@@ -1,0 +1,14 @@
+{
+	
+    "compilerOptions": {
+		"forceConsistentCasingInFileNames":true,
+		"strict":true,
+        "target": "ES2022",
+        "module": "commonjs",
+        "outDir": "dist",
+		"esModuleInterop": true
+    },
+	"include": [
+		"src/**/*.ts"
+	]
+}
