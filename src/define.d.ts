@@ -57,7 +57,8 @@ interface ICoNET_DL_masterSetup {
         certificate: ICoNET_certificate
         client: ICoNET_certificate
     }
-    SeguroKeyID: string
+	master_wallet_public: string
+	master_wallet_private: string
 }
 
 interface ICoNET_IP_API_Result {

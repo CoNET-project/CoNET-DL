@@ -10,9 +10,9 @@ import { unzip } from 'node:zlib'
 import { createInterface } from 'readline'
 import { publicKeyByPrivateKey, cipher, decryptWithPrivateKey, hex, recover, hash, recoverPublicKey } from 'eth-crypto'
 import { Buffer } from 'buffer'
-
 import { ulid } from 'ulid'
 import { Writable } from 'node:stream'
+import Web3 from 'web3'
 
 const Eth = require('web3-eth')
 
@@ -284,7 +284,7 @@ const usdcNet = 'http://mvpusdc.conettech.ca/mvpusdc'
 const CONETNet = 'https://conettech.ca/mvp'
 const fujiCONET = `https://conettech.ca/fujiCoNET`
 const testNet = ''
-const tokenContract = '0xCABCde7cC96F8FbD4e4a1A232C8bfc3aC46b1461'		//		CoNET-ECR20-USDC
+
 const denominator = 1000000000000000000
 
 export const getCONETBalance = async (Addr: string) => {
@@ -295,35 +295,35 @@ export const getCONETBalance = async (Addr: string) => {
 	console.log (`Balance=`, balance)
 	return balance
 }
+// const tokenContract = '0x'
+// export const getCoNET_USDC_Balance = async (Addr: string ) => {
+// 	const balanceOfABI = [
+// 		{
+// 			"constant": true,
+// 			"inputs": [
+// 				{
+// 					"name": "_owner",
+// 					"type": "address"
+// 				}
+// 			],
+// 			"name": "balanceOf",
+// 			"outputs": [
+// 				{
+// 					"name": "balance",
+// 					"type": "uint256"
+// 				}
+// 			],
+// 			"payable": false,
+// 			"stateMutability": "view",
+// 			"type": "function"
+// 		},
+// 	]
+// 	const eth = new Eth ( new Eth.providers.HttpProvider(testNet))
+// 	const ethContract = new eth.Contract(balanceOfABI, tokenContract)
+// 	const result = parseInt(await ethContract.methods.balanceOf (Addr).call())/denominator
 
-export const getCoNET_USDC_Balance = async (Addr: string ) => {
-	const balanceOfABI = [
-		{
-			"constant": true,
-			"inputs": [
-				{
-					"name": "_owner",
-					"type": "address"
-				}
-			],
-			"name": "balanceOf",
-			"outputs": [
-				{
-					"name": "balance",
-					"type": "uint256"
-				}
-			],
-			"payable": false,
-			"stateMutability": "view",
-			"type": "function"
-		},
-	]
-	const eth = new Eth ( new Eth.providers.HttpProvider(testNet))
-	const ethContract = new eth.Contract(balanceOfABI, tokenContract)
-	const result = parseInt(await ethContract.methods.balanceOf (Addr).call())/denominator
-
-	return result
-}
+// 	return result
+// }
 
 export const getUSDCBalance = async (Addr: string) => {
 	const eth = new Eth ( new Eth.providers.HttpProvider(usdcNet))
@@ -334,11 +334,38 @@ export const getUSDCBalance = async (Addr: string) => {
 	return balance
 }
 
+export const checkAddress = (walletAddr: string) => {
+	return Web3.utils.isAddress (walletAddr)
+}
+
+export const getConfirmations = async (txHash: string, receiveAddr: string) => {
+	const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
+	const trx = await eth.getTransaction(txHash)
+	const _receiveAddr: string = trx.to
+
+	if ( _receiveAddr.toUpperCase() !== receiveAddr.toUpperCase()) {
+		return null
+	}
+	const from = trx.from
+	const ret = parseFloat((trx.value/denominator).toString())
+	logger (inspect(trx, false, 3, true))
+	return {
+		value: ret,
+		from
+	}
+}
+
 /**
  * 
  * 		TEST 
  * 
  */
+/*
+const sampleAddress = `0xc45543B3Ad238696a417b94483D313794541c4dF`
+const kkk = checkAddress (sampleAddress)
+logger (kkk)
+
+
 /*
 	getSetupFile (true, (err, data) => {
 		if (err ) {
@@ -348,6 +375,11 @@ export const getUSDCBalance = async (Addr: string) => {
 	})
 
  /** */
+
+/*
+const uuu = getConfirmations ('0x095e9da197a4582c1f08e7a062f416ebe8623e333262dd85d558ff2282fc8390', '0xD493391c2a2AafEd135A9f6164C0Dcfa9C68F1ee')
+logger (`getConfirmations success!`,uuu)
+
 /*
 	logger ( inspect(getServerIPV4Address (false), false, 3, true ))
 

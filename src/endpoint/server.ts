@@ -4,10 +4,12 @@
 import Express from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register } from './help-database'
+import { CoNET_SI_Register, regiestFaucet, streamCoNET_USDCPrice, getLast5Price, exchangeUSDC } from './help-database'
 import Colors from 'colors/safe'
-
+import { homedir, platform } from 'node:os'
+import Web3 from 'web3'
 import { logger, loadWalletAddress, getSetup, waitKeyInput, return404, returnHome, decryptPayload } from '../util/util'
+
 
 class conet_dl_server {
 	// @ts-ignore
@@ -15,16 +17,24 @@ class conet_dl_server {
 	private PORT: any
 	private appsPath = ''
 	private initData: ICoNET_NodeSetup|null = null
+	private master_wallet = ''
+	private streamCoNET_USDCPriceQuere = []
 	private initSetupData = async () => {
 		// @ts-ignore: Unreachable code error
 		this.initData = await getSetup ( this.debug )
-
+		const setup = join( homedir(),'master.json' )
+		const masterSetup: ICoNET_DL_masterSetup = require ( setup )
+		let passwd = this.password
 		if ( !this.initData?.keychain ) {
 			throw new Error (`Error: have no setup data!\nPlease restart CoNET-DI`)
 		}
 
-		// @ts-ignore: Unreachable code error
-		const passwd = await waitKeyInput (`Please enter the wallet password: `, true )
+		
+		if ( !passwd) {
+			// @ts-ignore: Unreachable code error
+			passwd = await waitKeyInput (`Please enter the wallet password: `, true )
+		}
+		
 		this.appsPath = this.initData.setupPath
 		this.initData.keyObj = await loadWalletAddress (this.initData.keychain, passwd )
 
@@ -33,7 +43,7 @@ class conet_dl_server {
 		this.startServer()
 	}
 
-	constructor ( private debug: boolean, private version: string ) {
+	constructor ( private debug: boolean, private version: string, private password: string ) {
 		this.initSetupData ()
     }
 
@@ -59,13 +69,13 @@ class conet_dl_server {
         })
 
 		app.post ('/conet-si-node-register', ( req, res ) => {
-			const payload = req.body.payload
+			const payload: any = req.body.payload
 			
 			return decryptPayload (payload, this.initData )
 			.then (dataPayload=> {
 				if ( !dataPayload ) {
 					logger (`/conet-si-node-register has unknow payload`)
-					return res.end (return404 ())
+					return res.status(404).end (return404 ())
 				}
 				logger (`app.post ('/conet-si-node-register') call CoNET_SI_Register!`)
 				
@@ -76,11 +86,51 @@ class conet_dl_server {
 			})
 		})
 
-		app.get ('/CoNET-SI-list', (req,res) => {
+		app.get ('/conet-price', async (req,res) => {
+			const prices = await getLast5Price ()
+			return res.json (prices).end()
+		})
+
+		app.get ('/conet-si-list', (req,res) => {
 			
 		})
 
-		this.localserver = app.listen ( this.PORT, () => {
+		app.post ('/conet-faucet', (req, res ) => {
+
+			const wallet_addr = req.body?.walletAddr
+			if (!wallet_addr || !Web3.utils.isAddress(wallet_addr)) {
+				logger (`/conet-faucet ERROR! Have no walletAddr`, inspect(req.body, false, 3, true))
+				return res.status(404).end(return404 ())
+			}
+
+			logger (`/conet-faucet!`)
+			return regiestFaucet(wallet_addr).then (n => {
+				if (!n) {
+					return res.status(404).end(return404 ())
+					
+				}
+				return res.json ({}).end ()
+			})
+
+		})
+
+		app.post ('/exchange_conet_usdc', async (req, res) => {
+			const txHash = req.body?.txHash
+			if (!txHash) {
+				return res.status(404).end(return404 ())
+			}
+			const data = await exchangeUSDC (txHash)
+			if (!data) {
+				logger (`/exchange_conet_usdc !data`)
+				return res.status(404).end(return404 ())
+			}
+			
+			return res.json ({}).end ()
+		})
+
+		this.localserver = app.listen ( this.PORT, async () => {
+			
+			streamCoNET_USDCPrice (this.streamCoNET_USDCPriceQuere)
             return console.table([
                 { 'CoNET DL node': `mvp-dl version is [${ this.version }], Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
             ])
@@ -109,11 +159,12 @@ class conet_dl_server {
 		})
 
 		app.get('*', (req, res) => {
-			return res.end (return404 ())
+
+			return res.status(404).end (return404 ())
 		})
 
 		app.post('*', (req, res) => {
-			return res.end (return404 ())
+			return res.status(404).end (return404 ())
 		})
 		
 	}

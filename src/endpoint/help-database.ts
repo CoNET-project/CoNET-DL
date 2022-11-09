@@ -3,14 +3,19 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion  } from '../util/util'
+import { logger, getIpaddressLocaltion, getConfirmations } from '../util/util'
 import { createHash } from 'node:crypto'
+import type {RequestOptions} from 'node:http'
+import { request } from 'node:https'
+import Web3 from 'web3'
 import { waterfall, series } from 'async'
 import Color from 'colors/safe'
 
 import { Client, auth, types, } from 'cassandra-driver'
 
-const setup = platform() === 'darwin' ? join( __dirname, '../../','src', 'master.json' ): join( homedir(), 'master.json' )
+const Eth = require('web3-eth')
+
+const setup = join( homedir(),'master.json' )
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
@@ -28,67 +33,6 @@ const option = {
 	sslOptions: sslOptions,
 	keyspace: masterSetup.Cassandra.keyspace,
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
-}
-
-const init_tables = ( cassClient: any, Callback: any ) => {
-	const blockDevice =
-	`CREATE TABLE IF NOT EXISTS conet_si_nodes (`+								//		
-	`wallet_addr text, ` +														//		node wallet address
-	`ip_addr text, ` +															//		node IP address
-	`outbound_fee FLOAT,` +														//		USDC 1MB outbound
-	`storage_fee FLOAT,` +														//		USDC 1MB storgag/1 hour   1TB = $10 1MB (10/1000)= $0.01  $0.0000138900/hour
-	`customs_review_ratings map <text, int>,` +									//		0-100 
-	`customs_review_total int,` +												//		Total ratings
-	`country text,` +															//		US, EU, Asia, 
-	`region text, ` +
-	`lat FLOAT, ` +
-	`lon FLOAT,` +
-	`outbound_total int,` +														//		MB
-	`storage_total int,` +														//		MB
-	`revenue_total FLOAT,` +													//		USDC
-	`registration_date text,` +													//		Date
-	`nft_tokenid text,` +														//		Date
-	`online timestamp,` +	
-	`public_key text, ` +
-	`PRIMARY KEY ((nft_tokenid), country ))`
-	
-	
-	const FaucetRecord =
-	`CREATE TABLE IF NOT EXISTS conet_faucet (`+								//
-	`wallet_addr text,` +
-	`total int,` +
-	`expired boolean,` +
-	`timestamp text,` +
-	`PRIMARY KEY ((wallet_addr), timestamp ))`
-	
-	return series ([
-		next => cassClient.execute ( blockDevice, next ),
-		next => cassClient.execute ( FaucetRecord, next ),
-	], Callback)
-}
-
-const initDatabase = (Callback: (err?: any )=> void) => {
-	
-	const cassClient = new Client (option)
-
-	/**
-	 * 				Table for CoNET-DL nodes
-	 * 				
-	 * 
-	*/
-
-
-
-
-	return series ([
-		next => cassClient.connect ( next ),
-		next => init_tables ( cassClient, next )
-	], err => {
-		return cassClient.shutdown (() => {
-			Callback (err)
-		})
-	})
-
 }
 
 export const CoNET_SI_Register = ( data: ICoNET_DecryptedPayload ) => {
@@ -114,7 +58,7 @@ export const CoNET_SI_Register = ( data: ICoNET_DecryptedPayload ) => {
 		return cassClient.execute (cmd)
 	}).then (() => {
 		return cassClient.shutdown()
-	}). catch (ex => {
+	}).catch (ex => {
 		logger (`CoNET_SI_Register ERROR!`, ex )
 		return cassClient.shutdown()
 	})
@@ -126,13 +70,199 @@ export const getAllCoNET_SI_nodes = () => {
 		return cassClient.connect ()
 	})
 }
+const FaucetCount = 2
+const FaucetTTL = 60 * 60 * 24
+const fujiCONET = `https://conettech.ca/fujiCoNET`
+const USDCNET = `http://mvpusdc.conettech.ca/mvpusdc`
+
+const admin_public = masterSetup.master_wallet_public
+const admin_private = masterSetup.master_wallet_private
+const wei = 1000000000000000000
+
+export const regiestFaucet = (wallet_addr: string ) => {
+	
+	return new Promise ( async resolve => {
+
+		const cassClient = new Client (option)
+		const time = new Date()
+
+		await cassClient.connect ()
+		const cmd = `SELECT expired from conet_faucet WHERE wallet_addr = '${wallet_addr}'`
+		const result = await cassClient.execute (cmd)
+		if ( result?.rowLength ) {
+			const expiredss = result.rows[0].expired
+			const expireds = result.rows
+			let expired = false
+			expireds.forEach ( n => {
+				if ( n.expired === true ) {
+					expired = true
+				}
+			})
+			if ( expired ) {
+				logger (`${wallet_addr} have data\n`)
+				await cassClient.shutdown ()
+				return resolve (false)
+			}
+			
+		}
+
+		const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
+		const obj = {
+			gas: 21000,
+			to: wallet_addr,
+			value: (FaucetCount * wei).toString()
+		}
+		const createTransaction = await eth.accounts.signTransaction( obj, admin_private )
+		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
+		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash) VALUES ('${wallet_addr.toUpperCase()}', '${time.toISOString()}', ${FaucetCount}, '${receipt.transactionHash.toUpperCase()}')`
+		await cassClient.execute (cmd1)
+		const cmd2 = `UPDATE conet_faucet USING TTL ${FaucetTTL} SET expired = true WHERE wallet_addr = '${wallet_addr.toUpperCase()}' and timestamp = '${time.toISOString()}'`
+		await cassClient.execute (cmd2)
+		await cassClient.shutdown ()
+		return resolve (true)
+	})
+	
+}
+
+
+
+const storeCoNET_market = (price: number, oneDayPrice: number) => {
+	return new Promise ( async resolve => {
+		const cassClient = new Client (option)
+		const time = new Date()
+		const cmd = `INSERT INTO conet_market (date, price, value_24hours, token_id) VALUES ('${time.toISOString()}', ${ price }, ${ oneDayPrice }, 'AVAX')`
+		await cassClient.execute (cmd)
+		await cassClient.shutdown ()
+		return resolve (null)
+	})
+}
+const streamCoNET_USDCInterval = 3 * 60 * 1000
+
+export const streamCoNET_USDCPrice = (quere: any[]) => {
+
+	quere.shift ()
+	const option:RequestOptions = {
+		host: 'min-api.cryptocompare.com',
+		method: 'GET',
+		path: '/data/pricemultifull?fsyms=AVAX&tsyms=USD',
+		headers: {
+			'accept': 'application/json'
+		},
+		port: 443
+	}
+
+	const req = request (option, res => {
+		let _data = ''
+		res.on ('data', data => {
+			_data += data.toString ()
+		})
+
+		res.once ('end', async () => {
+
+			let response
+			try {
+				response = JSON.parse (_data)
+			} catch (ex) {
+				return logger (Color.red(`streamCoNET_USDCInterval JSON.parse Error`), _data)
+			}
+			
+			await storeCoNET_market (response.RAW.AVAX.USD.PRICE, response.RAW.AVAX.USD.VOLUME24HOUR)
+			logger (`streamCoNET_USDCInterval SUCCESS!, PRICE [${Color.green(response.RAW.AVAX.USD.PRICE)}] VOLUME24HOUR[${Color.green(response.RAW.AVAX.USD.VOLUME24HOUR)}]`)
+
+		})
+	})
+
+
+	req.once ('error', err => {
+		logger (Color.red(`streamCoNET_USDCPrice request Once Error`), err )
+	})
+
+	req.end (() => {
+		if ( !quere.length ) {
+			const kk = setTimeout (() => {
+				streamCoNET_USDCPrice (quere)
+			}, streamCoNET_USDCInterval)
+			quere.unshift (kk)
+		}
+	})
+	
+	
+}
+
+export const getLast5Price = () => {
+	return new Promise ( async resolve => {
+		const cassClient = new Client (option)
+		const cmd = `SELECT date, price, value_24hours from conet_market where token_id ='AVAX' order by date DESC LIMIT 5`
+		const res = await cassClient.execute (cmd)
+		await cassClient.shutdown ()
+		return resolve(res.rows)
+	})
+}
+
+const estimateGas = async (wallet_addr: string ) => {
+	const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
+	const gas = await eth.estimateGas ({
+		to: wallet_addr,
+		from: admin_public,
+		value: wei.toString()
+	})
+}
+
+export const exchangeUSDC = (txHash: string) => {
+	return new Promise ( async resolve => {
+		const _res = await getConfirmations (txHash, admin_public)
+		if (!_res) {
+			logger (`getConfirmations have no data!`)
+			return resolve(false)
+		}
+		const cassClient = new Client (option)
+		const cmd2 = `SELECT from_transaction_hash from conet_usdc_exchange where from_addr = '${ _res.from.toUpperCase() }' and from_transaction_hash = '${ txHash.toUpperCase() }'`
+		const rowLength = (await cassClient.execute (cmd2)).rowLength
+		
+		if ( rowLength > 0 ) {
+			logger (`exchangeUSDC txHash[${ txHash }] already had data!`)
+			await cassClient.shutdown ()
+			return resolve(false)
+		}
+
+		const cmd = `SELECT price from conet_market where token_id ='AVAX' order by date DESC LIMIT 1`
+		const rate = (await cassClient.execute (cmd)).rows[0].price
+		const usdc = rate * _res.value
+
+		const obj = {
+			gas: 21000,
+			to: _res.from,
+			value: (usdc * wei).toString()
+		}
+
+		const eth = new Eth ( new Eth.providers.HttpProvider(USDCNET))
+		const createTransaction = await eth.accounts.signTransaction( obj, admin_private )
+		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
+		const time = new Date()
+		const cmd1 = `INSERT INTO conet_usdc_exchange (from_addr, timestamp, from_transaction_hash, rate, total_conet, total_usdc, transaction_hash) VALUES (` +
+			`'${ _res.from.toUpperCase() }', '${time.toISOString()}', '${ txHash.toUpperCase() }', ${rate}, ${ _res.value }, ${ usdc }, '${receipt.transactionHash.toUpperCase()}')`
+		await cassClient.execute (cmd1)
+		await cassClient.shutdown ()
+		return resolve(true)
+	})
+	
+	
+
+
+}
+
+
 /****************************************************************************
  * 
  * 			TEST AREA
  * 
  ***************************************************************************/
+/*
 
+const testWallet = '0xc45543B3Ad238696a417b94483D313794541c4dF'
 
+regiestFaucet (testWallet)
+/*
 
 initDatabase ( err => {
 	if ( err ) {
@@ -141,8 +271,15 @@ initDatabase ( err => {
 	logger ('success')
 })
 /** */
+/*
+const ttt = async () => {
+	const uuuu = await regiestFaucet ('0f044fcc79b761b3368fc05954abb4107c1c722a')
+	console.log (uuuu)
+}
 
+ttt()
 /** */
+
 /*
 const uu = {
 	payload: {
@@ -158,6 +295,31 @@ const uu = {
 	senderAddress: '0x0f044fcC79b761b3368Fc05954AbB4107c1c722a',
 	publickey: ''
 }
+/** */
+/*
+const uu = async () => {
+	const ret = await exchangeUSDC ('0x095e9da197a4582c1f08e7a062f416ebe8623e333262dd85d558ff2282fc8390')
+	logger (`exchangeUSDC success`, ret)
+}
+uu()
 
-CoNET_SI_Register(uu)
+
+/*
+const uu = async () => {
+	const uu: any = await getLast5Price ()
+	uu.forEach ((n: any) => {
+		logger (n.date, n.price, n.value_24hours)
+	})
+}
+uu()
+/*
+const uu: any[] = []
+
+streamCoNET_USDCPrice (uu)
+
+
+//CoNET_SI_Register(uu)
+
+
+
 /** */

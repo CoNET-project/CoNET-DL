@@ -14,8 +14,9 @@ let debug = false
 let version = false
 let start = false
 let help = false
+let passwd = ''
 
-args.forEach ( n => {
+args.forEach ((n, index ) => {
     if (/\-d/.test(n)) {
         debug = true
     } else if ( /\-v| \--version/.test (n)) {
@@ -24,7 +25,10 @@ args.forEach ( n => {
 		start = true
 	} else if (/\-h|\--help/.test (n)) {
 		help = true
+	} else if (/\-p/.test(n)) {
+		passwd = args[index + 1]
 	}
+
 })
 if ( Cluster.isPrimary ) {
 	const packageFile = join (__dirname, '..', 'package.json')
@@ -102,11 +106,11 @@ if ( Cluster.isPrimary ) {
 			}
 			// @ts-ignore: Unreachable code error
 			await saveSetup ( setupInfo, debug )
-			return new server( debug, setup.version )
+			return new server( debug, setup.version, passwd )
 		}
 		
 		debug ? logger (`getSetupInfo has data:\n`, inspect ( setupInfo, false, 4, true )): null
-		return new server( debug, setup.version )
+		return new server( debug, setup.version, passwd )
 	}
 
 	getSetupInfo ()
