@@ -117,11 +117,13 @@ class conet_dl_server {
 		app.post ('/exchange_conet_usdc', async (req, res) => {
 			const txHash = req.body?.txHash
 			if (!txHash) {
+				logger (`/exchange_conet_usdc have no txHash`, inspect (req.body, false, 3, true))
 				return res.status(404).end(return404 ())
 			}
+			logger (`exchange_conet_usdc access by [${ txHash }]`)
 			const data = await exchangeUSDC (txHash)
 			if (!data) {
-				logger (`/exchange_conet_usdc !data`)
+				logger (`/exchange_conet_usdc [${ txHash }] data error!`)
 				return res.status(404).end(return404 ())
 			}
 			

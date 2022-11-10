@@ -280,7 +280,7 @@ export const getIpaddressLocaltion = (Addr: string) => {
 	
 }
 
-const usdcNet = 'http://mvpusdc.conettech.ca/mvpusdc'
+const usdcNet = 'https://mvpusdc.conettech.ca/mvpusdc'
 const CONETNet = 'https://conettech.ca/mvp'
 const fujiCONET = `https://conettech.ca/fujiCoNET`
 const testNet = ''
@@ -328,7 +328,7 @@ export const getCONETBalance = async (Addr: string) => {
 export const getUSDCBalance = async (Addr: string) => {
 	const eth = new Eth ( new Eth.providers.HttpProvider(usdcNet))
 	const uuu = await eth.getBalance(Addr)
-	console.log (uuu)
+
 	const balance = parseInt(uuu)/denominator
 	console.log (`Balance=`, balance)
 	return balance
@@ -341,6 +341,9 @@ export const checkAddress = (walletAddr: string) => {
 export const getConfirmations = async (txHash: string, receiveAddr: string) => {
 	const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
 	const trx = await eth.getTransaction(txHash)
+	if ( !trx ) {
+		return null
+	}
 	const _receiveAddr: string = trx.to
 
 	if ( _receiveAddr.toUpperCase() !== receiveAddr.toUpperCase()) {

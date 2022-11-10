@@ -73,7 +73,7 @@ export const getAllCoNET_SI_nodes = () => {
 const FaucetCount = 2
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://conettech.ca/fujiCoNET`
-const USDCNET = `http://mvpusdc.conettech.ca/mvpusdc`
+const USDCNET = `https://mvpusdc.conettech.ca/mvpusdc`
 
 const admin_public = masterSetup.master_wallet_public
 const admin_private = masterSetup.master_wallet_private
@@ -87,14 +87,17 @@ export const regiestFaucet = (wallet_addr: string ) => {
 		const time = new Date()
 
 		await cassClient.connect ()
-		const cmd = `SELECT expired from conet_faucet WHERE wallet_addr = '${wallet_addr}'`
+		const cmd = `SELECT expired from conet_faucet WHERE wallet_addr = '${wallet_addr.toUpperCase()}'`
+
 		const result = await cassClient.execute (cmd)
+
 		if ( result?.rowLength ) {
-			const expiredss = result.rows[0].expired
+
 			const expireds = result.rows
 			let expired = false
 			expireds.forEach ( n => {
 				if ( n.expired === true ) {
+					logger (n)
 					expired = true
 				}
 			})
@@ -105,6 +108,8 @@ export const regiestFaucet = (wallet_addr: string ) => {
 			}
 			
 		}
+
+		logger (`[${ wallet_addr }] have no expired`, inspect (result.rows, false, 3, true))
 
 		const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
 		const obj = {
@@ -215,16 +220,17 @@ export const exchangeUSDC = (txHash: string) => {
 			logger (`getConfirmations have no data!`)
 			return resolve(false)
 		}
+		logger (inspect(_res, false, 3, true ))
 		const cassClient = new Client (option)
 		const cmd2 = `SELECT from_transaction_hash from conet_usdc_exchange where from_addr = '${ _res.from.toUpperCase() }' and from_transaction_hash = '${ txHash.toUpperCase() }'`
-		const rowLength = (await cassClient.execute (cmd2)).rowLength
+		const rowLength = await cassClient.execute (cmd2)
 		
-		if ( rowLength > 0 ) {
+		if ( rowLength.rowLength > 0 ) {
 			logger (`exchangeUSDC txHash[${ txHash }] already had data!`)
 			await cassClient.shutdown ()
 			return resolve(false)
 		}
-
+		logger (inspect(rowLength, false, 3, true))
 		const cmd = `SELECT price from conet_market where token_id ='AVAX' order by date DESC LIMIT 1`
 		const rate = (await cassClient.execute (cmd)).rows[0].price
 		const usdc = rate * _res.value
@@ -234,11 +240,16 @@ export const exchangeUSDC = (txHash: string) => {
 			to: _res.from,
 			value: (usdc * wei).toString()
 		}
-
 		const eth = new Eth ( new Eth.providers.HttpProvider(USDCNET))
-		const createTransaction = await eth.accounts.signTransaction( obj, admin_private )
-		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
 		const time = new Date()
+		let createTransaction
+		try {
+			createTransaction = await eth.accounts.signTransaction( obj, admin_private )
+		} catch (ex) {
+			logger (`exchangeUSDC eth.sendSignedTransaction ERROR`, ex )
+			return resolve(false)
+		}
+		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
 		const cmd1 = `INSERT INTO conet_usdc_exchange (from_addr, timestamp, from_transaction_hash, rate, total_conet, total_usdc, transaction_hash) VALUES (` +
 			`'${ _res.from.toUpperCase() }', '${time.toISOString()}', '${ txHash.toUpperCase() }', ${rate}, ${ _res.value }, ${ usdc }, '${receipt.transactionHash.toUpperCase()}')`
 		await cassClient.execute (cmd1)
@@ -298,7 +309,7 @@ const uu = {
 /** */
 /*
 const uu = async () => {
-	const ret = await exchangeUSDC ('0x095e9da197a4582c1f08e7a062f416ebe8623e333262dd85d558ff2282fc8390')
+	const ret = await exchangeUSDC ('0xd5e2e2d9a8aef8200042e304780ec8b46eced8095415bda95f6242bdc95491bb')
 	logger (`exchangeUSDC success`, ret)
 }
 uu()
