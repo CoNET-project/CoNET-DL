@@ -1,6 +1,6 @@
 {
 	"name": "@conet.project/mvp-dl",
-	"version": "0.0.57",
+	"version": "0.0.111",
 	"author": {
 		"name": "CoNET Project",
 		"email": "info@CoNETTech.ca"
@@ -8,7 +8,7 @@
 	"description": "The CoNET project provides Innate in digital privacy from the network layer to the application layer.",
 	"license": "MIT",
 	"files": [
-		"./dist/*"
+		"./dist/**/*.*"
 	],
 	"bugs": {
 		"url": "https://github.com/CoNET-project/mvp-SI/issues"
@@ -54,11 +54,19 @@
 		"eth-crypto": "^2.4.0",
 		"express": "^4.18.2",
 		"hexdump-nodejs": "^0.1.0",
-		"ulid": "^2.3.0",
-		"web3": "^1.8.0"
+		"uuid": "^9.0.0",
+		"web3": "^1.8.0",
+		"openpgp": "5.5.0",
+		"@aws-sdk/client-s3": "^3.213.0",
+		"@aws-sdk/lib-storage": "^3.213.0",
+		"aws-sdk": "^2.1258.0",
+		"global-dirs": "^3.0.1"
+		
 	},
 	"devDependencies": {
 		"@types/async": "^3.2.15",
-		"@types/express": "^4.17.14"
+		"@types/express": "^4.17.14",
+		"@types/uuid": "^8.3.4",
+		"@openpgp/web-stream-tools": "^0.0.12"
 	}
 }

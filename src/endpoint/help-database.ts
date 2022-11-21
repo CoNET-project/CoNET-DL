@@ -3,19 +3,21 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, getConfirmations } from '../util/util'
+import { logger, getIpaddressLocaltion, getConfirmations, checkPublickeySign, decryptPayload, postRouterToPublic, regiestCloudFlare } from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
-import Web3 from 'web3'
-import { waterfall, series } from 'async'
+import {v4} from 'uuid'
+import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recover } from 'eth-crypto'
+
+
 import Color from 'colors/safe'
 
-import { Client, auth, types, } from 'cassandra-driver'
+import { Client, auth, types } from 'cassandra-driver'
 
 const Eth = require('web3-eth')
 
-const setup = join( homedir(),'master.json' )
+const setup = join( homedir(),'.master.json' )
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
@@ -35,34 +37,121 @@ const option = {
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
 }
 
-export const CoNET_SI_Register = ( data: ICoNET_DecryptedPayload ) => {
-	
-	const cassClient = new Client (option)
-	const payload = data.payload
-	const time = new Date()
+const CoNET_SI_healthy_TTL = 1 * 60 * 5
 
-	return cassClient.connect ()
-	.then (() => {
-		return getIpaddressLocaltion (payload.ipV4)
-	})
-	.then ((_data: any) => {
-		payload.ip_api = _data
-		logger (`CoNET_SI_Register data\n${ inspect(_data, false, 3, true )}`)
+export const CoNET_SI_Register = ( data: ICoNET_DecryptedPayload, s3pass: s3pass ) => {
+
+	return new Promise(async resolve => {
+		const cassClient = new Client (option)
+		const payload: ICoNET_DL_POST_register_SI = data.payload
+
+
+		const time = new Date()
+		
+		payload.ip_api = await getIpaddressLocaltion (payload.ipV4)
+
+		if ( !payload.ip_api || !payload.pgpPublicKey ) {
+			return resolve (false)
+		}
+
+		const pgpKey = await checkPublickeySign (payload.pgpPublicKey)
+
+		if (!/^0[xX]/.test(payload.wallet_CoNET)) {
+			payload.wallet_CoNET = '0X' + payload.wallet_CoNET
+		}
+		if ( !pgpKey || data.senderAddress !== payload.wallet_CoNET.toUpperCase()) {
+
+			logger (Color.red(`CoNET_SI_Register !pgpKey || data.publickey.toUpperCase() !== payload.wallet_CoNET.toUpperCase() ERROR`), inspect(data, false, 3, true ))
+			return resolve (false)
+		}
+
+		const nft_tokenid = createHash('sha256').update(payload.ipV4).digest('base64')
+		const customs_review_total = (Math.random()*5).toFixed(2)
+
+		logger (`CoNET_SI_Register data\n${ inspect( payload, false, 3, true )}`)
 		const cmd = `INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
-					`country, region, lat, lon, `+
-					`public_key, nft_tokenid, online) VALUES (` +
-					` '${ payload.wallet_CoNET }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
-					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon },`+
-					`'${ data.publickey }', '${ createHash('sha256').update(payload.ipV4).digest('base64')}', dateof(now())`+
-					`) `
-		return cassClient.execute (cmd)
-	}).then (() => {
-		return cassClient.shutdown()
-	}).catch (ex => {
-		logger (`CoNET_SI_Register ERROR!`, ex )
-		return cassClient.shutdown()
+					`country, region, lat, lon, customs_review_total, `+
+					`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
+					` '${ data.senderAddress }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
+					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${ customs_review_total }, `+
+					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now())`+ `) `
+
+		const cmd2 = `INSERT INTO conet_si_nodes_online ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
+					`country, region, lat, lon, customs_review_total, `+
+					`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
+					` '${ data.senderAddress }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
+					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${customs_review_total}, ` +
+					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now())`+ `) USING TTL ${ CoNET_SI_healthy_TTL } `
+		const cmd3 = `INSERT INTO conet_si_nodes_customs_review ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
+					`country, region, lat, lon, customs_review_total, `+
+					`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
+					` '${ data.senderAddress }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
+					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${ customs_review_total }, ` +
+					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now())`+ `) USING TTL ${ CoNET_SI_healthy_TTL } `
+		await cassClient.connect ()
+		await cassClient.execute (cmd)
+		await cassClient.execute (cmd2)
+		await cassClient.execute (cmd3)
+		await cassClient.shutdown()
+		await postRouterToPublic (data, pgpKey, s3pass)
+		await regiestCloudFlare (payload.ipV4, pgpKey.publicKeyID, masterSetup )
+		return resolve (nft_tokenid)
 	})
 }
+
+export const CoNET_SI_health = ( message: string, signature: string ) => {
+
+	return new Promise( async resolve => {
+
+		const yyy = decryptPayload( message, signature )
+
+		if ( !yyy||! yyy.payload?.nft_tokenid) {
+			logger (`CoNET_SI_health ERROR!, encryptedString have no nft_tokenid! payload = [${ inspect( yyy, false, 3, true ) }]`)
+			return resolve (false)
+		}
+
+		const cassClient = new Client (option)
+		const nft_tokenid = yyy.payload.nft_tokenid
+
+		const cmd = `Select * from conet_si_nodes WHERE nft_tokenid = '${ nft_tokenid }'`
+		const res = await cassClient.execute (cmd)
+		const oldData = res.rows[0]
+
+		if ( !res.rowLength || oldData.pgp_publickey_id !== yyy.payload.publickey.toUpperCase()) {
+			await cassClient.shutdown ()
+			logger (`CoNET_SI_health ERROR!, SI have no nft_tokenid or wrong pgp_publickey_id. payload = [${ inspect( yyy.payload, false, 3, true ) }] DB = [${ inspect(oldData, false, 3, true) }]` )
+			return resolve (false)
+		}
+
+		
+		const customs_review_total = (Math.random()*5).toFixed(2)
+		
+		logger (`SUCCESS!`, inspect (oldData, false, 3, true ))
+
+		const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${oldData.total_online} + 5, last_online = dateof(now()) Where country = '${oldData.country}' and nft_tokenid = '${oldData.nft_tokenid}'`
+		await cassClient.execute (cmd1)
+
+		const cmd2 = `INSERT INTO conet_si_nodes_online ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
+			`country, region, lat, lon, customs_review_total, `+
+			`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
+			` '${ oldData.wallet_addr }', '${ oldData.ip_addr }', ${ oldData.outbound_fee }, ${ oldData.storage_fee }, '${ oldData.registration_date }', `+
+			`'${ oldData.country }', '${ oldData.region }', ${ oldData.lat }, ${ oldData.lon }, ${customs_review_total}, ` +
+			`'${ oldData.pgp_publickey_id }', '${ nft_tokenid }', ${oldData.total_online + 5}, dateof(now())`+ `) USING TTL ${CoNET_SI_healthy_TTL} `
+
+		const cmd3 = `INSERT INTO conet_si_nodes_customs_review ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
+			`country, region, lat, lon, customs_review_total, `+
+			`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
+			` '${ oldData.wallet_addr }', '${ oldData.ip_addr }', ${ oldData.outbound_fee }, ${ oldData.storage_fee }, '${ oldData.registration_date }', `+
+			`'${ oldData.country }', '${ oldData.region }', ${ oldData.lat }, ${ oldData.lon }, ${customs_review_total}, ` +
+			`'${ oldData.pgp_publickey_id }', '${ nft_tokenid }', ${oldData.total_online + 5}, dateof(now())`+ `) USING TTL ${CoNET_SI_healthy_TTL} `
+		await cassClient.execute (cmd2)
+		await cassClient.execute (cmd3)
+		await cassClient.shutdown ()
+		logger (`CoNET_SI_health SUCCESS!`)
+		return resolve (true)
+	})
+}
+
 
 export const getAllCoNET_SI_nodes = () => {
 	return new Promise((resolve) => {
@@ -70,6 +159,8 @@ export const getAllCoNET_SI_nodes = () => {
 		return cassClient.connect ()
 	})
 }
+
+
 const FaucetCount = 2
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://conettech.ca/fujiCoNET`
@@ -79,7 +170,7 @@ const admin_public = masterSetup.master_wallet_public
 const admin_private = masterSetup.master_wallet_private
 const wei = 1000000000000000000
 
-export const regiestFaucet = (wallet_addr: string ) => {
+export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 	
 	return new Promise ( async resolve => {
 
@@ -124,12 +215,10 @@ export const regiestFaucet = (wallet_addr: string ) => {
 		const cmd2 = `UPDATE conet_faucet USING TTL ${FaucetTTL} SET expired = true WHERE wallet_addr = '${wallet_addr.toUpperCase()}' and timestamp = '${time.toISOString()}'`
 		await cassClient.execute (cmd2)
 		await cassClient.shutdown ()
-		return resolve (true)
+		return resolve (receipt.transactionHash)
 	})
 	
 }
-
-
 
 const storeCoNET_market = (price: number, oneDayPrice: number) => {
 	return new Promise ( async resolve => {
@@ -215,7 +304,7 @@ const estimateGas = async (wallet_addr: string ) => {
 
 export const exchangeUSDC = (txHash: string) => {
 	return new Promise ( async resolve => {
-		const _res = await getConfirmations (txHash, admin_public)
+		const _res = await getConfirmations (txHash, admin_public, fujiCONET)
 		if (!_res) {
 			logger (`getConfirmations have no data!`)
 			return resolve(false)
@@ -254,12 +343,67 @@ export const exchangeUSDC = (txHash: string) => {
 			`'${ _res.from.toUpperCase() }', '${time.toISOString()}', '${ txHash.toUpperCase() }', ${rate}, ${ _res.value }, ${ usdc }, '${receipt.transactionHash.toUpperCase()}')`
 		await cassClient.execute (cmd1)
 		await cassClient.shutdown ()
-		return resolve(true)
+		return resolve(receipt.transactionHash)
 	})
 	
 	
 
 
+}
+const asset_name = 'USDC'
+
+export const mint_conetcash = async (txHash: string, sign: string ) => {
+	if (!txHash || !sign) {
+		logger (`mint_conetcash Error: !txHash || !sign`)
+		return false
+	}
+
+	const usdcData = await getConfirmations(txHash, admin_public, USDCNET)
+	if ( !usdcData || usdcData.value <= 0 || usdcData.value > 100 ) {
+		logger (`mint_conetcash have no usdcData or usdcData.value have not in []`, inspect(usdcData, false, 3, true))
+		return false
+	}
+	const cassClient = new Client (option)
+	const cmd1 = `SELECT from_transaction_hash from conet_dl_conetcash where asset_name = '${ asset_name }' and from_transaction_hash = '${ txHash.toUpperCase()  }'`
+	const rowLength = (await cassClient.execute (cmd1)).rowLength
+	if (rowLength > 0) {
+		await cassClient.shutdown ()
+		logger (`mint_conetcash ERROR: had same txHash [${ txHash.toUpperCase() }]`)
+		return false
+	}
+
+	const message = hash.keccak256('0xD493391c2a2AafEd135A9f6164C0Dcfa9C68F1ee')
+	const keyID: string = recover(sign, message)
+	const time = new Date()
+	const fee = usdcData.value * 0.0001
+	const balance = usdcData.value - fee
+	const id = v4().toUpperCase()
+	const cmd2 = `INSERT INTO conet_dl_conetcash (owner_addr, asset_name, from_transaction_hash, timestamp, deposit_tokens, balance, dl_id, Genesis_Fee, transfer_fee_total) VALUES (` + 
+		`'${keyID.toUpperCase()}', '${asset_name}', '${ txHash.toUpperCase() }', '${time.toISOString()}', ${usdcData.value}, ${balance}, '${id}', ${fee}, 0)`
+	await cassClient.execute (cmd2)
+	const cmd3 = `INSERT INTO conet_dl_conetcash_dl_id (owner_addr, asset_name, from_transaction_hash, timestamp, deposit_tokens, balance, dl_id, Genesis_Fee, transfer_fee_total) VALUES (` + 
+		`'${keyID.toUpperCase()}', '${asset_name}', '${ txHash.toUpperCase() }', '${time.toISOString()}', ${usdcData.value}, ${balance}, '${id}', ${fee}, 0)`
+	await cassClient.execute (cmd3)
+	await cassClient.shutdown ()
+	return id
+}
+
+export const conetcash_getBalance = (id: string ) => {
+	return new Promise( async resolve => {
+		const cmd1 = `SELECT * from conet_dl_conetcash_dl_id where asset_name='${asset_name}' and dl_id='${id.toUpperCase()}'`
+		const cassClient = new Client (option)
+		const data =  (await cassClient.execute (cmd1)).rows[0]
+		await cassClient.shutdown ()
+		if (!data) {
+			return resolve({})
+		}
+		const ret = {
+			id: data.dl_id,
+			balance: data.balance,
+			owner: data.owner_addr
+		}
+		return resolve(ret)
+	})
 }
 
 
@@ -290,6 +434,19 @@ const ttt = async () => {
 
 ttt()
 /** */
+/*
+const kk = '{"nft_tokenid":"AnB5oHdd77KM5JdytIO/bcf7GxQbakmIR5e9flaSFuU=","publickey":"2815A3B8624BD3B4"}'
+const kk1 = `0xfdb478abe7adda90d126bd3c52f5ca5fecd2558adca370a6caf0e07b84a6ae77161fe309f683497e5b551992987f3db0fb58bc711031b7190ebb4adf283ffb7d1b`
+CoNET_SI_health (kk, kk1)
+
+/*
+const h = {
+  message: '{"nft_tokenid":"AnB5oHdd77KM5JdytIO/bcf7GxQbakmIR5e9flaSFuU="}',
+  signature: '0x28df4df250a81536eca40132d81de29fe3d529275c0e1082c29287952577d2fe734c8ca9275a1af59d98366a2be0e834be93675f38317de2db7f494347bf2e001b'
+}
+
+const yyy = decryptPayload(h.message, h.signature )
+logger (inspect(yyy, false, 3, true))
 
 /*
 const uu = {
@@ -314,6 +471,12 @@ const uu = async () => {
 }
 uu()
 
+/** */
+/*
+const sign = '0xdb1dd23e916028545e0c846edbba3c0c8414daef9c79c9dc9696f393a59937b00bf5443d0c9b31ff1de64624896a0efb9a92b5e46874b78231de9132394addbd1c'
+const message = '0xf7c8807af619b93ed15e3508791a2d34e4e85d18fd5f212749345c2458120e64'
+
+logger (`SUCCESS`, mint_conetcash (message, sign))
 
 /*
 const uu = async () => {
@@ -323,13 +486,40 @@ const uu = async () => {
 	})
 }
 uu()
+/** */
+/*
+const uu = async () => {
+	const ret = await conetcash_getBalance ('BD4E8700-71AB-4933-A8E6-DE06C7BC4A11', '')
+	logger (inspect(ret, false, 3, true))
+}
+uu()
+
 /*
 const uu: any[] = []
 
 streamCoNET_USDCPrice (uu)
 
+/** */
+/*
+/** */
+/*
+CoNET_SI_health ('{"nft_tokenid":"AnB5oHdd77KM5JdytIO/bcf7GxQbakmIR5e9flaSFuU="}', '0xb4e227f28d6c62c8de70bd54491dfaecaececf9e4eaa374f0804a4e01ab8753334129ead87987f1e220247259a05a8b120b28d96db24423902a57c760a204e7d1c')
 
-//CoNET_SI_Register(uu)
+
+/*
+const uu = {
+	payload: {
+	  ipV4Port: 80,
+	  ipV4: '74.208.24.74',
+	  storage_price: 0.01,
+	  outbound_price: 0.00001,
+	  wallet_CoNET: 'c586fadac9b5d2a42a1a9fbf25cf66f1b316b242',
+	  wallet_CNTCash: '0b9d9c1b30b5277b5900cd8c9cd9ed3ff5922c27'
+	},
+	senderAddress: '0xc586fADAC9B5d2A42a1a9FBF25CF66F1b316b242',
+	publickey: 'ee05fec1a493ccc6be33a49ba52eeb70adf383d05ec0a41c008e917dd9a9b313fa1170219c8cac1981f62f189a73b79577b787678082d81f6ff0221e7664b485'
+  }
+CoNET_SI_Register(uu)
 
 
 
