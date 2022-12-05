@@ -1,14 +1,14 @@
-import colors from 'colors/safe'
-import { series } from 'async'
+import type { RequestOptions } from 'node:http'
+
 import { stat, mkdir, writeFile, readFile, link } from 'node:fs'
 import { homedir, networkInterfaces } from 'node:os'
 import { join } from 'node:path'
 import { get } from 'node:http'
-import { request as requestHttps } from 'https'
-import type { RequestOptions } from 'http'
+import { request as requestHttps } from 'node:https'
 import { inspect } from 'node:util'
-import Accounts from 'web3-eth-accounts'
 import { unzip } from 'node:zlib'
+import { exec } from 'node:child_process'
+
 import { createInterface } from 'readline'
 import { publicKeyByPrivateKey, cipher, decryptWithPrivateKey, hex, recover, hash, recoverPublicKey } from 'eth-crypto'
 import { Buffer } from 'buffer'
@@ -17,7 +17,9 @@ import { Writable } from 'node:stream'
 import Web3 from 'web3'
 import { Endpoint } from 'aws-sdk'
 import S3 from 'aws-sdk/clients/s3'
-
+import colors from 'colors/safe'
+import { series, waterfall } from 'async'
+import Accounts from 'web3-eth-accounts'
 
 const Eth = require('web3-eth')
 
@@ -387,6 +389,7 @@ export const postRouterToPublic = ( data: ICoNET_DecryptedPayload, publicKeyObj:
 	return new Promise (resolve => {
 		
 		const payload = data.payload
+
 		const saveObj: ICoNET_Router = {
 			gpgPublicKeyID: publicKeyObj.publicKeyID,
 			profileImg: '',
@@ -400,7 +403,7 @@ export const postRouterToPublic = ( data: ICoNET_DecryptedPayload, publicKeyObj:
 		const saveObj_json_string = JSON.stringify(saveObj)
 		const routerPath = join (setupFileDir, 'router')
 		
-		const wallet_addr_file_name = data.senderAddress
+		const wallet_addr_file_name =join( routerPath, data.senderAddress)
 		const pgp_file_name = publicKeyObj.publicKeyID
 		
 		return series ([
@@ -689,7 +692,61 @@ export const regiestCloudFlare = (ipAddr: string, gpgKeyID: string, setup: ICoNE
 }
 
 
+export const startPackageSelfVersionCheckAndUpgrade = async (packageName: string ) => {
+	
 
+	const execCommand = (command: string ) => {
+
+		return new Promise ( resolve => {
+			let u = ''
+			let stderr: Error|null = null
+
+			logger (colors.magenta(`execCommand doing [${ command }]`))
+			const running = exec ( command )
+
+			if ( running.stdout ) {
+				running.stdout.on ('data', data => {
+					u += data.toString()
+				})
+			}
+
+			if (running.stderr) {
+				running.stderr.once ('error', err => {
+					stderr = err
+				})
+			}
+
+			running.once ('exit', () => {
+				if ( stderr ) {
+					return resolve (null)
+				}
+				if ( u.length ) {
+					logger (colors.blue(`execCommand stdout\n`), u)
+					return resolve (true)
+				}
+				return resolve (false)
+			})
+		})
+	}
+
+	const cmd1 = await execCommand (`npm outdated -g | grep ${packageName}`)
+	if ( cmd1 === null ) {
+		logger (colors.red(`execCommand npm outdated -g | grep ${packageName} had ERROR!`))
+		return (null)
+	}
+	if ( cmd1 === false ) {
+		logger (colors.blue(`startPackageSelfVersionCheckAndUpgrade ${packageName} has up to date!`))
+		return (false)
+	}
+	logger (`startPackageSelfVersionCheckAndUpgrade doing upgrade now!`)
+	const cmd2 = await execCommand  (`sudo npm cache clean --force && sudo npm i ${packageName} -g`)
+	if ( cmd2 === null ) {
+		logger (colors.red(`execCommand [sudo npm cache clean --force && sudo npm i ${packageName} -g] had ERROR!`))
+		return (null)
+	}
+	logger (colors.blue(`startPackageSelfVersionCheckAndUpgrade ${packageName} have new version and upgrade success!`))
+	return (true)
+}
 /**
  * 
  * 		TEST 

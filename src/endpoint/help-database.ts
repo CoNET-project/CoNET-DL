@@ -9,13 +9,11 @@ import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
 import {v4} from 'uuid'
 import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recover } from 'eth-crypto'
-
-
+const Eth = require('web3-eth')
 import Color from 'colors/safe'
 
 import { Client, auth, types } from 'cassandra-driver'
 
-const Eth = require('web3-eth')
 
 const setup = join( homedir(),'.master.json' )
 
@@ -125,8 +123,6 @@ export const CoNET_SI_health = ( message: string, signature: string ) => {
 
 		
 		const customs_review_total = (Math.random()*5).toFixed(2)
-		
-		logger (`SUCCESS!`, inspect (oldData, false, 3, true ))
 
 		const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${oldData.total_online} + 5, last_online = dateof(now()) Where country = '${oldData.country}' and nft_tokenid = '${oldData.nft_tokenid}'`
 		await cassClient.execute (cmd1)
@@ -144,6 +140,8 @@ export const CoNET_SI_health = ( message: string, signature: string ) => {
 			` '${ oldData.wallet_addr }', '${ oldData.ip_addr }', ${ oldData.outbound_fee }, ${ oldData.storage_fee }, '${ oldData.registration_date }', `+
 			`'${ oldData.country }', '${ oldData.region }', ${ oldData.lat }, ${ oldData.lon }, ${customs_review_total}, ` +
 			`'${ oldData.pgp_publickey_id }', '${ nft_tokenid }', ${oldData.total_online + 5}, dateof(now())`+ `) USING TTL ${CoNET_SI_healthy_TTL} `
+
+			
 		await cassClient.execute (cmd2)
 		await cassClient.execute (cmd3)
 		await cassClient.shutdown ()
@@ -178,42 +176,60 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 		const time = new Date()
 
 		await cassClient.connect ()
-		const cmd = `SELECT expired from conet_faucet WHERE wallet_addr = '${wallet_addr.toUpperCase()}'`
+		let cmd = `SELECT * from conet_faucet_ipaddress WHERE client_ipaddress = '${ipAddr}'`
 
-		const result = await cassClient.execute (cmd)
+		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength ) {
+		logger (inspect(result, false, 3, true))
 
-			const expireds = result.rows
-			let expired = false
-			expireds.forEach ( n => {
-				if ( n.expired === true ) {
-					logger (n)
-					expired = true
-				}
-			})
-			if ( expired ) {
-				logger (`${wallet_addr} have data\n`)
-				await cassClient.shutdown ()
-				return resolve (false)
-			}
-			
+		if ( result?.rowLength > 9 ) {
+			logger (Color.red(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
+			await cassClient.shutdown ()
+			return resolve (false)
 		}
 
-		logger (`[${ wallet_addr }] have no expired`, inspect (result.rows, false, 3, true))
+		wallet_addr = wallet_addr.toUpperCase()
+		cmd = `SELECT * from conet_faucet_wallet_addr WHERE wallet_addr = '${ wallet_addr }'`
+		result = await cassClient.execute (cmd)
+		
+		if ( result?.rowLength > 0 ) {
+			logger (Color.red(`regiestFaucet IP address [${ ipAddr }] Wallet Address [${ wallet_addr }] already did Faucet in 24 hours! STOP! `))
+			await cassClient.shutdown ()
+			return resolve (false)
+		}
 
 		const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
+
+		const _nonce = await eth.getTransactionCount(admin_public)
+		logger (_nonce)
+		const nonce = '0x' + ((_nonce) + 1).toString(16)
 		const obj = {
 			gas: 21000,
 			to: wallet_addr,
 			value: (FaucetCount * wei).toString()
 		}
+
 		const createTransaction = await eth.accounts.signTransaction( obj, admin_private )
-		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
-		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash) VALUES ('${wallet_addr.toUpperCase()}', '${time.toISOString()}', ${FaucetCount}, '${receipt.transactionHash.toUpperCase()}')`
+
+		let receipt
+		try {
+			receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
+		} catch (ex) {
+			logger (`eth.sendSignedTransaction ERROR!`, ex)
+			await cassClient.shutdown ()
+			return resolve (false)
+		}
+
+		logger (inspect(receipt, false, 3, true))
+
+		const cmd2 = `INSERT INTO conet_faucet_ipaddress (client_ipaddress, timestamp) VALUES ('${ipAddr}', '${time.toISOString() }') USING TTL ${FaucetTTL}`
+		const cmd3 = `INSERT INTO conet_faucet_wallet_addr (wallet_addr) VALUES ('${wallet_addr}') USING TTL ${FaucetTTL}`
+		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash, client_ipaddress) VALUES ('${wallet_addr}', '${time.toISOString()}', ${ FaucetCount }, '${receipt.transactionHash.toUpperCase()}', '${ ipAddr }')`
 		await cassClient.execute (cmd1)
-		const cmd2 = `UPDATE conet_faucet USING TTL ${FaucetTTL} SET expired = true WHERE wallet_addr = '${wallet_addr.toUpperCase()}' and timestamp = '${time.toISOString()}'`
 		await cassClient.execute (cmd2)
+		await cassClient.execute (cmd3)
+
+		logger (Color.blue(`regiestFaucet [${wallet_addr}:${ipAddr}] SUCCESS`))
 		await cassClient.shutdown ()
 		return resolve (receipt.transactionHash)
 	})
@@ -261,7 +277,7 @@ export const streamCoNET_USDCPrice = (quere: any[]) => {
 			}
 			
 			await storeCoNET_market (response.RAW.AVAX.USD.PRICE, response.RAW.AVAX.USD.VOLUME24HOUR)
-			logger (`streamCoNET_USDCInterval SUCCESS!, PRICE [${Color.green(response.RAW.AVAX.USD.PRICE)}] VOLUME24HOUR[${Color.green(response.RAW.AVAX.USD.VOLUME24HOUR)}]`)
+			//logger (`streamCoNET_USDCInterval SUCCESS!, PRICE [${Color.green(response.RAW.AVAX.USD.PRICE)}] VOLUME24HOUR[${Color.green(response.RAW.AVAX.USD.VOLUME24HOUR)}]`)
 
 		})
 	})
@@ -406,121 +422,21 @@ export const conetcash_getBalance = (id: string ) => {
 	})
 }
 
-
-/****************************************************************************
- * 
- * 			TEST AREA
- * 
- ***************************************************************************/
-/*
-
-const testWallet = '0xc45543B3Ad238696a417b94483D313794541c4dF'
-
-regiestFaucet (testWallet)
-/*
-
-initDatabase ( err => {
-	if ( err ) {
-		return logger ( err )
-	}
-	logger ('success')
-})
-/** */
-/*
-const ttt = async () => {
-	const uuuu = await regiestFaucet ('0f044fcc79b761b3368fc05954abb4107c1c722a')
-	console.log (uuuu)
-}
-
-ttt()
-/** */
-/*
-const kk = '{"nft_tokenid":"AnB5oHdd77KM5JdytIO/bcf7GxQbakmIR5e9flaSFuU=","publickey":"2815A3B8624BD3B4"}'
-const kk1 = `0xfdb478abe7adda90d126bd3c52f5ca5fecd2558adca370a6caf0e07b84a6ae77161fe309f683497e5b551992987f3db0fb58bc711031b7190ebb4adf283ffb7d1b`
-CoNET_SI_health (kk, kk1)
-
-/*
-const h = {
-  message: '{"nft_tokenid":"AnB5oHdd77KM5JdytIO/bcf7GxQbakmIR5e9flaSFuU="}',
-  signature: '0x28df4df250a81536eca40132d81de29fe3d529275c0e1082c29287952577d2fe734c8ca9275a1af59d98366a2be0e834be93675f38317de2db7f494347bf2e001b'
-}
-
-const yyy = decryptPayload(h.message, h.signature )
-logger (inspect(yyy, false, 3, true))
-
-/*
-const uu = {
-	payload: {
-		ipV4Port: 80,
-		ipV4: '74.208.24.74',
-		storage_price: 0.01,
-		outbound_price: 0.00001,
-		wallet_CoNET: '0f044fcc79b761b3368fc05954abb4107c1c722a',
-		wallet_CNTCash: '67ca937c35f6d188dafddbd266824febc902a2dc',
-		publicKey:'publicKey67ca937c35f6d188dafddbd266824febc902a2dc'
+export const getSI_nodes = (sortby: SINodesSortby, region: SINodesRegion ) => {
+	return new Promise ( async resolve => {
+		const cassClient = new Client (option)
 		
-	},
-	senderAddress: '0x0f044fcC79b761b3368Fc05954AbB4107c1c722a',
-	publickey: ''
-}
-/** */
-/*
-const uu = async () => {
-	const ret = await exchangeUSDC ('0xd5e2e2d9a8aef8200042e304780ec8b46eced8095415bda95f6242bdc95491bb')
-	logger (`exchangeUSDC success`, ret)
-}
-uu()
-
-/** */
-/*
-const sign = '0xdb1dd23e916028545e0c846edbba3c0c8414daef9c79c9dc9696f393a59937b00bf5443d0c9b31ff1de64624896a0efb9a92b5e46874b78231de9132394addbd1c'
-const message = '0xf7c8807af619b93ed15e3508791a2d34e4e85d18fd5f212749345c2458120e64'
-
-logger (`SUCCESS`, mint_conetcash (message, sign))
-
-/*
-const uu = async () => {
-	const uu: any = await getLast5Price ()
-	uu.forEach ((n: any) => {
-		logger (n.date, n.price, n.value_24hours)
+		const cmd1 = `SELECT COUNT(*) FROM conet_si_nodes`
+		const cmd = `SELECT * from conet_si_nodes_customs_review LIMIT 10`
+		let total
+		let data
+		try {
+			total = (await cassClient.execute (cmd1)).rows[0]
+			data = await cassClient.execute (cmd)
+		} catch (ex) {
+			return resolve (null)
+		}
+		
+		return resolve ({total: total, rows: data.rows })
 	})
 }
-uu()
-/** */
-/*
-const uu = async () => {
-	const ret = await conetcash_getBalance ('BD4E8700-71AB-4933-A8E6-DE06C7BC4A11', '')
-	logger (inspect(ret, false, 3, true))
-}
-uu()
-
-/*
-const uu: any[] = []
-
-streamCoNET_USDCPrice (uu)
-
-/** */
-/*
-/** */
-/*
-CoNET_SI_health ('{"nft_tokenid":"AnB5oHdd77KM5JdytIO/bcf7GxQbakmIR5e9flaSFuU="}', '0xb4e227f28d6c62c8de70bd54491dfaecaececf9e4eaa374f0804a4e01ab8753334129ead87987f1e220247259a05a8b120b28d96db24423902a57c760a204e7d1c')
-
-
-/*
-const uu = {
-	payload: {
-	  ipV4Port: 80,
-	  ipV4: '74.208.24.74',
-	  storage_price: 0.01,
-	  outbound_price: 0.00001,
-	  wallet_CoNET: 'c586fadac9b5d2a42a1a9fbf25cf66f1b316b242',
-	  wallet_CNTCash: '0b9d9c1b30b5277b5900cd8c9cd9ed3ff5922c27'
-	},
-	senderAddress: '0xc586fADAC9B5d2A42a1a9FBF25CF66F1b316b242',
-	publickey: 'ee05fec1a493ccc6be33a49ba52eeb70adf383d05ec0a41c008e917dd9a9b313fa1170219c8cac1981f62f189a73b79577b787678082d81f6ff0221e7664b485'
-  }
-CoNET_SI_Register(uu)
-
-
-
-/** */

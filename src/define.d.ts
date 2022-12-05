@@ -102,6 +102,7 @@ interface ICoNET_GPG_PublickeySignResult {
 	publicKeyID: string
 }
 
+
 interface ICoNET_Router {
 	gpgPublicKeyID: string
 	armoredPublicKey: string
@@ -111,4 +112,10 @@ interface ICoNET_Router {
 	nickName: string
 	profileImg: string
 	emailAddr: string
+	forward?: string
 }
+
+type SINodesSortby = 'CUSTOMER_REVIEW'|'TOTAL_ONLINE_TIME'|
+	'STORAGE_PRICE_LOW'|'STORAGE_PRICE_HIGH'|'OUTBOUND_PRICE_HIGH'|'OUTBOUND_PRICE_LOW'
+	
+type SINodesRegion = 'USA'|'UK'|'ES'|'DE'

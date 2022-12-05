@@ -1,20 +1,47 @@
 #!/usr/bin/env node
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, s3fsPasswd } from './util/util'
+import { exec } from 'node:child_process'
+import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, s3fsPasswd, startPackageSelfVersionCheckAndUpgrade } from './util/util'
 import {streamCoNET_USDCPrice} from './endpoint/help-database'
 import conet_dl_server from './endpoint/server'
 import Cluster from 'node:cluster'
+import type { Worker } from 'node:cluster'
 import Colors from 'colors/safe'
 import { homedir, cpus } from 'node:os'
 
+
+
 if ( Cluster.isPrimary) {
+
+	
+	const startCommand = `conet-mvp-dl -d start > system.log &`
+	process.once ('exit', () => {
+		
+		logger (Colors.red (`@conet.project/mvp-dl main process on EXIT, restart again!\nstartCommand = ${startCommand}`))
+		const uuu = exec (startCommand)
+
+		uuu.once ('spawn', () => {
+			return logger (Colors.red (`@conet.project/mvp-dl main process now to exit!, ${startCommand} Start!`))
+		})
+
+	})
 	const [,,...args] = process.argv
 	let debug = false
 	let version = false
 	let start = false
 	let help = false
 	let passwd = ''
+	let workerPool: Worker[] = []
+
+	const killAllWorker = () => {
+		if ( workerPool.length > 0) {
+			for (let i = 0; i < workerPool.length; i ++) {
+				const worker = workerPool[i]
+				worker.kill ()
+			}
+		}
+	}
 
 	args.forEach ((n, index ) => {
 		if (/\-d/.test(n)) {
@@ -70,6 +97,24 @@ if ( Cluster.isPrimary) {
 	if ( GlobalIpAddress.length === 0 ) {
 		logger ('WARING: Your node looks have no Global IP address!')
 	}
+	const startPackageSelfVersionCheckAndUpgrade_IntervalTime = 1000 * 60 * 10				//			10 mins
+
+	const checkNewVer = async () => {
+		const haveNewVersion = await startPackageSelfVersionCheckAndUpgrade('@conet.project/mvp-dl')
+		if ( haveNewVersion === null ) {
+			return logger (Colors.red(`startPackageSelfVersionCheckAndUpgrade responsed null! Interval exec STOP!`))
+		}
+		if ( haveNewVersion === true ) {
+			logger (Colors.red (`@conet.project/mvp-dl had UPGRADE new!, restart all!`))
+			killAllWorker()
+			return process.exit ()
+		}
+
+		setTimeout (() => {
+			checkNewVer ()
+		}, startPackageSelfVersionCheckAndUpgrade_IntervalTime)
+	}
+
 
 	const tryMaster_json_file = async (password: string, setupInfo: ICoNET_NodeSetup) => {
 		const setup = join( homedir(),'.master.json' )
@@ -91,6 +136,8 @@ if ( Cluster.isPrimary) {
 		const streamCoNET_USDCPriceQuere: any[] = []
 		forkWorker ()
 		streamCoNET_USDCPrice (streamCoNET_USDCPriceQuere)
+		return checkNewVer()
+
 	}
 
 	const getSetupInfo = async () => {
@@ -133,16 +180,23 @@ if ( Cluster.isPrimary) {
 	
 		const _forkWorker = () => {
 			const fork = Cluster.fork ()
+
 			fork.once ('exit', (code: number, signal: string) => {
-				logger (Colors.red(`api-server.js Exit with code[${ code }] signal[${signal}]!\n Restart after 30 seconds!`))
+				logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
+				if ( !signal) {
+					return logger (`Worker [${ fork.id }] signal = NEW_VERSION do not restart!`)
+				}
+
 				return setTimeout (() => {
 					return _forkWorker ()
 				}, 1000 * 10)
 			})
+			return (fork)
 		}
 		
-		for (let i = 0; i < numCPUs -1; i ++) {
-			_forkWorker ()
+		for (let i = 0; i < numCPUs; i ++) {
+			const woeker = _forkWorker ()
+			workerPool.push (woeker)
 		}
 		
 	}

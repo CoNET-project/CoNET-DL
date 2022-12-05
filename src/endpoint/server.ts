@@ -4,13 +4,13 @@
 import Express, { Router } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price, exchangeUSDC, mint_conetcash, conetcash_getBalance, CoNET_SI_health } from './help-database'
+import { CoNET_SI_Register, regiestFaucet, getLast5Price, exchangeUSDC, mint_conetcash, conetcash_getBalance, CoNET_SI_health, getSI_nodes } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
 import { logger, loadWalletAddress, getSetup, return404, decryptPayload, s3fsPasswd } from '../util/util'
-import { createServer } from 'node:https'
+import { createServer} from 'node:https'
 import type { ServerOptions } from 'node:https'
 import Cluster from 'node:cluster'
 
@@ -21,9 +21,10 @@ const splitIpAddr = (ipaddress: string ) => {
 }
 
 const homePage = 'https://conetech.ca'
-
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
+const packageFile = join (__dirname, '..', '..','package.json')
+const packageJson = require ( packageFile )
 
 class conet_dl_server {
 	// @ts-ignore
@@ -33,8 +34,17 @@ class conet_dl_server {
 	private s3pass: s3pass|null = null
 	private initData: ICoNET_NodeSetup|null = null
 	private debug = false
-
+	private ver = ''
+	private workerNumber = -1
 	private initSetupData = async () => {
+		if ( Cluster.isWorker && Cluster?.worker?.id ) {
+			this.workerNumber = Cluster?.worker?.id
+		}
+		
+		logger (Colors.blue (`[${ this.workerNumber }] packageFile = ${ packageFile }`))
+		
+		this.ver = packageJson.version
+
 		const setup = join( homedir(),'.master.json' )
 		const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 		this.initData = await getSetup ( true )
@@ -51,6 +61,8 @@ class conet_dl_server {
 		this.appsPath = this.initData.setupPath
 		this.PORT = this.initData.ipV4Port
 		this.startServer()
+
+		setInterval
 	}
 
 	constructor () {
@@ -91,7 +103,7 @@ class conet_dl_server {
 		this.localserver = createServer (option, app ).listen (this.PORT, async () => {
 			
             return console.table([
-                { 'CoNET DL node': `mvp-dl, Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
+                { 'CoNET DL node ': `mvp-dl version [${ this.ver } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
             ])
         })
 
@@ -113,17 +125,14 @@ class conet_dl_server {
 		}
 
 		this.router (router)
-		let worker = -1
-		if ( Cluster.isWorker && Cluster?.worker?.id ) {
-			worker = Cluster?.worker?.id
-		}
+
 		app.get ('/', (req, res) => {
-			logger (Colors.red(`Worker [${ worker }] get [${ splitIpAddr (req.ip) }] / redirect to home!`))
+			logger (Colors.red(`Worker [${ this.workerNumber }] get [${ splitIpAddr (req.ip) }] / redirect to home!`))
 			res.writeHead(301, { "Location": homePage }).end ()
 		})
 
 		app.all ('*', (req, res) => {
-			logger (Colors.red(`Worker [${ worker }] get unknow url Error! [${ splitIpAddr (req.ip) }] => [${ req.url }]`))
+			logger (Colors.red(`Worker [${ this.workerNumber }] get unknow url Error! [${ splitIpAddr (req.ip) }] => [${ req.url }]`))
 			return res.status(404).end (return404 ())
 		})
 		
@@ -134,10 +143,6 @@ class conet_dl_server {
     }
 
 	private router ( router: Router ) {
-		let worker = -1
-		if ( Cluster.isWorker && Cluster?.worker?.id ) {
-			worker = Cluster?.worker?.id
-		}
 
 		
 		router.get ('/publishKey', async (req,res) => {
@@ -146,9 +151,15 @@ class conet_dl_server {
 				return res.status (404).end()
 			}
 			
-			logger (Colors.blue(` Worker [${ worker }] Router /publishKey to [${ splitIpAddr ( req.ip )}]`))
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /publishKey to [${ splitIpAddr ( req.ip )}]`))
 			
 			return res.json ({ publickey: this.initData.keyObj[0].publickey }).end()
+		})
+
+		router.get ('/conet-price', async (req,res) => {
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /conet-price to [${ splitIpAddr ( req.ip )}]`))
+			const prices = await getLast5Price ()
+			return res.json (prices).end()
 		})
 
 		router.post ('/conet-si-node-register', async ( req, res ) => {
@@ -157,11 +168,11 @@ class conet_dl_server {
 			const dataPayload = decryptPayload (message, signature )
 			
 			if ( !dataPayload?.payload?.ipV4 ) {
-				logger (`/conet-si-node-register has unknow payload`, inspect({body: req.body, dataPayload} , false, 3, true))
+				logger (Colors.red(`/conet-si-node-register has unknow payload [${this.workerNumber}][${splitIpAddr ( req.ip )}]`), inspect({body: req.body, dataPayload} , false, 3, true))
 				return res.status(404).end (return404 ())
 			}
 
-			logger (`app.post ('/conet-si-node-register') call CoNET_SI_Register!`, inspect(dataPayload, false, 3, true))
+			logger (Colors.blue(`app.post ('/conet-si-node-register') call CoNET_SI_Register! [${this.workerNumber}][${splitIpAddr ( req.ip )}]`), inspect(dataPayload, false, 3, true))
 
 			if (!this.s3pass ) {
 				return res.status(501).end ()
@@ -178,15 +189,9 @@ class conet_dl_server {
 			return res.json ({nft_tokenid:ret }).end()
 			
 		})
-
-		router.get ('/conet-price', async (req,res) => {
-			logger (Colors.blue(` Worker [${ worker }] Router /conet-price to [${ splitIpAddr ( req.ip )}]`))
-			const prices = await getLast5Price ()
-			return res.json (prices).end()
-		})
 		
 		router.post('/si-health', async (req, res) => {
-			logger (Colors.blue(` Worker [${ worker }] Router /si-health to [${ splitIpAddr ( req.ip )}]`))
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /si-health to [${ splitIpAddr ( req.ip )}]`))
 			const message: string = req.body?.message
 			const signature: string = req.body?.signature
 
@@ -205,15 +210,15 @@ class conet_dl_server {
 
 		router.post ('/conet-faucet', (req, res ) => {
 			const ip = splitIpAddr ( req.ip )
-			logger (Colors.blue(` Worker [${ worker }] Router /conet-faucet to [${ ip }]`))
-			const wallet_addr = req.body?.walletAddr
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /conet-faucet to [${ ip }]`))
+			const wallet_add = req.body?.walletAddr
 
-			if (!wallet_addr || !Web3.utils.isAddress(wallet_addr)) {
-				logger (`Worker [${ worker }] POST /conet-faucet ERROR! Have no walletAddr [${ip}]`, inspect(req.body, false, 3, true))
+			if (!wallet_add || !Web3.utils.isAddress(wallet_add)) {
+				logger (`Worker [${ this.workerNumber }] POST /conet-faucet ERROR! Have no walletAddr [${ip}]`, inspect(req.body, false, 3, true))
 				return res.status(404).end(return404 ())
 			}
 
-			return regiestFaucet(wallet_addr, ip).then (n => {
+			return regiestFaucet(wallet_add, ip).then (n => {
 				if (!n) {
 					return res.status(404).end(return404 ())
 				}
@@ -223,7 +228,7 @@ class conet_dl_server {
 		})
 
 		router.post ('/mint_conetcash', async (req, res ) => {
-			logger (Colors.blue(` Worker [${ worker }] Router /mint_conetcash to [${ splitIpAddr ( req.ip )}]`))
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /mint_conetcash to [${ splitIpAddr ( req.ip )}]`))
 			const txHash = req.body?.txHash
 			const sign = req.body?.sign
 			
@@ -242,7 +247,7 @@ class conet_dl_server {
 		})
 
 		router.post ('/exchange_conet_usdc', async (req, res) => {
-			logger (Colors.blue(` Worker [${ worker }] Router /exchange_conet_usdc to [${ splitIpAddr ( req.ip )}]`))
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /exchange_conet_usdc to [${ splitIpAddr ( req.ip )}]`))
 			
 			const txHash = req.body?.txHash
 			if (!txHash) {
@@ -260,7 +265,7 @@ class conet_dl_server {
 		})
 
 		router.post ('/conetcash_balance', async (req, res ) => {
-			logger (Colors.blue(` Worker [${ worker }] Router /conetcash_balance to [${ splitIpAddr ( req.ip )}]`))
+			logger (Colors.blue(` Worker [${ this.workerNumber }] Router /conetcash_balance to [${ splitIpAddr ( req.ip )}]`))
 			const id = req.body?.id
 			if ( !this.initData || !id ) {
 				res.status(404).end(return404 ())
@@ -271,8 +276,16 @@ class conet_dl_server {
 			return res.json (ret).end ()
 		})
 
+		router.post ('/conet-si-list', async ( req, res ) => {
+			logger (Colors.blue(`Worker [${this.workerNumber}] POST /conet-si-lis [${splitIpAddr ( req.ip )}]`))
+			const sortby: SINodesSortby = req.body.sortby
+			const region: SINodesRegion = req.body.region
+			const result = await getSI_nodes (sortby, region)
+			return res.json(result).end()
+		})
+
 		router.all ('*', (req, res ) =>{
-			logger (Colors.red(`Worker [${ worker }] Router /api get unknow router ${ splitIpAddr (req.ip) } [${ req.url }]`))
+			logger (Colors.red(`Worker [${ this.workerNumber }] Router /api get unknow router ${ splitIpAddr (req.ip) } [${ req.url }]`))
 			return res.status(404).end()
 		})
 	}
