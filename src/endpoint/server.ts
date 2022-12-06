@@ -186,7 +186,7 @@ class conet_dl_server {
 				return res.status(404).end(return404 ())
 			}
 
-			return res.json ({nft_tokenid:ret }).end()
+			return res.json ({nft_tokenid: ret }).end()
 			
 		})
 		
@@ -197,13 +197,13 @@ class conet_dl_server {
 
 			if ( !message || !signature ) {
 				logger (Colors.red(`/si-health none message && signature ERROR!`), inspect( req.body, false, 3, true))
-				return res.status(404).end (return404 ())
+				return res.status(404).end ()
 			}
 			const ret = await CoNET_SI_health( message, signature )
 			if ( !ret ) {
 				logger (Colors.red(`/si-health none message && signature ERROR!`), inspect( req.body, false, 3, true ))
 				logger (`/si-health CoNET_SI_health ERROR!`)
-				return res.status(404).end (return404 ())
+				return res.status(404).end ()
 			}
 			return res.json ({}).end()
 		})

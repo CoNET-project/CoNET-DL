@@ -3,7 +3,7 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, getConfirmations, checkPublickeySign, decryptPayload, postRouterToPublic, regiestCloudFlare } from '../util/util'
+import { logger, getIpaddressLocaltion, getConfirmations, decryptPayload, postRouterToPublic, regiestCloudFlare, checkPublickeySign } from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
@@ -67,33 +67,30 @@ export const CoNET_SI_Register = ( data: ICoNET_DecryptedPayload, s3pass: s3pass
 		const customs_review_total = (Math.random()*5).toFixed(2)
 
 		logger (`CoNET_SI_Register data\n${ inspect( payload, false, 3, true )}`)
-		const cmd = `INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
+		resolve (nft_tokenid)
+		const cmd0 = `SELECT * from conet_si_nodes WHERE nft_tokenid = '${ nft_tokenid }'`
+		await cassClient.connect ()
+		let result = await cassClient.execute (cmd0)
+		const oldData = result?.rows[0]
+		let cmd = !result.rowLength
+					? `INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
 					`country, region, lat, lon, customs_review_total, `+
-					`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
+					`pgp_publickey_id, nft_tokenid, total_online, last_online, platform_verison) VALUES (` +
 					` '${ data.senderAddress }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
 					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${ customs_review_total }, `+
-					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now())`+ `) `
+					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now()), '${ payload.platform_verison }' ) `
 
-		const cmd2 = `INSERT INTO conet_si_nodes_online ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
-					`country, region, lat, lon, customs_review_total, `+
-					`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
-					` '${ data.senderAddress }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
-					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${customs_review_total}, ` +
-					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now())`+ `) USING TTL ${ CoNET_SI_healthy_TTL } `
-		const cmd3 = `INSERT INTO conet_si_nodes_customs_review ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
-					`country, region, lat, lon, customs_review_total, `+
-					`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
-					` '${ data.senderAddress }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
-					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${ customs_review_total }, ` +
-					`'${ pgpKey.publicKeyID }', '${ nft_tokenid }', 5, dateof(now())`+ `) USING TTL ${ CoNET_SI_healthy_TTL } `
+					: `UPDATE conet_si_nodes SET wallet_addr = '${ data.senderAddress }', outbound_fee = ${ payload.outbound_price }, storage_fee = ${ payload.storage_price }, `+
+					`customs_review_total = ${customs_review_total}, `+
+					`pgp_publickey_id = ${ pgpKey.publicKeyID }, platform_verison = '${ data.payload.platform_verison }', total_online = ${ oldData.total_online + 5 }, last_online = dateof(now()) ` +
+
+					`WHERE nft_tokenid = '${ nft_tokenid }' and country = '${ oldData.country }'`
 		await cassClient.connect ()
 		await cassClient.execute (cmd)
-		await cassClient.execute (cmd2)
-		await cassClient.execute (cmd3)
 		await cassClient.shutdown()
 		await postRouterToPublic (data, pgpKey, s3pass)
 		await regiestCloudFlare (payload.ipV4, pgpKey.publicKeyID, masterSetup )
-		return resolve (nft_tokenid)
+		return 
 	})
 }
 
@@ -107,7 +104,7 @@ export const CoNET_SI_health = ( message: string, signature: string ) => {
 			logger (`CoNET_SI_health ERROR!, encryptedString have no nft_tokenid! payload = [${ inspect( yyy, false, 3, true ) }]`)
 			return resolve (false)
 		}
-
+		
 		const cassClient = new Client (option)
 		const nft_tokenid = yyy.payload.nft_tokenid
 
@@ -120,33 +117,12 @@ export const CoNET_SI_health = ( message: string, signature: string ) => {
 			logger (`CoNET_SI_health ERROR!, SI have no nft_tokenid or wrong pgp_publickey_id. payload = [${ inspect( yyy.payload, false, 3, true ) }] DB = [${ inspect(oldData, false, 3, true) }]` )
 			return resolve (false)
 		}
-
-		
 		const customs_review_total = (Math.random()*5).toFixed(2)
-
-		const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${oldData.total_online} + 5, last_online = dateof(now()) Where country = '${oldData.country}' and nft_tokenid = '${oldData.nft_tokenid}'`
+		const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${ oldData.total_online} + 5, platform_verison = '${ yyy.payload.platform_verison}', last_online = dateof(now()) Where country = '${oldData.country}' and nft_tokenid = '${ oldData.nft_tokenid }'`
 		await cassClient.execute (cmd1)
 
-		const cmd2 = `INSERT INTO conet_si_nodes_online ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
-			`country, region, lat, lon, customs_review_total, `+
-			`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
-			` '${ oldData.wallet_addr }', '${ oldData.ip_addr }', ${ oldData.outbound_fee }, ${ oldData.storage_fee }, '${ oldData.registration_date }', `+
-			`'${ oldData.country }', '${ oldData.region }', ${ oldData.lat }, ${ oldData.lon }, ${customs_review_total}, ` +
-			`'${ oldData.pgp_publickey_id }', '${ nft_tokenid }', ${oldData.total_online + 5}, dateof(now())`+ `) USING TTL ${CoNET_SI_healthy_TTL} `
-
-		const cmd3 = `INSERT INTO conet_si_nodes_customs_review ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
-			`country, region, lat, lon, customs_review_total, `+
-			`pgp_publickey_id, nft_tokenid, total_online, last_online) VALUES (` +
-			` '${ oldData.wallet_addr }', '${ oldData.ip_addr }', ${ oldData.outbound_fee }, ${ oldData.storage_fee }, '${ oldData.registration_date }', `+
-			`'${ oldData.country }', '${ oldData.region }', ${ oldData.lat }, ${ oldData.lon }, ${customs_review_total}, ` +
-			`'${ oldData.pgp_publickey_id }', '${ nft_tokenid }', ${oldData.total_online + 5}, dateof(now())`+ `) USING TTL ${CoNET_SI_healthy_TTL} `
-
-			
-		await cassClient.execute (cmd2)
-		await cassClient.execute (cmd3)
 		await cassClient.shutdown ()
-		logger (`CoNET_SI_health SUCCESS!`)
-		return resolve (true)
+		resolve(true)
 	})
 }
 
@@ -427,7 +403,7 @@ export const getSI_nodes = (sortby: SINodesSortby, region: SINodesRegion ) => {
 		const cassClient = new Client (option)
 		
 		const cmd1 = `SELECT COUNT(*) FROM conet_si_nodes`
-		const cmd = `SELECT * from conet_si_nodes_customs_review LIMIT 10`
+		const cmd = `SELECT * from conet_si_nodes LIMIT 20`
 		let total
 		let data
 		try {
@@ -440,3 +416,15 @@ export const getSI_nodes = (sortby: SINodesSortby, region: SINodesRegion ) => {
 		return resolve ({total: total, rows: data.rows })
 	})
 }
+
+/**
+ * 
+ * 			TEST
+ */
+/*
+const kk = {
+	message: '{"nft_tokenid":"9UVn83BEhjapvl/hNLlywowr2oTz0pAQ7ow+glmQp7o=", "publickey":"57C1F3E36A498281"}',
+	signature: '0x231c599986b7368ffc44fe33456919fead8b6c4e5ee1b1261c08137bf47453e555a20cea701896de4dc89203337ba5919934665869f5a3374af08188622273b81b'
+}
+
+/** */

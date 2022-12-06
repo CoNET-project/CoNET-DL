@@ -23,6 +23,7 @@ interface ICoNET_DL_POST_register_SI {
 	outbound_price: number
 	ipV4Port: number
 	ip_api?: any
+	platform_verison: string
 }
 
 interface ICoNET_DecryptedPayload {
