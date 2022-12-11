@@ -1,11 +1,26 @@
+
+
+type SINodesSortby = 'CUSTOMER_REVIEW'|'TOTAL_ONLINE_TIME'|
+'STORAGE_PRICE_LOW'|'STORAGE_PRICE_HIGH'|'OUTBOUND_PRICE_HIGH'|'OUTBOUND_PRICE_LOW'
+
+type SINodesRegion = 'USA'|'UK'|'ES'|'DE'
+
 interface ICoNET_NodeSetup {
 	ipV4: string
 	ipV4Port: number
 	ipV6: string
 	ipV6Port: number
 	keychain: any
-	setupPath: string
 	keyObj: any
+	setupPath: string
+	pgpKeyObj: pgpKey
+}
+
+interface pgpKey {
+	privateKeyArmored: string
+	publicKeyArmored: string
+	keyID: string
+	privateKeyObj?: any
 }
 
 interface ICoNET_certificate {
@@ -16,7 +31,6 @@ interface ICoNET_certificate {
 }
 
 interface ICoNET_DL_POST_register_SI {
-	wallet_CoNET: string
 	pgpPublicKey: string
 	ipV4: string
 	storage_price: number
@@ -24,12 +38,14 @@ interface ICoNET_DL_POST_register_SI {
 	ipV4Port: number
 	ip_api?: any
 	platform_verison: string
+	nft_tokenid: string
 }
 
 interface ICoNET_DecryptedPayload {
 	payload: ICoNET_DL_POST_register_SI|any
 	senderAddress: string
 	publickey: string
+	messageHash: string
 	
 }
 
@@ -103,20 +119,63 @@ interface ICoNET_GPG_PublickeySignResult {
 	publicKeyID: string
 }
 
-
-interface ICoNET_Router {
-	gpgPublicKeyID: string
-	armoredPublicKey: string
-	walletAddr: string
-	walletPublicArmored: string
+interface ICoNET_SINode extends ICoNET_Router_Base {
 	ipv4: string
+	nft_tokenid: string
+}
+
+interface ICoNET_Profile extends ICoNET_Router_Base {
 	nickName: string
 	profileImg: string
 	emailAddr: string
-	forward?: string
+	routerPublicKeyID: string
+	routerArmoredPublicKey: string
 }
 
-type SINodesSortby = 'CUSTOMER_REVIEW'|'TOTAL_ONLINE_TIME'|
-	'STORAGE_PRICE_LOW'|'STORAGE_PRICE_HIGH'|'OUTBOUND_PRICE_HIGH'|'OUTBOUND_PRICE_LOW'
-	
-type SINodesRegion = 'USA'|'UK'|'ES'|'DE'
+interface ICoNET_Router_Base {
+	gpgPublicKeyID: string
+	armoredPublicKey: string
+	walletAddr: string
+	signPgpKeyID: string
+	walletAddrSign: string
+}
+
+interface ethSignedObj {
+	message: string
+	messageHash: string
+	r: string
+	s: string
+	signature: string
+	v: string
+}
+
+interface CoNETCash_authorized {
+	id: string
+	to: string
+	amount: number
+	type: 'USDC'
+	from: string
+}
+
+interface SI_nodes {
+	customs_review_total: number
+	last_online: string
+	outbound_fee: number
+	storage_fee: number
+	total_online: number
+}
+
+interface ICoNET_DL_POST_register_SI extends ICoNET_Router_Base {
+	walletAddr: string
+	ipV4: string
+	storage_price: number
+	outbound_price: number
+	ipV4Port: number
+	ip_api?: any
+	platform_verison: string
+	nft_tokenid: string
+	cpus: number
+	walletAddrSign: string
+}
+
+

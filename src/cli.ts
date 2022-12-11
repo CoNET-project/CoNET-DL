@@ -2,7 +2,7 @@
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
-import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, s3fsPasswd, startPackageSelfVersionCheckAndUpgrade } from './util/util'
+import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, s3fsPasswd, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
 import {streamCoNET_USDCPrice} from './endpoint/help-database'
 import conet_dl_server from './endpoint/server'
 import Cluster from 'node:cluster'
@@ -13,9 +13,12 @@ import { homedir, cpus } from 'node:os'
 
 
 if ( Cluster.isPrimary) {
-
+	const DL_Path = '.CoNET-DL'
+	const setupFileDir = join ( homedir(), DL_Path )
+	const setupFileName = join ( setupFileDir, 'nodeSetup.json')
 	
 	const startCommand = `conet-mvp-dl -d start > system.log &`
+
 	process.once ('exit', () => {
 		
 		logger (Colors.red (`@conet.project/mvp-dl main process on EXIT, restart again!\nstartCommand = ${startCommand}`))
@@ -33,6 +36,7 @@ if ( Cluster.isPrimary) {
 	let help = false
 	let passwd = ''
 	let workerPool: Worker[] = []
+	let single = false
 
 	const killAllWorker = () => {
 		if ( workerPool.length > 0) {
@@ -54,6 +58,9 @@ if ( Cluster.isPrimary) {
 			help = true
 		} else if (/\-p/.test(n)) {
 			passwd = args[index + 1]
+		}
+		else if (/\-s/.test(n)) {
+			single = true
 		}
 	})
 
@@ -134,7 +141,13 @@ if ( Cluster.isPrimary) {
 			throw new Error (`Have no s3pass error!`)
 		}
 		const streamCoNET_USDCPriceQuere: any[] = []
-		forkWorker ()
+		if (!setupInfo.pgpKeyObj) {
+			setupInfo.pgpKeyObj = await generatePgpKeyInit ( setupInfo.keychain[0].address, password )
+
+			await saveSetup ( setupFileName, JSON.stringify (setupInfo))
+		}
+
+		single ? new conet_dl_server () : forkWorker ()
 		streamCoNET_USDCPrice (streamCoNET_USDCPriceQuere)
 		return checkNewVer()
 
@@ -145,9 +158,7 @@ if ( Cluster.isPrimary) {
 		let setupInfo: ICoNET_NodeSetup|undefined = await getSetup ( debug )
 	
 		if ( !setupInfo ) {
-			const DL_Path = '.CoNET-DL'
-			const setupFileDir = join ( homedir(), DL_Path )
-			const setupFileName = join ( setupFileDir, 'nodeSetup.json')
+
 
 			const password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
 	
@@ -163,8 +174,10 @@ if ( Cluster.isPrimary) {
 				ipV4Port: port,
 				ipV6Port: port,
 				setupPath: '',
+				pgpKeyObj: await generatePgpKeyInit(keychain[0].address, password),
 				keyObj: null
 			}
+
 			await saveSetup ( setupFileName, JSON.stringify (setupInfo))
 			return tryMaster_json_file (password, setupInfo)
 		} 
@@ -174,7 +187,7 @@ if ( Cluster.isPrimary) {
 
 	const forkWorker = () => {
 		
-		let numCPUs = cpus ().length
+		let numCPUs = cpus ().length * 2
 		
 		debug ? logger (`Cluster.isPrimary node have ${ numCPUs } cpus\n`): null
 	
