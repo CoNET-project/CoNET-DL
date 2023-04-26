@@ -34,7 +34,7 @@ const wasabiObj = {
 	}
 }
 
-const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : ''
+const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
 
 export const logger = (...argv: any ) => {
     const date = new Date ()
@@ -236,7 +236,7 @@ export const makePgpKeyObj = async ( keyObj: pgpKey, password: string ) => {
 		keyObj.privateKeyObj = await readPrivateKey ({armoredKey: keyObj.privateKeyArmored})
 		await decryptKey({privateKey: keyObj.privateKeyObj, passphrase: password})
 	} catch (ex) {
-		logger (`makePgpKeyObj error!`)
+		logger (`makePgpKeyObj error!`, inspect(keyObj, false, 3, true))
 	}
 	
 }
@@ -343,23 +343,32 @@ export const postRouterToPublic = ( nodeData: ICoNET_DL_POST_register_SI|null, p
 	return new Promise (async resolve => {
 		
 		const saveObj = nodeData ? <ICoNET_SINode> {
-			gpgPublicKeyID: nodeData.gpgPublicKeyID,
+			gpgPublicKeyID1: nodeData.gpgPublicKeyID1,
+			gpgPublicKeyID0: nodeData.gpgPublicKeyID0,
 			armoredPublicKey: nodeData.armoredPublicKey,
 			walletAddr: nodeData.walletAddr,
 			ipv4: nodeData.ipV4,
 			nft_tokenid: nodeData.nft_tokenid
 		} : profileData ? <ICoNET_Profile> {
-			gpgPublicKeyID: profileData.gpgPublicKeyID,
+			gpgPublicKeyID0: profileData.gpgPublicKeyID0,
+			gpgPublicKeyID1: profileData.gpgPublicKeyID1,
 			armoredPublicKey: profileData.armoredPublicKey,
 			walletAddr: profileData.walletAddr,
 			nickName: profileData.nickName,
 			profileImg: profileData.profileImg,
+			routerArmoredPublicKey: profileData.routerArmoredPublicKey,
+			routerPublicKeyID: profileData.routerPublicKeyID,
+			emailAddr: profileData.emailAddr,
+			bio: profileData.bio
 
 		} : null
 
 		if ( !saveObj) {
 			return resolve (false)
 		}
+
+		logger (inspect(saveObj, false, 3, true))
+
 		const saveObj_json_string = JSON.stringify(saveObj)
 		
 		
@@ -373,7 +382,12 @@ export const postRouterToPublic = ( nodeData: ICoNET_DL_POST_register_SI|null, p
 
 		const up2: S3.PutObjectRequest = {
 			Bucket: wo.Bucket,
-			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID }`,
+			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID1 }`,
+			Body: saveObj_json_string,
+		}
+		const up4: S3.PutObjectRequest = {
+			Bucket: wo.Bucket,
+			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID0 }`,
 			Body: saveObj_json_string,
 		}
 		let up3 : S3.PutObjectRequest| null = null
@@ -414,7 +428,7 @@ export const postRouterToPublic = ( nodeData: ICoNET_DL_POST_register_SI|null, p
 
 		await s3.putObject (up1).promise()
 		await s3.putObject (up2).promise()
-
+		await s3.putObject (up4).promise()
 		up3 ? await s3.putObject (up3).promise() : null
 
 		logger( colors.grey(`[${ up2.Key } & ${ up1.Key } & ${ up3 ? up3.Key : ''}] `), colors.blue(`upload SUCCESS!`))
@@ -454,7 +468,7 @@ export const getIpaddressLocaltion = (Addr: string) => {
 }
 
 const usdcNet = 'https://mvpusdc.conettech.ca/mvpusdc'
-const fujiCONET = `https://conettech.ca/fujiCoNET`
+const fujiCONET = `http://rpc3.openpgp.online`
 
 const denominator = 1000000000000000000
 
@@ -744,7 +758,8 @@ export const decryptPgpMessage = async ( pgpMessage: string, pgpPrivateObj: Priv
 		return null
 	}
 	 
-	obj.gpgPublicKeyID = publickeyObj.getKeyIDs()[1].toHex().toUpperCase()
+	obj.gpgPublicKeyID1 = publickeyObj.getKeyIDs()[1].toHex().toUpperCase()
+	obj.gpgPublicKeyID0 = publickeyObj.getKeyIDs()[0].toHex().toUpperCase()
 
 	const signkeyID = publickeyObj.getKeyIDs()[0].toHex().toUpperCase()
 	

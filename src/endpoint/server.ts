@@ -4,7 +4,7 @@
 import Express, { Router } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price, exchangeUSDC, mint_conetcash, conetcash_getBalance, CoNET_SI_health, getSI_nodes, authorizeCoNETCash } from './help-database'
+import { CoNET_SI_Register, regiestFaucet, getLast5Price, exchangeUSDC, mint_conetcash, conetcash_getBalance, CoNET_SI_health, authorizeCoNETCash } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import Web3 from 'web3'
@@ -23,9 +23,6 @@ const splitIpAddr = (ipaddress: string ) => {
 	const _ret = ipaddress.split (':')
 	return _ret[_ret.length - 1]
 }
-
-
-
 const homePage = 'https://conetech.ca'
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
@@ -60,6 +57,9 @@ const getRedirect = (req: Request, res: Response ) => {
 		}
 	}
 }
+
+
+
 class conet_dl_server {
 	// @ts-ignore
     private localserver: Server
@@ -70,7 +70,21 @@ class conet_dl_server {
 	private debug = false
 
 	private si_pool = []
-	private si_pool_last = 0
+
+	public onMessage = (message: clusterMessage) => {
+		switch (message.cmd) {
+			case 'si-node': {
+				
+				this.si_pool = message.data[0]
+				logger (`onMessage`, inspect(this.si_pool.length, false, 3, true))
+				return 
+			}
+			default: {
+				return logger (Colors.cyan(`Got unknow message from Master`), inspect(message, false, 3, true))
+			}
+		}
+	}
+
 	private initSetupData = async () => {
 
 		const setup = join( homedir(),'.master.json' )
@@ -95,6 +109,7 @@ class conet_dl_server {
 		this.startServer()
 		
 		setInterval
+		
 	}
 
 	constructor () {
@@ -158,14 +173,10 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.get ('*', (req, res ) => {
-			
-			return getRedirect (req, res)
-		})
-
 		app.all ('*', (req, res) => {
-			logger (Colors.red(`get unknow router ${ splitIpAddr (req.ip) }  ==> [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] response 404 STOP connect!`))
-			return res.status(404).end ()
+			logger (Colors.red(`get unknow router ${ splitIpAddr (req.ip) }  ==> [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			res.status(404).end ()
+			return res.socket?.end().destroy()
 		})
 		
 	}
@@ -180,19 +191,24 @@ class conet_dl_server {
 		router.get ('/publishGPGKeyArmored', async (req,res) => {
 			if (!this.initData) {
 				logger (Colors.red(`conet_dl_server /publishKey have no initData! response 404`))
-				return res.status (404).end()
+				res.status (404).end()
+				return res.socket?.end().destroy()
 			}
 			
 			logger (Colors.blue(` Router /publishKey to [${ splitIpAddr ( req.ip )}]`))
 			
-			return res.json ({ publishGPGKey: this.initData.pgpKeyObj.publicKeyArmored }).end()
+			res.json ({ publishGPGKey: this.initData.pgpKeyObj.publicKeyArmored }).end()
+			return res.socket?.end().destroy()
 
 		})
 
 		router.get ('/conet-price', async (req,res) => {
 			logger (Colors.blue(`Router /conet-price to [${ splitIpAddr ( req.ip )}]`))
 			const prices = await getLast5Price ()
-			return res.json (prices).end()
+			logger (inspect(prices, false, 3, true))
+			res.json (prices).end()
+			return res.socket?.end().destroy()
+
 		})
 
 		router.post ('/conet-si-node-register', async ( req, res ) => {
@@ -200,19 +216,22 @@ class conet_dl_server {
 			
 			if ( !pgpMessage ) {
 				logger (Colors.red(`/conet-si-node-register has unknow payload [${splitIpAddr ( req.ip )}]`), inspect(req.body, false, 3, true))
-				return res.status(404).end ()
+				res.status(404).end ()
+				return res.socket?.end().destroy()
 			}
 
 			if (!this.s3pass ) {
 				logger (Colors.red(`[${ splitIpAddr ( req.ip ) }] => /conet-si-node-register this.s3pass null ERROR!`))
-				return res.status(501).end ()
+				res.status(501).end ()
+				return res.socket?.end().destroy()
 			}
 
 			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData?.pgpKeyObj.privateKeyObj)
 
 			if (!obj) {
 				logger (Colors.red(`[${splitIpAddr ( req.ip )}] => /conet-si-node-register decryptPgpMessage ERROR!`), inspect(req.body , false, 3, true))
-				return res.status(404).end ()
+				res.status(404).end ()
+				return res.socket?.end().destroy()
 			}
 			
 
@@ -220,10 +239,12 @@ class conet_dl_server {
 
 			if (!ret ) {
 				logger (Colors.red(`[${ splitIpAddr ( req.ip ) }] => /conet-si-node-register CoNET_SI_Register return null ERROR`))
-				return res.status(404).end()
+				res.status(404).end()
+				return res.socket?.end().destroy()
 			}
 
-			return res.json ({ nft_tokenid: ret }).end()
+			res.json ({ nft_tokenid: ret }).end()
+			return res.socket?.end().destroy()
 			
 		})
 		
@@ -233,14 +254,16 @@ class conet_dl_server {
 
 			if ( !pgpMessage) {
 				logger (Colors.red(`[${splitIpAddr ( req.ip )}] ==> /si-health has unknow payload `), inspect(req.body, false, 3, true))
-				return res.status(404).end ()
+				res.status(404).end ()
+				return res.socket?.end().destroy()
 			}
 
 			const obj = await decryptPgpMessage (pgpMessage, this.initData?.pgpKeyObj.privateKeyObj)
 
 			if (!obj) {
 				logger (Colors.red(`[${splitIpAddr ( req.ip )}] => /si-health decryptPgpMessage ERROR!`), inspect(req.body, false, 3, true))
-				return res.status(404).end ()
+				res.status(404).end ()
+				return res.socket?.end().destroy()
 			}
 
 			//	@ts-ignore
@@ -251,11 +274,13 @@ class conet_dl_server {
 			if ( !ret ) {
 				logger (Colors.red(`/si-health none message && signature ERROR!`), inspect( req.body, false, 3, true ))
 				logger (`/si-health CoNET_SI_health ERROR!`)
-				return res.status(404).end ()
+				res.status(404).end ()
+				return res.socket?.end().destroy()
 			}
 
-			logger (Colors.grey(`[${splitIpAddr ( req.ip )}] ==> /si-health success!`))
-			return res.json ({}).end()
+			//logger (Colors.grey(`[${splitIpAddr ( req.ip )}] ==> /si-health success!`))
+			res.json ({}).end()
+			return res.socket?.end().destroy()
 		})
 
 		router.post ('/conet-faucet', (req, res ) => {
@@ -265,14 +290,17 @@ class conet_dl_server {
 
 			if (!wallet_add || !Web3.utils.isAddress(wallet_add)) {
 				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ip}]`, inspect(req.body, false, 3, true))
-				return res.status(400).end()
+				res.status(400).end()
+				return res.socket?.end().destroy()
 			}
 
 			return regiestFaucet(wallet_add, ip).then (n => {
 				if (!n) {
-					return res.status(400).end()
+					res.status(400).end()
+					return res.socket?.end().destroy()
 				}
-				return res.json ({txHash:n}).end ()
+				res.json ({txHash:n}).end ()
+				return res.socket?.end().destroy()
 			})
 
 		})
@@ -291,9 +319,11 @@ class conet_dl_server {
 			const ret = await mint_conetcash (txObj, txHash, sign)
 			if (!ret) {
 				res.status(404).end()
+				res.socket?.end().destroy()
 				return logger (`/mint_conetcash have no req.body?.cipher or cipher !== 'string'`, inspect(req.body, false, 3, true))
 			}
-			return res.json ({id: ret}).end ()
+			res.json ({id: ret}).end ()
+			return res.socket?.end().destroy()
 
 		})
 
@@ -303,16 +333,20 @@ class conet_dl_server {
 			const txHash = req.body?.txHash
 			if (!txHash) {
 				logger (`/exchange_conet_usdc have no txHash`, inspect (req.body, false, 3, true))
-				return res.status(404).end(return404 ())
+				res.status(404).end(return404 ())
+				return res.socket?.end().destroy()
 			}
 			logger (`exchange_conet_usdc access by [${ txHash }]`)
 			const data = await exchangeUSDC (txHash)
 			if (!data) {
 				logger (`/exchange_conet_usdc [${ txHash }] data error!`)
-				return res.status(404).end(return404 ())
+				res.status(404).end(return404 ())
+				res.socket?.end().destroy()
+				return res.socket?.end().destroy()
 			}
 			
-			return res.json ({transactionHash: data}).end ()
+			res.json ({transactionHash: data}).end ()
+			return res.socket?.end().destroy()
 		})
 
 		router.post ('/conetcash_balance', async (req, res ) => {
@@ -332,8 +366,9 @@ class conet_dl_server {
 			logger (Colors.blue(`POST ${ splitIpAddr (req.ip) }  ==> [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }]`))
 			const sortby: SINodesSortby = req.body.sortby
 			const region: SINodesRegion = req.body.region
-			const result = await getSI_nodes (sortby, region, this.si_pool, this.si_pool_last)
-			return res.json(result).end()
+			
+			res.json(this.si_pool).end()
+			return res.socket?.end().destroy()
 		})
 
 		router.post ('/authorizeCoNETCash', async (req, res ) => {
@@ -343,15 +378,18 @@ class conet_dl_server {
 
 			if (!CoNETCash_authorizedObj||!authorizedObjHash||!sign) {
 				res.status(404).end()
+				res.socket?.end().destroy()
 				return logger (`/authorizeCoNETCash [${ splitIpAddr (req.ip) }] have no correct parameters!`, inspect(req.body, false, 3, true))
 			}
 			logger (Colors.blue (`/authorizeCoNETCash from [${ splitIpAddr (req.ip) }] call authorizeCoNETCash`))
 			logger (inspect(req.body, false, 3, true ))
 			const ret = await authorizeCoNETCash (CoNETCash_authorizedObj, authorizedObjHash, sign)
 			if (!ret) {
-				return res.status(400).end()
+				res.status(400).end()
+				return res.socket?.end().destroy()
 			}
-			return res.json ({id: ret}).end ()
+			res.json ({id: ret}).end ()
+			return res.socket?.end().destroy()
 		})
 
 		router.post ('/regiestProfileRoute', async (req, res ) => {
@@ -361,34 +399,33 @@ class conet_dl_server {
 
 			if ( !pgpMessage?.length || !this.s3pass || !this.initData) {
 				logger (Colors.red(`Router /regiestProfileRouter [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] pgpMessage null Error!`))
-				return res.status(404).end()
+				res.status(404).end()
+				return res.socket?.end().destroy()
 			}
 
 			let obj = <ICoNET_Profile|null> await decryptPgpMessage (pgpMessage, this.initData.pgpKeyObj.privateKeyObj)
 
 			if (!obj) {
 				logger (Colors.red(`Router /regiestProfileRoute [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] decryptPgpMessage Error!`))
-				return res.status(400).end()
+				res.status(400).end()
+				return res.socket?.end().destroy()
 			}
 
 			const obj1 = await decryptPayload (obj)
 			if ( !obj1 ) {
-				return res.status(400).end()
+				res.status(400).end()
+				return res.socket?.end().destroy()
 			}
 			res.json({}).end()
+			res.socket?.end().destroy()
 			await postRouterToPublic (null, obj1, this.s3pass)
 
 		})
 
-
-		router.get ('*', (req, res ) =>{
-			logger (Colors.red(`Router.get unknow Redirect [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }]`))
-			return getRedirect (req, res)
-		})
-
 		router.all ('*', (req, res ) =>{
-			logger (Colors.red(`Router /api get unknow router [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }]`))
-			return res.status(404).end()
+			logger (Colors.red(`Router /api get unknow router [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			res.status(404).end()
+			return res.socket?.end().destroy()
 		})
 	}
 	

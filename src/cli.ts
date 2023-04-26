@@ -10,7 +10,7 @@ import type { Worker } from 'node:cluster'
 import Colors from 'colors/safe'
 import { homedir, cpus } from 'node:os'
 
-
+const eraseNodeOnlieTime = 1000 * 60 * 6
 
 if ( Cluster.isPrimary) {
 	const DL_Path = '.CoNET-DL'
@@ -37,7 +37,11 @@ if ( Cluster.isPrimary) {
 	let passwd = ''
 	let workerPool: Worker[] = []
 	let single = false
-
+	let node_si_pool: any[] = []
+	const timeoutPool: {
+		timeout: NodeJS.Timeout
+		ip_addr: string
+	}[] = []
 	const killAllWorker = () => {
 		if ( workerPool.length > 0) {
 			for (let i = 0; i < workerPool.length; i ++) {
@@ -159,7 +163,6 @@ if ( Cluster.isPrimary) {
 	
 		if ( !setupInfo ) {
 
-
 			const password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
 	
 			// @ts-ignore: Unreachable code error
@@ -185,6 +188,60 @@ if ( Cluster.isPrimary) {
 		
 	}
 
+	const broadcastNodelistToAllWorkers = () => {
+		const mess: clusterMessage = {
+			cmd: 'si-node',
+			data: [node_si_pool]
+		}
+		return workerPool.forEach (v => {
+			if ( v.isConnected()) {
+				v.send (mess)
+			}
+		})
+	}
+
+	const addToSiPool = (data: any) => {
+		const newPool = node_si_pool.filter (v => v.ip_addr !== data.ip_addr)
+		newPool.unshift(data)
+		const timeIndex = timeoutPool.findIndex(n => n.ip_addr === data.ip_addr)
+
+		if (timeIndex > -1) {
+			const time_out = timeoutPool[timeIndex]
+			clearTimeout (time_out.timeout)
+			timeoutPool.splice(timeIndex, 1)
+		}
+		const timeout = setTimeout (() => {
+			const index = node_si_pool.findIndex (n => n.ip_addr === data.ip_addr)
+			if ( index > -1) {
+				node_si_pool.splice (index, 1)
+				logger (Colors.red(`Erase node daemon! Erase node[${data.ip_addr}]`))
+				return broadcastNodelistToAllWorkers ()
+			}
+			return logger (`eraseNodeOnlie daemon Error! can't find the node information from pool!\n`, inspect(data, false, 3, true ))
+		}, eraseNodeOnlieTime)
+
+		node_si_pool = newPool
+		timeoutPool.push ({
+			timeout,
+			ip_addr: data.ip_addr
+		})
+		logger (Colors.bgYellow(`${data.ip_addr} `), Colors.grey (` to master pool [${node_si_pool.length}]!`))
+		return broadcastNodelistToAllWorkers()
+		
+	}
+
+	const onMessage = (message: clusterMessage) => {
+		switch (message.cmd) {
+			case 'si-node': {
+				return addToSiPool (message.data[0])
+			}
+
+			default: {
+				return logger (Colors.bgRed(`master get know message`), inspect (message, false, 3, true))
+			}
+		}
+	}
+
 	const forkWorker = () => {
 		
 		let numCPUs = cpus ().length * 2
@@ -193,6 +250,8 @@ if ( Cluster.isPrimary) {
 	
 		const _forkWorker = () => {
 			const fork = Cluster.fork ()
+
+			fork.on ('message', onMessage )
 
 			fork.once ('exit', (code: number, signal: string) => {
 				logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
@@ -217,6 +276,7 @@ if ( Cluster.isPrimary) {
 	getSetupInfo ()
 		
 } else {
-	new conet_dl_server ()
+	const uuu = new conet_dl_server ()
+	process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
 }
 	

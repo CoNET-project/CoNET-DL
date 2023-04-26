@@ -10,6 +10,9 @@ import { request } from 'node:https'
 import {v4} from 'uuid'
 import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recover } from 'eth-crypto'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
+var Web3HttpProvider = require('web3-providers-http')
+
+import Accounts from 'web3-eth-accounts'
 
 const Eth = require('web3-eth')
 import Color from 'colors/safe'
@@ -22,8 +25,8 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 const FaucetCount = 2
 const FaucetTTL = 60 * 60 * 24
-const fujiCONET = `https://conettech.ca/fujiCoNET`
-const USDCNET = `https://mvpusdc.conettech.ca/mvpusdc`
+const fujiCONET = `https://rpc1.openpgp.online`
+const USDCNET = `https://rpc1.openpgp.online/usdc`
 
 const admin_public = masterSetup.master_wallet_public
 const admin_private = masterSetup.master_wallet_private
@@ -95,18 +98,18 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI, s3pass: 
 	
 		const oldData = result?.rows[0]
 		const time = new Date ()
-		const needDomain = oldData?.pgp_publickey_id === payload.gpgPublicKeyID ? false: true
+		const needDomain = oldData?.pgp_publickey_id === payload.gpgPublicKeyID1 ? false: true
 		let cmd = !result.rowLength
 					? `INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
 					`country, region, lat, lon, customs_review_total, `+
 					`pgp_publickey_id, nft_tokenid, total_online, last_online, platform_verison) VALUES (` +
 					` '${ payload.walletAddr }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
 					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${ customs_review_total }, `+
-					`'${ payload.gpgPublicKeyID }', '${ nft_tokenid }', 5, dateof(now()), '${ payload.platform_verison }' ) `
+					`'${ payload.gpgPublicKeyID1 }', '${ nft_tokenid }', 5, dateof(now()), '${ payload.platform_verison }' ) `
 
 					: `UPDATE conet_si_nodes SET wallet_addr = '${ payload.walletAddr }', outbound_fee = ${ payload.outbound_price }, storage_fee = ${ payload.storage_price }, `+
 					`customs_review_total = ${customs_review_total}, `+
-					`${ needDomain ? "pgp_publickey_id = '" +  payload.gpgPublicKeyID + "',": '' } platform_verison = '${ payload.platform_verison }', total_online = ${ oldData.total_online + 5 }, last_online = dateof(now()) ` +
+					`${ needDomain ? "pgp_publickey_id = '" +  payload.gpgPublicKeyID1 + "',": '' } platform_verison = '${ payload.platform_verison }', total_online = ${ oldData.total_online + 5 }, last_online = dateof(now()) ` +
 					`WHERE nft_tokenid = '${ nft_tokenid }' and country = '${ oldData.country }'`
 
 		logger (inspect(cmd, false, 3, true))
@@ -120,14 +123,14 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI, s3pass: 
 		resolve(nft_tokenid)
 		await cassClient.shutdown()
 		await postRouterToPublic (payload, null, s3pass)
-		needDomain ? await regiestCloudFlare (payload.ipV4, payload.gpgPublicKeyID, masterSetup ): null
+		needDomain ? await regiestCloudFlare (payload.ipV4, payload.gpgPublicKeyID1, masterSetup ): null
 		
 	})
 
 	
 }
 
-export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI ) => {
+export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI) => {
 
 	if (!checkPayloadWalletSign(yyy)) {
 		return false
@@ -144,16 +147,26 @@ export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI ) => {
 	const res = await cassClient.execute (cmd)
 	const oldData = res.rows[0]
 
-	if ( !res.rowLength || oldData.pgp_publickey_id !== yyy.gpgPublicKeyID ) {
+	if ( !res.rowLength || oldData.pgp_publickey_id !== yyy.gpgPublicKeyID1 ) {
 		await cassClient.shutdown ()
 		logger (`CoNET_SI_health ERROR!, SI signPgpKeyID !== oldData.pgp_publickey_id payload = [${ inspect( yyy, false, 3, true ) }] DB = [${ inspect(oldData, false, 3, true) }]` )
 		return false
 	}
 	const customs_review_total = (Math.random()*5).toFixed(2)
-
-	const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${ oldData.total_online} + 5, platform_verison = '${ yyy.platform_verison}', last_online = dateof(now()) Where country = '${ oldData.country }' and nft_tokenid = '${ nft_tokenid }'`
+	oldData.customs_review_total = customs_review_total
+	oldData.platform_verison = yyy.platform_verison
+	const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${ oldData.total_online} + 5, platform_verison = '${ yyy.platform_verison }', last_online = dateof(now()) Where country = '${ oldData.country }' and nft_tokenid = '${ nft_tokenid }'`
 	await cassClient.execute (cmd1)
 	await cassClient.shutdown ()
+	
+	if ( process.connected && typeof process.send === 'function') {
+		const comd: clusterMessage = {
+			cmd:'si-node',
+			data: [oldData]
+		}
+		process.send (comd)
+	}
+	
 	return true
 
 }
@@ -188,28 +201,28 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 			return resolve (false)
 		}
 
-		const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
 
-		const _nonce = await eth.getTransactionCount(admin_public)
-		logger (_nonce)
-		const nonce = '0x' + ((_nonce) + 1).toString(16)
+		const eth = new Eth (new Web3HttpProvider (fujiCONET, option))
+
 		const obj = {
 			gas: 21000,
 			to: wallet_addr,
 			value: (FaucetCount * wei).toString()
 		}
+		logger (inspect(obj, false, 3, true), admin_private)
 
-		const createTransaction = await eth.accounts.signTransaction( obj, admin_private )
+		let createTransaction
 
 		let receipt
 		try {
+			createTransaction = await eth.accounts.signTransaction( obj, admin_private )
 			receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
 		} catch (ex) {
 			logger (`eth.sendSignedTransaction ERROR!`, ex)
-			await cassClient.shutdown ()
+			// await cassClient.shutdown ()
 			return resolve (false)
 		}
-
+		
 		logger (inspect(receipt, false, 3, true))
 
 		const cmd2 = `INSERT INTO conet_faucet_ipaddress (client_ipaddress, timestamp) VALUES ('${ipAddr}', '${time.toISOString() }') USING TTL ${FaucetTTL}`
@@ -427,58 +440,6 @@ export const conetcash_getBalance = (id: string ) => {
 	})
 }
 
-export const getSI_nodes = (sortby: SINodesSortby, region: SINodesRegion, si_pool: any[], si_last_Update_time: number ) => {
-
-	return new Promise ( async resolve => {
-
-		const return_result = () => {
-			
-			//		Use Pool Data
-			
-			const random = Math.round(Math.random () * 5)
-			if (random < 1) {
-				return resolve ({total: 10, rows: si_pool.sort ((a: SI_nodes , b: SI_nodes) => b.customs_review_total - a.customs_review_total).slice(0, 10) })
-			} 
-			if (random < 2) {
-				return resolve ({total: 10, rows: si_pool.sort ((a: SI_nodes , b: SI_nodes) => new Date(b.last_online).getTime() - new Date(a.last_online).getTime()).slice(0, 10) })
-			}
-			if (random < 3) {
-				return resolve ({total: 10, rows: si_pool.sort ((a: SI_nodes , b: SI_nodes) => b.outbound_fee - a.outbound_fee).slice(0, 10) })
-			}
-			if (random < 4) {
-				return resolve ({total: 10, rows: si_pool.sort ((a: SI_nodes , b: SI_nodes) => b.storage_fee - a.storage_fee).slice(0, 10) })
-			}
-			if (random <= 5) {
-				return resolve ({total: 10, rows: si_pool.sort ((a: SI_nodes , b: SI_nodes) => b.total_online - a.total_online).slice(0, 10) })
-			}
-			
-		}
-
-		const overTime = new Date().getTime() - si_last_Update_time > si_last_Update_time_timeout
-		if ( si_pool.length && !overTime ){
-			return return_result()
-		}
-
-		const cassClient = new Client (option)
-		await cassClient.connect ()
-		const cmd = `SELECT * from conet_si_nodes LIMIT 20`
-		let total
-		let data
-		try {
-			data = await cassClient.execute (cmd)
-		} catch (ex) {
-			await cassClient.shutdown ()
-			if (si_pool.length) {
-				return return_result()
-			}
-			return resolve (null)
-		}
-		await cassClient.shutdown ()
-		si_pool = data.rows
-		return return_result()
-	})
-}
-
 export const authorizeCoNETCash = async ( Cobj: CoNETCash_authorized, objHash: string, sign: string ) => {
 
 		// @ts-ignore
@@ -552,11 +513,3 @@ export const authorizeCoNETCash = async ( Cobj: CoNETCash_authorized, objHash: s
 		return (id)
 	
 }
-
-/**
- * 
- * 			TEST
- */
-
-
-/** */

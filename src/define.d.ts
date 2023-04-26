@@ -130,14 +130,16 @@ interface ICoNET_Profile extends ICoNET_Router_Base {
 	emailAddr: string
 	routerPublicKeyID: string
 	routerArmoredPublicKey: string
+	bio: string
 }
 
 interface ICoNET_Router_Base {
-	gpgPublicKeyID: string
+	gpgPublicKeyID1: string
 	armoredPublicKey: string
 	walletAddr: string
 	signPgpKeyID: string
 	walletAddrSign: string
+	gpgPublicKeyID0: string
 }
 
 interface ethSignedObj {
@@ -176,6 +178,11 @@ interface ICoNET_DL_POST_register_SI extends ICoNET_Router_Base {
 	nft_tokenid: string
 	cpus: number
 	walletAddrSign: string
+}
+
+interface clusterMessage {
+	cmd: 'si-node'|'get-si-nodes'
+	data: any[]
 }
 
 
