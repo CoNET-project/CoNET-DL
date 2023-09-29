@@ -3,7 +3,7 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, getConfirmations, decryptPayload, postRouterToPublic, regiestCloudFlare, decryptPgpMessage } from '../util/util'
+import { logger, getIpaddressLocaltion, getConfirmations, decryptPayload, regiestCloudFlare, decryptPgpMessage } from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
@@ -122,7 +122,7 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI, s3pass: 
 		}
 		resolve(nft_tokenid)
 		await cassClient.shutdown()
-		await postRouterToPublic (payload, null, s3pass)
+		//await postRouterToPublic (payload, null, s3pass)
 		needDomain ? await regiestCloudFlare (payload.ipV4, payload.gpgPublicKeyID1, masterSetup ): null
 		
 	})
@@ -155,6 +155,7 @@ export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI) => {
 	const customs_review_total = (Math.random()*5).toFixed(2)
 	oldData.customs_review_total = customs_review_total
 	oldData.platform_verison = yyy.platform_verison
+	oldData.armoredPublicKey = yyy.armoredPublicKey
 	const cmd1 = `UPDATE conet_si_nodes SET customs_review_total = ${ customs_review_total }, total_online = ${ oldData.total_online} + 5, platform_verison = '${ yyy.platform_verison }', last_online = dateof(now()) Where country = '${ oldData.country }' and nft_tokenid = '${ nft_tokenid }'`
 	await cassClient.execute (cmd1)
 	await cassClient.shutdown ()

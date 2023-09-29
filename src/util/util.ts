@@ -16,8 +16,7 @@ import { readCleartextMessage, verify, readKey, readMessage, readPrivateKey, dec
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
 import { Writable } from 'node:stream'
 import Web3 from 'web3'
-import { Endpoint } from 'aws-sdk'
-import S3 from 'aws-sdk/clients/s3'
+
 import colors from 'colors/safe'
 
 
@@ -339,102 +338,102 @@ export const generateSslCertificatesV1 = async (ipAddr: string, wallet_Addr: str
 	const out = '-subj "/C=US/ST=Kharkov/L=Kharkov/O=Super Secure Company/OU=IT Department/CN=example.com"'
 }
 
-export const postRouterToPublic = ( nodeData: ICoNET_DL_POST_register_SI|null, profileData: ICoNET_Profile|null, s3pass: s3pass ) => {
-	return new Promise (async resolve => {
+// export const postRouterToPublic = ( nodeData: ICoNET_DL_POST_register_SI|null, profileData: ICoNET_Profile|null, s3pass: s3pass ) => {
+// 	return new Promise (async resolve => {
 		
-		const saveObj = nodeData ? <ICoNET_SINode> {
-			gpgPublicKeyID1: nodeData.gpgPublicKeyID1,
-			gpgPublicKeyID0: nodeData.gpgPublicKeyID0,
-			armoredPublicKey: nodeData.armoredPublicKey,
-			walletAddr: nodeData.walletAddr,
-			ipv4: nodeData.ipV4,
-			nft_tokenid: nodeData.nft_tokenid
-		} : profileData ? <ICoNET_Profile> {
-			gpgPublicKeyID0: profileData.gpgPublicKeyID0,
-			gpgPublicKeyID1: profileData.gpgPublicKeyID1,
-			armoredPublicKey: profileData.armoredPublicKey,
-			walletAddr: profileData.walletAddr,
-			nickName: profileData.nickName,
-			profileImg: profileData.profileImg,
-			routerArmoredPublicKey: profileData.routerArmoredPublicKey,
-			routerPublicKeyID: profileData.routerPublicKeyID,
-			emailAddr: profileData.emailAddr,
-			bio: profileData.bio
+// 		const saveObj = nodeData ? <ICoNET_SINode> {
+// 			gpgPublicKeyID1: nodeData.gpgPublicKeyID1,
+// 			gpgPublicKeyID0: nodeData.gpgPublicKeyID0,
+// 			armoredPublicKey: nodeData.armoredPublicKey,
+// 			walletAddr: nodeData.walletAddr,
+// 			ipv4: nodeData.ipV4,
+// 			nft_tokenid: nodeData.nft_tokenid
+// 		} : profileData ? <ICoNET_Profile> {
+// 			gpgPublicKeyID0: profileData.gpgPublicKeyID0,
+// 			gpgPublicKeyID1: profileData.gpgPublicKeyID1,
+// 			armoredPublicKey: profileData.armoredPublicKey,
+// 			walletAddr: profileData.walletAddr,
+// 			nickName: profileData.nickName,
+// 			profileImg: profileData.profileImg,
+// 			routerArmoredPublicKey: profileData.routerArmoredPublicKey,
+// 			routerPublicKeyID: profileData.routerPublicKeyID,
+// 			emailAddr: profileData.emailAddr,
+// 			bio: profileData.bio
 
-		} : null
+// 		} : null
 
-		if ( !saveObj) {
-			return resolve (false)
-		}
+// 		if ( !saveObj) {
+// 			return resolve (false)
+// 		}
 
-		logger (inspect(saveObj, false, 3, true))
+// 		logger (inspect(saveObj, false, 3, true))
 
-		const saveObj_json_string = JSON.stringify(saveObj)
+// 		const saveObj_json_string = JSON.stringify(saveObj)
 		
 		
-		const wo = wasabiObj.us_east_1
+// 		const wo = wasabiObj.us_east_1
 
-		const up1: S3.PutObjectRequest = {
-			Bucket: wo.Bucket,
-			Key: `${ wo.Bucket_key }/${ saveObj.walletAddr }`,
-			Body: saveObj_json_string,
-		}
+// 		const up1: S3.PutObjectRequest = {
+// 			Bucket: wo.Bucket,
+// 			Key: `${ wo.Bucket_key }/${ saveObj.walletAddr }`,
+// 			Body: saveObj_json_string,
+// 		}
 
-		const up2: S3.PutObjectRequest = {
-			Bucket: wo.Bucket,
-			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID1 }`,
-			Body: saveObj_json_string,
-		}
-		const up4: S3.PutObjectRequest = {
-			Bucket: wo.Bucket,
-			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID0 }`,
-			Body: saveObj_json_string,
-		}
-		let up3 : S3.PutObjectRequest| null = null
-		if (nodeData) {
-			up3 =  {
-				Bucket: wo.Bucket,
-				Key: `${ wo.Bucket_key }/${ nodeData.nft_tokenid }`,
-				Body: saveObj_json_string,
-			}
-		}
+// 		const up2: S3.PutObjectRequest = {
+// 			Bucket: wo.Bucket,
+// 			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID1 }`,
+// 			Body: saveObj_json_string,
+// 		}
+// 		const up4: S3.PutObjectRequest = {
+// 			Bucket: wo.Bucket,
+// 			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID0 }`,
+// 			Body: saveObj_json_string,
+// 		}
+// 		let up3 : S3.PutObjectRequest| null = null
+// 		if (nodeData) {
+// 			up3 =  {
+// 				Bucket: wo.Bucket,
+// 				Key: `${ wo.Bucket_key }/${ nodeData.nft_tokenid }`,
+// 				Body: saveObj_json_string,
+// 			}
+// 		}
 		
 
-		const opt = {
-			//credentials: credentials,
-			credentials: {
-				accessKeyId: s3pass.ACCESS_KEY,
-				secretAccessKey: s3pass.SECRET_KEY
-			},
-			endpoint: new Endpoint(wo.endpoint),
-			correctClockSkew: true
-		}
+// 		const opt = {
+// 			//credentials: credentials,
+// 			credentials: {
+// 				accessKeyId: s3pass.ACCESS_KEY,
+// 				secretAccessKey: s3pass.SECRET_KEY
+// 			},
+// 			endpoint: new Endpoint(wo.endpoint),
+// 			correctClockSkew: true
+// 		}
 
-		const s3 = new S3(opt)
+// 		const s3 = new S3(opt)
 
-		//		******************
-		//			Fix S3 bug
-		//		******************
-			const check1 = opt.credentials.accessKeyId
-			const check2 = opt.credentials.secretAccessKey
-			if (/\n$/.test(check1)) {
-				opt.credentials.accessKeyId = check1.replace (/\n/, '')
-			}
-			if ( /\n$/.test(check2)) {
-				opt.credentials.secretAccessKey = check2.replace (/\n/, '')
-			}
+// 		//		******************
+// 		//			Fix S3 bug
+// 		//		******************
+// 			const check1 = opt.credentials.accessKeyId
+// 			const check2 = opt.credentials.secretAccessKey
+// 			if (/\n$/.test(check1)) {
+// 				opt.credentials.accessKeyId = check1.replace (/\n/, '')
+// 			}
+// 			if ( /\n$/.test(check2)) {
+// 				opt.credentials.secretAccessKey = check2.replace (/\n/, '')
+// 			}
 
-		//		******************
+// 		//		******************
 
-		await s3.putObject (up1).promise()
-		await s3.putObject (up2).promise()
-		await s3.putObject (up4).promise()
-		up3 ? await s3.putObject (up3).promise() : null
+// 		await s3.putObject (up1).promise()
+// 		await s3.putObject (up2).promise()
+// 		await s3.putObject (up4).promise()
+// 		up3 ? await s3.putObject (up3).promise() : null
 
-		logger( colors.grey(`[${ up2.Key } & ${ up1.Key } & ${ up3 ? up3.Key : ''}] `), colors.blue(`upload SUCCESS!`))
-		return resolve (true)
-	})
-}
+// 		logger( colors.grey(`[${ up2.Key } & ${ up1.Key } & ${ up3 ? up3.Key : ''}] `), colors.blue(`upload SUCCESS!`))
+// 		return resolve (true)
+// 	})
+// }
 
 export const getIpaddressLocaltion = (Addr: string) => {
 	return new Promise((resolve) => {

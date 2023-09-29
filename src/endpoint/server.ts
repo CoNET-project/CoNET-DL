@@ -9,7 +9,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
-import { logger, loadWalletAddress, getSetup, return404, decryptPayload, s3fsPasswd, decryptPgpMessage, makePgpKeyObj, postRouterToPublic } from '../util/util'
+import { logger, loadWalletAddress, getSetup, return404, decryptPayload, s3fsPasswd, decryptPgpMessage, makePgpKeyObj } from '../util/util'
 import { createServer} from 'node:https'
 import type { ServerOptions } from 'node:https'
 import Cluster from 'node:cluster'
@@ -233,7 +233,6 @@ class conet_dl_server {
 				res.status(404).end ()
 				return res.socket?.end().destroy()
 			}
-			
 
 			const ret = await CoNET_SI_Register ( obj, this.s3pass )
 
@@ -418,7 +417,7 @@ class conet_dl_server {
 			}
 			res.json({}).end()
 			res.socket?.end().destroy()
-			await postRouterToPublic (null, obj1, this.s3pass)
+			// await postRouterToPublic (null, obj1, this.s3pass)
 
 		})
 

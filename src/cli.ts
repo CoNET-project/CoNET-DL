@@ -29,6 +29,7 @@ if ( Cluster.isPrimary) {
 		})
 
 	})
+
 	const [,,...args] = process.argv
 	let debug = false
 	let version = false
@@ -193,6 +194,7 @@ if ( Cluster.isPrimary) {
 			cmd: 'si-node',
 			data: [node_si_pool]
 		}
+		
 		return workerPool.forEach (v => {
 			if ( v.isConnected()) {
 				v.send (mess)
