@@ -9,7 +9,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
-import { logger, loadWalletAddress, getSetup, return404, decryptPayload, s3fsPasswd, decryptPgpMessage, makePgpKeyObj } from '../util/util'
+import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj } from '../util/util'
 import { createServer} from 'node:https'
 import type { ServerOptions } from 'node:https'
 import Cluster from 'node:cluster'
@@ -30,33 +30,33 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
-const getRedirect = (req: Request, res: Response ) => {
-	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
-	switch (worker) {
-		case 4:
-		case 1: {
-			const localtion = `https://conettech.ca`
-			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
-		case 2: {
-			const localtion = `https://kloak.io`
-			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
-		case 3: {
-			const localtion = `https://kloak.app`
-			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
+// const getRedirect = (req: Request, res: Response ) => {
+// 	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
+// 	switch (worker) {
+// 		case 4:
+// 		case 1: {
+// 			const localtion = `https://conettech.ca`
+// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
+// 		case 2: {
+// 			const localtion = `https://kloak.io`
+// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
+// 		case 3: {
+// 			const localtion = `https://kloak.app`
+// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
 		
-		default : {
-			const localtion = `https://conettech.ca`
-			logger (Colors.red(`goto default [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
-	}
-}
+// 		default : {
+// 			const localtion = `https://conettech.ca`
+// 			logger (Colors.red(`goto default [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
+// 	}
+// }
 
 
 
@@ -94,11 +94,6 @@ class conet_dl_server {
 			throw new Error (`getSetup had null ERROR!`)
 		}
 
-		this.s3pass = await s3fsPasswd ()
-
-		if (!this.s3pass) {
-			throw new Error (`s3pass had null ERROR!`)
-		}
 
 		this.initData.keyObj = await loadWalletAddress (this.initData.keychain, masterSetup.passwd )
 
@@ -220,13 +215,15 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			if (!this.s3pass ) {
-				logger (Colors.red(`[${ splitIpAddr ( req.ip ) }] => /conet-si-node-register this.s3pass null ERROR!`))
-				res.status(501).end ()
+			if (!this.initData?.pgpKeyObj.privateKeyObj) {
+				logger(`/conet-si-node-register this.initData?.pgpKeyObj.privateKeyObj NULL ERROR`)
+				res.status(404).end ()
 				return res.socket?.end().destroy()
+
 			}
 
-			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData?.pgpKeyObj.privateKeyObj)
+			
+			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData.pgpKeyObj.privateKeyObj)
 
 			if (!obj) {
 				logger (Colors.red(`[${splitIpAddr ( req.ip )}] => /conet-si-node-register decryptPgpMessage ERROR!`), inspect(req.body , false, 3, true))
@@ -234,7 +231,7 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			const ret = await CoNET_SI_Register ( obj, this.s3pass )
+			const ret = await CoNET_SI_Register ( obj )
 
 			if (!ret ) {
 				logger (Colors.red(`[${ splitIpAddr ( req.ip ) }] => /conet-si-node-register CoNET_SI_Register return null ERROR`))
@@ -265,7 +262,7 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			//	@ts-ignore
+				// @ts-ignore
 			const hObj: ICoNET_DL_POST_register_SI = obj
 
 			const ret = await CoNET_SI_health ( hObj )

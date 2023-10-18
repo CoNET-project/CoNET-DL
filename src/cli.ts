@@ -2,7 +2,7 @@
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
-import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, s3fsPasswd, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
+import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
 import {streamCoNET_USDCPrice} from './endpoint/help-database'
 import conet_dl_server from './endpoint/server'
 import Cluster from 'node:cluster'
@@ -141,10 +141,7 @@ if ( Cluster.isPrimary) {
 			await saveSetup ( setup, JSON.stringify (masterSetup))
 		}
 		const obj = loadWalletAddress (setupInfo.keychain, masterSetup.passwd )
-		const s3pass = await s3fsPasswd()
-		if (!s3pass) {
-			throw new Error (`Have no s3pass error!`)
-		}
+
 		const streamCoNET_USDCPriceQuere: any[] = []
 		if (!setupInfo.pgpKeyObj) {
 			setupInfo.pgpKeyObj = await generatePgpKeyInit ( setupInfo.keychain[0].address, password )
