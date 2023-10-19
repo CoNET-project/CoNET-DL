@@ -243,7 +243,7 @@ if ( Cluster.isPrimary) {
 
 	const forkWorker = () => {
 		
-		let numCPUs = cpus ().length * 2
+		let numCPUs = cpus ().length/2
 		
 		debug ? logger (`Cluster.isPrimary node have ${ numCPUs } cpus\n`): null
 	

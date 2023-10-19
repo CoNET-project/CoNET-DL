@@ -10,7 +10,8 @@ import { homedir } from 'node:os'
 import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
 import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj } from '../util/util'
-import { createServer} from 'node:https'
+//import { createServer} from 'node:https'
+import { createServer as createServerHttp} from 'node:http'
 import type { ServerOptions } from 'node:https'
 import Cluster from 'node:cluster'
 import type { Request, Response } from 'express'
@@ -23,7 +24,6 @@ const splitIpAddr = (ipaddress: string ) => {
 	const _ret = ipaddress.split (':')
 	return _ret[_ret.length - 1]
 }
-const homePage = 'https://conetech.ca'
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
@@ -136,18 +136,11 @@ class conet_dl_server {
             logger (Colors.red(`Local server on ERROR`))
         })
 
-		const option: ServerOptions = {
-			key: readFileSync(masterSetup.ssl.key, 'utf8'),
-			cert: readFileSync(masterSetup.ssl.certificate, 'utf8'),
+		// const option: ServerOptions = {
+		// 	key: readFileSync(masterSetup.ssl.key, 'utf8'),
+		// 	cert: readFileSync(masterSetup.ssl.certificate, 'utf8'),
 			
-		}
-
-		this.localserver = createServer (option, app ).listen (this.PORT, async () => {
-			
-            return console.table([
-                { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
-            ])
-        })
+		// }
 
 		if ( this.debug ) {
 			app.use ((req, res, next) => {
@@ -173,7 +166,14 @@ class conet_dl_server {
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
-		
+
+		app.listen(4001)
+		// this.localserver = createServer (option, app ).listen (this.PORT, async () => {
+			
+        //     return console.table([
+        //         { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
+        //     ])
+        // })
 	}
 
 	public end () {
