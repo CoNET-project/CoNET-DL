@@ -190,23 +190,22 @@ export const generateWalletAddress = ( password: string ) => {
 	return acc.encrypt ( password )
 }
 
-export const loadWalletAddress = ( walletBase: any, password: any ) => {
-	// @ts-ignore: Unreachable code error
+export const loadWalletAddress = ( walletBase: any) => {
+    //@ts-ignore
 	const account: Accounts.Accounts = new Accounts()
-	const uu = account.wallet.decrypt ( walletBase, password )
+	const uu = account.wallet.decrypt ( walletBase, '' )
 
-	// @ts-ignore: Unreachable code error
+
 	uu[0]['publickey'] = publicKeyByPrivateKey (uu[0].privateKey)
-	// @ts-ignore: Unreachable code error
+
 	uu[1]['publickey'] = publicKeyByPrivateKey (uu[1].privateKey)
 	return uu
 }
 
-export const generatePgpKeyInit = async (walletAddr: string, passwd: string) => {
+export const generatePgpKeyInit = async (walletAddr: string) => {
 
 	const option = {
         type: 'ecc',
-		passphrase: passwd,
 		userIDs: [{
 			name: walletAddr
 		}],
@@ -230,10 +229,10 @@ export const generatePgpKeyInit = async (walletAddr: string, passwd: string) => 
 	return ( ret )
 }
 
-export const makePgpKeyObj = async ( keyObj: pgpKey, password: string ) => {
+export const makePgpKeyObj = async ( keyObj: pgpKey) => {
 	try {
 		keyObj.privateKeyObj = await readPrivateKey ({armoredKey: keyObj.privateKeyArmored})
-		await decryptKey({privateKey: keyObj.privateKeyObj, passphrase: password})
+		
 	} catch (ex) {
 		logger (`makePgpKeyObj error!`, inspect(keyObj, false, 3, true))
 	}
@@ -550,28 +549,28 @@ export const getConfirmations = async (txHash: string, receiveAddr: string, netw
 	}
 }
 
-export const s3fsPasswd: () => Promise<s3pass|null> = () => {
-	return new Promise (resolve => {
-		const s3fsPasswdFile = join(homedir(), '.passwd-s3fs')
-		return readFile (s3fsPasswdFile, 'utf-8', (err, data ) => {
-			if ( err || !data ) {
-				logger (colors.red(`s3fsPasswd have no [.passwd-s3fs] setup file!`))
-				return resolve (null)
-			}
-			const pass = data.split(':')
-			if ( pass.length < 2 ) {
-				logger (colors.red(`[.passwd-s3fs] have not correct!`))
-				return resolve (null)
-			}
-			const ret: s3pass = {
-				ACCESS_KEY: pass[0],
-				SECRET_KEY: pass[1]
-			}
-			return resolve (ret)
-		})
+// export const s3fsPasswd: () => Promise<s3pass|null> = () => {
+// 	return new Promise (resolve => {
+// 		const s3fsPasswdFile = join(homedir(), '.passwd-s3fs')
+// 		return readFile (s3fsPasswdFile, 'utf-8', (err, data ) => {
+// 			if ( err || !data ) {
+// 				logger (colors.red(`s3fsPasswd have no [.passwd-s3fs] setup file!`))
+// 				return resolve (null)
+// 			}
+// 			const pass = data.split(':')
+// 			if ( pass.length < 2 ) {
+// 				logger (colors.red(`[.passwd-s3fs] have not correct!`))
+// 				return resolve (null)
+// 			}
+// 			const ret: s3pass = {
+// 				ACCESS_KEY: pass[0],
+// 				SECRET_KEY: pass[1]
+// 			}
+// 			return resolve (ret)
+// 		})
 		
-	})
-}
+// 	})
+// }
 
 const conetServerTimeout = 1000 * 60
 const requestUrl = (option: RequestOptions, postData: string) => {
@@ -776,6 +775,53 @@ export const decryptPgpMessage = async ( pgpMessage: string, pgpPrivateObj: Priv
  * 		TEST 
  * 
  */
+/*
+const obj = {privateKeyObj:"-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nxYYEZWTcxBYJKwYBBAHaRw8BAQdAZh+95s/tt9+wp4/15esC38Zqfk1T+yd+\ns7XK2QV+zwr+CQMIdu6j7Fc8oZvgbrYloQXRqH0CigPlO9JNz58ZYhJR0kbL\nh3rx4zZXvlOxebzvMkYeGvcqnmyHDqVvK98KXEDYW3axCdRXuIzlj1gdFoil\np80oODE4MjFhOWM2NzMxMjZhOWFhMDIzY2E2YWIzNWRjZmQwMjBhYzliY8KM\nBBAWCgA+BYJlZNzEBAsJBwgJkJg4MrTtRgnQAxUICgQWAAIBAhkBApsDAh4B\nFiEEuidqbBGtg+gscWtemDgytO1GCdAAACOgAQCJKUnJe2c+tRkXfMfLxJzq\n+tzG6FQ3F48lv3YgT+bxvQD9H5g2yFhO1S2uYTZaVK5qFyu+oN7QV5B7Y8PS\ngFsdigDHiwRlZNzEEgorBgEEAZdVAQUBAQdAx+6GSJFhRiNu7a+tyDYtiE/V\nhzAde7B3b1tQ+QhM/HkDAQgH/gkDCHHngHHDzoa44Ih0ye07yPsRsIhZHZqp\ntbsd01b91TneT2Zc3LrjtXt0yZgxjskpPxREWp635vDcKklOiFDui3yJnuZc\nfhsVEEO2ljPW1yHCeAQYFggAKgWCZWTcxAmQmDgytO1GCdACmwwWIQS6J2ps\nEa2D6Cxxa16YODK07UYJ0AAAAksBAPfkrpA+paWSR0yx2YcncJeAl4980RRe\nPcGOJ7WdrMh3AQDGAV2PetBgYvBLC8jVbDD4PwaYjlhp15NswnFgD6HRCQ==\n=EEgp\n-----END PGP PRIVATE KEY BLOCK-----\n"}
+const kk = `-----BEGIN PGP MESSAGE-----
+
+wV4D+/+XvWVHGFMSAQdAfKO2E/jgepKsOJIpjrf6q+6sODB+mrwwSGiT5idB
+mnwwj8iQMAcxFnu8KJUtIcaU4ZBhOUs0NpE9s0sDMJnPzoGCIDv6CiNFDbUr
+xs8IKgcv0sR4AXciNQRiBFmXDX4K96Rd2y9ooYvaqzu9mHa1WgbvfXh/CwVT
+NYEdDXq3lZszCRyttRj0eHp/lqPiPrP0avfGhhX7OBnK886XJreR92ksDJ3m
+9xzJ/7MzPHqBNzEGhdvQ2yV6ByxKUnNT0P6GY7IFe7xJiEG83QWeZlIr7SU0
+HK8hJm3I4PIjJB52qleWEC2HhOQAIhD2b0SsSageEWiHuD5dL7I22GAfC/3a
+86D+nKO5xtxZ/U2pkp5qa1P7R7cOKUWmZDE6FCswg8/3vtFltKfyqKH6OPy0
+ejrPtM0F7kEvwDCwckKH3jEn7ad08ftLlHGFHKuCSIhM/ASnxtyE/ZKxu6/+
+FpVpBGvIjaG2f7bBKPhSC0rlYOxyvEGL4dVW9EV2/HJgpBlNm+0uw318xvMN
+Jm50A5s/aj5Au5SILzW2PWT6f5S4I5uhIDfin5AOqnicLUIidHgBgCgNhlyE
+0crHRhYLuZBR8ZbEHfHT1XJ9zO74xBb0C8UiSA4pYh70ZEvW3bUHZqEsZeZC
+gxi1gDc/bw5a9a2rVaZ4CKUixzE72p/AND3ERXZn5ToFMUDFWC0qnR/Iralf
+EJtTxStqg6Ykq2GpVwflWcFhF6eYefA3Kxl2xQlfeztU+TEoTtDUlsWtIwGt
+r/UbpWgT1JBJOqVZANgXGTY66Zp5634oXDN5fdPURFwCdMOKc8idZSyskql5
+cBq5xrPh4YjDiZr+0PUVZCyuab79ejdt5hLj3YE+XrTzsuixcooBiwdye0PT
+yuaVdzGC9SqrR4H7cLgsClgIHD7vY8vq4dpl7zd7Xpmrdk8S9lTlYS/L2EtO
+x+2Wa5jOEn5IpRjLdyfKoKzVqNt11TnsIjD5eIs1nfLGZNPLmKWPVPOpKHiI
+cb4OhKoxoQjbCbytBCm6ntMJOK3u2ymFzSqIeteHgS/GgaYFFoxCWe5bpkC0
+DjUUgihxsP/VnnzTFHKOB5bTUi6aHGOSTwMdPDJ/snhOI/3E10xFasoD4fxc
+X+k9nHdi74QDp61EAfJoZkFAmGltYFvjHnp959gXPUArhRfQ5rEiYPB16YCm
+nCxXiNfFEXYNnbT60eAHbvVAOIfAiaiCY4qEGj7HeNhbeC3UMNztTYY7OHg7
+ug2rxYZAvPfOqRFNKZaCWHrM9v0fUgOESfGbcRz0zm4FGn7A3a/jg32LYFDa
+hfPyPX2V0klBJfjOb8xioyV9Gytx2hQE409d0T3XO4H/qnWN8nWajIlhqIbj
+2zjcfetCxCle4TkRnhB3vlhe1ytby8hx/eXglMMzoQWXVMMWg2BXuls7cgPL
+pR6OTe92BkGCrrnAQq/HW1iYxhCMMU2oM1GFf5v71sLYHED0Yy4FcyeFiJw+
+cGbSMqDzN0iiQIK+40v/aNUmuY/QNdObUKMnqvQfims1nH/wQmQTdYdaeUhR
+Izog6wH7FAvcBWXOBQ2wT2Z2XkeOvV/sj1CNbDrpiVlz/E4ffINzOcAmqkfG
+Xryf/paXakPIFGLOTktbxIKfE86B9PbDeYy1RdF4y4XoPz5ZOms7vdzDB09r
+IxCOB/z8f/jGbqzAIWubJgFHCi3RanHrtSqRCbn7lxpm9Kmw33Xyf0YnyNWo
+IkHqLH2/2QIlNBt7hAq2WUUdbxghLVDThdlzlAtSX4ihEh5FFS5pssKCVwfv
+GUcF0vp/MYR3fgT2JIlqKy/y1bBMgnD8WsazFAPjFutaMrzaNwds9fnmc+hh
+vwzKhXmfIxBmWbCHpRVVGfAmdWWltC9yUMSqmBzSWsS0vx0PMxP5BQ==
+=vRj4
+-----END PGP MESSAGE-----
+`
+
+const kke = async () => {
+    // @ts-ignore
+    await makePgpKeyObj(obj, '')
+    // @ts-ignore
+    //decryptPgpMessage(kk, obj)
+}
+kke()
 /*
 const test = async () => {
 	const uuu =  await getPublicKeyArmoredKeyID(oo)

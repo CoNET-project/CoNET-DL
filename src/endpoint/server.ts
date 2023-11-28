@@ -9,9 +9,8 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
-import { logger, loadWalletAddress, getSetup, return404, decryptPayload, s3fsPasswd, decryptPgpMessage, makePgpKeyObj } from '../util/util'
+import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj } from '../util/util'
 import { createServer} from 'node:https'
-import type { ServerOptions } from 'node:https'
 import Cluster from 'node:cluster'
 import type { Request, Response } from 'express'
 
@@ -65,7 +64,6 @@ class conet_dl_server {
     private localserver: Server
 	private PORT: any
 	private appsPath = ''
-	private s3pass: s3pass|null = null
 	private initData: ICoNET_NodeSetup|null = null
 	private debug = false
 
@@ -94,21 +92,15 @@ class conet_dl_server {
 			throw new Error (`getSetup had null ERROR!`)
 		}
 
-		this.s3pass = await s3fsPasswd ()
+		this.initData.keyObj = await loadWalletAddress (this.initData.keychain )
 
-		if (!this.s3pass) {
-			throw new Error (`s3pass had null ERROR!`)
-		}
-
-		this.initData.keyObj = await loadWalletAddress (this.initData.keychain, masterSetup.passwd )
-
-		await makePgpKeyObj ( this.initData.pgpKeyObj, masterSetup.passwd )
+		await makePgpKeyObj ( this.initData.pgpKeyObj )
 
 		this.appsPath = this.initData.setupPath
 		this.PORT = this.initData.ipV4Port
+
+        logger (`start local server!`)
 		this.startServer()
-		
-		setInterval
 		
 	}
 
@@ -140,14 +132,7 @@ class conet_dl_server {
             logger (err)
             logger (Colors.red(`Local server on ERROR`))
         })
-
-		const option: ServerOptions = {
-			key: readFileSync(masterSetup.ssl.key, 'utf8'),
-			cert: readFileSync(masterSetup.ssl.certificate, 'utf8'),
-			
-		}
-
-		this.localserver = createServer (option, app ).listen (this.PORT, async () => {
+        app.listen (this.PORT, async () => {
 			
             return console.table([
                 { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
@@ -220,11 +205,6 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			if (!this.s3pass ) {
-				logger (Colors.red(`[${ splitIpAddr ( req.ip ) }] => /conet-si-node-register this.s3pass null ERROR!`))
-				res.status(501).end ()
-				return res.socket?.end().destroy()
-			}
 
 			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData?.pgpKeyObj.privateKeyObj)
 
@@ -234,7 +214,7 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			const ret = await CoNET_SI_Register ( obj, this.s3pass )
+			const ret = await CoNET_SI_Register ( obj)
 
 			if (!ret ) {
 				logger (Colors.red(`[${ splitIpAddr ( req.ip ) }] => /conet-si-node-register CoNET_SI_Register return null ERROR`))
@@ -396,7 +376,7 @@ class conet_dl_server {
 			
 			const pgpMessage = req.body?.pgpMessage
 
-			if ( !pgpMessage?.length || !this.s3pass || !this.initData) {
+			if ( !pgpMessage?.length || !this.initData) {
 				logger (Colors.red(`Router /regiestProfileRouter [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] pgpMessage null Error!`))
 				res.status(404).end()
 				return res.socket?.end().destroy()

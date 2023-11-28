@@ -2,8 +2,8 @@
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
-import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, s3fsPasswd, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
-import {streamCoNET_USDCPrice} from './endpoint/help-database'
+import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
+//import {streamCoNET_USDCPrice} from './endpoint/help-database'
 import conet_dl_server from './endpoint/server'
 import Cluster from 'node:cluster'
 import type { Worker } from 'node:cluster'
@@ -128,32 +128,20 @@ if ( Cluster.isPrimary) {
 	}
 
 
-	const tryMaster_json_file = async (password: string, setupInfo: ICoNET_NodeSetup) => {
+	const tryMaster_json_file = async (setupInfo: ICoNET_NodeSetup) => {
 		const setup = join( homedir(),'.master.json' )
 		const masterSetup: ICoNET_DL_masterSetup = require ( setup )
-		
-		if (! masterSetup.passwd ) {
-			password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
-		}
-
-		if ( password ) {
-			masterSetup.passwd = password
-			await saveSetup ( setup, JSON.stringify (masterSetup))
-		}
-		const obj = loadWalletAddress (setupInfo.keychain, masterSetup.passwd )
-		const s3pass = await s3fsPasswd()
-		if (!s3pass) {
-			throw new Error (`Have no s3pass error!`)
-		}
+	
+		const obj = loadWalletAddress (setupInfo.keychain)
 		const streamCoNET_USDCPriceQuere: any[] = []
-		if (!setupInfo.pgpKeyObj) {
-			setupInfo.pgpKeyObj = await generatePgpKeyInit ( setupInfo.keychain[0].address, password )
 
+		if (!setupInfo.pgpKeyObj) {
+			setupInfo.pgpKeyObj = await generatePgpKeyInit ( setupInfo.keychain[0].address)
 			await saveSetup ( setupFileName, JSON.stringify (setupInfo))
 		}
 
 		single ? new conet_dl_server () : forkWorker ()
-		streamCoNET_USDCPrice (streamCoNET_USDCPriceQuere)
+		//streamCoNET_USDCPrice (streamCoNET_USDCPriceQuere)
 		return checkNewVer()
 
 	}
@@ -164,12 +152,12 @@ if ( Cluster.isPrimary) {
 	
 		if ( !setupInfo ) {
 
-			const password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
+			//const password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
 	
 			// @ts-ignore: Unreachable code error
 			const port: number = parseInt(await waitKeyInput (`Please enter the node listening PORT number [default is 443]: `))|| 443
 	
-			const keychain = generateWalletAddress ( password )
+			const keychain = generateWalletAddress ('')
 
 			setupInfo = {
 				keychain: keychain,
@@ -178,14 +166,15 @@ if ( Cluster.isPrimary) {
 				ipV4Port: port,
 				ipV6Port: port,
 				setupPath: '',
-				pgpKeyObj: await generatePgpKeyInit(keychain[0].address, password),
+				pgpKeyObj: await generatePgpKeyInit(keychain[0].address),
 				keyObj: null
 			}
 
 			await saveSetup ( setupFileName, JSON.stringify (setupInfo))
-			return tryMaster_json_file (password, setupInfo)
-		} 
-		return tryMaster_json_file ('', setupInfo)
+			return tryMaster_json_file (setupInfo)
+		}
+
+		return tryMaster_json_file (setupInfo)
 		
 	}
 
