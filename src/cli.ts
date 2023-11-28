@@ -3,7 +3,9 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
 import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
+
 //import {streamCoNET_USDCPrice} from './endpoint/help-database'
+
 import conet_dl_server from './endpoint/server'
 import Cluster from 'node:cluster'
 import type { Worker } from 'node:cluster'
@@ -133,6 +135,7 @@ if ( Cluster.isPrimary) {
 		const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 	
 		const obj = loadWalletAddress (setupInfo.keychain)
+
 		const streamCoNET_USDCPriceQuere: any[] = []
 
 		if (!setupInfo.pgpKeyObj) {
@@ -235,7 +238,7 @@ if ( Cluster.isPrimary) {
 
 	const forkWorker = () => {
 		
-		let numCPUs = cpus ().length * 2
+		let numCPUs = cpus ().length/2
 		
 		debug ? logger (`Cluster.isPrimary node have ${ numCPUs } cpus\n`): null
 	

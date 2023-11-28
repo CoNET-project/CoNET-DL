@@ -135,10 +135,12 @@ export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI) => {
 	if (!checkPayloadWalletSign(yyy)) {
 		return false
 	}
+
 	if (!yyy.nft_tokenid) {
 		logger (Color.red(`CoNET_SI_health have no nft_tokenid Error`), inspect( yyy, false, 3, true ))
 		return false
 	}
+	
 	const nft_tokenid = yyy.nft_tokenid
 
 	const cmd = `Select * from conet_si_nodes WHERE nft_tokenid = '${ nft_tokenid }'`

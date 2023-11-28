@@ -10,7 +10,9 @@ import { homedir } from 'node:os'
 import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
 import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj } from '../util/util'
+
 import { createServer} from 'node:https'
+
 import Cluster from 'node:cluster'
 import type { Request, Response } from 'express'
 
@@ -22,40 +24,39 @@ const splitIpAddr = (ipaddress: string ) => {
 	const _ret = ipaddress.split (':')
 	return _ret[_ret.length - 1]
 }
-const homePage = 'https://conetech.ca'
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
-const getRedirect = (req: Request, res: Response ) => {
-	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
-	switch (worker) {
-		case 4:
-		case 1: {
-			const localtion = `https://conettech.ca`
-			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
-		case 2: {
-			const localtion = `https://kloak.io`
-			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
-		case 3: {
-			const localtion = `https://kloak.app`
-			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
+// const getRedirect = (req: Request, res: Response ) => {
+// 	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
+// 	switch (worker) {
+// 		case 4:
+// 		case 1: {
+// 			const localtion = `https://conettech.ca`
+// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
+// 		case 2: {
+// 			const localtion = `https://kloak.io`
+// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
+// 		case 3: {
+// 			const localtion = `https://kloak.app`
+// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
 		
-		default : {
-			const localtion = `https://conettech.ca`
-			logger (Colors.red(`goto default [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-			return res.writeHead(301, { "Location": localtion }).end ()
-		}
-	}
-}
+// 		default : {
+// 			const localtion = `https://conettech.ca`
+// 			logger (Colors.red(`goto default [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
+// 			return res.writeHead(301, { "Location": localtion }).end ()
+// 		}
+// 	}
+// }
 
 
 
@@ -133,11 +134,9 @@ class conet_dl_server {
             logger (Colors.red(`Local server on ERROR`))
         })
         app.listen (this.PORT, async () => {
+
 			
-            return console.table([
-                { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
-            ])
-        })
+		// }
 
 		if ( this.debug ) {
 			app.use ((req, res, next) => {
@@ -163,7 +162,14 @@ class conet_dl_server {
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
-		
+
+		app.listen(4001)
+		// this.localserver = createServer (option, app ).listen (this.PORT, async () => {
+			
+        //     return console.table([
+        //         { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
+        //     ])
+        // })
 	}
 
 	public end () {
@@ -206,7 +212,8 @@ class conet_dl_server {
 			}
 
 
-			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData?.pgpKeyObj.privateKeyObj)
+			
+			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData.pgpKeyObj.privateKeyObj)
 
 			if (!obj) {
 				logger (Colors.red(`[${splitIpAddr ( req.ip )}] => /conet-si-node-register decryptPgpMessage ERROR!`), inspect(req.body , false, 3, true))
@@ -245,7 +252,7 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			//	@ts-ignore
+				// @ts-ignore
 			const hObj: ICoNET_DL_POST_register_SI = obj
 
 			const ret = await CoNET_SI_health ( hObj )

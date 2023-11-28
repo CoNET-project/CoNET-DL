@@ -25,13 +25,6 @@ import Accounts from 'web3-eth-accounts'
 
 const Eth = require('web3-eth')
 
-const wasabiObj = {
-	us_east_1: {
-		endpoint: 's3.wasabisys.com',
-		Bucket: 'conet-mvp',
-		Bucket_key: 'router'
-	}
-}
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
 
@@ -230,12 +223,20 @@ export const generatePgpKeyInit = async (walletAddr: string) => {
 }
 
 export const makePgpKeyObj = async ( keyObj: pgpKey) => {
+
 	try {
 		keyObj.privateKeyObj = await readPrivateKey ({armoredKey: keyObj.privateKeyArmored})
 		
 	} catch (ex) {
-		logger (`makePgpKeyObj error!`, inspect(keyObj, false, 3, true))
+		logger (colors.red(`makePgpKeyObj error!   ====> `), inspect(keyObj, false, 3, true))
 	}
+	k = await decryptKey({privateKey: keyObj.privateKeyObj, passphrase: password})
+	if (!k.isDecrypted ) {
+		return logger (colors.red(`makePgpKeyObj decryptKey had isDecrypted == false`))
+	}
+	keyObj.privateKeyObj = k
+	
+	logger(colors.green(`makePgpKeyObj success! keyid[${k.getKeyIDs().map(n => n.toHex().toUpperCase())}]`))
 	
 }
 
@@ -281,7 +282,6 @@ export const waitKeyInput: (query: string, password: boolean ) => Promise<string
 }
 
 export const decryptPayload = ( obj: ICoNET_Profile ) => {
-
 
 	let walletAddr = ''
 	try {
@@ -717,7 +717,9 @@ export const decryptPgpMessage = async ( pgpMessage: string, pgpPrivateObj: Priv
 		message = await readMessage ({armoredMessage: pgpMessage})
 		clearObj = await decrypt ({ message, decryptionKeys: pgpPrivateObj })
 	} catch (ex) {
-		logger (colors.red(`decryptPgpMessage readMessage pgpMessage | decrypt message Error!`), colors.gray(pgpMessage))
+		logger (colors.red(`decryptPgpMessage readMessage pgpMessage | decrypt message Error!`), colors.gray(pgpMessage),
+		`message?.getEncryptionKeyIDs = `+message?.getEncryptionKeyIDs().map(n => n.toHex().toUpperCase()), 
+		`pgpPrivateObj.getKeyID() = `+ pgpPrivateObj.getKeyID().toHex().toUpperCase(),  ex )
 		return null
 	}
 	

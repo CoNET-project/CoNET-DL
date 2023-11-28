@@ -59,6 +59,7 @@
 		"global-dirs": "^4.0.0"
 		
 	},
+	
 	"devDependencies": {
 		"@types/async": "^3.2.24",
 		"@types/express": "^4.17.21",
