@@ -23,7 +23,7 @@ const setup = join( homedir(),'.master.json' )
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
-const FaucetCount = 2
+const FaucetCount = 0.2
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://rpc1.openpgp.online`
 const USDCNET = `https://rpc1.openpgp.online/usdc`
@@ -230,7 +230,9 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		const cmd2 = `INSERT INTO conet_faucet_ipaddress (client_ipaddress, timestamp) VALUES ('${ipAddr}', '${time.toISOString() }') USING TTL ${FaucetTTL}`
 		const cmd3 = `INSERT INTO conet_faucet_wallet_addr (wallet_addr) VALUES ('${wallet_addr}') USING TTL ${FaucetTTL}`
-		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash, client_ipaddress) VALUES ('${wallet_addr}', '${time.toISOString()}', ${ FaucetCount }, '${receipt.transactionHash.toUpperCase()}', '${ ipAddr }')`
+		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash, client_ipaddress) VALUES ('${wallet_addr}', '${time.toISOString()}', ${ FaucetCount*10 }, '${receipt.transactionHash.toUpperCase()}', '${ ipAddr }')`
+
+        logger (cmd2, cmd3, cmd1)
 		await cassClient.execute (cmd1)
 		await cassClient.execute (cmd2)
 		await cassClient.execute (cmd3)
@@ -254,56 +256,56 @@ const storeCoNET_market = (price: number, oneDayPrice: number) => {
 	})
 }
 
-export const streamCoNET_USDCPrice = (quere: any[]) => {
+// export const streamCoNET_USDCPrice = (quere: any[]) => {
 
-	quere.shift ()
-	const option:RequestOptions = {
-		host: 'min-api.cryptocompare.com',
-		method: 'GET',
-		path: '/data/pricemultifull?fsyms=AVAX&tsyms=USD',
-		headers: {
-			'accept': 'application/json'
-		},
-		port: 443
-	}
+// 	quere.shift ()
+// 	const option:RequestOptions = {
+// 		host: 'min-api.cryptocompare.com',
+// 		method: 'GET',
+// 		path: '/data/pricemultifull?fsyms=AVAX&tsyms=USD',
+// 		headers: {
+// 			'accept': 'application/json'
+// 		},
+// 		port: 443
+// 	}
 
-	const req = request (option, res => {
-		let _data = ''
-		res.on ('data', data => {
-			_data += data.toString ()
-		})
+// 	const req = request (option, res => {
+// 		let _data = ''
+// 		res.on ('data', data => {
+// 			_data += data.toString ()
+// 		})
 
-		res.once ('end', async () => {
+// 		res.once ('end', async () => {
 
-			let response
-			try {
-				response = JSON.parse (_data)
-			} catch (ex) {
-				return logger (Color.red(`streamCoNET_USDCInterval JSON.parse Error`), _data)
-			}
+// 			let response
+// 			try {
+// 				response = JSON.parse (_data)
+// 			} catch (ex) {
+// 				return logger (Color.red(`streamCoNET_USDCInterval JSON.parse Error`), _data)
+// 			}
 			
-			await storeCoNET_market (response.RAW.AVAX.USD.PRICE, response.RAW.AVAX.USD.VOLUME24HOUR)
-			//logger (`streamCoNET_USDCInterval SUCCESS!, PRICE [${Color.green(response.RAW.AVAX.USD.PRICE)}] VOLUME24HOUR[${Color.green(response.RAW.AVAX.USD.VOLUME24HOUR)}]`)
+// 			await storeCoNET_market (response.RAW.AVAX.USD.PRICE, response.RAW.AVAX.USD.VOLUME24HOUR)
+// 			//logger (`streamCoNET_USDCInterval SUCCESS!, PRICE [${Color.green(response.RAW.AVAX.USD.PRICE)}] VOLUME24HOUR[${Color.green(response.RAW.AVAX.USD.VOLUME24HOUR)}]`)
 
-		})
-	})
+// 		})
+// 	})
 
 
-	req.once ('error', err => {
-		logger (Color.red(`streamCoNET_USDCPrice request Once Error`), err )
-	})
+// 	req.once ('error', err => {
+// 		logger (Color.red(`streamCoNET_USDCPrice request Once Error`), err )
+// 	})
 
-	req.end (() => {
-		if ( !quere.length ) {
-			const kk = setTimeout (() => {
-				streamCoNET_USDCPrice (quere)
-			}, streamCoNET_USDCInterval)
-			quere.unshift (kk)
-		}
-	})
+// 	req.end (() => {
+// 		if ( !quere.length ) {
+// 			const kk = setTimeout (() => {
+// 				streamCoNET_USDCPrice (quere)
+// 			}, streamCoNET_USDCInterval)
+// 			quere.unshift (kk)
+// 		}
+// 	})
 	
 	
-}
+// }
 
 export const getLast5Price = () => {
 	return new Promise ( async resolve => {
