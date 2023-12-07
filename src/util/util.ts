@@ -15,13 +15,12 @@ import { Buffer } from 'buffer'
 import { readCleartextMessage, verify, readKey, readMessage, readPrivateKey, decryptKey, decrypt, generateKey } from 'openpgp'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
 import { Writable } from 'node:stream'
-import Web3 from 'web3'
+import {Web3} from 'web3'
 
 import colors from 'colors/safe'
 
 
 import { any, series, waterfall } from 'async'
-import Accounts from 'web3-eth-accounts'
 
 const Eth = require('web3-eth')
 
@@ -76,6 +75,7 @@ export const sendCoNETAsset = (walletAddr: string, admin_private: string, token:
 		
 	})
 }
+
 
 export const return404 = () => {
 	const kkk = '<html>\r\n<head><title>404 Not Found</title></head>\r\n<body bgcolor="white">\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx/1.6.2</center>\r\n</body>\r\n</html>\r\n'
@@ -155,44 +155,39 @@ export const getServerIPV4Address = ( includeLocal: boolean ) => {
 	const nets = networkInterfaces()
 	const results = []
 	for ( const name of Object.keys( nets )) {
-		// @ts-ignore: Unreachable code error
-		for (const net of nets[ name ]) {
-			if ( net.family === 'IPv4' && !net.internal ) {
-				// if (!results[ name ]) {
-				// 	results[ name ] = []
-				// }
-				if (!includeLocal ) {
-					if ( rfc1918.test (net.address)) {
-						logger (`${net.address} is local`)
-						continue
+		const _next = nets[ name ]
+		if (_next) {
+			for (const net of _next) {
+				if ( net.family === 'IPv4' && !net.internal ) {
+					// if (!results[ name ]) {
+					// 	results[ name ] = []
+					// }
+					if (!includeLocal ) {
+						if ( rfc1918.test (net.address)) {
+							logger (`${net.address} is local`)
+							continue
+						}
 					}
+					results.push( net.address )
 				}
-				results.push( net.address )
 			}
 		}
-		}
+		
+	}
 		
 	
 	return results
 }
 
-export const generateWalletAddress = ( password: string ) => {
-	// @ts-ignore: Unreachable code error
-	const accountw: Accounts.Accounts = new Accounts()
-	const acc = accountw.wallet.create(2)
-	return acc.encrypt ( password )
+export const generateWalletAddress = () => {
+	const web3 = new Web3()
+	const acc = web3.eth.accounts.create()
+	return acc
 }
 
 export const loadWalletAddress = ( walletBase: any) => {
-    //@ts-ignore
-	const account: Accounts.Accounts = new Accounts()
-	const uu = account.wallet.decrypt ( walletBase, '' )
-
-
-	uu[0]['publickey'] = publicKeyByPrivateKey (uu[0].privateKey)
-
-	uu[1]['publickey'] = publicKeyByPrivateKey (uu[1].privateKey)
-	return uu
+	logger (`loadWalletAddress`)
+	logger (inspect(walletBase, false, 3, true))
 }
 
 export const generatePgpKeyInit = async (walletAddr: string) => {
@@ -208,7 +203,7 @@ export const generatePgpKeyInit = async (walletAddr: string) => {
 
 
 	const { privateKey, publicKey } = await generateKey (
-		//	@ts-ignore
+		//@ts-ignore
 		option)
 
 	const keyObj = await readKey ({armoredKey: publicKey})
@@ -226,17 +221,10 @@ export const makePgpKeyObj = async ( keyObj: pgpKey) => {
 
 	try {
 		keyObj.privateKeyObj = await readPrivateKey ({armoredKey: keyObj.privateKeyArmored})
-		
 	} catch (ex) {
 		logger (colors.red(`makePgpKeyObj error!   ====> `), inspect(keyObj, false, 3, true))
 	}
-	k = await decryptKey({privateKey: keyObj.privateKeyObj, passphrase: password})
-	if (!k.isDecrypted ) {
-		return logger (colors.red(`makePgpKeyObj decryptKey had isDecrypted == false`))
-	}
-	keyObj.privateKeyObj = k
-	
-	logger(colors.green(`makePgpKeyObj success! keyid[${k.getKeyIDs().map(n => n.toHex().toUpperCase())}]`))
+
 	
 }
 
@@ -257,7 +245,7 @@ export const waitKeyInput: (query: string, password: boolean ) => Promise<string
 	return new Promise( resolve =>  {
 		const mutableStdout = new Writable({
 			write: ( chunk, encoding, next ) => {
-				// @ts-ignore: Unreachable code error
+				//@ts-ignore
 				if (!mutableStdout["muted"]) {
 					process.stdout.write (chunk, encoding)
 				}
@@ -275,7 +263,7 @@ export const waitKeyInput: (query: string, password: boolean ) => Promise<string
 			return resolve(ans)
 		})
 
-		// @ts-ignore: Unreachable code error
+		//@ts-ignore
 		return mutableStdout["muted"] = password
 	})
 	
@@ -312,7 +300,7 @@ export const checkPublickeySign  = async ( cleartextMessage: string ) => {
 	const pubkeyObj = await readKey ({ armoredKey: signedMessage.getText() })
 
 	const verificationResult = await verify ({
-		// @ts-ignore: Unreachable code error
+
         message: signedMessage,
         verificationKeys: pubkeyObj
     })
@@ -778,6 +766,16 @@ export const decryptPgpMessage = async ( pgpMessage: string, pgpPrivateObj: Priv
  * 
  */
 /*
+const test = async () => {
+	const ooo = generateWalletAddress()
+	const ss = await generatePgpKeyInit (ooo.address)
+	logger (inspect(ss, false, 3, true))
+}
+
+test()
+
+
+/*
 const obj = {privateKeyObj:"-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nxYYEZWTcxBYJKwYBBAHaRw8BAQdAZh+95s/tt9+wp4/15esC38Zqfk1T+yd+\ns7XK2QV+zwr+CQMIdu6j7Fc8oZvgbrYloQXRqH0CigPlO9JNz58ZYhJR0kbL\nh3rx4zZXvlOxebzvMkYeGvcqnmyHDqVvK98KXEDYW3axCdRXuIzlj1gdFoil\np80oODE4MjFhOWM2NzMxMjZhOWFhMDIzY2E2YWIzNWRjZmQwMjBhYzliY8KM\nBBAWCgA+BYJlZNzEBAsJBwgJkJg4MrTtRgnQAxUICgQWAAIBAhkBApsDAh4B\nFiEEuidqbBGtg+gscWtemDgytO1GCdAAACOgAQCJKUnJe2c+tRkXfMfLxJzq\n+tzG6FQ3F48lv3YgT+bxvQD9H5g2yFhO1S2uYTZaVK5qFyu+oN7QV5B7Y8PS\ngFsdigDHiwRlZNzEEgorBgEEAZdVAQUBAQdAx+6GSJFhRiNu7a+tyDYtiE/V\nhzAde7B3b1tQ+QhM/HkDAQgH/gkDCHHngHHDzoa44Ih0ye07yPsRsIhZHZqp\ntbsd01b91TneT2Zc3LrjtXt0yZgxjskpPxREWp635vDcKklOiFDui3yJnuZc\nfhsVEEO2ljPW1yHCeAQYFggAKgWCZWTcxAmQmDgytO1GCdACmwwWIQS6J2ps\nEa2D6Cxxa16YODK07UYJ0AAAAksBAPfkrpA+paWSR0yx2YcncJeAl4980RRe\nPcGOJ7WdrMh3AQDGAV2PetBgYvBLC8jVbDD4PwaYjlhp15NswnFgD6HRCQ==\n=EEgp\n-----END PGP PRIVATE KEY BLOCK-----\n"}
 const kk = `-----BEGIN PGP MESSAGE-----
 
@@ -818,9 +816,9 @@ vwzKhXmfIxBmWbCHpRVVGfAmdWWltC9yUMSqmBzSWsS0vx0PMxP5BQ==
 `
 
 const kke = async () => {
-    // @ts-ignore
+
     await makePgpKeyObj(obj, '')
-    // @ts-ignore
+
     //decryptPgpMessage(kk, obj)
 }
 kke()

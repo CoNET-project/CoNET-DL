@@ -11,12 +11,7 @@ import Web3 from 'web3'
 import { readFileSync } from 'node:fs'
 import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj } from '../util/util'
 
-import { createServer} from 'node:https'
-
-import Cluster from 'node:cluster'
-import type { Request, Response } from 'express'
-
-const splitIpAddr = (ipaddress: string ) => {
+const splitIpAddr = (ipaddress: string | undefined ) => {
 	if (!ipaddress?.length) {
 		logger (Colors.red(`splitIpAddr ipaddress have no ipaddress?.length`), inspect( ipaddress, false, 3, true ))
 		return ''
@@ -61,8 +56,7 @@ const version = packageJson.version
 
 
 class conet_dl_server {
-	// @ts-ignore
-    private localserver: Server
+
 	private PORT: any
 	private appsPath = ''
 	private initData: ICoNET_NodeSetup|null = null
@@ -133,27 +127,13 @@ class conet_dl_server {
             logger (err)
             logger (Colors.red(`Local server on ERROR`))
         })
+
         app.listen (this.PORT, async () => {
+			return console.table([
+                { 'CoNET DL': `version ${version} startup success ${ this.PORT }` }
+            ])
+		})
 
-			
-		// }
-
-		if ( this.debug ) {
-			app.use ((req, res, next) => {
-				const afterResponse = () => {
-
-					logger (`Server has request from ${ req.ip } request string:[${ req.url }]`)
-
-					res.removeListener('finish', afterResponse)
-    				res.removeListener('close', afterResponse)
-					return
-				}
-
-				res.once('finish', afterResponse)
-    			res.once('close', afterResponse)
-				next()
-			})
-		}
 
 		this.router (router)
 
@@ -163,18 +143,16 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 
-		app.listen(4001)
 		// this.localserver = createServer (option, app ).listen (this.PORT, async () => {
 			
         //     return console.table([
         //         { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
         //     ])
         // })
+	
 	}
+	
 
-	public end () {
-        this.localserver.close ()
-    }
 
 	private router ( router: Router ) {
 		
@@ -205,7 +183,7 @@ class conet_dl_server {
 		router.post ('/conet-si-node-register', async ( req, res ) => {
 			const pgpMessage = req.body?.pgpMessage
 			
-			if ( !pgpMessage ) {
+			if ( !pgpMessage || !this.initData) {
 				logger (Colors.red(`/conet-si-node-register has unknow payload [${splitIpAddr ( req.ip )}]`), inspect(req.body, false, 3, true))
 				res.status(404).end ()
 				return res.socket?.end().destroy()
@@ -265,7 +243,7 @@ class conet_dl_server {
 			}
 
 			//logger (Colors.grey(`[${splitIpAddr ( req.ip )}] ==> /si-health success!`))
-			res.json ({}).end()
+			res.json (this.si_pool).end()
 			return res.socket?.end().destroy()
 		})
 

@@ -21,9 +21,9 @@ if ( Cluster.isPrimary) {
 	
 	const startCommand = `conet-mvp-dl -d start > system.log &`
 
-	process.once ('exit', () => {
+	process.once ('exit', (code: any, kk: any) => {
 		
-		logger (Colors.red (`@conet.project/mvp-dl main process on EXIT, restart again!\nstartCommand = ${startCommand}`))
+		logger (Colors.red (`@conet.project/mvp-dl main process on EXIT with [code ${code}, kk ${kk}], restart again!\nstartCommand = ${startCommand}`))
 		const uuu = exec (startCommand)
 
 		uuu.once ('spawn', () => {
@@ -150,17 +150,16 @@ if ( Cluster.isPrimary) {
 	}
 
 	const getSetupInfo = async () => {
-		// @ts-ignore: Unreachable code error
-		let setupInfo: ICoNET_NodeSetup|undefined = await getSetup ( debug )
+
+		let setupInfo: ICoNET_NodeSetup|null = await getSetup ( debug )
 	
 		if ( !setupInfo ) {
 
 			//const password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
+
+			const port: number = 4001
 	
-			// @ts-ignore: Unreachable code error
-			const port: number = parseInt(await waitKeyInput (`Please enter the node listening PORT number [default is 443]: `))|| 443
-	
-			const keychain = generateWalletAddress ('')
+			const keychain = generateWalletAddress ()
 
 			setupInfo = {
 				keychain: keychain,
@@ -169,10 +168,10 @@ if ( Cluster.isPrimary) {
 				ipV4Port: port,
 				ipV6Port: port,
 				setupPath: '',
-				pgpKeyObj: await generatePgpKeyInit(keychain[0].address),
+				pgpKeyObj: await generatePgpKeyInit(keychain.address),
 				keyObj: null
 			}
-
+			
 			await saveSetup ( setupFileName, JSON.stringify (setupInfo))
 			return tryMaster_json_file (setupInfo)
 		}
@@ -248,11 +247,12 @@ if ( Cluster.isPrimary) {
 			fork.on ('message', onMessage )
 
 			fork.once ('exit', (code: number, signal: string) => {
-				logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
-				if ( !signal) {
-					return logger (`Worker [${ fork.id }] signal = NEW_VERSION do not restart!`)
+				
+				if ( signal === null ) {
+					return logger (`Worker [${ fork.id }] EXIT with code [${code}] signal = null do not restart!`)
 				}
 
+				logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
 				return setTimeout (() => {
 					return _forkWorker ()
 				}, 1000 * 10)

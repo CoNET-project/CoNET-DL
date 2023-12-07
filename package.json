@@ -1,6 +1,6 @@
 {
 	"name": "@conet.project/mvp-dl",
-	"version": "0.1.4",
+	"version": "0.1.13",
 	"author": {
 		"name": "CONET Project",
 		"email": "info@conet.network"
@@ -54,7 +54,7 @@
 		"express": "^4.18.2",
 		"hexdump-nodejs": "^0.1.0",
 		"uuid": "^9.0.1",
-		"web3": "^4.2.2",
+		"web3": "^4.3.0",
 		"openpgp": "^5.11.0",
 		"global-dirs": "^4.0.0"
 		
