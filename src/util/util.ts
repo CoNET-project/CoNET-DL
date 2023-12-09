@@ -15,10 +15,10 @@ import { Buffer } from 'buffer'
 import { readCleartextMessage, verify, readKey, readMessage, readPrivateKey, decryptKey, decrypt, generateKey } from 'openpgp'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
 import { Writable } from 'node:stream'
-import {Web3} from 'web3'
-
+ 
+import web3 from 'web3'
 import colors from 'colors/safe'
-
+import Accounts from 'web3-eth-accounts'
 
 import { any, series, waterfall } from 'async'
 
@@ -180,9 +180,10 @@ export const getServerIPV4Address = ( includeLocal: boolean ) => {
 }
 
 export const generateWalletAddress = () => {
-	const web3 = new Web3()
-	const acc = web3.eth.accounts.create()
-	return acc
+	// @ts-ignore: Unreachable code error
+	const accountw: Accounts.Accounts = new Accounts()
+	const acc = accountw.wallet.create(2)
+	return acc.encrypt ()
 }
 
 export const loadWalletAddress = ( walletBase: any) => {
@@ -454,7 +455,7 @@ export const getIpaddressLocaltion = (Addr: string) => {
 }
 
 const usdcNet = 'https://mvpusdc.conettech.ca/mvpusdc'
-const fujiCONET = `http://rpc3.openpgp.online`
+const fujiCONET = `http://rpc1.openpgp.online`
 
 const denominator = 1000000000000000000
 
@@ -513,9 +514,6 @@ export const getUSDCBalance = async (Addr: string) => {
 	return balance
 }
 
-export const checkAddress = (walletAddr: string) => {
-	return Web3.utils.isAddress (walletAddr)
-}
 
 export const getConfirmations = async (txHash: string, receiveAddr: string, network: string ) => {
 	const eth = new Eth ( new Eth.providers.HttpProvider(network))
@@ -767,9 +765,26 @@ export const decryptPgpMessage = async ( pgpMessage: string, pgpPrivateObj: Priv
  */
 /*
 const test = async () => {
-	const ooo = generateWalletAddress()
-	const ss = await generatePgpKeyInit (ooo.address)
-	logger (inspect(ss, false, 3, true))
+	const ooo = {
+		address: '0xCac9Bb2748Ece233B4717Be5EcAFC4a6D2b21E6E',
+  		privateKey: '0x47ffe87f78d6f497a90f9a3bdd210e7f148a41ef4caeef74e4a4aed038f5af10'
+	}
+	const web3 = new Web3 (new HttpProvider(fujiCONET))
+	await web3.eth.personal.importRawKey(ooo.privateKey.slice(2),'')
+	let receipt
+	try {
+		receipt = await web3.eth.sendTransaction({
+			from: ooo.address,
+			to: '0xcB25daB10170853C7626563D02af554fF34C0AbC',
+			value: (0.02 * wei).toString(),
+			gas: '300000',
+			
+		})
+	} catch (error) {
+		// catch transaction error
+		console.error(error)
+	}
+	inspect(receipt, false, 2, true)
 }
 
 test()
