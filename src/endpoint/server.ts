@@ -12,14 +12,15 @@ import {v4} from 'uuid'
 
 import {readFileSync} from 'node:fs'
 import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, checkSign, checkReferralSign, getCNTPMastersBalance, listedServerIpAddress} from '../util/util'
-//import {createServer} from 'node:https'
-
 import {createServer} from 'node:https'
+
+
+import {createServer as createServerForDebug} from 'node:http'
 
 import { ethers } from 'ethers'
 
-const privateKey = readFileSync('/etc/letsencrypt/live/openpgp.online/privkey.pem')
-const certificate = readFileSync( '/etc/letsencrypt/live/openpgp.online/fullchain.pem' )
+// const privateKey = readFileSync('/etc/letsencrypt/live/openpgp.online/privkey.pem')
+// const certificate = readFileSync( '/etc/letsencrypt/live/openpgp.online/fullchain.pem' )
 const nodesPath = join(homedir(),'nodes,son')
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
@@ -265,9 +266,13 @@ class conet_dl_server {
             logger (err)
             logger (Colors.red(`Local server on ERROR`))
         })
-		const server = createServer({
-			key: privateKey,
-			cert: certificate
+		// const server = createServer({
+		// 	key: privateKey,
+		// 	cert: certificate
+		// }, app)
+
+		const server = createServerForDebug({
+
 		}, app)
 
 

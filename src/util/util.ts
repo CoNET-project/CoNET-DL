@@ -902,8 +902,8 @@ export const _nodes1= [
 export const splitPei = async (walletAddressList: string[], privateKeyReferrals: string, ReferralsMap: Map<string, string>,callback: (data: any)=> void) => {
 
 
-	const total_pie = 77.160493827160494*2
-	//const total_pie = 0.007716*2
+	// const total_pie = 77.160493827160494 * 2
+	const total_pie = 0.07716*2
 
 	const nodes1_Pei = total_pie * .603
 	const nodes2_Pei = total_pie * .323
@@ -960,7 +960,7 @@ export const sendTokenToMiner = async (walletList: string[], payList: string[], 
 	nonceLock.conetPointAdmin = false
 	let total = 0
 	payList.forEach(n => total += parseFloat(n)/10**18)
-	return logger (colors.magenta (`Send to Miner success! nodes + free userDATA LENGTH [${ walletList.length }] Total CNTP = [${total}]`))
+	return logger (colors.magenta (`Send to Miner success! nodes + free userDATA LENGTH [${ walletList.length }] Total CNTP = [${total}] tx=[${uu.hash}]`), inspect(uu, false, 3, true))
 }
 
 export const checkSign = (message: string, signMess: string, publicAddress: string) => {
@@ -1145,7 +1145,7 @@ export const multiTransfer = async (privateKey: string, nodes: string[], _payLis
 		return logger (colors.red(`Send to Referrals [${ nodes.length }] ERROR, Try make new provide RPC`), ex)
 	}
 	nonceLock.cnptReferralAdmin = false
-	return logger (colors.magenta (`Send to Referrals success! total wallets ${ nodes.length }] Total CNTP = [${total}]`))
+	return logger (colors.magenta (`Send to Referrals success! total wallets ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`), inspect(tx, false, 3, true))
 
 }
 
