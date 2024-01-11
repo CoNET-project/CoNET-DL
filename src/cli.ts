@@ -2,7 +2,7 @@
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
-import { logger, getServerIPV4Address, generateWalletAddress, saveSetup, getSetup, waitKeyInput, loadWalletAddress, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit } from './util/util'
+import { logger, getServerIPV4Address, saveSetup, getSetup, getCNTPMastersBalance, loadWalletAddress, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit, splitPei, sendTokenToMiner, multiTransfer, nodesWalletAddr, listedServerIpAddress, sendCONET, checkReferralSign } from './util/util'
 
 //import {streamCoNET_USDCPrice} from './endpoint/help-database'
 
@@ -11,6 +11,11 @@ import Cluster from 'node:cluster'
 import type { Worker } from 'node:cluster'
 import Colors from 'colors/safe'
 import { homedir, cpus } from 'node:os'
+import {eachLimit} from 'async'
+import {v4} from 'uuid'
+
+
+const ReserveIPAddress=['74.208.25.159','74.208.151.98','108.175.5.112','209.209.8.74']
 
 const eraseNodeOnlieTime = 1000 * 60 * 6
 
@@ -18,9 +23,10 @@ if ( Cluster.isPrimary) {
 	const DL_Path = '.CoNET-DL'
 	const setupFileDir = join ( homedir(), DL_Path )
 	const setupFileName = join ( setupFileDir, 'nodeSetup.json')
-	
+	const setupFile = join( homedir(),'.master.json' )
+	const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 	const startCommand = `conet-mvp-dl -d start > system.log &`
-
+	const livenessListeningPool:Map<string, minerObj> = new Map()
 	process.once ('exit', (code: any, kk: any) => {
 		
 		logger (Colors.red (`@conet.project/mvp-dl main process on EXIT with [code ${code}, kk ${kk}], restart again!\nstartCommand = ${startCommand}`))
@@ -32,6 +38,9 @@ if ( Cluster.isPrimary) {
 
 	})
 
+
+	const sendMinerPool: sendMiner[] = []
+
 	const [,,...args] = process.argv
 	let debug = false
 	let version = false
@@ -40,7 +49,24 @@ if ( Cluster.isPrimary) {
 	let passwd = ''
 	let workerPool: Worker[] = []
 	let single = false
-	let node_si_pool: any[] = []
+	let node_si_pool: nodeType[] = []
+	let livenessStart = false
+	let sending_CONET = false
+	let sendMineFromMinerPool_processing = false
+	let masterBalance: {
+		CNTPMasterBalance: string
+		CNTPReferralBalance: string
+	}|null
+	const ipaddressPool: Map<string, number[]>  = new Map()
+	const sendCONET_Pool: string[] = []
+	const ReferralsMap: Map<string, string> = new Map()
+
+	const nonceLock: nonceLock = {
+		conetPointAdmin: false,
+		cnptReferralAdmin: false,
+
+	}
+
 	const timeoutPool: {
 		timeout: NodeJS.Timeout
 		ip_addr: string
@@ -52,6 +78,22 @@ if ( Cluster.isPrimary) {
 				worker.kill ()
 			}
 		}
+	}
+
+	const sendMineFromMinerPool = async () => {
+		if (sendMineFromMinerPool_processing) {
+			return
+		}
+		const data = sendMinerPool.shift()
+		if (!data) {
+			return logger(Colors.magenta(`sendMineFromMinerPool got null from pool, stop process!`))
+		}
+		logger(Colors.magenta(`sendMineFromMinerPool process current data miner = [${data.miner.walletList.length}] referrals = [${data.referrals.payList.length}] waitinglist = [${sendMinerPool.length}]`))
+		sendMineFromMinerPool_processing = true
+		await multiTransfer (masterSetup.cnptReferralAdmin, data.referrals.walletList, data.referrals.payList, nonceLock )
+		await sendTokenToMiner (data.miner.walletList, data.miner.payList, masterSetup.conetPointAdmin, nonceLock)
+		sendMineFromMinerPool_processing = false
+		sendMineFromMinerPool ()
 	}
 
 	args.forEach ((n, index ) => {
@@ -111,7 +153,7 @@ if ( Cluster.isPrimary) {
 	if ( GlobalIpAddress.length === 0 ) {
 		logger ('WARING: Your node looks have no Global IP address!')
 	}
-	const startPackageSelfVersionCheckAndUpgrade_IntervalTime = 1000 * 60 * 10				//			10 mins
+	const startPackageSelfVersionCheckAndUpgrade_IntervalTime = 1000 * 60 * 3				//			10 mins
 
 	const checkNewVer = async () => {
 		const haveNewVersion = await startPackageSelfVersionCheckAndUpgrade('@conet.project/mvp-dl')
@@ -129,10 +171,8 @@ if ( Cluster.isPrimary) {
 		}, startPackageSelfVersionCheckAndUpgrade_IntervalTime)
 	}
 
-
 	const tryMaster_json_file = async (setupInfo: ICoNET_NodeSetup) => {
-		const setup = join( homedir(),'.master.json' )
-		const masterSetup: ICoNET_DL_masterSetup = require ( setup )
+		
 	
 		const obj = loadWalletAddress (setupInfo.keychain)
 
@@ -149,33 +189,45 @@ if ( Cluster.isPrimary) {
 
 	}
 
+
+
+	const reflashMasterBalance = async () => {
+		masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
+		setTimeout(() => {
+			return reflashMasterBalance()
+		}, 30000)
+	}
+
 	const getSetupInfo = async () => {
 
 		let setupInfo: ICoNET_NodeSetup|null = await getSetup ( debug )
 	
 		if ( !setupInfo ) {
-
+			logger(Colors.blue(`function getSetup return null!`))
 			//const password = await waitKeyInput (`Please enter the password for protected wallet address: `, true )
 
 			const port: number = 4001
 	
-			const keychain = generateWalletAddress ()
+
 
 			setupInfo = {
-				keychain: keychain,
+				keychain:'',
 				ipV4: GlobalIpAddress[0],
 				ipV6: '',
 				ipV4Port: port,
 				ipV6Port: port,
 				setupPath: '',
-				pgpKeyObj: await generatePgpKeyInit(keychain.address),
+				pgpKeyObj: await generatePgpKeyInit(''),
 				keyObj: null
 			}
 			
 			await saveSetup ( setupFileName, JSON.stringify (setupInfo))
 			return tryMaster_json_file (setupInfo)
 		}
+		logger(Colors.blue(`function getSetupFinished`))
+		masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
 
+		logger(Colors.blue(`function getSetup return null!`))
 		return tryMaster_json_file (setupInfo)
 		
 	}
@@ -183,7 +235,9 @@ if ( Cluster.isPrimary) {
 	const broadcastNodelistToAllWorkers = () => {
 		const mess: clusterMessage = {
 			cmd: 'si-node',
-			data: [node_si_pool]
+			data: [node_si_pool],
+			uuid:'',
+			err: null
 		}
 		
 		return workerPool.forEach (v => {
@@ -191,6 +245,44 @@ if ( Cluster.isPrimary) {
 				v.send (mess)
 			}
 		})
+	}
+
+	const broadcastStartlivenessMiner = async (data: any) => {
+		
+		const mess: clusterMessage = {
+			cmd: 'livenessStart',
+			data: [node_si_pool, masterBalance],
+			uuid: '',
+			err: null
+		}
+		logger(Colors.magenta(`broadcastStartlivenessMiner to all servers!`), inspect(masterBalance, false, 2, true))
+		return workerPool.forEach (v => {
+			if ( v.isConnected()) {
+				v.send (mess)
+			}
+		})
+		
+		
+	}
+
+	const FaucetCount = '0.1'
+
+	const _sendCONET = async () => {
+		if (sending_CONET) {
+			return
+		}
+		const wallet = sendCONET_Pool.shift()
+		if (!wallet) {
+			return
+		}
+
+		sending_CONET = true
+
+		await sendCONET(masterSetup.master_wallet_private, FaucetCount, wallet)
+		sending_CONET = false
+		_sendCONET ()
+		return
+ 
 	}
 
 	const addToSiPool = (data: any) => {
@@ -203,10 +295,12 @@ if ( Cluster.isPrimary) {
 			clearTimeout (time_out.timeout)
 			timeoutPool.splice(timeIndex, 1)
 		}
+
 		const timeout = setTimeout (() => {
 			const index = node_si_pool.findIndex (n => n.ip_addr === data.ip_addr)
 			if ( index > -1) {
-				node_si_pool.splice (index, 1)
+				const node= node_si_pool[index]
+				node.running = false
 				logger (Colors.red(`Erase node daemon! Erase node[${data.ip_addr}]`))
 				return broadcastNodelistToAllWorkers ()
 			}
@@ -223,10 +317,176 @@ if ( Cluster.isPrimary) {
 		
 	}
 
-	const onMessage = (message: clusterMessage) => {
+	const onMessage = async (message: clusterMessage, fork: Worker) => {
 		switch (message.cmd) {
 			case 'si-node': {
-				return addToSiPool (message.data[0])
+				const node: nodeType = message.data[0]
+				
+					const _index = listedServerIpAddress.findIndex(nn => {
+						return nn.ipaddress === node.ip_addr
+					})
+					if (_index < 0){
+						return logger(Colors.red(`new SI node ${node.ip_addr} Join to  listedServerIpAddress!`))
+					}
+					node.minerAddr = listedServerIpAddress[_index].wallet_addr
+					node.running = true
+					node.type = listedServerIpAddress[_index].type
+					// const data = await getWalletBalance(masterSetup.conetPointAdmin, node.minerAddr, ReferralsMap)
+					// if (data) {
+					// 	node.balance = data?.CNTP_Balance
+					// }
+					// logger(inspect(node, false, 3, true))
+					return addToSiPool (node)
+				
+				
+			}
+
+			case 'newBlock': {
+				const blockNumber = message.data[0]
+				const soingMint = (parseInt(blockNumber) %2) > 0
+				if (!soingMint) {
+					return logger(Colors.red(`onMessage newBlock skip THE BLOCK [${blockNumber}] EVENT`))
+				}
+				// if (livenessStart) {
+				// 	return logger(Colors.red(`onMessage newBlock but livenessStart === true, skip THE BLOCK [${blockNumber}] EVENT`))
+				// }
+				livenessStart = true
+				const walletAddressArray = Array.from(livenessListeningPool, ([name, value]) => name)
+				const final_walletAddressArray = walletAddressArray.filter(n => n !== undefined)
+
+				logger(Colors.magenta(`newBlock [${blockNumber}] walletAddressArray = ${final_walletAddressArray?.length}`))
+				return splitPei (final_walletAddressArray, masterSetup.cnptReferralAdmin, ReferralsMap, async (data: sendMiner) => {
+
+					livenessStart = false
+					// await getNodesBalance(node_si_pool, masterSetup.conetPointAdmin)
+					logger(Colors.magenta(`newBlock splitPei callback success!`))
+
+					sendMinerPool.push(data)
+
+					logger(Colors.magenta(`newBlock splitPei success! miner length = [${data.miner.walletList.length}] referrals = [${data.referrals.payList.length}] pushed to sendMinerPool.length  [${ sendMinerPool.length }]`))
+					sendMineFromMinerPool()
+					return broadcastStartlivenessMiner(data)
+				})
+			}
+
+			case 'livenessStart': {
+				const obj: minerObj = message.data[0]
+				let ipMatch = false
+				let ipaddress=''
+				const _obj = livenessListeningPool.get (obj.walletAddress)
+
+				if (_obj ){
+					message.err = 'has connecting'
+					return fork.send(message)
+			
+				}
+				
+				const index = ReserveIPAddress.findIndex(n => n === obj.ipAddress)
+				if (index < 0) {
+					livenessListeningPool.forEach(n => {
+						if (n.ipAddress === obj.ipAddress) {
+							ipMatch = true
+							ipaddress = n.ipAddress
+						}
+					})
+				}
+				
+
+				if (ipMatch||index > -1) {
+					message.data=[ipaddress]
+					message.err = 'different IP'
+					return fork.send(message)
+				}
+
+				message.data=[]
+
+				
+				// @ts-ignore
+				obj.fork = fork
+
+				livenessListeningPool.set(obj.walletAddress, obj)
+				livenessListeningPool.set(obj.walletAddress, obj)
+				logger(Colors.gray(`[${obj.walletAddress}:${obj.ipAddress}] added to livenessListeningPool total size is [${livenessListeningPool.size}]`))
+				return fork.send(message)
+			}
+
+
+			case 'sendCONET': {
+				const wallet = message.data[0]
+				sendCONET_Pool.push (wallet)
+				return _sendCONET()
+			}
+
+			case 'stop-liveness': {
+				const obj: minerObj = message.data[0]
+				const walletAddress = obj.walletAddress
+				const kk = livenessListeningPool.get (walletAddress)
+				if (!kk) {
+					return logger(Colors.grey(`Client [${obj.ipAddress}:${walletAddress}] does't in list!`))
+				}
+				
+				livenessListeningPool.delete(walletAddress)
+				if (kk.fork) {
+					kk.fork.send(message)
+				}
+			}
+
+			case 'livenessLoseConnecting': {
+				const walletAddress = message.data[0]
+				const _obj = livenessListeningPool.get (walletAddress)
+				if (!_obj) {
+					return //logger (Colors.red(`onMessage [livenessLoseConnecting] WalletAddress [${walletAddress}] from work id = [${fork.id}] has not in livenessListeningPool, length = [${livenessListeningPool.size}]`))
+				}
+				livenessListeningPool.delete(walletAddress)
+				return //logger (Colors.cyan(`onMessage [livenessLoseConnecting] WalletAddress [${walletAddress}] delete from livenessListeningPool SUCCESS! length = [${livenessListeningPool.values}]`))
+			}
+
+			case 'attackcheck': {
+				const ipaddress:string = message.data[0]
+				message.data = []
+				const count = ipaddressPool.get(ipaddress)
+				const time = new Date().getTime()
+				if (!count) {
+					ipaddressPool.set(ipaddress, [time])
+					return fork.send(message)
+				}
+				
+				count.push(time)
+				
+				
+				if (count.length < 5) {
+					return fork.send(message)
+				}
+
+				const checkTime = () => {
+					if (count.length < 5) {
+						return fork.send(message)
+					}
+					const tx = count.shift()
+					if (tx === undefined) {
+						checkTime ()
+						return
+					}
+
+					if (time - tx < 5000 ) {
+						message.data = [true]
+						return fork.send(message)
+					}
+					return fork.send(message)
+				}
+				return checkTime()
+			}
+
+			case 'registerReferrer': {
+				const obj = message.data[0]
+				message.data = [await checkReferralSign(obj.walletAddress, obj.referrer, ReferralsMap, masterSetup.ReferralAddAdmin, nonceLock)]
+				return fork.send(message)
+			}
+
+			
+
+			case 'available-nodes': {
+				return
 			}
 
 			default: {
@@ -237,14 +497,14 @@ if ( Cluster.isPrimary) {
 
 	const forkWorker = () => {
 		
-		let numCPUs = cpus ().length/2
+		let numCPUs = cpus ().length
 		
 		debug ? logger (`Cluster.isPrimary node have ${ numCPUs } cpus\n`): null
 	
 		const _forkWorker = () => {
 			const fork = Cluster.fork ()
 
-			fork.on ('message', onMessage )
+			fork.on ('message', msg => onMessage(msg, fork) )
 
 			fork.once ('exit', (code: number, signal: string) => {
 				
@@ -260,12 +520,14 @@ if ( Cluster.isPrimary) {
 			return (fork)
 		}
 		
-		for (let i = 0; i < numCPUs; i ++) {
+		for (let i = 0; i < numCPUs*2; i ++) {
 			const woeker = _forkWorker ()
 			workerPool.push (woeker)
 		}
 		
 	}
+
+
 
 	getSetupInfo ()
 		

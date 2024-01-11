@@ -14,6 +14,7 @@ interface ICoNET_NodeSetup {
 	keyObj: any
 	setupPath: string
 	pgpKeyObj: pgpKey
+
 }
 
 interface pgpKey {
@@ -50,6 +51,9 @@ interface ICoNET_DecryptedPayload {
 }
 
 interface ICoNET_DL_masterSetup {
+	ReferralAddAdmin: string
+	conetPointAdmin: string
+	cnptReferralAdmin: string
     "13b995b1fDotCa":{
         Key: string
         cert: string 
@@ -181,8 +185,53 @@ interface ICoNET_DL_POST_register_SI extends ICoNET_Router_Base {
 }
 
 interface clusterMessage {
-	cmd: 'si-node'|'get-si-nodes'
+	cmd: 'si-node'|'get-si-nodes'|'newBlock'|'livenessListening'|'livenessStart'|'livenessLoseConnecting'|'sendCONET'|'available-nodes'|'registerReferrer'|'CNTP-balance'|'stop-liveness'|'attackcheck'
+	uuid: string
 	data: any[]
+	err: 'has connecting'|'different IP'|'no in regiset pool'|null
 }
 
 
+interface minerObj {
+	walletAddress: string
+	ipAddress: string
+	weidth: number
+	blockNumber?:string
+	referrer?:string
+	fork: any
+}
+
+interface nodeType {
+	ip_addr: string
+	minerAddr: string
+	running: boolean
+	balance: string
+	type: 'super'|'seed'
+	ipaddress: string
+	pgp_publickey_id?: string
+}
+
+interface CNTPMasterBalance {
+	CNTPMasterBalance: string
+	CNTPReferralBalance: string
+}
+
+interface transferPair {
+	walletList: string[]
+	payList: string[]
+}
+
+interface sendMiner {
+	miner: transferPair
+	referrals: transferPair
+}
+
+interface nonceLock {
+	conetPointAdmin: boolean
+	cnptReferralAdmin: boolean
+}
+interface _nodeType {
+	ipaddress: string
+	type: 'super'|'seed'
+	wallet_addr: string
+}

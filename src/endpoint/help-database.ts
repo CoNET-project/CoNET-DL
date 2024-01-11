@@ -3,18 +3,14 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, getConfirmations, decryptPayload, regiestCloudFlare, decryptPgpMessage } from '../util/util'
+import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations } from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
 import {v4} from 'uuid'
 import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recover } from 'eth-crypto'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
-var Web3HttpProvider = require('web3-providers-http')
 
-import Accounts from 'web3-eth-accounts'
-
-const Eth = require('web3-eth')
 import Color from 'colors/safe'
 
 import { Client, auth, types } from 'cassandra-driver'
@@ -23,7 +19,7 @@ const setup = join( homedir(),'.master.json' )
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
-const FaucetCount = 0.2
+const FaucetCount = '0.1'
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://rpc1.openpgp.online`
 const USDCNET = `https://rpc1.openpgp.online/usdc`
@@ -84,7 +80,8 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI ) => {
 	
 		payload.ip_api = await getIpaddressLocaltion ( payload.ipV4 )
 	
-		const nft_tokenid = createHash('sha256').update(payload.ipV4).digest('hex')
+		const nft_tokenid = createHash('sha256').update(payload.walletAddr.toLowerCase()).digest('hex')
+		//logger(Color.blue(`nft_tokenid[${nft_tokenid}] = createHash('sha256').update(payload.walletAddr.toLowerCase())[${payload.walletAddr.toLowerCase()}]`))
 		payload.nft_tokenid = nft_tokenid
 		
 		const customs_review_total = (Math.random()*5).toFixed(2)
@@ -95,24 +92,19 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI ) => {
 		await cassClient.connect ()
 			
 		let result = await cassClient.execute (cmd0)
-	
-		const oldData = result?.rows[0]
+		//@ts-ignore
+		let oldData: nodeType = result?.rows[0]
 		const time = new Date ()
 		const needDomain = oldData?.pgp_publickey_id === payload.gpgPublicKeyID1 ? false: true
-		let cmd = !result.rowLength
-					? `INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
+		let cmd = 
+					`INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
 					`country, region, lat, lon, customs_review_total, `+
 					`pgp_publickey_id, nft_tokenid, total_online, last_online, platform_verison) VALUES (` +
 					` '${ payload.walletAddr }', '${ payload.ipV4 }', ${ payload.outbound_price }, ${ payload.storage_price }, '${ time.toISOString() }', `+
-					`'${ payload.ip_api.countryCode }', '${ payload.ip_api.region }', ${ payload.ip_api.lat }, ${ payload.ip_api.lon }, ${ customs_review_total }, `+
+					`'${ payload.ip_api?.countryCode }', '${ payload.ip_api?.region }', ${ payload.ip_api?.lat }, ${ payload.ip_api?.lon }, ${ customs_review_total }, `+
 					`'${ payload.gpgPublicKeyID1 }', '${ nft_tokenid }', 5, dateof(now()), '${ payload.platform_verison }' ) `
 
-					: `UPDATE conet_si_nodes SET wallet_addr = '${ payload.walletAddr }', outbound_fee = ${ payload.outbound_price }, storage_fee = ${ payload.storage_price }, `+
-					`customs_review_total = ${customs_review_total}, `+
-					`${ needDomain ? "pgp_publickey_id = '" +  payload.gpgPublicKeyID1 + "',": '' } platform_verison = '${ payload.platform_verison }', total_online = ${ oldData.total_online + 5 }, last_online = dateof(now()) ` +
-					`WHERE nft_tokenid = '${ nft_tokenid }' and country = '${ oldData.country }'`
-
-		logger (inspect(cmd, false, 3, true))
+		// logger (inspect(cmd, false, 3, true))
 		try {
 			await cassClient.execute (cmd)
 		} catch (ex) {
@@ -120,8 +112,21 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI ) => {
 			logger (ex)
 			return false
 		}
+
 		resolve(nft_tokenid)
 		await cassClient.shutdown()
+
+		if ( process.connected && typeof process.send === 'function') {
+			const comd: clusterMessage = {
+				cmd:'si-node',
+				data: [{ip_addr: payload.ipV4}],
+				uuid: '',
+				err: null
+			}
+			process.send (comd)
+		}
+		
+
 		//await postRouterToPublic (payload, null, s3pass)
 		needDomain ? await regiestCloudFlare (payload.ipV4, payload.gpgPublicKeyID1, masterSetup ): null
 		
@@ -133,6 +138,7 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI ) => {
 export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI) => {
 
 	if (!checkPayloadWalletSign(yyy)) {
+		logger(Color.red(`CoNET_SI_health checkPayloadWalletSign Error!`))
 		return false
 	}
 
@@ -147,9 +153,14 @@ export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI) => {
 	const cassClient = new Client (option)
 	await cassClient.connect ()
 	const res = await cassClient.execute (cmd)
-	const oldData = res.rows[0]
 
-	if ( !res.rowLength || oldData.pgp_publickey_id !== yyy.gpgPublicKeyID1 ) {
+
+	if (!res.rowLength ) {
+		await cassClient.shutdown ()
+		return logger (Color.red(`Select * from conet_si_nodes WHERE nft_tokenid = '${ nft_tokenid }' got null Error!`))
+	}
+	const oldData = res.rows[0]
+	if ( oldData.pgp_publickey_id !== yyy.gpgPublicKeyID1 ) {
 		await cassClient.shutdown ()
 		logger (`CoNET_SI_health ERROR!, SI signPgpKeyID !== oldData.pgp_publickey_id payload = [${ inspect( yyy, false, 3, true ) }] DB = [${ inspect(oldData, false, 3, true) }]` )
 		return false
@@ -165,7 +176,9 @@ export const CoNET_SI_health = async ( yyy: ICoNET_DL_POST_register_SI) => {
 	if ( process.connected && typeof process.send === 'function') {
 		const comd: clusterMessage = {
 			cmd:'si-node',
-			data: [oldData]
+			data: [oldData],
+			uuid: '',
+			err: null
 		}
 		process.send (comd)
 	}
@@ -187,8 +200,8 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 9 ) {
-			logger (Color.red(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
+		if ( result?.rowLength > 5 ) {
+			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
 		}
@@ -199,47 +212,36 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 		result = await cassClient.execute (cmd)
 		
 		if ( result?.rowLength > 0 ) {
-			logger (Color.red(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
+			logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
 			await cassClient.shutdown ()
 			return resolve (false)
 		}
 
+		//const receipt = await sendCONET (admin_private, FaucetCount, wallet_addr)
 
-		const eth = new Eth (new Web3HttpProvider (fujiCONET, option))
-
-		const obj = {
-			gas: 21000,
-			to: wallet_addr,
-			value: (FaucetCount * wei).toString()
-		}
-		logger (inspect(obj, false, 3, true), admin_private)
-
-		let createTransaction
-
-		let receipt
-		try {
-			createTransaction = await eth.accounts.signTransaction( obj, admin_private )
-			receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
-		} catch (ex) {
-			logger (`eth.sendSignedTransaction ERROR!`, ex)
-			// await cassClient.shutdown ()
-			return resolve (false)
-		}
-		
-		logger (inspect(receipt, false, 3, true))
 
 		const cmd2 = `INSERT INTO conet_faucet_ipaddress (client_ipaddress, timestamp) VALUES ('${ipAddr}', '${time.toISOString() }') USING TTL ${FaucetTTL}`
 		const cmd3 = `INSERT INTO conet_faucet_wallet_addr (wallet_addr) VALUES ('${wallet_addr}') USING TTL ${FaucetTTL}`
-		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash, client_ipaddress) VALUES ('${wallet_addr}', '${time.toISOString()}', ${ FaucetCount*10 }, '${receipt.transactionHash.toUpperCase()}', '${ ipAddr }')`
+		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash, client_ipaddress) VALUES ('${wallet_addr}', '${time.toISOString()}', ${ '1' }, '', '${ ipAddr }')`
 
-        logger (cmd2, cmd3, cmd1)
+
 		await cassClient.execute (cmd1)
 		await cassClient.execute (cmd2)
 		await cassClient.execute (cmd3)
 
-		logger (Color.blue(`regiestFaucet [${wallet_addr}:${ipAddr}] SUCCESS`))
+		logger (Color.grey(`regiestFaucet [${wallet_addr}:${ipAddr}] SUCCESS`))
 		await cassClient.shutdown ()
-		return resolve (receipt.transactionHash)
+		if ( process.connected && typeof process.send === 'function') {
+			const comd: clusterMessage = {
+				cmd:'sendCONET',
+				data: [wallet_addr],
+				uuid: '',
+				err: null
+			}
+			process.send (comd)
+		}
+		return resolve ('OK')
+		
 	})
 	
 }
@@ -318,113 +320,104 @@ export const getLast5Price = () => {
 	})
 }
 
-const estimateGas = async (wallet_addr: string ) => {
-	const eth = new Eth ( new Eth.providers.HttpProvider(fujiCONET))
-	const gas = await eth.estimateGas ({
-		to: wallet_addr,
-		from: admin_public,
-		value: wei.toString()
-	})
-}
-
-export const exchangeUSDC = (txHash: string) => {
-	return new Promise ( async resolve => {
-		const _res = await getConfirmations (txHash, admin_public, fujiCONET)
-		if (!_res) {
-			logger (`getConfirmations have no data!`)
-			return resolve(false)
-		}
-		logger (inspect(_res, false, 3, true ))
-		const cassClient = new Client (option)
-		await cassClient.connect ()
-		const cmd2 = `SELECT from_transaction_hash from conet_usdc_exchange where from_addr = '${ _res.from.toUpperCase() }' and from_transaction_hash = '${ txHash.toUpperCase() }'`
-		const rowLength = await cassClient.execute (cmd2)
+// export const exchangeUSDC = (txHash: string) => {
+// 	return new Promise ( async resolve => {
+// 		const _res = await getCONETConfirmations (txHash, admin_public)
+// 		if (!_res) {
+// 			logger (`getConfirmations have no data!`)
+// 			return resolve(false)
+// 		}
+// 		logger (inspect(_res, false, 3, true ))
+// 		const cassClient = new Client (option)
+// 		await cassClient.connect ()
+// 		const cmd2 = `SELECT from_transaction_hash from conet_usdc_exchange where from_addr = '${ _res.from.toUpperCase() }' and from_transaction_hash = '${ txHash.toUpperCase() }'`
+// 		const rowLength = await cassClient.execute (cmd2)
 		
-		if ( rowLength.rowLength > 0 ) {
-			logger (`exchangeUSDC txHash[${ txHash }] already had data!`)
-			await cassClient.shutdown ()
-			return resolve(false)
-		}
-		logger (inspect(rowLength, false, 3, true))
-		const cmd = `SELECT price from conet_market where token_id ='AVAX' order by date DESC LIMIT 1`
-		const rate = (await cassClient.execute (cmd)).rows[0].price
-		const usdc = rate * _res.value
+// 		if ( rowLength.rowLength > 0 ) {
+// 			logger (`exchangeUSDC txHash[${ txHash }] already had data!`)
+// 			await cassClient.shutdown ()
+// 			return resolve(false)
+// 		}
+// 		logger (inspect(rowLength, false, 3, true))
+// 		const cmd = `SELECT price from conet_market where token_id ='AVAX' order by date DESC LIMIT 1`
+// 		const rate = (await cassClient.execute (cmd)).rows[0].price
+// 		const usdc = rate * _res.value
 
-		const obj = {
-			gas: 21000,
-			to: _res.from,
-			value: (usdc * wei).toString()
-		}
-		const eth = new Eth ( new Eth.providers.HttpProvider(USDCNET))
-		const time = new Date()
-		let createTransaction
-		try {
-			createTransaction = await eth.accounts.signTransaction( obj, admin_private )
-		} catch (ex) {
-			await cassClient.shutdown ()
-			logger (`exchangeUSDC eth.sendSignedTransaction ERROR`, ex )
-			return resolve(false)
-		}
-		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
-		const cmd1 = `INSERT INTO conet_usdc_exchange (from_addr, timestamp, from_transaction_hash, rate, total_conet, total_usdc, transaction_hash) VALUES (` +
-			`'${ _res.from.toUpperCase() }', '${time.toISOString()}', '${ txHash.toUpperCase() }', ${rate}, ${ _res.value }, ${ usdc }, '${receipt.transactionHash.toUpperCase()}')`
-		await cassClient.execute (cmd1)
-		await cassClient.shutdown ()
-		return resolve(receipt.transactionHash)
-	})
+// 		const obj = {
+// 			gas: 21000,
+// 			to: _res.from,
+// 			value: (usdc * wei).toString()
+// 		}
+// 		const eth = new Eth ( new Eth.providers.HttpProvider(USDCNET))
+// 		const time = new Date()
+// 		let createTransaction
+// 		try {
+// 			createTransaction = await eth.accounts.signTransaction( obj, admin_private )
+// 		} catch (ex) {
+// 			await cassClient.shutdown ()
+// 			logger (`exchangeUSDC eth.sendSignedTransaction ERROR`, ex )
+// 			return resolve(false)
+// 		}
+// 		const receipt = await eth.sendSignedTransaction (createTransaction.rawTransaction )
+// 		const cmd1 = `INSERT INTO conet_usdc_exchange (from_addr, timestamp, from_transaction_hash, rate, total_conet, total_usdc, transaction_hash) VALUES (` +
+// 			`'${ _res.from.toUpperCase() }', '${time.toISOString()}', '${ txHash.toUpperCase() }', ${rate}, ${ _res.value }, ${ usdc }, '${receipt.transactionHash.toUpperCase()}')`
+// 		await cassClient.execute (cmd1)
+// 		await cassClient.shutdown ()
+// 		return resolve(receipt.transactionHash)
+// 	})
 	
 	
 
 
-}
+// }
 
-export const mint_conetcash = async (txObj: {tx: string, to: string}, txObjHash: string, sign: string ) => {
+// export const mint_conetcash = async (txObj: {tx: string, to: string}, txObjHash: string, sign: string ) => {
 
-	// @ts-ignore
-	const _txObjHash = hash.keccak256(txObj)
-	if ( txObjHash !== _txObjHash) {
-		logger (`mint_conetcash Error: _txObjHash [${_txObjHash}] !== [${ txObjHash }]`)
-		return false
-	}
+// 	// @ts-ignore
+// 	const _txObjHash = hash.keccak256(txObj)
+// 	if ( txObjHash !== _txObjHash) {
+// 		logger (`mint_conetcash Error: _txObjHash [${_txObjHash}] !== [${ txObjHash }]`)
+// 		return false
+// 	}
 
-	const usdcData = await getConfirmations( txObj.tx, admin_public, USDCNET )
-	if ( !usdcData || usdcData.value <= 0 || usdcData.value > 100 ) {
-		logger (`mint_conetcash have no usdcData or usdcData.value have not in []`, inspect(usdcData, false, 3, true))
-		return false
-	}
+// 	const usdcData = await getConfirmations( txObj.tx, admin_public, USDCNET )
+// 	if ( !usdcData || usdcData.value <= 0 || usdcData.value > 100 ) {
+// 		logger (`mint_conetcash have no usdcData or usdcData.value have not in []`, inspect(usdcData, false, 3, true))
+// 		return false
+// 	}
 	
-	const cassClient = new Client (option)
-	await cassClient.connect ()
-	const cmd1 = `SELECT from_transaction_hash from conet_dl_conetcash where asset_name = '${ asset_name }' and from_transaction_hash = '${ txObj.tx.toUpperCase()}'`
-	const rowLength = (await cassClient.execute (cmd1)).rowLength
-	if (rowLength > 0) {
-		await cassClient.shutdown ()
-		logger (`mint_conetcash ERROR: had same txHash [${ txObj.tx }]`)
-		return false
-	}
+// 	const cassClient = new Client (option)
+// 	await cassClient.connect ()
+// 	const cmd1 = `SELECT from_transaction_hash from conet_dl_conetcash where asset_name = '${ asset_name }' and from_transaction_hash = '${ txObj.tx.toUpperCase()}'`
+// 	const rowLength = (await cassClient.execute (cmd1)).rowLength
+// 	if (rowLength > 0) {
+// 		await cassClient.shutdown ()
+// 		logger (`mint_conetcash ERROR: had same txHash [${ txObj.tx }]`)
+// 		return false
+// 	}
 
-	txObj.to = txObj.to.toUpperCase()
+// 	txObj.to = txObj.to.toUpperCase()
 
 
-	const keyID: string = recover(sign, _txObjHash).toUpperCase()
-	if (keyID !== usdcData.from.toUpperCase()) {
-		return false
-	}
+// 	const keyID: string = recover(sign, _txObjHash).toUpperCase()
+// 	if (keyID !== usdcData.from.toUpperCase()) {
+// 		return false
+// 	}
 
 	
-	const time = new Date()
-	const fee = usdcData.value * CoNETCashFee
-	const balance = usdcData.value - fee
-	const id = v4().toUpperCase()
-	const cmd2 = `INSERT INTO conet_dl_conetcash (owner_addr, asset_name, from_transaction_hash, timestamp, deposit_tokens, balance, dl_id, Genesis_Fee, transfer_fee_total) VALUES (` + 
-		`'${txObj.to}', '${ asset_name }', '${ txObj.tx.toUpperCase() }', '${ time.toISOString() }', ${ usdcData.value }, ${ balance }, '${ id }', ${ fee }, 0)`
-	await cassClient.execute (cmd2)
-	const cmd3 = `INSERT INTO conet_dl_conetcash_dl_id (owner_addr, asset_name, from_transaction_hash, timestamp, deposit_tokens, balance, dl_id, Genesis_Fee, transfer_fee_total) VALUES (` + 
-		`'${ txObj.to }', '${ asset_name }', '${ txObj.tx.toUpperCase() }', '${ time.toISOString() }', ${ usdcData.value }, ${ balance }, '${ id }', ${ fee }, 0)`
-	await cassClient.execute (cmd3)
-	await cassClient.shutdown ()
-	return id
-}
+// 	const time = new Date()
+// 	const fee = usdcData.value * CoNETCashFee
+// 	const balance = usdcData.value - fee
+// 	const id = v4().toUpperCase()
+// 	const cmd2 = `INSERT INTO conet_dl_conetcash (owner_addr, asset_name, from_transaction_hash, timestamp, deposit_tokens, balance, dl_id, Genesis_Fee, transfer_fee_total) VALUES (` + 
+// 		`'${txObj.to}', '${ asset_name }', '${ txObj.tx.toUpperCase() }', '${ time.toISOString() }', ${ usdcData.value }, ${ balance }, '${ id }', ${ fee }, 0)`
+// 	await cassClient.execute (cmd2)
+// 	const cmd3 = `INSERT INTO conet_dl_conetcash_dl_id (owner_addr, asset_name, from_transaction_hash, timestamp, deposit_tokens, balance, dl_id, Genesis_Fee, transfer_fee_total) VALUES (` + 
+// 		`'${ txObj.to }', '${ asset_name }', '${ txObj.tx.toUpperCase() }', '${ time.toISOString() }', ${ usdcData.value }, ${ balance }, '${ id }', ${ fee }, 0)`
+// 	await cassClient.execute (cmd3)
+// 	await cassClient.shutdown ()
+// 	return id
+// }
 
 export const conetcash_getBalance = (id: string ) => {
 	return new Promise( async resolve => {
@@ -518,3 +511,20 @@ export const authorizeCoNETCash = async ( Cobj: CoNETCash_authorized, objHash: s
 		return (id)
 	
 }
+
+
+
+/** */
+
+// const test = async() => {
+// 	const cmd = `Select * from conet_si_nodes WHERE nft_tokenid = '${ '98dccf558ff7b4b0a17056cc6484e1dd03d2e414efe29d2791bec4324caa4283' }'`
+// 	const cassClient = new Client (option)
+// 	await cassClient.connect ()
+// 	const res = await cassClient.execute (cmd)
+// 	const oldData = res.rows[0]
+// 	await cassClient.shutdown ()
+// 	logger (inspect(oldData, false, 3, true))
+
+// }
+
+// test()
