@@ -2,7 +2,7 @@
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
-import { logger, getServerIPV4Address, saveSetup, getSetup, getCNTPMastersBalance, loadWalletAddress, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit, splitPei, sendTokenToMiner, multiTransfer, nodesWalletAddr, listedServerIpAddress, sendCONET, checkReferralSign } from './util/util'
+import { logger, getServerIPV4Address, saveSetup, getSetup, getCNTPMastersBalance, mergeTransfers, loadWalletAddress, multiTransfer_original_Blast, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit, splitPei, sendTokenToMiner, multiTransfer,free_Pei, nodesWalletAddr, listedServerIpAddress, sendCONET, checkReferralSign } from './util/util'
 
 //import {streamCoNET_USDCPrice} from './endpoint/help-database'
 
@@ -40,7 +40,7 @@ if ( Cluster.isPrimary) {
 
 
 	const sendMinerPool: sendMiner[] = []
-
+	const debugWhiteList = ['207.216.58.151', '104.152.209.34']
 	const [,,...args] = process.argv
 	let debug = false
 	let version = false
@@ -64,7 +64,8 @@ if ( Cluster.isPrimary) {
 	const nonceLock: nonceLock = {
 		conetPointAdmin: false,
 		cnptReferralAdmin: false,
-
+		blastConetPointAdmin: false,
+		blastcnptReferralAdmin: false
 	}
 
 	const timeoutPool: {
@@ -79,6 +80,7 @@ if ( Cluster.isPrimary) {
 			}
 		}
 	}
+	const sendDataLength = 35
 
 	const sendMineFromMinerPool = async () => {
 		if (sendMineFromMinerPool_processing) {
@@ -88,10 +90,36 @@ if ( Cluster.isPrimary) {
 		if (!data) {
 			return logger(Colors.magenta(`sendMineFromMinerPool got null from pool, stop process!`))
 		}
-		logger(Colors.magenta(`sendMineFromMinerPool process current data miner = [${data.miner.walletList.length}] referrals = [${data.referrals.payList.length}] waitinglist = [${sendMinerPool.length}]`))
+
+		
 		sendMineFromMinerPool_processing = true
+		
 		await multiTransfer (masterSetup.cnptReferralAdmin, data.referrals.walletList, data.referrals.payList, nonceLock )
-		await sendTokenToMiner (data.miner.walletList, data.miner.payList, masterSetup.conetPointAdmin, nonceLock)
+
+		
+		//await multiTransfer_original_Blast(masterSetup.cnptReferralAdmin, data.referrals.walletList, data.referrals.payList, nonceLock)
+		let keep = true
+		while(keep) {
+			const addressList: string[] = []
+			const payList: string[] = []
+			for (let l = 0; l < sendDataLength; l ++) {
+				
+				const add = data.miner.walletList.shift()
+				const pay = data.miner.payList.shift()
+				if (!add||!pay) {
+					keep = false
+					break
+				}
+				addressList.push(add)
+				payList.push(pay)
+			}
+			if (addressList.length) {
+				await multiTransfer_original_Blast(masterSetup.conetPointAdmin, addressList, payList, nonceLock )
+				await sendTokenToMiner (addressList, payList, masterSetup.conetPointAdmin, nonceLock)
+			}
+		}
+		
+
 		sendMineFromMinerPool_processing = false
 		sendMineFromMinerPool ()
 	}
@@ -189,8 +217,6 @@ if ( Cluster.isPrimary) {
 
 	}
 
-
-
 	const reflashMasterBalance = async () => {
 		masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
 		setTimeout(() => {
@@ -225,7 +251,7 @@ if ( Cluster.isPrimary) {
 			return tryMaster_json_file (setupInfo)
 		}
 		logger(Colors.blue(`function getSetupFinished`))
-		masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
+		//masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
 
 		logger(Colors.blue(`function getSetup return null!`))
 		return tryMaster_json_file (setupInfo)
@@ -247,22 +273,31 @@ if ( Cluster.isPrimary) {
 		})
 	}
 
-	const broadcastStartlivenessMiner = async (data: any) => {
+	const broadcastStartlivenessMiner = async (blockNumber: number) => {
 		
 		const mess: clusterMessage = {
 			cmd: 'livenessStart',
-			data: [node_si_pool, masterBalance],
+			data: [node_si_pool, blockNumber, livenessListeningPool.size, free_Pei],
 			uuid: '',
 			err: null
 		}
-		logger(Colors.magenta(`broadcastStartlivenessMiner to all servers!`), inspect(masterBalance, false, 2, true))
+		logger(Colors.magenta(`broadcastStartlivenessMiner to all servers!`))
 		return workerPool.forEach (v => {
 			if ( v.isConnected()) {
 				v.send (mess)
 			}
 		})
+	}
+
+	const sendStopToWork = async (obj: minerObj) => {
 		
-		
+		const mess: clusterMessage = {
+			cmd: 'stop-liveness',
+			data: [obj],
+			uuid: '',
+			err: null
+		}
+		return obj.fork.send(mess)
 	}
 
 	const FaucetCount = '0.1'
@@ -278,11 +313,10 @@ if ( Cluster.isPrimary) {
 
 		sending_CONET = true
 
-		await sendCONET(masterSetup.master_wallet_private, FaucetCount, wallet)
+		await sendCONET(masterSetup.conetPointAdmin, FaucetCount, wallet)
 		sending_CONET = false
 		_sendCONET ()
 		return
- 
 	}
 
 	const addToSiPool = (data: any) => {
@@ -317,6 +351,19 @@ if ( Cluster.isPrimary) {
 		
 	}
 
+	const mergePool = (data: sendMiner) => {
+		
+		const merge = sendMinerPool.shift()
+		if (merge) {
+			const merge1 = {miner: mergeTransfers([...merge.miner.walletList, ...data.miner.walletList], [...merge.miner.payList, ...data.miner.payList]), 
+				referrals: mergeTransfers([...merge.referrals.walletList, ...data.referrals.walletList],[...merge.referrals.payList, ...data.referrals.payList])}
+			mergePool (merge1)
+			return
+		}
+		sendMinerPool.push(data)
+		sendMineFromMinerPool()
+	}
+
 	const onMessage = async (message: clusterMessage, fork: Worker) => {
 		switch (message.cmd) {
 			case 'si-node': {
@@ -345,6 +392,7 @@ if ( Cluster.isPrimary) {
 				const blockNumber = message.data[0]
 				const soingMint = (parseInt(blockNumber) %2) > 0
 				if (!soingMint) {
+					broadcastStartlivenessMiner(blockNumber)
 					return logger(Colors.red(`onMessage newBlock skip THE BLOCK [${blockNumber}] EVENT`))
 				}
 				// if (livenessStart) {
@@ -355,18 +403,20 @@ if ( Cluster.isPrimary) {
 				const final_walletAddressArray = walletAddressArray.filter(n => n !== undefined)
 
 				logger(Colors.magenta(`newBlock [${blockNumber}] walletAddressArray = ${final_walletAddressArray?.length}`))
+				broadcastStartlivenessMiner(blockNumber)
 				return splitPei (final_walletAddressArray, masterSetup.cnptReferralAdmin, ReferralsMap, async (data: sendMiner) => {
 
 					livenessStart = false
 					// await getNodesBalance(node_si_pool, masterSetup.conetPointAdmin)
 					logger(Colors.magenta(`newBlock splitPei callback success!`))
-
-					sendMinerPool.push(data)
-
-					logger(Colors.magenta(`newBlock splitPei success! miner length = [${data.miner.walletList.length}] referrals = [${data.referrals.payList.length}] pushed to sendMinerPool.length  [${ sendMinerPool.length }]`))
-					sendMineFromMinerPool()
-					return broadcastStartlivenessMiner(data)
+					
+					mergePool(data)
+					
+					logger(Colors.magenta(`newBlock splitPei success! miner length = [${data.miner.payList.length}] referrals = [${data.referrals.payList.length}] pushed to sendMinerPool.length  [${ sendMinerPool.length }]`))
+					
 				})
+
+				return
 			}
 
 			case 'livenessStart': {
@@ -382,6 +432,7 @@ if ( Cluster.isPrimary) {
 				}
 				
 				const index = ReserveIPAddress.findIndex(n => n === obj.ipAddress)
+				const whiteListIndex = debugWhiteList.findIndex(n => n === obj.ipAddress)
 				if (index < 0) {
 					livenessListeningPool.forEach(n => {
 						if (n.ipAddress === obj.ipAddress) {
@@ -391,25 +442,18 @@ if ( Cluster.isPrimary) {
 					})
 				}
 				
-
-				if (ipMatch||index > -1) {
+				if (whiteListIndex < 0 && (ipMatch||index > -1)) {
 					message.data=[ipaddress]
 					message.err = 'different IP'
 					return fork.send(message)
 				}
-
-				message.data=[]
-
 				
-				// @ts-ignore
 				obj.fork = fork
-
 				livenessListeningPool.set(obj.walletAddress, obj)
-				livenessListeningPool.set(obj.walletAddress, obj)
+				message.data=[livenessListeningPool.size, free_Pei]
 				logger(Colors.gray(`[${obj.walletAddress}:${obj.ipAddress}] added to livenessListeningPool total size is [${livenessListeningPool.size}]`))
 				return fork.send(message)
 			}
-
 
 			case 'sendCONET': {
 				const wallet = message.data[0]
@@ -426,9 +470,8 @@ if ( Cluster.isPrimary) {
 				}
 				
 				livenessListeningPool.delete(walletAddress)
-				if (kk.fork) {
-					kk.fork.send(message)
-				}
+				logger(Colors.grey(`stop-liveness [${obj.walletAddress}]`))
+				return sendStopToWork(kk)
 			}
 
 			case 'livenessLoseConnecting': {
@@ -479,7 +522,7 @@ if ( Cluster.isPrimary) {
 
 			case 'registerReferrer': {
 				const obj = message.data[0]
-				message.data = [await checkReferralSign(obj.walletAddress, obj.referrer, ReferralsMap, masterSetup.ReferralAddAdmin, nonceLock)]
+				message.data = [await checkReferralSign(obj.walletAddress, obj.referrer, ReferralsMap, masterSetup.cnptReferralAdmin, nonceLock)]
 				return fork.send(message)
 			}
 
@@ -520,14 +563,9 @@ if ( Cluster.isPrimary) {
 			return (fork)
 		}
 		
-		for (let i = 0; i < numCPUs*2; i ++) {
-			const woeker = _forkWorker ()
-			workerPool.push (woeker)
-		}
-		
+		_forkWorker ()
+
 	}
-
-
 
 	getSetupInfo ()
 		
@@ -535,4 +573,3 @@ if ( Cluster.isPrimary) {
 	const uuu = new conet_dl_server ()
 	process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
 }
-	

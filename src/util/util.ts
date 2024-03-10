@@ -21,20 +21,45 @@ import JSBI from 'jsbi'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 import {abi as CONET_multiTransfer_ABI} from './CONET_multiTransfer.json'
+
+import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
+
+import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
 import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
 import Web3, { Web3Eth } from 'web3'
+import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
 
 
-const CONET_Holesky_write = 'https://a3c6a17769809e43.conet.network'
-const CONET_Holesky_read= 'https://ee62a6be24b3c4581defb76b7d.conet.network'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
+let provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+let provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+let blast_current = 0
+const blast_EndPoints = ['https://wispy-greatest-telescope.blast-sepolia.quiknode.pro/eed482657dac9ab72cc8e710fa88ab4d6462cb98/', 'https://rpc.ankr.com/blast_testnet_sepolia','https://rpc.ankr.com/blast_testnet_sepolia/5e384380ae112067a637c50b7d8f2a3050e08db459e0a40a4e56950c7a27fc76','https://divine-lingering-water.blast-sepolia.quiknode.pro/be6893e1b1f57bac9a6e1e280f5ad46fddd6c146/']
 
-let provide_write = new ethers.JsonRpcProvider(CONET_Holesky_write)
-let provideReader = new ethers.JsonRpcProvider(CONET_Holesky_read)
+const getProvider_Blast = () => {
+	if (++blast_current > blast_EndPoints.length - 1) {
+		blast_current = 0
+	}
+	const uu = new ethers.JsonRpcProvider(blast_EndPoints[blast_current])
+	//@ts-ignore
+	uu["endpoint_url"] = blast_EndPoints[blast_current]
+	return uu
+}
 
-const conet_point_contract = `0x0f43685B2cB08b9FB8Ca1D981fF078C22Fec84c5`
+const rpcs = ['https://a3c6a17769809e43.conet.network', 'https://ee62a6be24b3c4581defb76b7d.conet.network']
+let pointToRPC = 0
+
+const conet_point_contract = `0x113E91FC4296567f95B84D0FacDa6fC29c5E7238`
 const conet_Referral_contract = `0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD`
 const CNTP_HoleskyMultiTransfer = '0x94217083059e7D1eFdd9D9f95039A43329D532ac'
-//const CNTP_HoleskyMultiTransfer = '0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
+
+const conet_ERC20_MultiTransfer_contract_blast = '0x8c40ecFE10665FA66C1De087b5e188916C73DB96'
+const CNTP_Referral_contract_Blast = '0x76e68E0B3d088e52e1e7B714ddC57eBbE94c52c4'
+
+
+
+const conet_point_contract_blast = `0x53634b1285c256aE64BAd795301322E0e911153D`
+
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
 
@@ -65,7 +90,6 @@ const otherRespon = ( body: string| Buffer, _status: number ) => {
 	return status + headers + body
 }
 const wei = 1000000000000000000
-
 
 export const return404 = () => {
 	const kkk = '<html>\r\n<head><title>404 Not Found</title></head>\r\n<body bgcolor="white">\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx/1.6.2</center>\r\n</body>\r\n</html>\r\n'
@@ -311,108 +335,91 @@ export const generateSslCertificatesV1 = async (ipAddr: string, wallet_Addr: str
 	const out = '-subj "/C=US/ST=Kharkov/L=Kharkov/O=Super Secure Company/OU=IT Department/CN=example.com"'
 }
 
-// export const postRouterToPublic = ( nodeData: ICoNET_DL_POST_register_SI|null, profileData: ICoNET_Profile|null, s3pass: s3pass ) => {
-// 	return new Promise (async resolve => {
+export const s3fsPasswd: () => Promise<s3pass|null> = () => {
+	return new Promise (resolve => {
+		const s3fsPasswdFile = join(homedir(), '.passwd-s3fs')
+		return readFile (s3fsPasswdFile, 'utf-8', (err, data ) => {
+			if ( err || !data ) {
+				logger (colors.red(`s3fsPasswd have no [.passwd-s3fs] setup file!`))
+				return resolve (null)
+			}
+			const pass = data.split(':')
+			if ( pass.length < 2 ) {
+				logger (colors.red(`[.passwd-s3fs] have not correct!`))
+				return resolve (null)
+			}
+			pass[1] = pass[1].replace(/\n/i,'')
+			const ret: s3pass = {
+				ACCESS_KEY: pass[0],
+				SECRET_KEY: pass[1]
+			}
+			logger (inspect(ret, false, 3, true))
+			return resolve (ret)
+		})
 		
-// 		const saveObj = nodeData ? <ICoNET_SINode> {
-// 			gpgPublicKeyID1: nodeData.gpgPublicKeyID1,
-// 			gpgPublicKeyID0: nodeData.gpgPublicKeyID0,
-// 			armoredPublicKey: nodeData.armoredPublicKey,
-// 			walletAddr: nodeData.walletAddr,
-// 			ipv4: nodeData.ipV4,
-// 			nft_tokenid: nodeData.nft_tokenid
-// 		} : profileData ? <ICoNET_Profile> {
-// 			gpgPublicKeyID0: profileData.gpgPublicKeyID0,
-// 			gpgPublicKeyID1: profileData.gpgPublicKeyID1,
-// 			armoredPublicKey: profileData.armoredPublicKey,
-// 			walletAddr: profileData.walletAddr,
-// 			nickName: profileData.nickName,
-// 			profileImg: profileData.profileImg,
-// 			routerArmoredPublicKey: profileData.routerArmoredPublicKey,
-// 			routerPublicKeyID: profileData.routerPublicKeyID,
-// 			emailAddr: profileData.emailAddr,
-// 			bio: profileData.bio
+	})
+}
 
-// 		} : null
-
-// 		if ( !saveObj) {
-// 			return resolve (false)
-// 		}
-
-// 		logger (inspect(saveObj, false, 3, true))
-
-// 		const saveObj_json_string = JSON.stringify(saveObj)
+export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
+	return new Promise (async resolve => {
 		
+		const saveObj_json_string = obj.data
+		const wo = wasabiObj.us_east_1
+
+
+		// const opt:S3.ClientConfiguration = {
+		// 	//credentials: credentials,
+		// 	credentials: {
+		// 		accessKeyId: s3pass.ACCESS_KEY,
+		// 		secretAccessKey: s3pass.SECRET_KEY
+		// 	},
+		// 	endpoint: new S3Endpoint(wo.endpoint),
+		// 	correctClockSkew: true
+		// }
 		
-// 		const wo = wasabiObj.us_east_1
+		const option: S3.S3ClientConfig = {
+			credentials: {
+				accessKeyId: s3pass.ACCESS_KEY,
+				secretAccessKey: s3pass.SECRET_KEY
+			},
+			endpoint: wo.endpoint,
+			region: wo.region
+		}
+		const s3cmd: S3.PutObjectCommandInput = {
+			Bucket: wo.Bucket,
+			Key: `${ wo.Bucket_key }/${ obj.walletAddress }/${obj.}`,
+			Body: saveObj_json_string,
+		}
+		const s3Client = new S3Client(option)
+		const command = new PutObjectCommand(s3cmd)
+		let req
+		try {
+			req = await s3Client.send(command)
+		} catch (ex) {
+			logger(colors.red(`storageWalletProfile s3.putObject Error`),ex)
+			return resolve(false)
+		}
+		logger(inspect(req, false, 3, true))
+		return resolve(true)
+	})
+}
 
-// 		const up1: S3.PutObjectRequest = {
-// 			Bucket: wo.Bucket,
-// 			Key: `${ wo.Bucket_key }/${ saveObj.walletAddr }`,
-// 			Body: saveObj_json_string,
-// 		}
+const wasabiObj = {
+	us_east_1: {
+		endpoint: 'https://s3.wasabisys.com',
+		Bucket: 'conet-mvp',
+		Bucket_key: 'storage',
+		region: 'us-east-1'
+	}
+}
 
-// 		const up2: S3.PutObjectRequest = {
-// 			Bucket: wo.Bucket,
-// 			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID1 }`,
-// 			Body: saveObj_json_string,
-// 		}
-// 		const up4: S3.PutObjectRequest = {
-// 			Bucket: wo.Bucket,
-// 			Key: `${  wo.Bucket_key }/${ saveObj.gpgPublicKeyID0 }`,
-// 			Body: saveObj_json_string,
-// 		}
-// 		let up3 : S3.PutObjectRequest| null = null
-// 		if (nodeData) {
-// 			up3 =  {
-// 				Bucket: wo.Bucket,
-// 				Key: `${ wo.Bucket_key }/${ nodeData.nft_tokenid }`,
-// 				Body: saveObj_json_string,
-// 			}
-// 		}
-		
-
-// 		const opt = {
-// 			//credentials: credentials,
-// 			credentials: {
-// 				accessKeyId: s3pass.ACCESS_KEY,
-// 				secretAccessKey: s3pass.SECRET_KEY
-// 			},
-// 			endpoint: new Endpoint(wo.endpoint),
-// 			correctClockSkew: true
-// 		}
-
-// 		const s3 = new S3(opt)
-
-// 		//		******************
-// 		//			Fix S3 bug
-// 		//		******************
-// 			const check1 = opt.credentials.accessKeyId
-// 			const check2 = opt.credentials.secretAccessKey
-// 			if (/\n$/.test(check1)) {
-// 				opt.credentials.accessKeyId = check1.replace (/\n/, '')
-// 			}
-// 			if ( /\n$/.test(check2)) {
-// 				opt.credentials.secretAccessKey = check2.replace (/\n/, '')
-// 			}
-
-// 		//		******************
-
-// 		await s3.putObject (up1).promise()
-// 		await s3.putObject (up2).promise()
-// 		await s3.putObject (up4).promise()
-// 		up3 ? await s3.putObject (up3).promise() : null
-
-// 		logger( colors.grey(`[${ up2.Key } & ${ up1.Key } & ${ up3 ? up3.Key : ''}] `), colors.blue(`upload SUCCESS!`))
-// 		return resolve (true)
-// 	})
-// }
 
 export const getIpaddressLocaltion = (Addr: string) => {
 	return new Promise((resolve) => {
 		const url = `http://ip-api.com/json/${Addr}`
 
-		const tryGetInfo = () => {
+		const tryGetInfo: any = () => {
+		
 			return get (url, res => {
 				if ( res.statusCode !== 200 ) {
 					const error = `getIpaddressLocaltion URL = [${url}] res.statusCode !== 200 [${ res.statusCode }] try again late!`
@@ -427,14 +434,18 @@ export const getIpaddressLocaltion = (Addr: string) => {
 				res.on ('data', data => {
 					return body += data
 				})
+
 				return res.once ('end', () => {
 					let ret: ICoNET_IP_API_Result
 					try {
 						ret = JSON.parse (body)
 					} catch (ex) {
-						const error = `getIpaddressLocaltion [${url}] response a no JSON data!`
+						const error = `getIpaddressLocaltion [${url}] response a no JSON data! 【${body}】`
 						logger (colors.red(error))
-						return resolve (null)
+						return setTimeout(() => {
+							return tryGetInfo ()
+						}, 500)
+						
 					}
 					ret.location = `${ ret.region },${ ret.countryCode }`
 					return resolve (ret)
@@ -742,27 +753,34 @@ export const sendCONET: (privateKey: string, amountInEther: string, receiverAddr
 	const wallet = new ethers.Wallet(privateKey, provide_write)
 	
 	return new Promise (resolve => {
-		let address
-		try {
-			address = ethers.getAddress(receiverAddress.toLowerCase())
-		} catch (ex) {
-			logger (colors.red(`sendCONET ethers.getAddress(${receiverAddress}) ERROR!`))
-			return resolve (null)
-		}
-		const tx = {
-			to: address,
-			// Convert currency unit from ether to wei
-			value: ethers.parseEther(amountInEther)
-		}
+		const trySend = () => {
+			let address
+			try {
+				address = ethers.getAddress(receiverAddress.toLowerCase())
+			} catch (ex) {
+				logger (colors.red(`sendCONET ethers.getAddress(${receiverAddress}) ERROR!`))
+				return resolve (null)
+			}
+			const tx = {
+				to: address,
+				// Convert currency unit from ether to wei
+				value: ethers.parseEther(amountInEther)
+			}
 
-		wallet.sendTransaction(tx)
-		.then((txObj) => {
-			return resolve(txObj)
-		})
-		.catch (ex => {
-			logger (colors.red(`sendCONET Catch Error` ), ex)
-			return resolve (null)
-		})
+			wallet.sendTransaction(tx)
+			.then((txObj) => {
+				return resolve(txObj)
+			})
+			.catch (ex => {
+				//logger (colors.red(`sendCONET Catch Error ${ex.message}`))
+				setTimeout(() => {
+					trySend()
+				}, 1000)
+				
+			})
+		}
+		trySend()
+
 	})
 	
 }
@@ -841,13 +859,12 @@ export const checkSignObj = (message: string, signMess: string) => {
 		digest = ethers.id(message)
 		recoverPublicKey = ethers.recoverAddress(digest, signMess)
 	} catch (ex) {
-		logger (colors.red(`checkSignObj recoverPublicKey ERROR`), ex)
-		logger (`digest = ${digest} signMess = ${signMess}`)
+		logger (colors.red(`checkSignObj recoverPublicKey ERROR digest = ${digest} signMess = ${signMess}`))
 		return null
 	}
 	
-	if (!recoverPublicKey || !obj?.walletAddress || recoverPublicKey.toUpperCase() !== obj?.walletAddress?.toUpperCase()) {
-		logger (colors.red(`checkSignObj obj Error!`))
+	if (!recoverPublicKey || !obj?.walletAddress || recoverPublicKey.toLowerCase() !== obj?.walletAddress?.toLowerCase()) {
+		logger (colors.red(`checkSignObj obj Error! !recoverPublicKey[${!recoverPublicKey}] !obj?.walletAddress[${!obj?.walletAddress}] recoverPublicKey.toLowerCase() [${recoverPublicKey.toLowerCase()}]!== obj?.walletAddress?.toLowerCase() [${recoverPublicKey.toLowerCase() !== obj?.walletAddress?.toLowerCase()}]`),inspect(obj, false, 3, true) )
 		return null
 	}
 	return obj
@@ -898,16 +915,18 @@ export const _nodes1= [
 	'0x93AC5b9b1305616Cb5B46a03546356780FF6c0C7'
 
 ]
+export const total_pie = 77.160493827160494 * 2
+// const total_pie = 0.07716*2
+const nodes1_Pei = total_pie * .603
+const nodes2_Pei = total_pie * .323
+export const free_Pei = total_pie - nodes1_Pei - nodes2_Pei
+//			0.1TB tokens / 180 days = 555555.555555555555556 /day
+//			23148.148148148148148 / hour
+//			385.802469135802469 / min
+//			77.160493827160494 / block (5 blocks / min)
 
 export const splitPei = async (walletAddressList: string[], privateKeyReferrals: string, ReferralsMap: Map<string, string>,callback: (data: any)=> void) => {
 
-
-	// const total_pie = 77.160493827160494 * 2
-	const total_pie = 0.07716*2
-
-	const nodes1_Pei = total_pie * .603
-	const nodes2_Pei = total_pie * .323
-	const free_Pei = total_pie - nodes1_Pei - nodes2_Pei
 
 	const pay1 = nodes1_Pei / _nodes.length
 	const pay2 = nodes2_Pei / _nodes1.length
@@ -915,23 +934,18 @@ export const splitPei = async (walletAddressList: string[], privateKeyReferrals:
 
 	const pay = _nodes.map(n => pay1)
 	const nodes = _nodes.map(n=>n)
-	//			0.1TB tokens / 180 days = 555555.555555555555556 /day
-	//			23148.148148148148148 / hour
-	//			385.802469135802469 / min
-	//			77.160493827160494 / block (5 blocks / min)
-	
 
-	const payList = pay.map(n => ethers.parseUnits(n.toFixed(6),'ether').toString())
+	const payList = pay.map(n => ethers.parseUnits(n.toFixed(18),'ether').toString())
 	
 	for (let i = 0; i < _nodes1.length; i ++) {
 		nodes.push (_nodes1[i])
-		payList.push (ethers.parseUnits(pay2.toFixed(6),'ether').toString())
+		payList.push (ethers.parseUnits(pay2.toFixed(18),'ether').toString())
 	}
 
 	const freeAddressList = []
 	const freePayList = []
 	if (walletAddressList?.length >0) {
-		const pay_free = (free_Pei / walletAddressList?.length).toFixed(6)
+		const pay_free = (free_Pei / walletAddressList?.length).toFixed(18)
 		for (let i = 0; i < walletAddressList.length; i ++) {
 			freeAddressList.push (walletAddressList[i])
 			freePayList.push (ethers.parseUnits(pay_free,'ether').toString())
@@ -947,20 +961,34 @@ export const sendTokenToMiner = async (walletList: string[], payList: string[], 
 		return setTimeout(() => {sendTokenToMiner (walletList, payList, privateKey, nonceLock)}, 1000)
 	}
 	nonceLock.conetPointAdmin = true
-	const wallet = new ethers.Wallet(privateKey, provide_write)
-	const contract = new ethers.Contract(conet_point_contract, CONET_Point_ABI, wallet)
-	let uu
-	try{
-		uu = await contract.multiTransferToken(walletList, payList)
-	} catch(ex) {
-		provide_write = new ethers.JsonRpcProvider(CONET_Holesky_write)
-		nonceLock.conetPointAdmin = false
-		return logger (colors.red(`sendTokenToMiner call Error, Try make new provide RPC`), ex)
+	if (++pointToRPC > rpcs.length - 1) {
+		pointToRPC = 0
 	}
-	nonceLock.conetPointAdmin = false
-	let total = 0
-	payList.forEach(n => total += parseFloat(n)/10**18)
-	return logger (colors.magenta (`Send to Miner success! nodes + free userDATA LENGTH [${ walletList.length }] Total CNTP = [${total}] tx=[${uu.hash}]`), inspect(uu, false, 3, true))
+
+	let uu
+	
+		const wallet = new ethers.Wallet(privateKey, provide_write = new ethers.JsonRpcProvider(rpcs[pointToRPC]))
+		const contract = new ethers.Contract(conet_point_contract, CONET_Point_ABI, wallet)
+		try{
+			uu = await contract.multiTransferToken(walletList, payList)
+		} catch(ex) {
+			if (++pointToRPC > rpcs.length - 1) {
+				pointToRPC = 0
+			}
+			provide_write = new ethers.JsonRpcProvider(rpcs[pointToRPC])
+			nonceLock.conetPointAdmin = false
+			setTimeout(() => {
+				sendTokenToMiner (walletList, payList, privateKey, nonceLock)
+			}, 1000)
+			
+			return //logger (colors.red(`sendTokenToMiner call Error, Try make new provide RPC`))
+		}
+		let total = 0
+		payList.forEach(n => total += parseFloat(n)/10**18)
+		logger (colors.magenta (`Send to Miner success! nodes + free userDATA LENGTH [${ walletList.length }] Total CNTP = [${total}] tx=[${uu?.hash}]`))
+	
+	return nonceLock.conetPointAdmin = false
+	
 }
 
 export const checkSign = (message: string, signMess: string, publicAddress: string) => {
@@ -993,7 +1021,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 			referrer = ethers.getAddress(_referrer)
 		} catch (ex) {
 			logger (colors.grey(`checkReferralSign ethers.getAddress(${_referee}) || ethers.getAddress(${_referrer}) Error!`))
-			provideReader = new ethers.JsonRpcProvider(CONET_Holesky_read)
+			provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 			return resolve (false)
 		}
 		
@@ -1002,14 +1030,14 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 			return resolve (false)
 		}
 
-		logger (colors.grey(`referrer[${referrer}] => referee[${referee}]`))
+		
 		let uu: string, tt: string[]
 
 		try{
 			uu = ReferralsMap.get(referee) || await contract.getReferrer(referee)
 			tt = await contract.getReferees(referee)
 		} catch(ex) {
-			provideReader = new ethers.JsonRpcProvider(CONET_Holesky_read)
+			provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 			resolve(false)
 			return  logger (colors.grey(`checkReferralSign call getReferrals Error, Try make new provide RPC`), ex)
 		}
@@ -1030,13 +1058,15 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 				return setTimeout (() => {waitPool()}, 500)
 			}
 			nonceLock.cnptReferralAdmin = true
+			let tx
 			try{
-				uu = await contract.addReferrer(referee, referrer)
+				tx = await contract.addReferrer(referee, referrer)
 			} catch (ex) {
 				nonceLock.cnptReferralAdmin = false
 				return logger (colors.grey(`checkReferralSign call addReferrals Error, Try make new provide RPC`), ex)
 			}
 			nonceLock.cnptReferralAdmin = false
+			logger (colors.grey(`referrer[${referrer}] => referee[${referee}] success tx = [${tx.hash}]`))
 			return resolve(true)
 		}
 		waitPool()
@@ -1061,7 +1091,7 @@ const ReferralsPay = (nodeList: string[], nodePay: string[], freeList: string[],
 		})
 	}, err => {
 		eachOfLimit(freeList, 5, (n, index, next) => {
-			CalculateReferrals(n, freePay[parseInt(index.toString())],[.05, .03, .01], [], privateKey,ReferralsMap, (err, data1) => {
+			CalculateReferrals(n, freePay[parseInt(index.toString())],[.05, .03, .01], [], privateKey, ReferralsMap, (err, data1) => {
 				if (err) {
 					return logger (colors.red(`CalculateReferrals Error!`), err)
 				}
@@ -1072,7 +1102,7 @@ const ReferralsPay = (nodeList: string[], nodePay: string[], freeList: string[],
 		}, async err => {
 			
 			const ret: sendMiner = {
-				miner:mergeTransfers([...nodeList, ...freeList], [...nodePay, ...freePay]),
+				miner: mergeTransfers([...nodeList, ...freeList], [...nodePay, ...freePay]),
 				referrals: mergeTransfers(addressList, payList)
 			}
 			
@@ -1081,7 +1111,7 @@ const ReferralsPay = (nodeList: string[], nodePay: string[], freeList: string[],
 	})
 }
 
-const mergeTransfers = (_nodeList: string[], pay: string[]) => {
+export const mergeTransfers = (_nodeList: string[], pay: string[]) => {
 	const walletList: string[] = []
 	const payList: string[] = []
 	const beforeLength = _nodeList.length
@@ -1120,8 +1150,10 @@ const mergeTransfers = (_nodeList: string[], pay: string[]) => {
 			nextIndexFun()
 		
 	}
+
 	nextItem()
-	logger(colors.blue(`mergeTransfers length from [${beforeLength}] to [${payList.length}]`))
+	//logger(colors.blue(`mergeTransfers length from [${beforeLength}] to [${payList.length}]`))
+
 	return {walletList, payList}
 }
 
@@ -1130,30 +1162,97 @@ export const multiTransfer = async (privateKey: string, nodes: string[], _payLis
 		return setTimeout(() => {multiTransfer(privateKey, nodes, _payList, nonceLock)}, 1000)
 	}
 	nonceLock.cnptReferralAdmin = true
-	const wallet = new ethers.Wallet(privateKey, provide_write)
-	const contract = new ethers.Contract(CNTP_HoleskyMultiTransfer, CONET_multiTransfer_ABI, wallet)
+
 
 	const payList = _payList.map(n => n.split('.')[0])
 	let total = 0
 	payList.forEach(n => total += parseFloat(n)/10**18)
 	let tx
-	try{
-		tx = await contract.multiTransfer (conet_point_contract, nodes, payList)
-	} catch(ex) {
-		provide_write = new ethers.JsonRpcProvider(CONET_Holesky_write) 
-		nonceLock.cnptReferralAdmin = false
-		return logger (colors.red(`Send to Referrals [${ nodes.length }] ERROR, Try make new provide RPC`), ex)
-	}
-	nonceLock.cnptReferralAdmin = false
-	return logger (colors.magenta (`Send to Referrals success! total wallets ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`), inspect(tx, false, 3, true))
+	
+		const wallet = new ethers.Wallet(privateKey, provide_write)
+		const contract = new ethers.Contract(CNTP_HoleskyMultiTransfer, CONET_multiTransfer_ABI, wallet)
+		try{
+			tx = await contract.multiTransfer (conet_point_contract, nodes, payList)
+		} catch(ex) {
+			nonceLock.cnptReferralAdmin = false
+			setTimeout(() => {
+				provide_write.destroy()
+				multiTransfer(privateKey, nodes, _payList, nonceLock)
+			}, 1000)
+			return //logger (colors.grey(`Send to Referrals [${ nodes.length }] ERROR, Try make new provide RPC`))
+		}
+		logger (colors.magenta (`Send to Referrals success! total wallets ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`))
+	
+	return  nonceLock.cnptReferralAdmin = false
+	
+}
 
+export const multiTransfer_blast = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
+	if (nonceLock.blastcnptReferralAdmin) {
+		return setTimeout(() => {multiTransfer_blast(privateKey, nodes, _payList, nonceLock)}, 1000)
+	}
+	nonceLock.blastcnptReferralAdmin = true
+
+
+	const payList = _payList.map(n => n.split('.')[0])
+	let total = 0
+	payList.forEach(n => total += parseFloat(n)/10**18)
+	let tx
+		const provide_writeBlast = new ethers.JsonRpcProvider('https://rpc.ankr.com/blast_testnet_sepolia')
+		const wallet = new ethers.Wallet(privateKey, provide_writeBlast)
+		const contract = new ethers.Contract(conet_ERC20_MultiTransfer_contract_blast, CONET_multiTransfer_ABI, wallet)
+		try{
+			tx = await contract.multiTransfer (conet_point_contract_blast, nodes, payList)
+		} catch(ex) {
+			nonceLock.blastcnptReferralAdmin = false
+			setTimeout(() => {
+				multiTransfer_blast(privateKey, nodes, _payList, nonceLock)
+			}, 1000)
+			return logger (colors.red(`Send to Referrals [${ nodes.length }] ERROR, Try make new provide RPC`))
+		}
+		logger (colors.blue (`Send to Referrals Blast success! total wallets ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`))
+	
+	return  nonceLock.blastcnptReferralAdmin = false
+	
 }
 
 const CNTPMasterWallet = '0x44d1FCCce6BAF388617ee972A6FB898b6b5629B1'
 const CNTPReferralWallet = '0x63377154F972f6FC1319e382535EC9691754bd18'
 
-export const getWalletBalance1 = () => {
+export const multiTransfer_original_Blast = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
+	if (nonceLock.blastConetPointAdmin) {
+		return setTimeout(() => {multiTransfer_original_Blast(privateKey, nodes, _payList, nonceLock)}, 1000)
+	}
+	nonceLock.blastConetPointAdmin = true
+	const payList = _payList.map(n => n.split('.')[0])
+	let total = 0
+	payList.forEach(n => total += parseFloat(n)/10**18)
 	
+	const provide_writeBlast = getProvider_Blast()
+
+	const wallet = new ethers.Wallet(privateKey, provide_writeBlast)
+	const contract = new ethers.Contract(conet_point_contract_blast, CONET_Point_blast_v1, wallet)
+
+	let tx
+	const _hash = ethers.hashMessage(JSON.stringify(nodes))
+	try{
+		tx = await contract.multiTransferToken(nodes, payList)
+	} catch(ex) {
+		nonceLock.blastConetPointAdmin = false
+		setTimeout(() => {
+			provide_writeBlast.destroy()
+			
+			return multiTransfer_original_Blast(privateKey, nodes, _payList, nonceLock)
+		}, 1000)
+		// logger(colors.blue (JSON.stringify(nodes)))
+		// logger(colors.blue (JSON.stringify(_payList)))
+		//@ts-ignore
+		return logger (colors.red(`multiTransferBlast [${ nodes.length }] ERROR! ${provide_writeBlast.endpoint_url} HASH = [${_hash}]`))
+	}
+	//@ts-ignore
+	logger (colors.blue (`${provide_writeBlast.endpoint_url} HASH [${_hash}] multiTransferBlast SUCCESS! ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`))
+	provide_writeBlast.destroy()
+	return  nonceLock.blastConetPointAdmin = false
 }
 
 export const getCNTPMastersBalance = async (privateKey: string) => {
@@ -1164,7 +1263,7 @@ export const getCNTPMastersBalance = async (privateKey: string) => {
 		CNTPMasterBalance = ethers.formatEther(await contract.balanceOf(CNTPMasterWallet))
 		CNTPReferralBalance = ethers.formatEther(await contract.balanceOf(CNTPReferralWallet))
 	} catch (ex) {
-		provideReader = new ethers.JsonRpcProvider(CONET_Holesky_read)
+		provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 		logger(colors.red(`getCNTPMastersBalance contract.balanceOf Error`))
 		return null
 	}
@@ -1192,7 +1291,7 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 		try{
 			address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
 		} catch (ex: any) {
-			provide_write = new ethers.JsonRpcProvider(CONET_Holesky_write)
+			provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 			continue
 		}
 		
@@ -1374,51 +1473,115 @@ const walletAddress = [
 // 	check()
 // 	return {}
 // }
+export const ReferralsReg_Blast: (referee: string, referrer: string, ReferralsMap: Map<string, string>, _privateKey: string, nonceLock: nonceLock)=> Promise<string|boolean> =
+	 (_referee, _referrer, ReferralsMap, _privateKey, nonceLock) => new Promise ( async resolve=> {
+		
+		const wallet = new ethers.Wallet(_privateKey, getProvider_Blast())
+		const contract = new ethers.Contract(CNTP_Referral_contract_Blast, CONET_Referral_blast_v2, wallet)
+		let referee: string, referrer: string
+		try {
+			referee = ethers.getAddress(_referee)
+			referrer = ethers.getAddress(_referrer)
+		} catch (ex) {
+			logger (colors.grey(`ReferralsReg_Blast ethers.getAddress(${_referee}) || ethers.getAddress(${_referrer}) Error!`))
+			provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+			return resolve (false)
+		}
+		
+		if (referee === referrer) {
+			logger (colors.grey(`ReferralsReg_Blast referrer[${referrer}] == referee[${referee}]`))
+			return resolve (false)
+		}
 
+		
+		let uu: string, tt: string[]
+
+		try{
+			uu = ReferralsMap.get(referee) || await contract.getReferrer(referee)
+			tt = await contract.getReferees(referee)
+		} catch(ex) {
+			resolve(false)
+			return  logger (colors.grey(`ReferralsReg_Blast call getReferrals Error, Try make new provide RPC`), ex)
+		}
+		if (uu !== ethers.getAddress('0x0000000000000000000000000000000000000000')) {
+			return resolve(uu)
+		}
+
+		ReferralsMap.set(referee, referrer)
+		// if ( parseInt(cntpToken.toString()) > 0) {
+		// 	logger (colors.red(`referee[${referee}] balance of CNTP > 0`), cntpToken)
+		// }
+
+		// if (tt.length > 0) {
+		// 	logger (colors.red(`referee has referrer` ), inspect(tt, false, 2, true))
+		// 	return resolve(true)
+		// }
+		const waitPool = async () => {
+			if (nonceLock.blastcnptReferralAdmin) {
+				return setTimeout (() => {waitPool()}, 1000)
+			}
+			nonceLock.blastcnptReferralAdmin = true
+			let tx
+			try{
+				tx = await contract.addReferrer(referee, referrer)
+			} catch (ex) {
+				nonceLock.blastcnptReferralAdmin = false
+				return logger (colors.grey(`checkReferralSign call addReferrals Error, Try make new provide RPC`), ex)
+			}
+			nonceLock.blastcnptReferralAdmin = false
+			logger (colors.grey(`referrer[${referrer}] => referee[${referee}] success tx = [${tx.hash}]`))
+			return resolve(true)
+		}
+
+		waitPool()
+		return resolve(true)
+
+})
+
+const setupFile = join( homedir(),'.master.json' )
+const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 
 const addReferral = async () => {
 	const seven = [
-		// ['0x295bA944D9a7e7b2c5EfC0e96b7a063c685F7c7d', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
-		// ['0x335Cf03756EF2B667a1F892F4382ce03b919265b', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
-		// ['0x4a287A601Cf17A817fd764348cB0190cac68fbD1', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
+		['0x295bA944D9a7e7b2c5EfC0e96b7a063c685F7c7d', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
+		['0x335Cf03756EF2B667a1F892F4382ce03b919265b', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
+		['0x4a287A601Cf17A817fd764348cB0190cac68fbD1', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
 
-		// ['0xf2e12cc4C09858AF1330b85E2c8A5aaD7b39Bf3C', '0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1'],
-		// ['0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1', '0x060FC4A81a51393C3077B024b99f2DE63F020DdE'],
-		// ['0x522d89e0C5c8d53D9656eA0f33efa20a81bd76c6', '0x060FC4A81a51393C3077B024b99f2DE63F020DdE'],
-		// ['0x060FC4A81a51393C3077B024b99f2DE63F020DdE', '0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc'],
-		// ['0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
-		// ['0xE30B823Aeb7d199D980b7480EC5667108DC583DD', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
+		['0xf2e12cc4C09858AF1330b85E2c8A5aaD7b39Bf3C', '0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1'],
+		['0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1', '0x060FC4A81a51393C3077B024b99f2DE63F020DdE'],
+		['0x522d89e0C5c8d53D9656eA0f33efa20a81bd76c6', '0x060FC4A81a51393C3077B024b99f2DE63F020DdE'],
+		['0x060FC4A81a51393C3077B024b99f2DE63F020DdE', '0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc'],
+		['0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
+		['0xE30B823Aeb7d199D980b7480EC5667108DC583DD', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
 
-		// ['0xd1A18F6aa5bC2b4928C313F1bDbE9f5799f1A2db', '0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845'],
-		// ['0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845', '0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c'],
-		// ['0x6eaE0202053c5aEf1b57911fec208f08D96050DE', '0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44'],
-		// ['0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44', '0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7'],
-		// ['0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
-		// ['0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
-		// ['0x3A67775d2634BDC09336a7d2836016eA211B4F32', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
+		['0xd1A18F6aa5bC2b4928C313F1bDbE9f5799f1A2db', '0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845'],
+		['0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845', '0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c'],
+		['0x6eaE0202053c5aEf1b57911fec208f08D96050DE', '0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44'],
+		['0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44', '0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7'],
+		['0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
+		['0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
+		['0x3A67775d2634BDC09336a7d2836016eA211B4F32', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
 
-		// ['0xEdd67DdD7870609461A606A2502ad6e8959e44E3', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
+		['0xEdd67DdD7870609461A606A2502ad6e8959e44E3', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
 
-		// ['0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD', '0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813'],
-		// ['0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813', '0xc9043f661ADddCAF902d45D220e7aea38920d188'],
-		// ['0xc9043f661ADddCAF902d45D220e7aea38920d188', '0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A'],
-		// ['0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A', '0x4fa1FC4a2a96D77E8521628268631F735E2CcBee'],
-		// ['0x4fa1FC4a2a96D77E8521628268631F735E2CcBee', '0x04441E4BC3A8842473Fe974DB4351f0b126940be'],
-		// ['0x04441E4BC3A8842473Fe974DB4351f0b126940be', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
+		['0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD', '0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813'],
+		['0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813', '0xc9043f661ADddCAF902d45D220e7aea38920d188'],
+		['0xc9043f661ADddCAF902d45D220e7aea38920d188', '0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A'],
+		['0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A', '0x4fa1FC4a2a96D77E8521628268631F735E2CcBee'],
+		['0x4fa1FC4a2a96D77E8521628268631F735E2CcBee', '0x04441E4BC3A8842473Fe974DB4351f0b126940be'],
+		['0x04441E4BC3A8842473Fe974DB4351f0b126940be', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
 
-		// ['0x8b02ec615B7a2d5B82F746F990062459DF996c48', '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2'],
-		// ['0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2', '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38'],
-		// ['0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5', '0x3A67775d2634BDC09336a7d2836016eA211B4F32'],
-		// ['0x9F550F2E95df1Fd989da56f3cB706E3E839F7b5e', '0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5'],
+		['0x8b02ec615B7a2d5B82F746F990062459DF996c48', '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2'],
+		['0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2', '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38'],
+		['0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5', '0x3A67775d2634BDC09336a7d2836016eA211B4F32'],
+		['0x9F550F2E95df1Fd989da56f3cB706E3E839F7b5e', '0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5'],
 
-		// ['0xB8f7bDfFee7C74B8d6619eB374d42AD5f89C626a', '0xEdd67DdD7870609461A606A2502ad6e8959e44E3'],
-		// ['0xC1E6ccf826322354ae935e15e750DFF6a6Ad1BfC', '0xB8f7bDfFee7C74B8d6619eB374d42AD5f89C626a'],
+		['0xB8f7bDfFee7C74B8d6619eB374d42AD5f89C626a', '0xEdd67DdD7870609461A606A2502ad6e8959e44E3'],
+		['0xC1E6ccf826322354ae935e15e750DFF6a6Ad1BfC', '0xB8f7bDfFee7C74B8d6619eB374d42AD5f89C626a'],
 
-		// ['0x368B873f37bc15e1bE12EeA0BDE1f0bbb9192bB8', '0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD'],
+		['0x368B873f37bc15e1bE12EeA0BDE1f0bbb9192bB8', '0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD'],
 	
-		// ['0xD130bB620f41838c05C65325b6ee84be1D4B4701','0xAF34d323683d8bA040Dac24cc537243AeC319A30'],
-
-
+		['0xD130bB620f41838c05C65325b6ee84be1D4B4701','0xAF34d323683d8bA040Dac24cc537243AeC319A30'],
 
 		['0xAF34d323683d8bA040Dac24cc537243AeC319A30', '0xb1C01c53fcDA4E968CE21Af8055392779239eF1b'],
 		['0xb1C01c53fcDA4E968CE21Af8055392779239eF1b', '0x93AC5b9b1305616Cb5B46a03546356780FF6c0C7'],
@@ -1427,223 +1590,87 @@ const addReferral = async () => {
 	]
 	const nonceLock: nonceLock = {
 		conetPointAdmin: false,
-		cnptReferralAdmin: false
+		cnptReferralAdmin: false,
+		blastConetPointAdmin: false,
+		blastcnptReferralAdmin: false
 	}
-	const _series = seven.map (n => async (next: () => void) => await checkReferralSign(n[0], n[1], new Map(), '', nonceLock))
+	const _series = seven.map (n => async (next: () => void) => await ReferralsReg_Blast(n[0], n[1], new Map(), masterSetup.conetPointAdmin, nonceLock))
 
 	series(_series, err => {
 		logger (colors.magenta(`success!`))
 	})
 	
-	// const n = seven[0]
-	// const yyy = await checkReferralSign(n[0], n[1], '')
-	// logger (colors.blue(`await checkReferralSign return ${yyy}`))
+	//const yyy = await ReferralsReg_Blast(n[0], n[1],new Map(),masterSetup.conetPointAdmin, nonceLock)
+	//logger (colors.blue(`await checkReferralSign return ${yyy}`))
 }
 
-
-const test2 = async () => {
-	const kk = '0x295bA944D9a7e7b2c5EfC0b7a063c685F7c7d'
-	const uu = {
-		nodeList: [
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-		  '0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845',
-		  '0xd1A18F6aa5bC2b4928C313F1bDbE9f5799f1A2db',
-		  '0x6eaE0202053c5aEf1b57911fec208f08D96050DE',
-		  '0x295bA944D9a7e7b2c5EfC0e96b7a063c685F7c7d',
-		  '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB',
-		  '0x060FC4A81a51393C3077B024b99f2DE63F020DdE',
-		  '0x335Cf03756EF2B667a1F892F4382ce03b919265b',
-		  '0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1',
-		  '0x04441E4BC3A8842473Fe974DB4351f0b126940be',
-		  '0xf2e12cc4C09858AF1330b85E2c8A5aaD7b39Bf3C',
-		  '0x4fa1FC4a2a96D77E8521628268631F735E2CcBee',
-		  '0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD',
-		  '0x4a287A601Cf17A817fd764348cB0190cac68fbD1',
-		  '0x74eDC24c5559A5f39506aa09A406F250808694Ec',
-		  '0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5',
-		  '0x9F550F2E95df1Fd989da56f3cB706E3E839F7b5e',
-		  '0xE30B823Aeb7d199D980b7480EC5667108DC583DD',
-		  '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3',
-		  '0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c',
-		  '0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7',
-		  '0x3A67775d2634BDC09336a7d2836016eA211B4F32',
-		  '0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44',
-		  '0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc',
-		  '0x522d89e0C5c8d53D9656eA0f33efa20a81bd76c6',
-		  '0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A',
-		  '0xc9043f661ADddCAF902d45D220e7aea38920d188',
-		  '0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813'
-		],
-		nodePay: [
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2448830409356725000',
-		  '2448830409356725000', '2265712682379348800',
-		  '2265712682379348800', '2265712682379348800',
-		  '2265712682379348800', '2265712682379348800',
-		  '2265712682379348800', '2265712682379348800',
-		  '2265712682379348800', '2265712682379348800',
-		  '2265712682379348800', '2265712682379348800'
-		],
-		addressList: [
-		  '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-		  '0xba34ac9dabf6ef33dd1a666675bdd52264274a7c',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0x24d074530bb9526a67369b67fcf1fa6cf6ef6845',
-		  '0xba34ac9dabf6ef33dd1a666675bdd52264274a7c',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0xd0d7006c30549fe2932b543815fde2fb45a3aaeb',
-		  '0x518b2eb8dffe6e826c737484c9f2ead6696c7a44',
-		  '0x6f226df857ffa0d1f8c3c0533db06e7e6042ccc7',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0xd0d7006c30549fe2932b543815fde2fb45a3aaeb',
-		  '0x318a3927ebde5e06b0f9c7f1012c84e69916f5fc',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0x060fc4a81a51393c3077b024b99f2de63f020dde',
-		  '0x318a3927ebde5e06b0f9c7f1012c84e69916f5fc',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-		  '0x019ed74ef161ad1789bd2c61e39511a7e41b76c1',
-		  '0x060fc4a81a51393c3077b024b99f2de63f020dde',
-		  '0x318a3927ebde5e06b0f9c7f1012c84e69916f5fc',
-		  '0x04441e4bc3a8842473fe974db4351f0b126940be',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0xd0d7006c30549fe2932b543815fde2fb45a3aaeb',
-		  '0x1afc1fcb4ec4931f1ea8b38026b93a7a8482a813',
-		  '0xc9043f661adddcaf902d45d220e7aea38920d188',
-		  '0xdbaa41dd7cabe1d5ca41d38e8f768f94d531d85a',
-		  '0xdf6ba415f39cfd294f931eb54067cdc872b1d2b5',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0x6f226df857ffa0d1f8c3c0533db06e7e6042ccc7',
-		  '0x2bd9d9eb221bd4e60b301c0d25aa7c7829e76de3',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-		  '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-		  '0x060fc4a81a51393c3077b024b99f2de63f020dde',
-		  '0x318a3927ebde5e06b0f9c7f1012c84e69916f5fc',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0x4fa1fc4a2a96d77e8521628268631f735e2ccbee',
-		  '0x04441e4bc3a8842473fe974db4351f0b126940be',
-		  '0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-		  '0xdbaa41dd7cabe1d5ca41d38e8f768f94d531d85a',
-		  '0x4fa1fc4a2a96d77e8521628268631f735e2ccbee',
-		  '0x04441e4bc3a8842473fe974db4351f0b126940be',
-		  '0xc9043f661adddcaf902d45d220e7aea38920d188',
-		  '0xdbaa41dd7cabe1d5ca41d38e8f768f94d531d85a',
-		  '0x4fa1fc4a2a96d77e8521628268631f735e2ccbee',
-		  '0xede7aec4268858c68d84048194c832b8ffb01f9e',
-		  '0x6d25ed5a25e36b21d5db078d2c2e9d2b8ad52b27',
-		  '0x364484b48fac0343631a06ddc5583c856e96bc12',
-		  '0xc91d74fb5740ebb12d8f9c8b3472789a08d03cac',
-		  '0xe5dbb468652d83fa04d7f98c71bfe5847c03fe19',
-		  '0xee5149adefbe76c41cbd844418d9578b5fac2675',
-		  '0xe5dbb468652d83fa04d7f98c71bfe5847c03fe19',
-		  '0xf7f40b77c761f0848c0c710b215e00f1784a7777',
-		  '0x33e601b40fe84842ab2c7f1730229176cd7f33e2',
-		  '0x45a1c0381da7f18c0914ca095e37295194339792',
-		  '0x36067f545845269f1d7c7e6835b19041a34f3f0d',
-		  '0xba072658e4f5efec76325494ccd1f4be3dd22601',
-		  '0x0cee80a35751ed63a9ab837ab0561c4439fcb03a',
-		  '0xfd576b298430cc07e833457498edc22fd9cdaed1',
-		  '0xc9750dcc7cd287fc05f4f8ea1910870f09888151',
-		  '0xd495fb0754650df396eec997528dacc9027023a8',
-		  '0x0cee80a35751ed63a9ab837ab0561c4439fcb03a',
-		  '0x80b71bf9a80265d17fe7044fe7ab793427924891',
-		  '0x55467dc69a9203a7bfa6e5964724b6aaef900114',
-		  '0x19e9a15d6499be5163fddeb50674966683ce4a2c',
-		  '0xcc88dbf46028927e3e26787c2a6d840c47b731b9',
-		  '0x796dbcf485452b3e72bdc7fdc58126ff545a4578',
-		  '0x5a0762d7f4001802dc9fb37d51e5ab722a3c2f21',
-		  '0xfc61c4f9967f13d933596d5f72fb72121530b061',
-		  '0xa5b8f284e689b58dd15083bd34b820906b12f481',
-		  '0x0828439498d526dc3fd720883eea732585f2c6be',
-		  '0xe5dbb468652d83fa04d7f98c71bfe5847c03fe19',
-		  '0xc6d03ec70f11eefb0215b91120062951c7f3e332',
-		  '0x9cb254b774af7a9950ac93eff8745fb91b3235bc',
-		  '0xb1473ef0468d34e6f0b52240e1584265565c4434',
-		  '0x9e08605a6dea875c7999ee44ae497411153c93d0',
-		  '0x263e9ddcae191c360a139680cb5239314ef01f41',
-		  '0x9cb254b774af7a9950ac93eff8745fb91b3235bc',
-		  '0xb1473ef0468d34e6f0b52240e1584265565c4434',
-		  '0x0cee80a35751ed63a9ab837ab0561c4439fcb03a',
-		  '0xc8fcef25bd8fcf6d582e5d96acca5cb0270b31fc',
-		  '0x0cee80a35751ed63a9ab837ab0561c4439fcb03a',
-		  '0x456a46094cc5254575ab10c0eb14ef65ef07f181',
-		  '0x089c10ef2c7c9162fa9f1932f7638c2e9e59062b',
-		  '0x2218c25fb4a594e77ec2734ef46ff510ba747995',
-		  '0x02a8d162fddee29d32e58bcf89c7edd5ad444347',
-		  '0x9cb254b774af7a9950ac93eff8745fb91b3235bc',
-		  '0xb1473ef0468d34e6f0b52240e1584265565c4434'
-		],
-		payList: [
-		  '489766081871345100', '489766081871345100', '244883040935672540',
-		  '489766081871345100', '244883040935672540', '489766081871345100',
-		  '244883040935672540', '122441520467836270', '489766081871345100',
-		  '489766081871345100', '244883040935672540', '122441520467836270',
-		  '489766081871345100', '489766081871345100', '244883040935672540',
-		  '122441520467836270', '489766081871345100', '244883040935672540',
-		  '122441520467836270', '489766081871345100', '244883040935672540',
-		  '122441520467836270', '489766081871345100', '244883040935672540',
-		  '122441520467836270', '489766081871345100', '244883040935672540',
-		  '122441520467836270', '489766081871345100', '489766081871345100',
-		  '244883040935672540', '122441520467836270', '489766081871345100',
-		  '453142536475869760', '453142536475869760', '226571268237934880',
-		  '113285634118967440', '453142536475869760', '453142536475869760',
-		  '453142536475869760', '226571268237934880', '453142536475869760',
-		  '226571268237934880', '113285634118967440', '453142536475869760',
-		  '226571268237934880', '113285634118967440', '453142536475869760',
-		  '226571268237934880', '113285634118967440', '453142536475869760',
-		  '226571268237934880', '113285634118967440', '453142536475869760',
-		  '226571268237934880', '113285634118967440', '6797472075249853',
-		  '6797472075249853',   '4078483245149911.5', '6797472075249853',
-		  '4078483245149911.5', '6797472075249853',   '4078483245149911.5',
-		  '6797472075249853',   '6797472075249853',   '6797472075249853',
-		  '6797472075249853',   '6797472075249853',   '6797472075249853',
-		  '6797472075249853',   '6797472075249853',   '6797472075249853',
-		  '6797472075249853',   '6797472075249853',   '4078483245149911.5',
-		  '6797472075249853',   '4078483245149911.5', '6797472075249853',
-		  '4078483245149911.5', '1359494415049970.5', '6797472075249853',
-		  '6797472075249853',   '6797472075249853',   '6797472075249853',
-		  '4078483245149911.5', '1359494415049970.5', '6797472075249853',
-		  '6797472075249853',   '6797472075249853',   '4078483245149911.5',
-		  '6797472075249853',   '6797472075249853',   '6797472075249853',
-		  '6797472075249853',   '6797472075249853',   '4078483245149911.5',
-		  '6797472075249853',   '4078483245149911.5', '1359494415049970.5'
-		]
+const airdropForTwitter=async () => {
+	const address=[
+		'0xAFFAC80D4BEB717E14A47C55E879B6BED35E6927',
+		'0x9995961D972f2d088fC641E96D1C904a6ACC824b',
+		'0x6EB626Ec2E810cC0DD464C2B7AC10D6edbE91b07',
+		'0x11F748c9aF68F9ce3D66d28fd44732c995e75Ccd',
+		'0x62C9D1C65CF4DB5CAC5952D6AB1846118E1B05B7',
+		'0x8efA3746E2B561bEfd5649570fCD8e5b94175F57',
+		'0x18863725079c0efA712ABe31ed4D82e77C901d6A',
+		'0x4484D0C9926350c9EB53675C96BEb649F1F1ad74',
+		'0x41F21f5cfD346EDDfeC01b591310F3702512981c',
+		'0xcDc52A47a10D84c8D7462148D144674A03d0d9b3',
+		'0x5D545D80AE40F9ADC41ED6A24DA0EA3866C99317',
+		'0x21a2213f7752d4c8BAD2B09c5eD113FB5C80f993',
+		'0xB8BBF03788D55E096FB066F7DE393A2BBE393C5F',
+		'0xeA9dEf62155fd3fcC2fA1cAf6fE9A95078C8C0d0',
+		'0xa6318365FDd658cE17aBD598BE66C50b1100Ebed',
+		'0xBB79856850532A7C863E7813A952C267660FB026',
+		'0x253378A9b21d08FFCa4F683B2C4041CB46B27EFE',
+		'0xfd8D02F61Ab8d7577E0Fc36DD7d094f009f56e96',
+		'0xCe4B0F9B8319C9Ce0feA119fb876d1F4C52270d3',
+		'0x5B03D895156A9F500CA0174B584FD5D4D7956E36'
+	]
+	const nonceLock: nonceLock = {
+		conetPointAdmin: false,
+		cnptReferralAdmin: false,
+		blastConetPointAdmin: false,
+		blastcnptReferralAdmin: false
 	}
-
-	const hhh = '{"message":"{\\"walletAddress\\":\\"0x5CF66CD8978AB4EE32EE5C28BF9F7CFDDBC232EF\\"}","signMessage":"0x0cd147236382264866525213a34ab4dbfea18b2968968cef86ed3190163d8eef7a6bea104f1c8d8d82ff2cfc8b9711ef882a9ca389fba1071bc9e8bf0c44cf561c"}'
-	// const balance = await getCNTPMastersBalance('')
-	//const balance = await getWalletAssetBalance(kk, '')
-
-	// const node:nodeType[] = kkk.node
-	// await getNodesBalance(node, '')
-
-	// logger(inspect(node.map(n => n.balance), false, 3, true))
-	//const kks = mergeTransfers(uu.addressList, uu.payList)
-	
-	// logger(colors.magenta(`nodes length = ${kks.returnNodeList.length} pay length = ${kks.returnPay.length}`))
+	const payList = address.map(n=>ethers.parseEther('100').toString())
+	await sendTokenToMiner (address, payList, masterSetup.conetPointAdmin, nonceLock)
 }
 
+// addReferral()
+
+const tryTransferTest = () => {
+	const nonceLock: nonceLock = {
+		conetPointAdmin: false,
+		cnptReferralAdmin: false,
+		blastConetPointAdmin: false,
+		blastcnptReferralAdmin: false
+	}
+	const pay = nodesWalletAddr.map(n => ethers.parseEther("1").toString())
+
+	multiTransfer_original_Blast(masterSetup.conetPointAdmin, nodesWalletAddr, pay, nonceLock)
+}
+const data = {
+    "message": "{\"walletAddress\":\"0x9ed5ffbDB2c0A1cbF1ca1b2834f0B24c9c886943\",\"data\":\"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\"}",
+    "signMessage": "0x0e11597247d54f8c52297b28fd1367751da9465c2c13568776279b823a2e69ed551d8e88deeeb492100d1b9d2f36c31a937cb357104749217b732351dbd83b121b"
+}
+const test = async () => {
+	// const uuu = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
+	// logger(inspect(uuu, false, 3, true), typeof uuu?.CNTPMasterBalance )
+	
+	
+	const uuu = checkSignObj(data.message, data.signMessage)
+	if (!uuu) {
+		return logger(colors.red(`checkSignObj Error`), inspect(uuu, false, 3, true))
+	}
+	const pass = await s3fsPasswd()
+	if (pass ) {
+		const vvv = await storageWalletProfile(uuu.walletAddress, , pass)
+		logger(inspect(uuu, false, 3, true))
+	}
+	// logger(inspect(uuu, false, 3, true))
+
+}
+test()
+// tryTransferTest()
 /** */
-
-

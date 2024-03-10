@@ -5,22 +5,23 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price, conetcash_getBalance, CoNET_SI_health } from './help-database'
+import { CoNET_SI_Register, regiestFaucet, getLast5Price, conetcash_getBalance, CoNET_SI_health, getIpAttack } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
-
+import Cluster from 'node:cluster'
 import {readFileSync} from 'node:fs'
-import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, checkSign, checkReferralSign, getCNTPMastersBalance, listedServerIpAddress} from '../util/util'
-import {createServer} from 'node:https'
+import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile} from '../util/util'
+
+const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
-import {createServer as createServerForDebug} from 'node:http'
+//	for production
+	import {createServer} from 'node:http'
 
-import { ethers } from 'ethers'
+//	for debug
+	// import {createServer as createServerForDebug} from 'node:http'
 
-// const privateKey = readFileSync('/etc/letsencrypt/live/openpgp.online/privkey.pem')
-// const certificate = readFileSync( '/etc/letsencrypt/live/openpgp.online/fullchain.pem' )
 const nodesPath = join(homedir(),'nodes,son')
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
@@ -57,10 +58,7 @@ const version = packageJson.version
 // }
 
 
-interface snedMessageWaitingObj {
-	resolve: (cmd:clusterMessage|null) => void
-	timeOutObj: NodeJS.Timeout
-}
+
 
 const sendDisConnecting = (walletAddress: string) => {
 	if ( process.connected && typeof process.send === 'function') {
@@ -77,28 +75,27 @@ const sendDisConnecting = (walletAddress: string) => {
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
-
-	if (!req.ip) {
-		return null
+	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
+	if (!ipaddress||typeof ipaddress !== 'string') {
+		return ''
 	}
-	if (/\:/.test(req.ip)) {
-		return req.ip.split(':')[1]
-	}
-	return req.ip
+	return ipaddress
 }
 
 class conet_dl_server {
 
-	private PORT: any
+	private PORT = 8000
 	private appsPath = ''
 	private initData: ICoNET_NodeSetup|null = null
 	private debug = false
+	private serverID = ''
 
 	private si_pool: nodeType[] = []
 	private livenessListeningPool: Map <string, Response> = new Map()
 	private sendCommandWaitingPool: Map <string, snedMessageWaitingObj> = new Map()
 	private livenessHash = ''
 	private masterBalance: CNTPMasterBalance|null = null
+	private s3Pass: s3pass|null = null
 	private sendCommandToMasterAndWaiting: (cmd: clusterMessage) => Promise<clusterMessage|null> = (cmd ) => new Promise(resolve=> {
 		if ( process.connected && typeof process.send === 'function') {
 			const timeSet = setTimeout(() => {
@@ -123,15 +120,11 @@ class conet_dl_server {
 		return sendDisConnecting(key)
 	}
 
-	private stratliveness = () => {
-		
+	private stratliveness = (returnData: any) => {
+
 		this.livenessListeningPool.forEach(async (n, key ) => {
 			if (n.writable && !n.closed) {
-				const returnData = {
-					balance: 0,
-					nodesBalance: [],
-					masterBalance: 0
-				}
+				
 				return n.write( JSON.stringify(returnData)+'\r\n\r\n', err => {
 					if (err) {
 						return this.deleteConnetcing(key, n)
@@ -156,16 +149,18 @@ class conet_dl_server {
 		switch (message.cmd) {
 			case 'si-node': {
 				this.si_pool = message.data[0]
-				return logger (Colors.gray(`onMessage si-node [${this.si_pool.length}]`))
+				return //logger (Colors.gray(`onMessage si-node [${this.si_pool.length}]`))
 			}
 
 			case 'livenessStart': {
 				this.si_pool = message.data[0]
-				if (message.data[1]) {
-					this.masterBalance = message.data[1]
+				const returnData = {
+					block: message.data[1],
+					rate: message.data[3],
+					online: message.data[2],
+					status: 200
 				}
-
-				this.stratliveness()
+				this.stratliveness(returnData)
 				return logger (Colors.cyan(`onMessage livenessStart! uuid[${this.livenessHash}] to [${this.livenessListeningPool.size}] clients !`))
 			}
 
@@ -176,7 +171,13 @@ class conet_dl_server {
 					const res = this.livenessListeningPool.get(obj.walletAddress)
 					if (res) {
 						this.livenessListeningPool.delete(obj.walletAddress)
-						res.end()
+						const returnData = {
+							ipaddress: obj.ipAddress,
+							status: 200
+						}
+						res.write(JSON.stringify(returnData)+'\r\n\r\n', err => {
+							res.end()
+						})
 						logger(Colors.grey(`On Message stop-liveness from cli STOP res [${obj.walletAddress }]`))
 					}
 				}
@@ -203,10 +204,12 @@ class conet_dl_server {
 		await makePgpKeyObj ( this.initData.pgpKeyObj )
 
 		this.appsPath = this.initData.setupPath
-		this.PORT = this.initData.ipV4Port
 
-        logger (`start local server!`)
+        logger (Colors.blue(`start local server!`))
 		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
+		this.serverID = getServerIPV4Address(false)[0]
+		logger(Colors.blue(`serverID = [${this.serverID}]`))
+		this.s3Pass = await s3fsPasswd()
 		this.startServer()
 	}
 
@@ -235,23 +238,21 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			const cmd: clusterMessage = {
-				cmd:'attackcheck',
-				data: [ipaddress],
-				uuid: v4(),
-				err: null
-			}
-
-			const response: clusterMessage|null = await this.sendCommandToMasterAndWaiting(cmd)
-			if (response) {
-				if (response.data[0]) {
-					logger(Colors.red(`Server at attack by [${ipaddress}]!`))
+			getIpAttack(ipaddress, this.serverID, (err, data) => {
+				if (err) {
+					
+					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
 					return res.status(404).end()
 				}
+				if (data) {
+					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
+					return res.status(404).end()
+				}
+				
 				return next()
-			}
-			logger(Colors.blue(`message send to cluster can't get response! Pass [${ipaddress}]`))
-			return next()
+			})
+
+			
 		})
 
 		app.use( '/api', router )
@@ -266,15 +267,8 @@ class conet_dl_server {
             logger (err)
             logger (Colors.red(`Local server on ERROR`))
         })
-		// const server = createServer({
-		// 	key: privateKey,
-		// 	cert: certificate
-		// }, app)
 
-		const server = createServerForDebug({
-
-		}, app)
-
+		const server = createServer(app)
 
 		this.router (router)
 
@@ -285,54 +279,17 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT,'0.0.0.0', () => {
+		server.listen(this.PORT, '0.0.0.0', () => {
 			return console.table([
-                { 'CoNET DL': `version ${version} startup success ${ this.PORT }` }
+                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
-		// this.localserver = createServer (option, app ).listen (this.PORT, async () => {
-			
-        //     return console.table([
-        //         { 'CoNET DL node ': `mvp-dl version [${ version } Worker , Url: http://${ this.initData?.ipV4 }:${ this.PORT }, local-path = [${ staticFolder }]` }
-        //     ])
-        // })
+
 	
 	}
 
 	private router ( router: Router ) {
 		
-		// router.get ('/liveness-answer', async (req, res) =>{
-		// 	const [message, signMessage] = req.body?.message
-		// 	if (!message||!this.initData||!signMessage) {
-		// 		res.status(404).end()
-		// 		return res.socket?.end().destroy()
-		// 	}
-
-		// 	const obj = checkSignObj (message, signMessage)
-		// 	if (!obj) {
-		// 		res.status(404).end()
-		// 		return res.socket?.end().destroy()
-		// 	}
-			
-		// 	const ipaddress = getIpAddressFromForwardHeader(req)
-		// 	if (!ipaddress) {
-		// 		res.status(404).end()
-		// 		return res.socket?.end().destroy()
-		// 	}
-
-		// 	obj.ipAddress = ipaddress
-		// 	const comd: clusterMessage = {
-		// 		cmd:'livenessListening',
-		// 		data: [obj],
-		// 		uuid: v4(),
-		// 		err: null
-		// 	}
-
-		// 	await this.sendCommandToMasterAndWaiting(comd)
-
-		// })
-
-
 		router.get ('/publishGPGKeyArmored', async (req,res) => {
 
 			if (!this.initData) {
@@ -342,7 +299,7 @@ class conet_dl_server {
 			}
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(` Router /publishKey form [${ ipaddress}]`))
+			logger (Colors.grey(` Router /publishKey form [${ ipaddress}]`), inspect(req.headers, false, 3, true))
 
 			res.json ({ publishGPGKey: this.initData.pgpKeyObj.publicKeyArmored }).end()
 			return res.socket?.end().destroy()
@@ -421,7 +378,7 @@ class conet_dl_server {
 				return  res.status(404).end()
 				
 			}
-
+			
 			const obj = checkSignObj (message, signMessage)
 
 			if (!obj) {
@@ -434,7 +391,7 @@ class conet_dl_server {
 				logger (Colors.grey(`Router /stop-liveness !ipaddress Error!`))
 				return res.status(404).end()
 			}
-			res.end()
+			
 			obj.ipAddress = ipaddress
 			const cmd: clusterMessage = {
 				cmd:'stop-liveness',
@@ -442,17 +399,12 @@ class conet_dl_server {
 				uuid: v4(),
 				err: null
 			}
-			
+			logger(Colors.grey(`[${obj.ipAddress}] /stop-liveness`))
 			if ( process.connected && typeof process.send === 'function') {
-				return process.send (cmd)
+				process.send (cmd)
 			}
-			const clientRes = this.livenessListeningPool.get(obj.walletAddress)
-
-			if (clientRes) {
-				this.livenessListeningPool.delete(obj.walletAddress)
-				clientRes.end()
-			}
-			return 
+			
+			return res.status(200).end()
 		})
 
 		router.post ('/conet-si-node-register', async ( req, res ) => {
@@ -620,7 +572,8 @@ class conet_dl_server {
 				uuid: v4(),
 				err: null
 			}
-			logger(Colors.grey(`[${obj.ipAddress}] /livenessListening`))
+			//logger(Colors.grey(`[${obj.ipAddress}] /livenessListening`))
+
 			const responObj = await this.sendCommandToMasterAndWaiting(comd)
 
 			if (!responObj) {
@@ -628,36 +581,42 @@ class conet_dl_server {
 				return res.status(404).end()
 			}
 
+			const returnData = {
+				rate: responObj.data[1],
+				online: responObj.data[0],
+				ipaddress: obj.ipAddress,
+				status: 200
+			}
+			
+
 			if (responObj.err) {
 				logger (Colors.grey(`[${ipaddress}] /livenessListening has [${responObj.err}] Error!`))
 				switch (responObj.err) {
 					
 					case 'different IP': {
-						
-						return res.status(401).end()
+						returnData.status = 401
+						return res.status(401).json(returnData).end()
 						
 					}
 					case 'has connecting': {
-						return res.status(402).end()
+						returnData.status = 402
+						return res.status(402).json(returnData).end()
 					}
 					default :{
-						return res.status(403).end()
+						returnData.status = 403
+						return res.status(403).json(returnData).end()
 					}
 				}
 			}
 			
 			//		Listening desconnect
 
-
 			res.setHeader('Cache-Control', 'no-cache')
             res.setHeader('Content-Type', 'text/event-stream')
             res.setHeader('Access-Control-Allow-Origin', '*')
             res.setHeader('Connection', 'keep-alive')
             res.flushHeaders() // flush the headers to establish SSE with client
-			const returnData = {
-				balance: 0,
-				ipaddress: obj.ipAddress
-			}
+			
 			res.write(JSON.stringify (returnData)+'\r\n\r\n')
 			//logger (Colors.blue(`Router /livenessListening [${ipaddress}:${ obj.walletAddress }] SUCCESS!`))
 			return this.livenessListeningPool.set(obj.walletAddress, res)
@@ -691,7 +650,7 @@ class conet_dl_server {
 			logger(Colors.gray(``))
 			return res.json({}).end()
 			
-			// await postRouterToPublic (null, obj1, this.s3pass)
+			//await postRouterToPublic (null, obj1, this.s3pass)
 
 		})
 
@@ -727,6 +686,31 @@ class conet_dl_server {
 			}
 			logger(Colors.grey(`/registerReferrer [${ obj.walletAddress }] SUCCESS!`))
 			return res.json({referrer: obj.referrer}).end()
+		})
+
+		router.post ('/storageFragments', async (req, res ) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj || !obj?.data || !this.s3Pass) {
+				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
+				return res.status(403).end()
+			}
+			const uu = await storageWalletProfile(obj.walletAddress, obj.data, this.s3Pass)
+			if (!uu) {
+				return res.status(504).end()
+			}
+			return res.status(200).json({}).end()
 		})
 
 		router.all ('*', (req, res ) =>{

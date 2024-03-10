@@ -51,7 +51,6 @@ interface ICoNET_DecryptedPayload {
 }
 
 interface ICoNET_DL_masterSetup {
-	ReferralAddAdmin: string
 	conetPointAdmin: string
 	cnptReferralAdmin: string
     "13b995b1fDotCa":{
@@ -79,7 +78,6 @@ interface ICoNET_DL_masterSetup {
         client: ICoNET_certificate
     }
 	master_wallet_public: string
-	master_wallet_private: string
 	cloudflare: {
 		X_Auth_Email: string
 		X_Auth_Key: string
@@ -199,6 +197,8 @@ interface minerObj {
 	blockNumber?:string
 	referrer?:string
 	fork: any
+	hash?: string
+	data?: string
 }
 
 interface nodeType {
@@ -209,6 +209,11 @@ interface nodeType {
 	type: 'super'|'seed'
 	ipaddress: string
 	pgp_publickey_id?: string
+	country: string
+	region: string
+	lat: string
+	lon: string
+
 }
 
 interface CNTPMasterBalance {
@@ -229,9 +234,17 @@ interface sendMiner {
 interface nonceLock {
 	conetPointAdmin: boolean
 	cnptReferralAdmin: boolean
+	blastConetPointAdmin: boolean
+	blastcnptReferralAdmin: boolean
+	
 }
 interface _nodeType {
 	ipaddress: string
 	type: 'super'|'seed'
 	wallet_addr: string
+}
+
+interface snedMessageWaitingObj {
+	resolve: (cmd:clusterMessage|null) => void
+	timeOutObj: NodeJS.Timeout
 }

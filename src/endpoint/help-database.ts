@@ -24,8 +24,6 @@ const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://rpc1.openpgp.online`
 const USDCNET = `https://rpc1.openpgp.online/usdc`
 
-const admin_public = masterSetup.master_wallet_public
-const admin_private = masterSetup.master_wallet_private
 const wei = 1000000000000000000
 const si_last_Update_time_timeout = 1000 * 60 *5
 const CoNETCashFee = 0.0001
@@ -78,8 +76,6 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI ) => {
 			return resolve(false)
 		}
 	
-		payload.ip_api = await getIpaddressLocaltion ( payload.ipV4 )
-	
 		const nft_tokenid = createHash('sha256').update(payload.walletAddr.toLowerCase()).digest('hex')
 		//logger(Color.blue(`nft_tokenid[${nft_tokenid}] = createHash('sha256').update(payload.walletAddr.toLowerCase())[${payload.walletAddr.toLowerCase()}]`))
 		payload.nft_tokenid = nft_tokenid
@@ -96,6 +92,16 @@ export const CoNET_SI_Register = ( payload: ICoNET_DL_POST_register_SI ) => {
 		let oldData: nodeType = result?.rows[0]
 		const time = new Date ()
 		const needDomain = oldData?.pgp_publickey_id === payload.gpgPublicKeyID1 ? false: true
+		if (!oldData?.country) {
+			payload.ip_api = await getIpaddressLocaltion ( payload.ipV4 )
+		} else {
+			payload.ip_api = {
+				countryCode: oldData.country,
+				region: oldData.region,
+				lon: oldData.lon,
+				lat: oldData.lat
+			}
+		}
 		let cmd = 
 					`INSERT INTO conet_si_nodes ( wallet_addr, ip_addr, outbound_fee, storage_fee, registration_date, `+
 					`country, region, lat, lon, customs_review_total, `+
@@ -512,6 +518,29 @@ export const authorizeCoNETCash = async ( Cobj: CoNETCash_authorized, objHash: s
 	
 }
 
+const AttackTTL = 30 
+
+export const getIpAttack = async (ipaddress: string, node: string, callback: (err:Error|null, isAttack?: any)=> void) => {
+	const cassClient = new Client (option)
+	const time = new Date().getTime()
+	const cmd = `INSERT INTO const_api_attack (ipaddress, node, timestamp) VALUES ('${ipaddress}', '${node}', '${time}') USING TTL ${AttackTTL}`
+	const cmd1 = `SELECT * from const_api_attack WHERE ipaddress = '${ ipaddress }'`
+	let data
+	try {
+		await cassClient.execute (cmd)
+		data = await cassClient.execute (cmd1)
+	} catch (ex: any) {
+		await cassClient.shutdown()
+		logger (ex)
+		return callback(ex)
+	}
+	await cassClient.shutdown()
+	if (data.rowLength > AttackTTL) {
+		return callback(null, true)
+	}
+	return callback(null, false)
+	
+}
 
 
 /** */
