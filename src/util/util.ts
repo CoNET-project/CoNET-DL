@@ -387,7 +387,7 @@ export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
 		}
 		const s3cmd: S3.PutObjectCommandInput = {
 			Bucket: wo.Bucket,
-			Key: `${ wo.Bucket_key }/${ obj.walletAddress }/${obj.}`,
+			Key: `${ wo.Bucket_key }/${ obj.walletAddress }/${obj}`,
 			Body: saveObj_json_string,
 		}
 		const s3Client = new S3Client(option)
@@ -1029,7 +1029,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 			logger (colors.grey(`referrer[${referrer}] == referee[${referee}]`))
 			return resolve (false)
 		}
-
+		
 		
 		let uu: string, tt: string[]
 
@@ -1069,7 +1069,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 			logger (colors.grey(`referrer[${referrer}] => referee[${referee}] success tx = [${tx.hash}]`))
 			return resolve(true)
 		}
-		waitPool()
+		await waitPool()
 		return resolve(true)
 
 })
@@ -1594,14 +1594,15 @@ const addReferral = async () => {
 		blastConetPointAdmin: false,
 		blastcnptReferralAdmin: false
 	}
-	const _series = seven.map (n => async (next: () => void) => await ReferralsReg_Blast(n[0], n[1], new Map(), masterSetup.conetPointAdmin, nonceLock))
+	// const _series = seven.map (n => async (next: () => void) => await ReferralsReg_Blast(n[0], n[1], new Map(), masterSetup.conetPointAdmin, nonceLock))
+	const _series = seven.map (n => async (next: () => void) => await checkReferralSign(n[0], n[1], new Map(), masterSetup.cnptReferralAdmin, nonceLock))
 
 	series(_series, err => {
 		logger (colors.magenta(`success!`))
 	})
 	
-	//const yyy = await ReferralsReg_Blast(n[0], n[1],new Map(),masterSetup.conetPointAdmin, nonceLock)
-	//logger (colors.blue(`await checkReferralSign return ${yyy}`))
+	// const yyy = await ReferralsReg_Blast(n[0], n[1],new Map(),masterSetup.conetPointAdmin, nonceLock)
+	// logger (colors.blue(`await checkReferralSign return ${yyy}`))
 }
 
 const airdropForTwitter=async () => {
@@ -1637,7 +1638,7 @@ const airdropForTwitter=async () => {
 	await sendTokenToMiner (address, payList, masterSetup.conetPointAdmin, nonceLock)
 }
 
-// addReferral()
+//addReferral()
 
 const tryTransferTest = () => {
 	const nonceLock: nonceLock = {
@@ -1650,27 +1651,79 @@ const tryTransferTest = () => {
 
 	multiTransfer_original_Blast(masterSetup.conetPointAdmin, nodesWalletAddr, pay, nonceLock)
 }
+
 const data = {
     "message": "{\"walletAddress\":\"0x9ed5ffbDB2c0A1cbF1ca1b2834f0B24c9c886943\",\"data\":\"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\"}",
     "signMessage": "0x0e11597247d54f8c52297b28fd1367751da9465c2c13568776279b823a2e69ed551d8e88deeeb492100d1b9d2f36c31a937cb357104749217b732351dbd83b121b"
 }
+
+const getReferees = async (wallet: string, contract: ethers.Contract) => {
+	
+	let tt: string[]
+
+	try{
+		tt = await contract.getReferees(wallet)
+	} catch(ex) {
+		provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+		logger (colors.grey(`checkReferralSign call getReferrals Error, Try make new provide RPC`), ex)
+		return []
+	}
+	return tt
+}
+
+const getAllReferees = async (_wallet: string, contract: ethers.Contract) => {
+	const firstArray: string[] = await getReferees(_wallet, contract)
+	if (!firstArray.length) {
+		return []
+	}
+	const ret: any = []
+	const getData = async (wallet: string) => {
+		const kkk = await getReferees(wallet, contract)
+		const data = JSON.parse(`{"${wallet}": ${JSON.stringify(kkk)}}`)
+		return data
+	}
+	for (let i = 0; i < firstArray.length; i++) {
+		const kk = await getReferees(firstArray[i], contract)
+		const ret1 = []
+
+		if (kk.length) {
+			
+			for (let j = 0; j < kk.length; j ++) {
+				ret1.push(await getData(kk[j]))
+			}
+
+		}
+		const data = `{"${firstArray[i]}": ${JSON.stringify(ret1)}}`
+		const k = JSON.parse(data)
+		ret.push(k)
+	}
+	
+	return ret
+}
+
+const listeningEvent = (contractAddress: string) => {
+	
+}
+
 const test = async () => {
 	// const uuu = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
 	// logger(inspect(uuu, false, 3, true), typeof uuu?.CNTPMasterBalance )
 	
 	
-	const uuu = checkSignObj(data.message, data.signMessage)
-	if (!uuu) {
-		return logger(colors.red(`checkSignObj Error`), inspect(uuu, false, 3, true))
-	}
-	const pass = await s3fsPasswd()
-	if (pass ) {
-		const vvv = await storageWalletProfile(uuu.walletAddress, , pass)
-		logger(inspect(uuu, false, 3, true))
-	}
-	// logger(inspect(uuu, false, 3, true))
+	// const uuu = checkSignObj(data.message, data.signMessage)
+	// if (!uuu) {
+	// 	return logger(colors.red(`checkSignObj Error`), inspect(uuu, false, 3, true))
+	// }
+	// const pass = await s3fsPasswd()
+	// if (pass ) {
+	// 	//const vvv = await storageWalletProfile(uuu.walletAddress, , pass)
+	// 	logger(inspect(uuu, false, 3, true))
+	// }
+	const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, provideReader)
+	const uuu = await getAllReferees('0x04441E4BC3A8842473Fe974DB4351f0b126940be', contract)
+	logger(inspect(uuu, false, 5, true))
 
 }
-test()
+// test()
 // tryTransferTest()
 /** */

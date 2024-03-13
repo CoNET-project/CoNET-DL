@@ -526,8 +526,6 @@ if ( Cluster.isPrimary) {
 				return fork.send(message)
 			}
 
-			
-
 			case 'available-nodes': {
 				return
 			}
