@@ -18,13 +18,14 @@ import { Writable } from 'node:stream'
 import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
+
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 import {abi as CONET_multiTransfer_ABI} from './CONET_multiTransfer.json'
-
 import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
-
 import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
+import CONET_StorgaeAbi from './cone-storage.json'
+
 import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
 import Web3, { Web3Eth } from 'web3'
 import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
@@ -52,7 +53,7 @@ let pointToRPC = 0
 const conet_point_contract = `0x113E91FC4296567f95B84D0FacDa6fC29c5E7238`
 const conet_Referral_contract = `0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD`
 const CNTP_HoleskyMultiTransfer = '0x94217083059e7D1eFdd9D9f95039A43329D532ac'
-
+const CONET_Stroage_Contract = '0x30D870224419226eFcEA57B920a2e67929893DbA'
 const conet_ERC20_MultiTransfer_contract_blast = '0x8c40ecFE10665FA66C1De087b5e188916C73DB96'
 const CNTP_Referral_contract_Blast = '0x76e68E0B3d088e52e1e7B714ddC57eBbE94c52c4'
 
@@ -360,49 +361,6 @@ export const s3fsPasswd: () => Promise<s3pass|null> = () => {
 	})
 }
 
-export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
-	return new Promise (async resolve => {
-		
-		const saveObj_json_string = obj.data
-		const wo = wasabiObj.us_east_1
-
-
-		// const opt:S3.ClientConfiguration = {
-		// 	//credentials: credentials,
-		// 	credentials: {
-		// 		accessKeyId: s3pass.ACCESS_KEY,
-		// 		secretAccessKey: s3pass.SECRET_KEY
-		// 	},
-		// 	endpoint: new S3Endpoint(wo.endpoint),
-		// 	correctClockSkew: true
-		// }
-		
-		const option: S3.S3ClientConfig = {
-			credentials: {
-				accessKeyId: s3pass.ACCESS_KEY,
-				secretAccessKey: s3pass.SECRET_KEY
-			},
-			endpoint: wo.endpoint,
-			region: wo.region
-		}
-		const s3cmd: S3.PutObjectCommandInput = {
-			Bucket: wo.Bucket,
-			Key: `${ wo.Bucket_key }/${ obj.walletAddress }/${obj}`,
-			Body: saveObj_json_string,
-		}
-		const s3Client = new S3Client(option)
-		const command = new PutObjectCommand(s3cmd)
-		let req
-		try {
-			req = await s3Client.send(command)
-		} catch (ex) {
-			logger(colors.red(`storageWalletProfile s3.putObject Error`),ex)
-			return resolve(false)
-		}
-		logger(inspect(req, false, 3, true))
-		return resolve(true)
-	})
-}
 
 const wasabiObj = {
 	us_east_1: {
@@ -854,7 +812,7 @@ export const checkSignObj = (message: string, signMess: string) => {
 		logger (colors.red(`checkSignObj JSON.parse(message) Error`), message)
 		return null
 	}
-	let digest, recoverPublicKey
+	let digest, recoverPublicKey, _digest
 	try {
 		digest = ethers.id(message)
 		recoverPublicKey = ethers.recoverAddress(digest, signMess)
@@ -1652,10 +1610,7 @@ const tryTransferTest = () => {
 	multiTransfer_original_Blast(masterSetup.conetPointAdmin, nodesWalletAddr, pay, nonceLock)
 }
 
-const data = {
-    "message": "{\"walletAddress\":\"0x9ed5ffbDB2c0A1cbF1ca1b2834f0B24c9c886943\",\"data\":\"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\"}",
-    "signMessage": "0x0e11597247d54f8c52297b28fd1367751da9465c2c13568776279b823a2e69ed551d8e88deeeb492100d1b9d2f36c31a937cb357104749217b732351dbd83b121b"
-}
+
 
 const getReferees = async (wallet: string, contract: ethers.Contract) => {
 	
@@ -1701,8 +1656,60 @@ const getAllReferees = async (_wallet: string, contract: ethers.Contract) => {
 	return ret
 }
 
-const listeningEvent = (contractAddress: string) => {
-	
+const listeningStorgaeEvent = (CallBack:(data: any)=>void) => {
+	const conet_storage = new ethers.Contract(CONET_Stroage_Contract, CONET_StorgaeAbi, provideReader)
+
+	conet_storage.on('FragmentsStorage', (from, to, ver, data) => {
+		logger (`listeningStorgaeEvent from[${from}] to [${to}] ver [${ver}] data [${data}]`)
+		const ret = {
+			from, to, ver, data
+		}
+		CallBack(ret)
+	}).catch (ex => {
+		logger(`FragmentsStorage on Error`,ex)
+	})
+}
+export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
+	return new Promise (async resolve => {
+		
+		const wo = wasabiObj.us_east_1
+		const wallet = new ethers.Wallet(masterSetup.conetStorageAdmin, provide_write)
+		const conet_storage = new ethers.Contract(CONET_Stroage_Contract, CONET_StorgaeAbi, wallet)
+		let tx = 0
+		try {
+			tx = await conet_storage._storageFragments(obj.walletAddress, '0x0')
+		} catch (ex) {
+			logger(`storageWalletProfile conet_storage.count Error!`, ex)
+			return resolve(false)
+		}
+		
+		const option: S3.S3ClientConfig = {
+			credentials: {
+				accessKeyId: s3pass.ACCESS_KEY,
+				secretAccessKey: s3pass.SECRET_KEY
+			},
+			endpoint: wo.endpoint,
+			region: wo.region
+		}
+
+		const s3cmd: S3.PutObjectCommandInput = {
+			Bucket: wo.Bucket,
+			Key: `${ wo.Bucket_key }/${ obj.walletAddress }/${obj.hash}`,
+			Body: obj.data,
+		}
+
+		const s3Client = new S3Client(option)
+		const command = new PutObjectCommand(s3cmd)
+		let req
+		try {
+			req = await s3Client.send(command)
+		} catch (ex) {
+			logger(colors.red(`storageWalletProfile s3.putObject Error`),ex)
+			return resolve(false)
+		}
+		logger(inspect(req, false, 3, true))
+		return resolve(true)
+	})
 }
 
 const test = async () => {
@@ -1710,20 +1717,28 @@ const test = async () => {
 	// logger(inspect(uuu, false, 3, true), typeof uuu?.CNTPMasterBalance )
 	
 	
-	// const uuu = checkSignObj(data.message, data.signMessage)
+	//const uuu = checkSignObj(data.message, data.signMessage)
+	
 	// if (!uuu) {
 	// 	return logger(colors.red(`checkSignObj Error`), inspect(uuu, false, 3, true))
 	// }
 	// const pass = await s3fsPasswd()
 	// if (pass ) {
 	// 	//const vvv = await storageWalletProfile(uuu.walletAddress, , pass)
-	// 	logger(inspect(uuu, false, 3, true))
+	
 	// }
-	const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, provideReader)
-	const uuu = await getAllReferees('0x04441E4BC3A8842473Fe974DB4351f0b126940be', contract)
-	logger(inspect(uuu, false, 5, true))
+	// const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, provideReader)
+	// const uuu = await getAllReferees('0x04441E4BC3A8842473Fe974DB4351f0b126940be', contract)
+	// logger(inspect(uuu, false, 5, true))
+	const obj: minerObj = {
+		walletAddress: "0x880845514B8f13614a01B4Dc511E58B9b5753980",
+		ipAddress: '',
+		weidth: 1,
+		fork: null
+	}
 
 }
-// test()
+
+//test()
 // tryTransferTest()
 /** */

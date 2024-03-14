@@ -53,6 +53,7 @@ interface ICoNET_DecryptedPayload {
 interface ICoNET_DL_masterSetup {
 	conetPointAdmin: string
 	cnptReferralAdmin: string
+	conetStorageAdmin: string
     "13b995b1fDotCa":{
         Key: string
         cert: string 

@@ -191,8 +191,6 @@ class conet_dl_server {
 	}
 
 	private initSetupData = async () => {
-
-		const setup = join( homedir(),'.master.json' )
 		
 		this.initData = await getSetup ( true )
 		if ( !this.initData ) {
@@ -711,6 +709,27 @@ class conet_dl_server {
 				return res.status(504).end()
 			}
 			return res.status(200).json({}).end()
+		})
+
+		router.get ('/event', async ( req, res ) => {
+
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			const obj = checkSignObj (message, signMessage)
+			if (!obj ) {
+				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
+				return res.status(403).end()
+			}
+
+
 		})
 
 		router.all ('*', (req, res ) =>{
