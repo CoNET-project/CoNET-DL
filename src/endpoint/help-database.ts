@@ -252,6 +252,57 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 	
 }
 
+export const regiestFaucetBlast = (wallet_addr: string, ipAddr: string ) => {
+	
+	return new Promise ( async resolve => {
+
+		const cassClient = new Client (option)
+		await cassClient.connect ()
+		const time = new Date()
+
+		
+		let cmd = `SELECT * from conet_faucet_ipaddress WHERE client_ipaddress = '${ipAddr}'`
+
+		let result = await cassClient.execute (cmd)
+
+		if ( result?.rowLength > 5 ) {
+			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
+			await cassClient.shutdown ()
+			return resolve (false)
+		}
+
+		wallet_addr = wallet_addr.toUpperCase()
+
+		cmd = `SELECT * from conet_faucet_wallet_addr WHERE wallet_addr = '${ wallet_addr }'`
+		result = await cassClient.execute (cmd)
+		
+		if ( result?.rowLength > 0 ) {
+			logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
+			await cassClient.shutdown ()
+			return resolve (false)
+		}
+
+		//const receipt = await sendCONET (admin_private, FaucetCount, wallet_addr)
+
+
+		const cmd2 = `INSERT INTO conet_faucet_ipaddress (client_ipaddress, timestamp) VALUES ('${ipAddr}', '${time.toISOString() }') USING TTL ${FaucetTTL}`
+		const cmd3 = `INSERT INTO conet_faucet_wallet_addr (wallet_addr) VALUES ('${wallet_addr}') USING TTL ${FaucetTTL}`
+		const cmd1 = `INSERT INTO conet_faucet (wallet_addr, timestamp, total, transaction_hash, client_ipaddress) VALUES ('${wallet_addr}', '${time.toISOString()}', ${ '1' }, '', '${ ipAddr }')`
+
+
+		await cassClient.execute (cmd1)
+		await cassClient.execute (cmd2)
+		await cassClient.execute (cmd3)
+
+		logger (Color.grey(`regiestFaucet [${wallet_addr}:${ipAddr}] SUCCESS`))
+		await cassClient.shutdown ()
+		
+		return resolve ('OK')
+		
+	})
+	
+}
+
 const storeCoNET_market = (price: number, oneDayPrice: number) => {
 	return new Promise ( async resolve => {
 		const cassClient = new Client (option)

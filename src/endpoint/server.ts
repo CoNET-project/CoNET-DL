@@ -227,7 +227,7 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use ( Express.static ( staticFolder ))
         app.use ( Express.static ( launcherFolder ))
-        app.use ( Express.json())
+        app.use ( Express.json({limit: '25mb'}))
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
