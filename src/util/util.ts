@@ -730,7 +730,7 @@ export const sendCONET: (privateKey: string, amountInEther: string, receiverAddr
 				return resolve(txObj)
 			})
 			.catch (ex => {
-				//logger (colors.red(`sendCONET Catch Error ${ex.message}`))
+				logger (colors.red(`sendCONET Catch Error try again! ${ex.message}`))
 				setTimeout(() => {
 					trySend()
 				}, 1000)
@@ -1730,15 +1730,43 @@ const test = async () => {
 	// const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, provideReader)
 	// const uuu = await getAllReferees('0x04441E4BC3A8842473Fe974DB4351f0b126940be', contract)
 	// logger(inspect(uuu, false, 5, true))
-	const obj: minerObj = {
-		walletAddress: "0x880845514B8f13614a01B4Dc511E58B9b5753980",
-		ipAddress: '',
-		weidth: 1,
-		fork: null
-	}
+	// const obj: minerObj = {
+	// 	walletAddress: "0x880845514B8f13614a01B4Dc511E58B9b5753980",
+	// 	ipAddress: '',
+	// 	weidth: 1,
+	// 	fork: null
+	// }
+
+	sendCONET(masterSetup.conetFaucetAdmin, '0.01', '0XE21EFA939CD058F65E842E47290EACF194B4C9C3')
 
 }
 
+const getRefferRate= (num: number) => {
+	switch(num) {
+		case 0: {
+			return 0
+		}
+		case 1: {
+			return 1
+		}
+		case 2: {
+			return 2.2
+		}
+		case 3: {
+			return 3.5
+		}
+		case 4: {
+			return 4.85
+		}
+		default: {
+			return (num - 4) * 0.35 + 0.85 + num
+		}
+	}
+}
+
+
+//const [,,...args] = process.argv
+//logger(getRefferRate(parseInt(args[0])))
 //test()
 // tryTransferTest()
 /** */

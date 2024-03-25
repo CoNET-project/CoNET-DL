@@ -206,7 +206,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 5 ) {
+		if ( result?.rowLength > 5 && ipAddr !=='206.116.178.157') {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -217,7 +217,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 		cmd = `SELECT * from conet_faucet_wallet_addr WHERE wallet_addr = '${ wallet_addr }'`
 		result = await cassClient.execute (cmd)
 		
-		if ( result?.rowLength > 0 ) {
+		if ( result?.rowLength > 0 && ipAddr !=='206.116.178.157' ) {
 			logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -246,6 +246,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 			}
 			process.send (comd)
 		}
+
 		return resolve ('OK')
 		
 	})

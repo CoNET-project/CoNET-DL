@@ -300,7 +300,7 @@ if ( Cluster.isPrimary) {
 		return obj.fork.send(mess)
 	}
 
-	const FaucetCount = '0.1'
+	const FaucetCount = '0.05'
 
 	const _sendCONET = async () => {
 		if (sending_CONET) {
@@ -313,7 +313,7 @@ if ( Cluster.isPrimary) {
 
 		sending_CONET = true
 
-		await sendCONET(masterSetup.conetPointAdmin, FaucetCount, wallet)
+		await sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet)
 		sending_CONET = false
 		_sendCONET ()
 		return
@@ -456,7 +456,9 @@ if ( Cluster.isPrimary) {
 			}
 
 			case 'sendCONET': {
+				
 				const wallet = message.data[0]
+				logger(`sendCONET from[${wallet}]`)
 				sendCONET_Pool.push (wallet)
 				return _sendCONET()
 			}
@@ -566,7 +568,7 @@ if ( Cluster.isPrimary) {
 	}
 
 	getSetupInfo ()
-		
+
 } else {
 	const uuu = new conet_dl_server ()
 	process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
