@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
 import { logger, getServerIPV4Address, saveSetup, getSetup, getCNTPMastersBalance, mergeTransfers, loadWalletAddress, multiTransfer_original_Blast, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit, splitPei, sendTokenToMiner, multiTransfer,free_Pei, nodesWalletAddr, listedServerIpAddress, sendCONET, checkReferralSign } from './util/util'
-
+import {daemons} from './endpoint/daemon'
 //import {streamCoNET_USDCPrice} from './endpoint/help-database'
 
 import conet_dl_server from './endpoint/server'
@@ -11,48 +11,81 @@ import Cluster from 'node:cluster'
 import type { Worker } from 'node:cluster'
 import Colors from 'colors/safe'
 import { homedir, cpus } from 'node:os'
-import {eachLimit} from 'async'
-import {v4} from 'uuid'
+
 
 
 const ReserveIPAddress=['74.208.25.159','74.208.151.98','108.175.5.112','209.209.8.74']
 
 const eraseNodeOnlieTime = 1000 * 60 * 6
 
+let debug = false
+let version = false
+let start = false
+let help = false
+let passwd = ''
+let daemon = false
+let workerPool: Worker[] = []
+let single = false
+let node_si_pool: nodeType[] = []
+let livenessStart = false
+let sending_CONET = false
+let sendMineFromMinerPool_processing = false
+const [,,...args] = process.argv
+args.forEach ((n, index ) => {
+	if (/\-debug/.test(n)) {
+		debug = true
+	} else if ( /\-v| \--version/.test (n)) {
+		version = true
+	} else if  (/\-start/.test (n)) {
+		start = true
+	} else if (/\-h|\--help/.test (n)) {
+		help = true
+	} else if (/\-p/.test(n)) {
+		passwd = args[index + 1]
+	} else if (/\-d/.test(n)) {
+		daemon = true
+	}
+	else if (/\-s/.test(n)) {
+		single = true
+	}
+})
+
+
+const _forkWorker = (onMessage: (message: clusterMessage, fork: Worker)=> void = ()=>{}) => {
+	const fork = Cluster.fork ()
+	if ( !/^\(\)\s=>\s\{\s\}/.test(onMessage.toString())) {
+		fork.on ('message', msg => onMessage(msg, fork) )
+	}
+	
+
+	fork.once ('exit', (code: number, signal: string) => {
+		
+		if ( signal === null ) {
+			return logger (`Worker [${ fork.id }] EXIT with code [${code}] signal = null do not restart!`)
+		}
+
+		logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
+		return setTimeout (() => {
+			return _forkWorker (onMessage)
+		}, 1000 * 10)
+	})
+	return (fork)
+}
 if ( Cluster.isPrimary) {
 	const DL_Path = '.CoNET-DL'
 	const setupFileDir = join ( homedir(), DL_Path )
 	const setupFileName = join ( setupFileDir, 'nodeSetup.json')
 	const setupFile = join( homedir(),'.master.json' )
 	const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
-	const startCommand = `conet-mvp-dl -d start > system.log &`
+	const startCommand = `conet-mvp-dl start > system.log &`
 	const livenessListeningPool:Map<string, minerObj> = new Map()
-	process.once ('exit', (code: any, kk: any) => {
-		
-		logger (Colors.red (`@conet.project/mvp-dl main process on EXIT with [code ${code}, kk ${kk}], restart again!\nstartCommand = ${startCommand}`))
-		const uuu = exec (startCommand)
 
-		uuu.once ('spawn', () => {
-			return logger (Colors.red (`@conet.project/mvp-dl main process now to exit!, ${startCommand} Start!`))
-		})
-
-	})
 
 
 	const sendMinerPool: sendMiner[] = []
 	const debugWhiteList = ['207.216.58.151', '104.152.209.34']
-	const [,,...args] = process.argv
-	let debug = false
-	let version = false
-	let start = false
-	let help = false
-	let passwd = ''
-	let workerPool: Worker[] = []
-	let single = false
-	let node_si_pool: nodeType[] = []
-	let livenessStart = false
-	let sending_CONET = false
-	let sendMineFromMinerPool_processing = false
+	
+
 	let masterBalance: {
 		CNTPMasterBalance: string
 		CNTPReferralBalance: string
@@ -124,22 +157,6 @@ if ( Cluster.isPrimary) {
 		sendMineFromMinerPool ()
 	}
 
-	args.forEach ((n, index ) => {
-		if (/\-d/.test(n)) {
-			debug = true
-		} else if ( /\-v| \--version/.test (n)) {
-			version = true
-		} else if  (/\-start/.test (n)) {
-			start = true
-		} else if (/\-h|\--help/.test (n)) {
-			help = true
-		} else if (/\-p/.test(n)) {
-			passwd = args[index + 1]
-		}
-		else if (/\-s/.test(n)) {
-			single = true
-		}
-	})
 
 	const packageFile = join (__dirname, '..', 'package.json')
 	debug ? logger (`packageFile = ${ packageFile }`): null
@@ -168,10 +185,12 @@ if ( Cluster.isPrimary) {
 	
 	if ( version ) {
 		printVersion ()
+		process.exit()
 	}
 	
 	if ( !args[0] || help ) {
 		printInfo ()
+		process.exit()
 	}
 	
 	const GlobalIpAddress = getServerIPV4Address ( false )
@@ -181,6 +200,7 @@ if ( Cluster.isPrimary) {
 	if ( GlobalIpAddress.length === 0 ) {
 		logger ('WARING: Your node looks have no Global IP address!')
 	}
+
 	const startPackageSelfVersionCheckAndUpgrade_IntervalTime = 1000 * 60 * 3				//			10 mins
 
 	const checkNewVer = async () => {
@@ -300,7 +320,7 @@ if ( Cluster.isPrimary) {
 		return obj.fork.send(mess)
 	}
 
-	const FaucetCount = '0.05'
+	const FaucetCount = '0.01'
 
 	const _sendCONET = async () => {
 		if (sending_CONET) {
@@ -544,32 +564,37 @@ if ( Cluster.isPrimary) {
 		
 		debug ? logger (`Cluster.isPrimary node have ${ numCPUs } cpus\n`): null
 	
-		const _forkWorker = () => {
-			const fork = Cluster.fork ()
-
-			fork.on ('message', msg => onMessage(msg, fork) )
-
-			fork.once ('exit', (code: number, signal: string) => {
-				
-				if ( signal === null ) {
-					return logger (`Worker [${ fork.id }] EXIT with code [${code}] signal = null do not restart!`)
-				}
-
-				logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
-				return setTimeout (() => {
-					return _forkWorker ()
-				}, 1000 * 10)
-			})
-			return (fork)
-		}
-		
-		_forkWorker ()
+		_forkWorker (onMessage)
 
 	}
 
-	getSetupInfo ()
+	if(!daemon) {
+		logger (`main process start getSetupInfo!`)
+		process.once ('exit', (code: any, kk: any) => {
+		
+			logger (Colors.red (`@conet.project/mvp-dl main process on EXIT with [code ${code}, kk ${kk}], restart again!\nstartCommand = ${startCommand}`))
+			const uuu = exec (startCommand)
+	
+			uuu.once ('spawn', () => {
+				return logger (Colors.red (`@conet.project/mvp-dl main process now to exit!, ${startCommand} Start!`))
+			})
+	
+		})
+		getSetupInfo ()
+	} else {
+		logger(`main process start daemon process`)
+		
+		_forkWorker ()
+	}	
+
+	
 
 } else {
-	const uuu = new conet_dl_server ()
-	process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
+	if (!daemon) {
+		const uuu = new conet_dl_server ()
+		process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
+	} else {
+		daemons()
+	}
+	
 }

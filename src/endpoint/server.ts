@@ -5,13 +5,16 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price, conetcash_getBalance, CoNET_SI_health, getIpAttack } from './help-database'
+import { CoNET_SI_Register, regiestFaucet, getLast5Price, conetcash_getBalance, CoNET_SI_health, getIpAttack, getOraclePrice } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import {readFileSync} from 'node:fs'
-import { logger, loadWalletAddress, getSetup, return404, decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile} from '../util/util'
+import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
+	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
+	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, 
+	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile} from '../util/util'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -81,6 +84,8 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	}
 	return ipaddress
 }
+
+
 
 class conet_dl_server {
 
@@ -238,7 +243,6 @@ class conet_dl_server {
 
 			getIpAttack(ipaddress, this.serverID, (err, data) => {
 				if (err) {
-					
 					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
 					return res.status(404).end()
 				}
@@ -474,6 +478,7 @@ class conet_dl_server {
 			return res.json ({ipaddress}).end ()
 		})
 
+		//********************			V2    		****** */				
 		router.post ('/conet-faucet', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
@@ -730,6 +735,100 @@ class conet_dl_server {
 			}
 
 
+		})
+
+		router.get ('/asset-prices', async ( req, res ) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			
+			let kk
+			try {
+				kk = await getOraclePrice()
+			} catch (ex) {
+				logger(Colors.gray(`/asset-prices from ${ipaddress} Error!` ), ex)
+				return res.status(403).json({}).end()
+			}
+			logger(Colors.gray(`/asset-prices from ${ipaddress} success!` ), inspect(kk, false, 3, true))
+			return res.status(200).json(kk).end()
+		})
+
+		router.post ('/Purchase-Guardian', async (req,res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			// const ipaddress = req.headers['cf-connecting-ip']||splitIpAddr(req.ip)
+			
+			
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /Purchase-Guardian message = req.body.message ERROR!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+				
+			}
+			
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+				return  res.status(403).end()
+				
+			}
+			
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj||!obj?.data) {
+				logger (Colors.grey(`Router /Purchase-Guardian checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+
+			if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
+				logger(Colors.grey(`Router /Purchase-Guardian obj.data?.nodes !== obj.data?.publishKeys?.length Error!`), inspect(obj, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const txObj = await checkTx (obj.data.receiptTx, obj.data.tokenName)
+
+			if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
+				logger(Colors.grey(`Router /Purchase-Guardian txObj Error!`), inspect(txObj, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
+
+			if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
+				if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+					logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
+					return res.status(403).end()
+				}
+				const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount)
+				if (erc20Result === false) {
+					logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
+					return res.status(403).end()
+				}
+				const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+				if (!kk) {
+					logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
+					return res.status(403).end()
+				}
+				const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
+				return res.status(200).json(ret).end()
+			}
+			
+			const value = txObj.tx1.value.toString()
+			if (obj.data.amount !== value) {
+				logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
+				return res.status(403).end()
+			}
+
+			const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+			if (!kk) {
+				logger(Colors.red(`checkValueOfGuardianPlan Error!`))
+				return res.status(403).end()
+			}
+			
+			const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+			const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
+			return res.status(200).json(ret).end()
 		})
 
 		router.all ('*', (req, res ) =>{

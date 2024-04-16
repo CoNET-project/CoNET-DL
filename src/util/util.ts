@@ -19,12 +19,16 @@ import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
 
+import {getOraclePrice} from '../endpoint/help-database'
+
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 import {abi as CONET_multiTransfer_ABI} from './CONET_multiTransfer.json'
 import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
 import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
+import {abi as claimableToken } from './claimableToken.json'
 import CONET_StorgaeAbi from './cone-storage.json'
+import {abi as GuardianNodesABI} from './GuardianNodes.json'
 
 import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
 import Web3, { Web3Eth } from 'web3'
@@ -32,6 +36,10 @@ import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
 
 
 const conet_Holesky_rpc = 'https://rpc.conet.network'
+const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
+const balstMainchainRPC = 'https://rpc.blast.io'
+
+const ethMainchainRPC = 'https://eth-mainnet.g.alchemy.com/v2/dxNi8w6owhHdzNZPXQPeppST3CqFRO-F'
 let provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 let provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 let blast_current = 0
@@ -50,16 +58,33 @@ const getProvider_Blast = () => {
 const rpcs = ['https://a3c6a17769809e43.conet.network', 'https://ee62a6be24b3c4581defb76b7d.conet.network']
 let pointToRPC = 0
 
-const conet_point_contract = `0x113E91FC4296567f95B84D0FacDa6fC29c5E7238`
-const conet_Referral_contract = `0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD`
-const CNTP_HoleskyMultiTransfer = '0x94217083059e7D1eFdd9D9f95039A43329D532ac'
-const CONET_Stroage_Contract = '0x30D870224419226eFcEA57B920a2e67929893DbA'
-const conet_ERC20_MultiTransfer_contract_blast = '0x8c40ecFE10665FA66C1De087b5e188916C73DB96'
-const CNTP_Referral_contract_Blast = '0x76e68E0B3d088e52e1e7B714ddC57eBbE94c52c4'
+const conet_point_contract = `0x113E91FC4296567f95B84D0FacDa6fC29c5E7238`.toLowerCase()
+const conet_Referral_contract = `0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD`.toLowerCase()
+
+const conet_Referral_contractV2 = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
+const CNTP_HoleskyMultiTransfer = '0x94217083059e7D1eFdd9D9f95039A43329D532ac'.toLowerCase()
+const CONET_Stroage_Contract = '0x7d9CF1dd164D6AF82C00514071990358805d8d80'.toLowerCase()
+const conet_ERC20_MultiTransfer_contract_blast = '0x8c40ecFE10665FA66C1De087b5e188916C73DB96'.toLowerCase()
+const CNTP_Referral_contract_Blast = '0x76e68E0B3d088e52e1e7B714ddC57eBbE94c52c4'.toLowerCase()
+const preNFTSmartCOntract = '0xddbC4Bcd03818a673abde0671933C31a2adb14Ea'
+
+const usdtBnbContract = '0x55d398326f99059fF775485246999027B3197955'
+const usdtBlastContract = '0x4300000000000000000000000000000000000003'
+const usdtETHContract = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+
+const CONET_bnb_safeWallet = '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'
+const CONET_ETH_safeWallet = '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'
+const eth_usdt_contract = '0xdac17f958d2ee523a2206206994597c13d831ec7'
+const bnb_usdt_contract = '0x55d398326f99059fF775485246999027B3197955'
+const blast_usdb_contract = '0x4300000000000000000000000000000000000003'
+const conet_dWETH = '0x84b6d6A6675F830c8385f022Aefc9e3846A89D3B'
+const conet_dUSDT = '0x0eD55798a8b9647f7908c72a0Ce844ad47274422'
+const conet_dWBNB = '0xd8b094E91c552c623bc054085871F6c1CA3E5cAd'
+const CNTPMasterWallet = '0x44d1FCCce6BAF388617ee972A6FB898b6b5629B1'
+const CNTPReferralWallet = '0x63377154F972f6FC1319e382535EC9691754bd18'
 
 
-
-const conet_point_contract_blast = `0x53634b1285c256aE64BAd795301322E0e911153D`
+const conet_point_contract_blast = `0x53634b1285c256aE64BAd795301322E0e911153D`.toLowerCase()
 
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
@@ -825,6 +850,7 @@ export const checkSignObj = (message: string, signMess: string) => {
 		logger (colors.red(`checkSignObj obj Error! !recoverPublicKey[${!recoverPublicKey}] !obj?.walletAddress[${!obj?.walletAddress}] recoverPublicKey.toLowerCase() [${recoverPublicKey.toLowerCase()}]!== obj?.walletAddress?.toLowerCase() [${recoverPublicKey.toLowerCase() !== obj?.walletAddress?.toLowerCase()}]`),inspect(obj, false, 3, true) )
 		return null
 	}
+	obj.walletAddress = recoverPublicKey.toLowerCase()
 	return obj
 	
 }
@@ -1174,8 +1200,7 @@ export const multiTransfer_blast = async (privateKey: string, nodes: string[], _
 	
 }
 
-const CNTPMasterWallet = '0x44d1FCCce6BAF388617ee972A6FB898b6b5629B1'
-const CNTPReferralWallet = '0x63377154F972f6FC1319e382535EC9691754bd18'
+
 
 export const multiTransfer_original_Blast = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
 	if (nonceLock.blastConetPointAdmin) {
@@ -1610,8 +1635,6 @@ const tryTransferTest = () => {
 	multiTransfer_original_Blast(masterSetup.conetPointAdmin, nodesWalletAddr, pay, nonceLock)
 }
 
-
-
 const getReferees = async (wallet: string, contract: ethers.Contract) => {
 	
 	let tt: string[]
@@ -1669,19 +1692,11 @@ const listeningStorgaeEvent = (CallBack:(data: any)=>void) => {
 		logger(`FragmentsStorage on Error`,ex)
 	})
 }
+
 export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
 	return new Promise (async resolve => {
 		
 		const wo = wasabiObj.us_east_1
-		const wallet = new ethers.Wallet(masterSetup.conetStorageAdmin, provide_write)
-		const conet_storage = new ethers.Contract(CONET_Stroage_Contract, CONET_StorgaeAbi, wallet)
-		let tx = 0
-		try {
-			tx = await conet_storage._storageFragments(obj.walletAddress, '0x0')
-		} catch (ex) {
-			logger(`storageWalletProfile conet_storage.count Error!`, ex)
-			return resolve(false)
-		}
 		
 		const option: S3.S3ClientConfig = {
 			credentials: {
@@ -1694,7 +1709,7 @@ export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
 
 		const s3cmd: S3.PutObjectCommandInput = {
 			Bucket: wo.Bucket,
-			Key: `${ wo.Bucket_key }/${ obj.walletAddress }/${obj.hash}`,
+			Key: `${ wo.Bucket_key }/FragmentOcean/${obj.hash}`,
 			Body: obj.data,
 		}
 
@@ -1712,61 +1727,508 @@ export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
 	})
 }
 
-const test = async () => {
-	// const uuu = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
-	// logger(inspect(uuu, false, 3, true), typeof uuu?.CNTPMasterBalance )
-	
-	
-	//const uuu = checkSignObj(data.message, data.signMessage)
-	
-	// if (!uuu) {
-	// 	return logger(colors.red(`checkSignObj Error`), inspect(uuu, false, 3, true))
-	// }
-	// const pass = await s3fsPasswd()
-	// if (pass ) {
-	// 	//const vvv = await storageWalletProfile(uuu.walletAddress, , pass)
-	
-	// }
-	// const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, provideReader)
-	// const uuu = await getAllReferees('0x04441E4BC3A8842473Fe974DB4351f0b126940be', contract)
-	// logger(inspect(uuu, false, 5, true))
-	// const obj: minerObj = {
-	// 	walletAddress: "0x880845514B8f13614a01B4Dc511E58B9b5753980",
-	// 	ipAddress: '',
-	// 	weidth: 1,
-	// 	fork: null
-	// }
 
-	sendCONET(masterSetup.conetFaucetAdmin, '0.01', '0XE21EFA939CD058F65E842E47290EACF194B4C9C3')
+
+const preOrder = async (txHash: string, chain: string) => {
+	let txRpc = balstMainchainRPC
+	let usdSmartContract = usdtBlastContract
+	switch (chain) {
+		case 'bsc': {
+			usdSmartContract = usdtBnbContract
+			return txRpc = bscMainchainRPC
+		}
+		case 'eth': {
+			usdSmartContract = usdtETHContract
+			return txRpc = ethMainchainRPC
+		}
+	}
+	const provider = new ethers.JsonRpcProvider(txRpc)
+	let tx
+	try {
+		tx = await provider.getTransaction(txHash)
+	} catch (ex) {
+		logger(ex)
+		return null
+	}
+	if (!tx) {
+		return null
+	}
+
+	const ret = {
+		from: tx.from.toLowerCase(),
+		to: tx.to?.toLowerCase(),
+		value: parseFloat(ethers.formatEther(tx?.value||'0'))
+	}
+
+	switch (chain) {
+		case 'bsc': {
+			if ( ret.value > 0.0 ) {
+				
+			} else {
+				if (ret.to !== usdSmartContract) {
+
+				}
+			}
+		}
+		case 'eth': {
+
+		}
+		default: {
+
+		}
+	}
 
 }
 
-const getRefferRate= (num: number) => {
-	switch(num) {
-		case 0: {
-			return 0
+
+const detailTransfer = async (transferHash: string, provideCONET: ethers.JsonRpcProvider) => {
+
+	const transObj = await provideCONET.getTransactionReceipt(transferHash)
+	
+	if (transObj?.to && transObj.to.toLowerCase() === CONET_Stroage_Contract ) {
+		// if (transObj.from.toLowerCase() === cntpAdminAddress) {
+		// 	for (let transferLog of transObj.logs) {
+		// 		const topic = transferLog.topics
+		// 		if (topic) {
+		// 			const kkk = ethers.getAddress('0x'+topic[2].toString().substring(26)).toLowerCase()
+		// 			const rev = await transAddress (kkk)
+		// 			if (typeof rev === 'string' && rev !== '0x0000000000000000000000000000000000000000') {
+		// 				await transAddress (rev)
+		// 			}
+
+		// 		} else {
+		// 			console.log (Colors.red(`detailTransfer topic = transferLog.topics has NONE`))
+		// 			console.log(inspect(transferLog, false, 3, true))
+		// 		}
+				
+		// 	}
+			
+		// 	return
+			
+		// }
+		logger(inspect(transObj, false, 3, true))
+		return console.log (colors.red(`detailTransfer from [${transObj.from}] to CONET_Stroage_Contract`))
+	}
+	
+}
+
+
+const listenEvent = async () => {
+	const cntp_conet_holasky_address = '0x113E91FC4296567f95B84D0FacDa6fC29c5E7238'
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const wallet = new ethers.Wallet(masterSetup.conetPointAdmin, provideCONET)
+	const fee = await provideCONET.getFeeData()
+	const erc20 = new ethers.Contract(cntp_conet_holasky_address, CONET_Point_ABI, wallet)
+	const gas = await erc20.approve.estimateGas('0x5B38Da6a701c568545dCfcB03FcB875f56beddC4', 100)
+	
+	const tx = {
+		to: "0x6E0d01A76C3Cf4288372a29124A26D4353EE51BE",
+		value: ethers.parseEther("0.05")
+	}
+	const gas1 = await wallet.estimateGas(tx)
+	logger(inspect(gas1, false, 3, true))
+	
+}
+
+const getNetwork = (networkName: string) => {
+	switch (networkName) {
+		case 'usdb':
+		case 'blastETH': {
+			return balstMainchainRPC
 		}
-		case 1: {
-			return 1
+		case 'dUSDT':
+		case 'dWBNB':
+		case 'dWETH':
+		case 'conet':
+		case 'cntpb': {
+			return conet_Holesky_rpc
 		}
-		case 2: {
-			return 2.2
+		case 'usdt':
+		case 'eth': {
+			return ethMainchainRPC
 		}
-		case 3: {
-			return 3.5
+		case 'wusdt': 
+		case 'wbnb': {
+			return bscMainchainRPC
 		}
-		case 4: {
-			return 4.85
-		}
-		default: {
-			return (num - 4) * 0.35 + 0.85 + num
+		case 'cntp':
+		default : {
+			return ''
 		}
 	}
 }
 
+export const checkTx =  async (txHash: string, tokenName: string) => {
+	const rpc = getNetwork(tokenName)
+	if (!rpc) {
+		return null
+	}
+	const provide = new ethers.JsonRpcProvider(rpc)
+	
+	try {
+		const [tx, tx1] = await Promise.all([
+			provide.getTransactionReceipt(txHash),
+			provide.getTransaction(txHash)
+		])
+		await tx1?.wait()
+		return {tx, tx1}
+	} catch (ex: any) {
+		logger(colors.red(`checkTx provide.getTransaction(${txHash}) Error`),ex.message)
+		return false
+	}
+	
+}
+
+export const CONET_guardian_Address = (networkName: string) => {
+	switch (networkName) {
+		
+		case 'usdt':
+		case 'eth': {
+			return '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'.toLowerCase()
+		}
+		case 'wusdt': 
+		case 'wbnb': {
+			return '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'.toLowerCase()
+		}
+		//		CONET holesky
+		case 'dWETH':
+		case 'dWBNB':
+		case 'dUSDT':
+		case '':
+		//		blast mainnet
+		case 'usdb':
+		case 'blastETH':
+		default: {
+			return `0x4A8E5dF9F1B2014F7068711D32BA72bEb3482686`.toLowerCase()
+		}
+	}
+}
+
+export const getAssetERC20Address = (assetName: string) => {
+	switch (assetName) {
+		
+		case 'usdt':{
+			return eth_usdt_contract.toLowerCase()
+		}
+		case 'wusdt':{
+			return bnb_usdt_contract.toLowerCase()
+		}
+		case 'usdb': {
+			return blast_usdb_contract.toLowerCase()
+		}
+
+		case 'dWBNB': {
+			return conet_dWBNB.toLowerCase()
+		}
+
+		case 'dUSDT': {
+			return conet_dUSDT.toLowerCase()
+		}
+
+		case 'dWETH': {
+			return conet_dWETH.toLowerCase()
+		}
+	
+		default: {
+			return ``
+		}
+	}
+}
+
+export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string) => {
+	const txLogs = tx.logs[0]
+	if (!txLogs) {
+		logger(colors.red(`checkErc20Tx txLogs empty Error!`))
+		return false
+	}
+	
+	const iface = new ethers.Interface(CONET_Point_ABI)
+	
+	let uuu
+	try {
+		uuu = iface.parseLog(txLogs)
+	} catch (ex) {
+		logger(colors.red(`checkErc20Tx iface.parseLog(txLogs) ex Error!`))
+		return false
+	}
+	if (uuu?.name !== 'Transfer') {
+		logger(colors.red(`checkErc20Tx txLogs name [${uuu?.name}] !== 'Transfer' Error!`))
+		return false
+	}
+
+	const receive = uuu.args[1].toLowerCase()
+	const from = uuu.args[0].toLowerCase()
+	if (from !== fromWallet || receive !== receiveWallet) {
+		logger(colors.red(`checkErc20Tx from [${from}] !==[${from !== fromWallet}] fromWallet [${fromWallet}] receive [${receive}] !== [${receive !== receiveWallet}] receiveWallet [${receiveWallet}]`))
+		return false
+	}
+	if (value !== uuu.args[2].toString()) {
+		logger(colors.red(`checkErc20Tx value [${value}] !== uuu.args[2] [${uuu.args[2].toString()}] Error!`))
+		return false
+	}
+	return true
+}
+
+const GuardianPlanPrice = 1250
+
+const getAmountOfNodes: (nodes: number, assetName: string) => Promise<number> = (nodes, assetName) => new Promise(async resolve => {
+	const assetPrice = await getOraclePrice ()
+	if (typeof assetPrice === 'boolean') {
+		return resolve(0)
+	}
+	const totalUsdt = nodes * GuardianPlanPrice
+	const asssetSymbol = new RegExp (/usd/i.test(assetName) ? 'usd' : /bnb/i.test(assetName) ? 'bnb' : 'eth', 'i')
+	const index = assetPrice.findIndex(n => asssetSymbol.test(n.currency_name))
+	if (index < 0) {
+		return resolve(totalUsdt)
+	}
+	const rate = parseFloat(assetPrice[index].usd_price)
+	return resolve (totalUsdt/rate)
+})
+
+export const checkValueOfGuardianPlan = async (nodes: number, tokenName: string, paymentValue: string) => {
+
+	const totalAmount = await getAmountOfNodes(nodes, tokenName)
+	if (!totalAmount) {
+		return false
+	}
+	const _total = parseFloat(ethers.formatEther(paymentValue))
+	if (_total - totalAmount > totalAmount * 0.01) {
+		return false
+	}
+	return true
+}
+
+
+export const checkReferralsV2_OnCONET_Holesky = async (wallet: string) => {
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_blast_v2, provider)
+	let uu
+	try {
+		uu = await contract.getReferrer(wallet)
+
+	} catch (ex) {
+		logger(colors.red(`checkReferralsV2_OnCONET_Holesky contract.getReferrer(${wallet}) Error!`), ex)
+		return ('')
+	}
+	if (uu !== ethers.getAddress('0x0000000000000000000000000000000000000000')) {
+		return (uu.toLowerCase())
+	}
+	return ''
+	
+}
+
+const Claimable_BNBUSDT = '0xC06D98B3185D3de0dF02b8a7AfD1fF9cB3c9399a'.toLowerCase()
+const Claimable_BlastUSDB = '0x53Aee1f4c9b0ff76781eFAC6e20eAe4561e29E8A'.toLowerCase()
+const Claimable_BlastETH = '0x47A10d4BBF904BCd550200CcBB6266fB88EB9804'.toLowerCase()
+const Claimable_BNB = '0x8E7B1D5f6DF4B0d7576B7430ECB1bEEE0b612382'.toLowerCase()
+const Claimable_ETH = '0x6Eb683B666310cC4E08f32896ad620E5F204c8f8'.toLowerCase()
+const Claimable_ETHUSDT = '0x7A44b74658E814115CD98e537B5402EEebd10eb3'.toLowerCase()
+const GuardianNodes_Contract = '0xc8aC4AE6d227ddb4CbC3bD9bd9fc39AD66FFF1e1'
+
+
+export const getClaimableContractAddress = (tokenName: string) => {
+	switch(tokenName) {
+		case 'dUSDT':
+		case 'usdt':{
+		
+			return Claimable_ETHUSDT.toLowerCase()
+		}
+		case 'wusdt':{
+			return Claimable_BNBUSDT.toLowerCase()
+		}
+		case 'usdb': {
+			return Claimable_BlastUSDB.toLowerCase()
+		}
+		
+		case 'blastETH': {
+			return Claimable_BlastETH.toLowerCase()
+		}
+		case 'conet':
+		case 'dWETH':
+		case 'eth': {
+			return Claimable_ETH.toLowerCase()
+		}
+		case 'dWBNB':
+		case 'bnb': {
+			return Claimable_BNB.toLowerCase()
+		}
+
+		default : {
+			return ''
+		}
+	}
+}
+
+const sendClaimableAsset = async (privateKey: string, retClaimableContractAddress: string, toAddr: string, amount: string) => new Promise(resolve => {
+
+	const trySend = async () => {
+		const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+		const wallet = new ethers.Wallet(privateKey, provider)
+		const claimableContract = new ethers.Contract(retClaimableContractAddress, claimableToken, wallet)
+
+		try{
+			const tx = await claimableContract.mint(toAddr, ethers.parseEther(amount))
+			logger(colors.blue(`sendClaimableAsset ${claimableContract.target} amount [${amount}] success!`))
+			resolve(tx)
+		} catch (ex) {
+			logger(colors.red(`sendClaimableAsset [${toAddr}] amount [${amount}] Error! try again!`))
+			setTimeout(async () => {
+				return await trySend()
+			}, 5000)
+		}
+		
+	}
+	trySend()
+})
+	
+
+const getReferralNode = async (contract: ethers.Contract, referrer: string) => {
+	let nodes
+	try {
+		nodes = await contract.payerNodes(referrer)
+	} catch(ex){
+		return false
+	}
+	return nodes
+}
+
+const sendGuardianNodesContract = async (privateKey: string, nodeAddr: string[], paymentWallet: string) => new Promise(async resolve =>{
+	const tryConnect = async () => {
+		const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+		const wallet = new ethers.Wallet(privateKey, provider)
+		const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract, GuardianNodesABI, wallet)
+		
+		try{
+			const tx = await GuardianNodesContract.mint(nodeAddr, paymentWallet)
+			resolve (tx)
+		} catch (ex) {
+			logger(colors.red(`returnGuardianPlanReferral call GuardianNodesContract.mint Error! Try Again`))
+			setTimeout(async () => {
+				return await tryConnect()
+			}, 5000)
+		}
+		
+	}
+	tryConnect()
+	
+})
+
+
+
+export const returnGuardianPlanReferral = async (nodes: number, referrerAddress: string, paymentWallet: string, tokenName: string, amount: string, privateKey: string, nodeAddr: string[]) => {
+	const _amount = parseFloat(ethers.formatEther(amount)) * 0.1
+	const eachNodeReferral = _amount/nodes
+	const referrerReturn = eachNodeReferral
+	
+	const paymentReferrerReturn = eachNodeReferral * (nodes - 1)
+	const retClaimableContractAddress = getClaimableContractAddress(tokenName)
+	
+	if (!retClaimableContractAddress) {
+		logger(colors.red(`returnGuardianPlanReferral getClaimableContractAddress tokenName =(${tokenName}) return Empty ERROR`))
+		return false
+	}
+	
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const wallet = new ethers.Wallet(privateKey, provider)
+	const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract, GuardianNodesABI, wallet)
+	const referrerNodes = await getReferralNode (GuardianNodesContract, referrerAddress)
+	const ret: any = {
+		claimableAssetTx: null,
+		guardianNodesTx: null
+	}
+
+	if (referrerNodes > 0 && referrerReturn > 0.00001 && paymentWallet) {
+		await sendClaimableAsset (privateKey, retClaimableContractAddress, referrerAddress, referrerReturn.toFixed(8))
+	}
+
+	if (paymentReferrerReturn > 0.00001) {
+		ret.claimableAssetTx = await sendClaimableAsset (privateKey,retClaimableContractAddress, paymentWallet, paymentReferrerReturn.toFixed(8))
+	}
+	
+	ret.guardianNodesTx = await sendGuardianNodesContract(privateKey, nodeAddr, paymentWallet)
+
+	return (ret)
+
+}
+
+const GuardianPlanPreCheck = async () => {
+
+	const data1 = {
+		message: '{"walletAddress":"0x0060f53fEac407a04f3d48E3EA0335580369cDC4","data":{"receiptTx":"0x390fb06db644b9858f71048b5ad6d28dc3eea17b65efc73d963917e2591b55c5","publishKeys":["0x2d8Fa325234B57cc6eDf6d2B63B21B46Dc0c40e2","0x849881E3E589eEa0f63F9307afbe476B8372fAA2","0x7E73114490F5CaD2bA310c754E4b9AC670c3C515","0xbD2Ec976BF990b5F91eA79DD286971EA3F4887Ab","0x28A0823Ad316b2a506e459c72Ef58044793C6222"],"nodes":5,"tokenName":"conet","network":"CONET Holesky","amount":"1985210000000000000"}}',
+		signMessage: '0xcf7cd4a17ffaa2df165966d433fc665089ab8644456a71bfa1c5ad39545d135d4b2038672c8a124cfabcf445d21af302b1785fd1c8aafcac13bca4b5be4db4fe1c'
+	}
+
+	const data = {
+		message: '{"walletAddress":"0x0060f53fEac407a04f3d48E3EA0335580369cDC4","data":{"receiptTx":"0xc1e8e47600149f727146783edff2919f18e00809628a81ee0fb8cb2a862d0475","publishKeys":["0x2d8Fa325234B57cc6eDf6d2B63B21B46Dc0c40e2","0x849881E3E589eEa0f63F9307afbe476B8372fAA2","0x7E73114490F5CaD2bA310c754E4b9AC670c3C515","0xbD2Ec976BF990b5F91eA79DD286971EA3F4887Ab","0x28A0823Ad316b2a506e459c72Ef58044793C6222"],"nodes":5,"tokenName":"dUSDT","network":"CONET Holesky","amount":"6250000000000000000000"}}',
+		signMessage: '0xabbe1c081a607eac464505fb0da510a02bb60890d9eeab1db63a4530ecbf452d009173a4c57777a48f5bd0314c29160b3cd987677a662f2512665d70928e0a4b1c'
+	}
+
+	const data2 = {
+		message: '{"walletAddress":"0x0060f53fEac407a04f3d48E3EA0335580369cDC4","data":{"receiptTx":"0x84310f22937af39d8b83930370d3884eff1ee86a68b3860b5328fc827725d2da","publishKeys":["0x2d8Fa325234B57cc6eDf6d2B63B21B46Dc0c40e2","0x849881E3E589eEa0f63F9307afbe476B8372fAA2","0x7E73114490F5CaD2bA310c754E4b9AC670c3C515","0xbD2Ec976BF990b5F91eA79DD286971EA3F4887Ab","0x28A0823Ad316b2a506e459c72Ef58044793C6222"],"nodes":5,"tokenName":"dUSDT","network":"CONET Holesky","amount":"6250000000000000000000"}}',
+		signMessage: '0xd7f2cec252361cb30fd457a48ad765b60874a9710a5bb51ab16d18bac08576753e30fe7673e17adeb1bb011e16447d38a2c61c1aaa1dbc4e6101a60b130bdf261c'
+	  }
+
+	const obj = checkSignObj (data.message, data.signMessage)
+	logger (inspect(obj, false, 3, true))
+	if (!obj || !obj?.data) {
+		logger(colors.red(`GuardianPlanPreCheck obj Error!`))
+		return false
+	}
+
+	if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
+		logger(colors.red(`obj Error!`))
+		return false
+	}
+	const txObj = await checkTx (obj.data.receiptTx, obj.data.tokenName)
+	
+	if (typeof txObj === 'boolean'||!txObj?.tx1||!txObj?.tx) {
+		logger(colors.red(`txObj Error!`))
+		return false
+	}
+
+	const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
+
+	//		ERC20 Token payment
+	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
+		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+			logger(colors.red(`ERC20 token address Error!`))
+			return false
+		}
+
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount)
+		if (erc20Result === false) {
+			logger(colors.red(`checkErc20Tx Error!`))
+			return false
+		}
+		const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+		if (!kk) {
+			logger(colors.red(`checkValueOfGuardianPlan Error!`))
+			return false
+		}
+		const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
+		return ret
+	}
+	const value = txObj.tx1.value.toString()
+	if (obj.data.amount !== value) {
+		logger(colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
+		return false
+	}
+
+	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+	if (!kk) {
+		logger(colors.red(`checkValueOfGuardianPlan Error!`))
+		return false
+	}
+	const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+	const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
+	return ret
+}
 
 //const [,,...args] = process.argv
 //logger(getRefferRate(parseInt(args[0])))
 //test()
-// tryTransferTest()
+
+//listenEvent()
 /** */

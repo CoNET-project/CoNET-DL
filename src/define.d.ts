@@ -55,6 +55,7 @@ interface ICoNET_DL_masterSetup {
 	cnptReferralAdmin: string
 	conetStorageAdmin: string
 	conetFaucetAdmin: string
+	claimableAdmin: string
     "13b995b1fDotCa":{
         Key: string
         cert: string 
@@ -200,7 +201,7 @@ interface minerObj {
 	referrer?:string
 	fork: any
 	hash?: string
-	data?: string
+	data?: any
 }
 
 interface nodeType {
@@ -249,4 +250,15 @@ interface _nodeType {
 interface snedMessageWaitingObj {
 	resolve: (cmd:clusterMessage|null) => void
 	timeOutObj: NodeJS.Timeout
+}
+interface bnbAvgPrice {
+	mins: number
+	price: string
+	closeTime: number
+}
+
+interface assetsStructure {
+	currency_name: string
+	timestamp: string
+	usd_price: string
 }

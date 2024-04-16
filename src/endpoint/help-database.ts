@@ -206,7 +206,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 5 && ipAddr !=='206.116.178.157') {
+		if ( result?.rowLength > 25 ) {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -217,7 +217,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 		cmd = `SELECT * from conet_faucet_wallet_addr WHERE wallet_addr = '${ wallet_addr }'`
 		result = await cassClient.execute (cmd)
 		
-		if ( result?.rowLength > 0 && ipAddr !=='206.116.178.157' ) {
+		if ( result?.rowLength > 0 ) {
 			logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -587,12 +587,25 @@ export const getIpAttack = async (ipaddress: string, node: string, callback: (er
 		return callback(ex)
 	}
 	await cassClient.shutdown()
-	if (data.rowLength > AttackTTL) {
+	if (data.rowLength > AttackTTL/2) {
 		return callback(null, true)
 	}
 	return callback(null, false)
 	
 }
+
+export const getOraclePrice: () => Promise<assetsStructure[]|boolean> = () => new Promise(async resolve => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT * from conet_crypto_price WHERE currency_name = 'eth' order by timestamp DESC LIMIT 1`
+	const cmd1 = `SELECT * from conet_crypto_price WHERE currency_name = 'bnb' order by timestamp DESC LIMIT 1`
+	const [eth, bnb] = await Promise.all ([
+		cassClient.execute (cmd),
+		cassClient.execute (cmd1)
+	])
+	await cassClient.shutdown()
+	//@ts-ignore
+	resolve ([eth.rows[0], bnb.rows[0]])
+})
 
 
 /** */
