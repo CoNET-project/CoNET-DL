@@ -56,6 +56,9 @@ interface ICoNET_DL_masterSetup {
 	conetStorageAdmin: string
 	conetFaucetAdmin: string
 	claimableAdmin: string
+	claimableAdminForNode: string
+	GuardianAdmin: string
+	GuardianReferrals: string
     "13b995b1fDotCa":{
         Key: string
         cert: string 

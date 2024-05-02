@@ -3,16 +3,16 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations } from '../util/util'
+import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations, conet_Holesky_rpc, transferCCNTP, checkSignObj, checkClaimeToeknbalance} from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
 import {v4} from 'uuid'
 import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recover } from 'eth-crypto'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
-
+import type {Response, Request } from 'express'
 import Color from 'colors/safe'
-
+import {ethers} from 'ethers'
 import { Client, auth, types } from 'cassandra-driver'
 
 const setup = join( homedir(),'.master.json' )
@@ -206,7 +206,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 25 ) {
+		if ( result?.rowLength > 50 ) {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -266,7 +266,7 @@ export const regiestFaucetBlast = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 5 ) {
+		if ( result?.rowLength > 20 ) {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -587,7 +587,7 @@ export const getIpAttack = async (ipaddress: string, node: string, callback: (er
 		return callback(ex)
 	}
 	await cassClient.shutdown()
-	if (data.rowLength > AttackTTL/2) {
+	if (data.rowLength > AttackTTL) {
 		return callback(null, true)
 	}
 	return callback(null, false)
@@ -608,17 +608,371 @@ export const getOraclePrice: () => Promise<assetsStructure[]|boolean> = () => ne
 })
 
 
+export const txManager: (tx: string, tokenName: string, payment_address: string, nodes: number, network: string, message: string, signMessage: string) 
+	=> Promise<boolean> = (_tx, tokenName, payment_address, nodes, network, message, signMessage) => new Promise(async resolve => {
+	const cassClient = new Client (option)
+	const tx = _tx.toLowerCase()
+	const cmd = `SELECT * from conet_guardian_receipt WHERE tx = '${tx}'`
+	const cmd1 = `INSERT INTO conet_guardian_receipt (payment_address, nodes, token_name, tx, timestamp, network, message, signMessage) VALUES (`+
+	`'${payment_address.toLowerCase()}', ${nodes}, '${tokenName}', '${tx}', '${new Date().toISOString()}', '${network}', '${message}', '${signMessage}')`
+	try {
+		const data = await cassClient.execute (cmd)
+		if (data.rowLength !== 0) {
+			await cassClient.shutdown()
+			return resolve(false)
+		}
+		await cassClient.execute (cmd1)
+		await cassClient.shutdown()
+		return resolve(true)
+	}
+	catch(ex) {
+		logger(Color.red(`txManager catch ex`), ex)
+		await cassClient.shutdown()
+		resolve(false)
+	}
+	
+})
+
+export const freeMinerManager = async (ipaddress: string, wallet: string) => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT ipaddress from conet_free_mining WHERE ipaddress = '${ipaddress}'`
+	const cmd1 = `SELECT wallet from conet_free_mining WHERE wallet = '${wallet.toLowerCase()}'`
+
+	let idata, wdata
+	try {
+		[idata, wdata] = await Promise.all ([
+			cassClient.execute (cmd),
+			cassClient.execute (cmd1)
+		])
+	} catch(ex) {
+		logger(ex)
+		return 404
+	}
+	
+
+	if (idata.rowLength) {
+		if (ipaddress !== '75.157.212.2') {
+			await cassClient.shutdown()
+			return 401
+		}
+		
+	}
+	if (wdata.rowLength) {
+		await cassClient.shutdown()
+		return 402
+	}
+
+	const oo: any = await getIpaddressLocaltion ( ipaddress )
+	// logger(inspect(oo, false, 3, true))
+	const cmd3 = `INSERT INTO conet_free_mining (ipaddress, wallet, region, country, node_wallet) VALUES ('${ipaddress}', '${wallet.toLowerCase()}', '${oo.region}', '${oo.country}', '${nodeWallet.toLowerCase()}')`
+	try {
+		await cassClient.execute (cmd3)
+	} catch (ex) {
+		logger(ex)
+	}
+	await cassClient.shutdown()
+	return true
+	
+}
+
+
+export const deleteMiner = async (ipaddress: string, wallet: string) => {
+	const cassClient = new Client (option)
+	const cmd1 = `DELETE from conet_free_mining WHERE ipaddress = '${ipaddress}' AND wallet = '${wallet}' AND node_wallet = '${nodeWallet}'`
+	await cassClient.execute (cmd1)
+	await cassClient.shutdown()
+	logger(Color.magenta(`deleteMiner ${ipaddress}:${wallet} success!`))
+}
+
+export const getMinerCount = async (_epoch: number) => {
+	let count = 0
+	const epoch = (_epoch - 1).toString()
+	
+	const counts = await getEpochNodeMiners(epoch)
+	if (!counts) {
+		logger(Color.red(`getMinerCount got empty array`))
+		return null
+	}
+
+	if (counts.length < clusterNodes) {
+		logger(Color.magenta(`getMinerCount getEpochNodeMiners data.length [${counts.length}] < clusterNodes [${clusterNodes}]`))
+		return null
+	}
+	counts.forEach(n => {
+		count += n.miner_count
+	})
+	return {count, counts}
+	
+}
+
+const updateNodeMiners = async (epoch: string, miner_count: number, wallets: string[]) => {
+	const cassClient = new Client (option)
+	const cmd3 = `INSERT INTO conet_free_mining_cluster (epoch, wallet, miner_count, wallets) VALUES ('${epoch}', '${nodeWallet}', ${miner_count}, '${JSON.stringify(wallets)}')`
+	try{
+		await cassClient.execute (cmd3)
+	} catch (ex) {
+		
+		logger (Color.red(`updateNodeMiners error`), ex)
+	}
+	await cassClient.shutdown()
+}
+
+const getEpochNodeMiners = async (epoch: string) => {
+	const cassClient = new Client (option)
+	const cmd3 = `SELECT * FROM conet_free_mining_cluster WHERE epoch = '${epoch}'`
+	let miners
+	try{
+		miners = await cassClient.execute (cmd3)
+	} catch (ex) {
+		logger (Color.red(`getEpochNodeMiners error`), ex)
+	}
+	await cassClient.shutdown()
+	return miners?.rows
+	
+}
+
+const getNodeAllMinerWallet = async () => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT wallet, ipaddress from conet_free_mining WHERE node_wallet = '${nodeWallet}'`
+	const data = await cassClient.execute (cmd)
+	await cassClient.shutdown()
+	return data.rows
+}
+
+const getAllMinerIpaddress = async () => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT ipaddress from conet_free_mining`
+	const data = await cassClient.execute (cmd)
+	await cassClient.shutdown()
+	return data.rows
+}
+
+const cleanupNodeMainers = async () => {
+	const rows = await getNodeAllMinerWallet()
+	if (!rows) {
+		return logger(Color.blue(`cleanupNodeMainers got zero rows!`))
+	}
+	rows.forEach(async n => {
+		await deleteMiner(n.ipaddress, n.wallet)
+	})
+
+}
+
+let EPOCH: number
+export let totalminerOnline = 0
+let minerRate = 0
+let transferEposh = 0
+const tokensEachEPOCH = 34.72
+const clusterNodes = 2
+
+interface livenessListeningPoolObj {
+	res: Response
+	ipaddress: string
+	wallet: string
+}
+
+
+const livenessListeningPool: Map <string, livenessListeningPoolObj> = new Map()
+const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+export const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
+
+
+const testMinerCOnnecting = (res: Response<any, Record<string, any>>, returnData: any, wallet: string, ipaddress: string) => new Promise (resolve=> {
+	returnData['wallet'] = wallet
+	if (res.writable && !res.closed) {
+		return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
+			if (err) {
+				deleteMiner(ipaddress, wallet)
+				logger(Color.grey (`stratliveness write Error! delete ${wallet}`))
+				livenessListeningPool.delete(wallet)
+			}
+			return resolve (true)
+		})
+	}
+	deleteMiner(ipaddress, wallet)
+	livenessListeningPool.delete(wallet)
+	logger(Color.grey (`stratliveness write Error! delete ${wallet}`))
+	return resolve (true)
+})
+
+const stratliveness = async (block: number) => {
+	
+	
+	logger(Color.grey(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
+	EPOCH = block
+	
+	const processPool: any[] = []
+	
+	livenessListeningPool.forEach(async (n, key) => {
+		const res = n.res
+		const returnData = {
+			rate: minerRate.toFixed(6),
+			online: totalminerOnline,
+			status: 200,
+			epoch: transferEposh
+		}
+		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress))
+
+	})
+
+	await Promise.all(processPool)
+
+	const wallets: string[] = []
+
+	livenessListeningPool.forEach((value: livenessListeningPoolObj, key: string) => {
+		wallets.push (value.wallet)
+	})
+
+	await updateNodeMiners (block.toString(), livenessListeningPool.size, wallets)
+	logger(Color.grey(`stratliveness EPOCH ${block} stoped! Pool length = [${livenessListeningPool.size}]`))
+	await transferMiners()
+}
+
+const transferMiners = async () => {
+
+	
+	const tryTransfer = async () => {
+		if (transferEposh >= EPOCH) {
+			return logger(Color.gray(`transferMiners transferEposh [${transferEposh}] === EPOCH [${EPOCH}] STOP Process!`))
+		}
+
+		const data = await getMinerCount (transferEposh+1)
+		if (!data) {
+			if (EPOCH - transferEposh+1 < 3 ) {
+				return logger(Color.magenta(`transferMiners block [${transferEposh}] didn't ready!`))
+			}
+			return transferEposh++ 
+		}
+
+		minerRate = tokensEachEPOCH/data.count
+		totalminerOnline = data.count
+		transferEposh ++
+		const index = data.counts.findIndex(n => n.wallet === nodeWallet)
+		if (index < 0) {
+			logger(inspect(data.counts, false, 3, true))
+			return logger(Color.red(`transferMiners row data error!`))
+
+		}
+		const localData = data.counts[index]
+		const paymentWallet: string[] = JSON.parse(localData.wallets)
+		transferCCNTP(paymentWallet, minerRate.toFixed(8), () => {
+			tryTransfer()
+		})
+		
+	}
+	
+	await tryTransfer()
+	
+}
+
+export const startListeningCONET_Holesky_EPOCH = async () => {
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	EPOCH = await provideCONET.getBlockNumber()
+	transferEposh = EPOCH + 5
+	await cleanupNodeMainers()
+	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
+	provideCONET.on('block', async block => {
+		if (block <= EPOCH) {
+			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
+		}
+		return stratliveness(block.toString())
+	})
+}
+
+export const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, res: Response) => {
+	const obj: livenessListeningPoolObj = {
+		ipaddress, wallet, res
+	}
+	livenessListeningPool.set (wallet, obj)
+	const returnData = {
+		rate: minerRate,
+		online: totalminerOnline,
+		ipaddress,
+		status: 200,
+		epoch: EPOCH
+	}
+	logger (Color.cyan(` [${ipaddress}:${wallet}] Added to livenessListeningPool!`))
+	return returnData
+}
+
+const checkLastClaimeTime = async (assetName: string, wallet: string) => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT * FROM conet_claimable_asset WHERE asset_name = '${assetName}' AND recipient_wallet = '${wallet}' LIMIT 1`
+	try {
+		const miners = await cassClient.execute (cmd)
+		await cassClient.shutdown()
+		return miners.rows
+	} catch (ex) {
+		await cassClient.shutdown()
+		logger(Color.blue(`checkLastClaimeTime `))
+	}
+	return null
+}
+
+
+export const claimeToekn = async (message: string, signMessage: string ) => {
+	const obj = checkSignObj (message, signMessage)
+	if (!obj || !obj?.data) {
+		logger(Color.red(`claimeToekn obj Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
+		return false
+	}
+	logger(Color.blue(`claimeToekn message=[${message}]`))
+	logger(Color.blue(`claimeToekn signMessage=[${signMessage}]`))
+	const data = obj.data
+	if (!data?.tokenName) {
+		logger(Color.red(`claimeToekn hasn't data.tokenName Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
+		return false
+	}
+	logger(inspect(obj))
+	//const kk = await checkLastClaimeTime(data.tokenName, obj.walletAddress)
+	return await checkClaimeToeknbalance(obj.walletAddress, data.tokenName)
+}
+
+
+
 /** */
 
-// const test = async() => {
-// 	const cmd = `Select * from conet_si_nodes WHERE nft_tokenid = '${ '98dccf558ff7b4b0a17056cc6484e1dd03d2e414efe29d2791bec4324caa4283' }'`
-// 	const cassClient = new Client (option)
-// 	await cassClient.connect ()
-// 	const res = await cassClient.execute (cmd)
-// 	const oldData = res.rows[0]
-// 	await cassClient.shutdown ()
-// 	logger (inspect(oldData, false, 3, true))
+const test = async() => {
+	const cmd = `Select * from conet_si_nodes WHERE nft_tokenid = '${ '98dccf558ff7b4b0a17056cc6484e1dd03d2e414efe29d2791bec4324caa4283' }'`
+	const cassClient = new Client (option)
+	await cassClient.connect ()
+	const res = await cassClient.execute (cmd)
+	const oldData = res.rows[0]
+	await cassClient.shutdown ()
+	logger (inspect(oldData, false, 3, true))
 
+}
+
+// const test = async () => {
+	
+// 	const cassClient = new Client (option)
+// 	//totalminerOnline = await getMinerCount (cassClient, 376894)
+// 	//await deleteMiner('189.68.243.180')
+// 	//const kkk = await getAllMinerIpaddress()
+// 	//logger(inspect(kkk, false, 3, true), typeof kkk)
+	
+// 	//await updateNodeMiners(cassClient, '368633', 3)
+// 	// startListeningCONET_Holesky_EPOCH()
+// 	// logger(inspect(kkk, false, 3, true), typeof kkk)
+// 	// const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+
+// 	// const kkk = await freeMinerManager('191.205.216.248', '0x23033811ae9a29d01bc6a8368449f74d18c2ce18')
+// 	// logger(inspect(kkk, false, 3, true), typeof kkk)
+// 	// deleteMiner('191.205.216.248', '0x23033811ae9a29d01bc6a8368449f74d18c2ce18')
+// 	await cassClient.shutdown()
 // }
 
+const testClaimeToekn = async () => {
+
+
+	const data = {
+		message: '{"walletAddress":"0x3b494e206788BEbaBa160F17Be231Dfdc27eB426","data":{"tokenName":"cUSDT","network":"CONET Holesky","amount":"125.000000"}}',
+		signMessage: '0x5b118b1b029139e288b2a53b57ae4a5f0b0910e0bcf62cb28f6238956b8e0e1d6cb8eb45d156e82ba05047462e9720a5bb0eebfbc101ceaa46b408bfd47372741b'
+	}
+	await claimeToekn(data.message, data.signMessage)
+	
+
+}
+
+// testClaimeToekn()
 // test()

@@ -318,6 +318,52 @@
 			"type": "function"
 		},
 		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "account",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "id",
+					"type": "uint256"
+				},
+				{
+					"internalType": "uint256",
+					"name": "value",
+					"type": "uint256"
+				}
+			],
+			"name": "burn",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "account",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "ids",
+					"type": "uint256[]"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "values",
+					"type": "uint256[]"
+				}
+			],
+			"name": "burnBatch",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
 			"inputs": [],
 			"name": "canTransferRule",
 			"outputs": [
@@ -363,6 +409,34 @@
 			"type": "function"
 		},
 		{
+			"inputs": [],
+			"name": "getAllIdOwnershipAndBooster",
+			"outputs": [
+				{
+					"internalType": "address[]",
+					"name": "nodeAddress",
+					"type": "address[]"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "boosters",
+					"type": "uint256[]"
+				},
+				{
+					"internalType": "address[]",
+					"name": "referrerAddress",
+					"type": "address[]"
+				},
+				{
+					"internalType": "uint256[]",
+					"name": "referrerNodes",
+					"type": "uint256[]"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
 			"inputs": [
 				{
 					"internalType": "uint256",
@@ -376,6 +450,25 @@
 					"internalType": "string",
 					"name": "nodeMetadata",
 					"type": "string"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "_owner",
+					"type": "address"
+				}
+			],
+			"name": "getOwnerNodesAddress",
+			"outputs": [
+				{
+					"internalType": "uint256[]",
+					"name": "nodesAddress",
+					"type": "uint256[]"
 				}
 			],
 			"stateMutability": "view",
@@ -482,12 +575,74 @@
 					"type": "uint256"
 				}
 			],
-			"name": "nodeOwnership",
+			"name": "nodeIdBooster",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "nodeOwnershipAddress",
 			"outputs": [
 				{
 					"internalType": "address",
 					"name": "",
 					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "nodeReferrerAddress",
+			"outputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "ownershipForIDs",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
 				}
 			],
 			"stateMutability": "view",
@@ -649,19 +804,6 @@
 					"internalType": "string",
 					"name": "",
 					"type": "string"
-				}
-			],
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"inputs": [],
-			"name": "totalNodes",
-			"outputs": [
-				{
-					"internalType": "uint256",
-					"name": "",
-					"type": "uint256"
 				}
 			],
 			"stateMutability": "view",

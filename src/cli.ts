@@ -592,7 +592,7 @@ if ( Cluster.isPrimary) {
 } else {
 	if (!daemon) {
 		const uuu = new conet_dl_server ()
-		process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
+		// process.on ('message', (message: clusterMessage) => uuu.onMessage (message))
 	} else {
 		daemons()
 	}

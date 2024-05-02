@@ -19,7 +19,7 @@ import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
 
-import {getOraclePrice} from '../endpoint/help-database'
+import {getOraclePrice,txManager} from '../endpoint/help-database'
 
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
@@ -28,16 +28,20 @@ import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
 import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
 import {abi as claimableToken } from './claimableToken.json'
 import CONET_StorgaeAbi from './cone-storage.json'
-import {abi as GuardianNodesABI} from './GuardianNodes.json'
+import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import {abi as erc20TokenABI} from './erc20.json'
+
+
+import {abi as fx168Abi} from './fx168.json'
 
 import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
 import Web3, { Web3Eth } from 'web3'
 import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
 
 
-const conet_Holesky_rpc = 'https://rpc.conet.network'
+export const conet_Holesky_rpc = 'http://207.90.195.83:9999'
 const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
-const balstMainchainRPC = 'https://rpc.blast.io'
+const balstMainchainRPC = 'https://rpc.ankr.com/blast'
 
 const ethMainchainRPC = 'https://eth-mainnet.g.alchemy.com/v2/dxNi8w6owhHdzNZPXQPeppST3CqFRO-F'
 let provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -74,7 +78,7 @@ const usdtETHContract = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
 
 const CONET_bnb_safeWallet = '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'
 const CONET_ETH_safeWallet = '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'
-const eth_usdt_contract = '0xdac17f958d2ee523a2206206994597c13d831ec7'
+
 const bnb_usdt_contract = '0x55d398326f99059fF775485246999027B3197955'
 const blast_usdb_contract = '0x4300000000000000000000000000000000000003'
 const conet_dWETH = '0x84b6d6A6675F830c8385f022Aefc9e3846A89D3B'
@@ -83,9 +87,10 @@ const conet_dWBNB = '0xd8b094E91c552c623bc054085871F6c1CA3E5cAd'
 const CNTPMasterWallet = '0x44d1FCCce6BAF388617ee972A6FB898b6b5629B1'
 const CNTPReferralWallet = '0x63377154F972f6FC1319e382535EC9691754bd18'
 
+export const GuardianNodes_ContractV2 = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
 
-const conet_point_contract_blast = `0x53634b1285c256aE64BAd795301322E0e911153D`.toLowerCase()
-
+const conet_point_contract_blast = `0x0E75599668A157B00419b58Ff3711913d2a716e0`
+export const cCNTP_Contract = '0x27A961F17E7244d8aA75eE19061f6360DeeDF76F'
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
 
@@ -219,7 +224,6 @@ export const getServerIPV4Address = ( includeLocal: boolean ) => {
 	
 	return results
 }
-
 
 export const loadWalletAddress = ( walletBase: any) => {
 	logger (`loadWalletAddress`)
@@ -1522,7 +1526,7 @@ export const ReferralsReg_Blast: (referee: string, referrer: string, ReferralsMa
 })
 
 const setupFile = join( homedir(),'.master.json' )
-const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
+export const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 
 const addReferral = async () => {
 	const seven = [
@@ -1611,12 +1615,14 @@ const airdropForTwitter=async () => {
 		'0xCe4B0F9B8319C9Ce0feA119fb876d1F4C52270d3',
 		'0x5B03D895156A9F500CA0174B584FD5D4D7956E36'
 	]
+
 	const nonceLock: nonceLock = {
 		conetPointAdmin: false,
 		cnptReferralAdmin: false,
 		blastConetPointAdmin: false,
 		blastcnptReferralAdmin: false
 	}
+	
 	const payList = address.map(n=>ethers.parseEther('100').toString())
 	await sendTokenToMiner (address, payList, masterSetup.conetPointAdmin, nonceLock)
 }
@@ -1728,7 +1734,6 @@ export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
 }
 
 
-
 const preOrder = async (txHash: string, chain: string) => {
 	let txRpc = balstMainchainRPC
 	let usdSmartContract = usdtBlastContract
@@ -1832,26 +1837,26 @@ const listenEvent = async () => {
 
 const getNetwork = (networkName: string) => {
 	switch (networkName) {
-		case 'usdb':
-		case 'blastETH': {
+		case 'CNTP':
+		case 'usdb': {
 			return balstMainchainRPC
 		}
-		case 'dUSDT':
-		case 'dWBNB':
-		case 'dWETH':
-		case 'conet':
-		case 'cntpb': {
-			return conet_Holesky_rpc
-		}
-		case 'usdt':
-		case 'eth': {
+		
+		// case 'dUSDT':
+		// case 'dWBNB':
+		// case 'dWETH':
+		// case 'conet':
+		// case 'cntpb': {
+		// 	return conet_Holesky_rpc
+		// }
+		case 'usdt': {
 			return ethMainchainRPC
 		}
-		case 'wusdt': 
-		case 'wbnb': {
+
+		case 'wusdt':{
 			return bscMainchainRPC
 		}
-		case 'cntp':
+
 		default : {
 			return ''
 		}
@@ -1883,23 +1888,28 @@ export const CONET_guardian_Address = (networkName: string) => {
 	switch (networkName) {
 		
 		case 'usdt':
-		case 'eth': {
-			return '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'.toLowerCase()
-		}
+		//case 'eth':
+			{
+				return '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'.toLowerCase()
+			}
 		case 'wusdt': 
-		case 'wbnb': {
-			return '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'.toLowerCase()
-		}
+		//case 'wbnb': 
+			{
+				return '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'.toLowerCase()
+			}
 		//		CONET holesky
-		case 'dWETH':
-		case 'dWBNB':
-		case 'dUSDT':
-		case '':
+		// case 'dWETH':
+		// case 'dWBNB':
+		// case 'dUSDT':
+		// case '':
 		//		blast mainnet
 		case 'usdb':
-		case 'blastETH':
-		default: {
+		// case 'blastETH':
+		{
 			return `0x4A8E5dF9F1B2014F7068711D32BA72bEb3482686`.toLowerCase()
+		}
+		default: {
+			return ''
 		}
 	}
 }
@@ -1908,7 +1918,7 @@ export const getAssetERC20Address = (assetName: string) => {
 	switch (assetName) {
 		
 		case 'usdt':{
-			return eth_usdt_contract.toLowerCase()
+			return usdtETHContract.toLowerCase()
 		}
 		case 'wusdt':{
 			return bnb_usdt_contract.toLowerCase()
@@ -1917,17 +1927,21 @@ export const getAssetERC20Address = (assetName: string) => {
 			return blast_usdb_contract.toLowerCase()
 		}
 
-		case 'dWBNB': {
-			return conet_dWBNB.toLowerCase()
+		case 'CNTP': {
+			return CNTPV2_Contract_Blast
 		}
 
-		case 'dUSDT': {
-			return conet_dUSDT.toLowerCase()
-		}
+		// case 'dWBNB': {
+		// 	return conet_dWBNB.toLowerCase()
+		// }
 
-		case 'dWETH': {
-			return conet_dWETH.toLowerCase()
-		}
+		// case 'dUSDT': {
+		// 	return conet_dUSDT.toLowerCase()
+		// }
+
+		// case 'dWETH': {
+		// 	return conet_dWETH.toLowerCase()
+		// }
 	
 		default: {
 			return ``
@@ -1935,7 +1949,23 @@ export const getAssetERC20Address = (assetName: string) => {
 	}
 }
 
-export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string) => {
+const parseEther = (ether: string, tokenName: string ) => {
+	switch (tokenName) {
+		case 'usdt': {
+			return ethers.parseUnits(ether, 6)
+		}
+		default: {
+			return ethers.parseEther(ether)
+		}
+	}
+}
+
+
+export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string, nodes: number, assetName: string) => {
+	const total = parseEther((nodes * 1250).toString(), assetName).toString()
+	if (total !== value) {
+		return false
+	}
 	const txLogs = tx.logs[0]
 	if (!txLogs) {
 		logger(colors.red(`checkErc20Tx txLogs empty Error!`))
@@ -2017,21 +2047,53 @@ export const checkReferralsV2_OnCONET_Holesky = async (wallet: string) => {
 	return ''
 	
 }
+// const Claimable_BlastETH = '0x47A10d4BBF904BCd550200CcBB6266fB88EB9804'.toLowerCase()
+// const Claimable_BNB = '0x8E7B1D5f6DF4B0d7576B7430ECB1bEEE0b612382'.toLowerCase()
+// const Claimable_ETH = '0x6Eb683B666310cC4E08f32896ad620E5F204c8f8'.toLowerCase()
 
+
+const Claimable_ETHUSDT = '0x95A9d14fC824e037B29F1Fdae8EE3D9369B13915'.toLowerCase()
 const Claimable_BNBUSDT = '0xC06D98B3185D3de0dF02b8a7AfD1fF9cB3c9399a'.toLowerCase()
 const Claimable_BlastUSDB = '0x53Aee1f4c9b0ff76781eFAC6e20eAe4561e29E8A'.toLowerCase()
-const Claimable_BlastETH = '0x47A10d4BBF904BCd550200CcBB6266fB88EB9804'.toLowerCase()
-const Claimable_BNB = '0x8E7B1D5f6DF4B0d7576B7430ECB1bEEE0b612382'.toLowerCase()
-const Claimable_ETH = '0x6Eb683B666310cC4E08f32896ad620E5F204c8f8'.toLowerCase()
-const Claimable_ETHUSDT = '0x7A44b74658E814115CD98e537B5402EEebd10eb3'.toLowerCase()
-const GuardianNodes_Contract = '0xc8aC4AE6d227ddb4CbC3bD9bd9fc39AD66FFF1e1'
 
 
-export const getClaimableContractAddress = (tokenName: string) => {
+const CNTPV2_Contract_Blast = '0x0f43685B2cB08b9FB8Ca1D981fF078C22Fec84c5'
+
+
+export const getNetworkName = (tokenName: string) => {
 	switch(tokenName) {
-		case 'dUSDT':
-		case 'usdt':{
+		case 'conet':
+		case 'dWETH':
+		case 'dWBNB':
+		case 'dUSDT': {
+			return `CONET Holesky`
+		}
 		
+		case 'eth':
+		case 'usdt':{
+			return `Ethereum`
+		}
+
+		case 'blastETH':
+		case 'usdb': {
+			return 'Blast'
+		}
+		
+		case 'wusdt':
+		case 'bnb': {
+			return 'BNB'
+		}
+
+		default : {
+			return ''
+		}
+	}
+}
+
+const realToClaimableContractAddress = (tokenName: string) => {
+	switch(tokenName) {
+		//case 'dUSDT':
+		case 'usdt':{
 			return Claimable_ETHUSDT.toLowerCase()
 		}
 		case 'wusdt':{
@@ -2041,19 +2103,63 @@ export const getClaimableContractAddress = (tokenName: string) => {
 			return Claimable_BlastUSDB.toLowerCase()
 		}
 		
-		case 'blastETH': {
-			return Claimable_BlastETH.toLowerCase()
-		}
-		case 'conet':
-		case 'dWETH':
-		case 'eth': {
-			return Claimable_ETH.toLowerCase()
-		}
-		case 'dWBNB':
-		case 'bnb': {
-			return Claimable_BNB.toLowerCase()
-		}
+		
+		// case 'blastETH': {
+		// 	return Claimable_BlastETH.toLowerCase()
+		// }
+		// case 'conet':
+		// case 'dWETH':
+		// case 'eth': {
+		// 	return Claimable_ETH.toLowerCase()
+		// }
+		// case 'dWBNB':
+		// case 'bnb': {
+		// 	return Claimable_BNB.toLowerCase()
+		// }
 
+		default : {
+			return ''
+		}
+	}
+}
+
+
+const getCONETHoleskyClaimableRealTokenName = (tokenName: string) => {
+	switch(tokenName) {
+
+		case 'cCNTP':{
+			return 'CNTP'
+		}
+		case 'cUSDB':{
+			return 'usdb'
+		}
+		case 'cUSDT': {
+			return 'usdt'
+		}
+		case 'cBNBUSDT': {
+			return 'wusdt'
+		}
+		default : {
+			return ''
+		}
+	}
+}
+
+const getCONETHoleskyClaimableContractAddress = (tokenName: string) => {
+	switch(tokenName) {
+
+		// case 'cCNTP':{
+		// 	return cCNTP_Contract
+		// }
+		case 'cUSDB':{
+			return Claimable_BlastUSDB
+		}
+		case 'cUSDT': {
+			return Claimable_ETHUSDT
+		}
+		case 'cBNBUSDT': {
+			return Claimable_BNBUSDT
+		}
 		default : {
 			return ''
 		}
@@ -2075,7 +2181,7 @@ const sendClaimableAsset = async (privateKey: string, retClaimableContractAddres
 			logger(colors.red(`sendClaimableAsset [${toAddr}] amount [${amount}] Error! try again!`))
 			setTimeout(async () => {
 				return await trySend()
-			}, 5000)
+			}, 2000)
 		}
 		
 	}
@@ -2083,10 +2189,10 @@ const sendClaimableAsset = async (privateKey: string, retClaimableContractAddres
 })
 	
 
-const getReferralNode = async (contract: ethers.Contract, referrer: string) => {
+const getReferralNode = async (contract: ethers.Contract, referrerAddr: string, tokenID: number) => {
 	let nodes
 	try {
-		nodes = await contract.payerNodes(referrer)
+		nodes = await contract.balanceOf(referrerAddr, tokenID)
 	} catch(ex){
 		return false
 	}
@@ -2097,7 +2203,7 @@ const sendGuardianNodesContract = async (privateKey: string, nodeAddr: string[],
 	const tryConnect = async () => {
 		const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 		const wallet = new ethers.Wallet(privateKey, provider)
-		const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract, GuardianNodesABI, wallet)
+		const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, wallet)
 		
 		try{
 			const tx = await GuardianNodesContract.mint(nodeAddr, paymentWallet)
@@ -2114,35 +2220,37 @@ const sendGuardianNodesContract = async (privateKey: string, nodeAddr: string[],
 	
 })
 
-
-
 export const returnGuardianPlanReferral = async (nodes: number, referrerAddress: string, paymentWallet: string, tokenName: string, amount: string, privateKey: string, nodeAddr: string[]) => {
-	const _amount = parseFloat(ethers.formatEther(amount)) * 0.1
-	const eachNodeReferral = _amount/nodes
-	const referrerReturn = eachNodeReferral
-	
-	const paymentReferrerReturn = eachNodeReferral * (nodes - 1)
-	const retClaimableContractAddress = getClaimableContractAddress(tokenName)
+	const retClaimableContractAddress = realToClaimableContractAddress(tokenName)
 	
 	if (!retClaimableContractAddress) {
 		logger(colors.red(`returnGuardianPlanReferral getClaimableContractAddress tokenName =(${tokenName}) return Empty ERROR`))
 		return false
 	}
-	
+
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(privateKey, provider)
-	const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract, GuardianNodesABI, wallet)
-	const referrerNodes = await getReferralNode (GuardianNodesContract, referrerAddress)
+	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, wallet)
+
+	const bayerOwnNodes = await getReferralNode (GuardianNodesContract, paymentWallet, 1)
+	const referrerNodes = await getReferralNode (GuardianNodesContract, referrerAddress, 2)
+
+	const _amount = nodes * 1250 * 0.1
+	const eachNodeReferral = _amount/nodes
+
+	const referrerReturn = bayerOwnNodes > 0 ? 0: referrerNodes > 0 ? eachNodeReferral: 0
+	const paymentReferrerReturn = bayerOwnNodes > 0 ? _amount : _amount - eachNodeReferral
+	
 	const ret: any = {
 		claimableAssetTx: null,
 		guardianNodesTx: null
 	}
 
-	if (referrerNodes > 0 && referrerReturn > 0.00001 && paymentWallet) {
+	if (referrerReturn > 0) {
 		await sendClaimableAsset (privateKey, retClaimableContractAddress, referrerAddress, referrerReturn.toFixed(8))
 	}
 
-	if (paymentReferrerReturn > 0.00001) {
+	if (paymentReferrerReturn > 0) {
 		ret.claimableAssetTx = await sendClaimableAsset (privateKey,retClaimableContractAddress, paymentWallet, paymentReferrerReturn.toFixed(8))
 	}
 	
@@ -2152,6 +2260,124 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 
 }
 
+export const transferCCNTP = (walletList: string[], amount: string, callback: () => void) => {
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, provider)
+	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
+
+	const send: any = async () => {
+		const paymentList = walletList.map(n => ethers.parseEther(amount))
+
+		try {
+			await cCNTPContract.multiTransferToken(walletList, paymentList)
+		} catch (ex) {
+			logger(colors.red(`transferCCNTP Error!  = [${walletList.length}]`))
+			return setTimeout(() => {
+				return send()
+			}, 1000)
+		}
+		logger (colors.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] success!`))
+		callback()
+	}
+	send()
+}
+
+
+const checkWalletLastEvent = async (contract: ethers.Contract, wallet: string) => {
+	let events
+	try {
+		events = await contract.filters.Transfer(null, wallet)
+	} catch (ex: any) {
+		logger(colors.red(`checkWalletLastEvent ex error! [${ex.message}]`))
+	}
+	logger(events)
+	
+}
+
+const convertWeiToEthWithDecimal = (value: string, tokenName: string) => {
+	switch(tokenName) {
+		case 'usdt':
+			{
+				return ethers.formatUnits(value, 6)
+			}
+		default:
+			{
+				return ethers.formatUnits(value, 18)
+			}
+
+	}
+}
+
+export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: string) => {
+	
+	const smartContractAddress = getCONETHoleskyClaimableContractAddress(claimeTokenName)
+	if (!smartContractAddress) {
+		return false
+	}
+	const provide = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const claimableAdmin = new ethers.Wallet(masterSetup.claimableAdmin, provide)
+	const claimableContract = new ethers.Contract(smartContractAddress, claimableToken, claimableAdmin)
+	let balance = ''
+	
+	try {
+		balance = (await claimableContract.balanceOf(wallet)).toString()
+	} catch (ex: any) {
+		logger(colors.red(`checkClaimeToeknbalance getBalance error [${ex.message}]`) )
+		return false
+	}
+
+	if (!balance || balance === '0') {
+		return false
+	}
+
+	const realTokenName = getCONETHoleskyClaimableRealTokenName(claimeTokenName)
+	if (!realTokenName) {
+		return false
+	}
+	const realRPC = getNetwork(realTokenName)
+	const sc1 = getAssetERC20Address(realTokenName)
+	if (!sc1) {
+		return false
+	}
+
+	const provideReal = new ethers.JsonRpcProvider(realRPC)
+	const sendAdmin = new ethers.Wallet(masterSetup.conetPointAdmin, provideReal)
+	const sc1d = new ethers.Contract(sc1, erc20TokenABI, sendAdmin)
+
+	//const lastuu = checkWalletLastEvent(sc1d, wallet)
+
+	let sendWalletBalance
+	try {
+		sendWalletBalance = await sc1d.balanceOf(sendAdmin.address.toLowerCase())
+	} catch (ex:any) {
+		logger(colors.red(`checkClaimeToeknbalance check sendWalletBalance error [${ex.message}]`) )
+		return false
+	}
+	const requestBalance = parseFloat(ethers.formatEther(balance))
+	const masterBalance = parseFloat(convertWeiToEthWithDecimal(sendWalletBalance.toString(), realTokenName).toString())
+	if (masterBalance - requestBalance <= 0) {
+		logger(colors.red(`checkClaimeToeknbalance conetPointAdmin balance [${ masterBalance }] LESS ERROR`))
+		return false
+	}
+	const requestAmount = parseEther(requestBalance.toString(), realTokenName)
+	try {
+		const tx1 = await claimableContract.burnFrom(wallet, balance)
+		logger(inspect(tx1, false, 3, true))
+		
+	} catch (ex: any) {
+		logger(colors.red(`checkClaimeToeknbalance claimableContract.burnFrom||sc1d.transfer ERROR!`), ex.message)
+		return false
+	}
+	try {
+		const tx2 = await sc1d.transfer(wallet, requestAmount)
+	} catch (ex: any) {
+		logger(colors.red(`checkClaimeToeknbalance sc1d.transfer ERROR!`), ex.message)
+		return false
+	}
+
+	return true
+}
+
 const GuardianPlanPreCheck = async () => {
 
 	const data1 = {
@@ -2159,7 +2385,7 @@ const GuardianPlanPreCheck = async () => {
 		signMessage: '0xcf7cd4a17ffaa2df165966d433fc665089ab8644456a71bfa1c5ad39545d135d4b2038672c8a124cfabcf445d21af302b1785fd1c8aafcac13bca4b5be4db4fe1c'
 	}
 
-	const data = {
+	const data3 = {
 		message: '{"walletAddress":"0x0060f53fEac407a04f3d48E3EA0335580369cDC4","data":{"receiptTx":"0xc1e8e47600149f727146783edff2919f18e00809628a81ee0fb8cb2a862d0475","publishKeys":["0x2d8Fa325234B57cc6eDf6d2B63B21B46Dc0c40e2","0x849881E3E589eEa0f63F9307afbe476B8372fAA2","0x7E73114490F5CaD2bA310c754E4b9AC670c3C515","0xbD2Ec976BF990b5F91eA79DD286971EA3F4887Ab","0x28A0823Ad316b2a506e459c72Ef58044793C6222"],"nodes":5,"tokenName":"dUSDT","network":"CONET Holesky","amount":"6250000000000000000000"}}',
 		signMessage: '0xabbe1c081a607eac464505fb0da510a02bb60890d9eeab1db63a4530ecbf452d009173a4c57777a48f5bd0314c29160b3cd987677a662f2512665d70928e0a4b1c'
 	}
@@ -2167,7 +2393,37 @@ const GuardianPlanPreCheck = async () => {
 	const data2 = {
 		message: '{"walletAddress":"0x0060f53fEac407a04f3d48E3EA0335580369cDC4","data":{"receiptTx":"0x84310f22937af39d8b83930370d3884eff1ee86a68b3860b5328fc827725d2da","publishKeys":["0x2d8Fa325234B57cc6eDf6d2B63B21B46Dc0c40e2","0x849881E3E589eEa0f63F9307afbe476B8372fAA2","0x7E73114490F5CaD2bA310c754E4b9AC670c3C515","0xbD2Ec976BF990b5F91eA79DD286971EA3F4887Ab","0x28A0823Ad316b2a506e459c72Ef58044793C6222"],"nodes":5,"tokenName":"dUSDT","network":"CONET Holesky","amount":"6250000000000000000000"}}',
 		signMessage: '0xd7f2cec252361cb30fd457a48ad765b60874a9710a5bb51ab16d18bac08576753e30fe7673e17adeb1bb011e16447d38a2c61c1aaa1dbc4e6101a60b130bdf261c'
-	  }
+	}
+
+	const data4 = {
+		message: '{"walletAddress":"0x17F1843F0c2C3F92531233875Ce968d734Af28A0","data":{"receiptTx":"0x24dd354da25854d0669ebaa222db30e75935356dceab5c2ea610c9515951ea0e","publishKeys":["0xA2AB5b63a58E23bF5187C434f3Fb43A28Ed592E2"],"nodes":1,"tokenName":"dUSDT","network":"CONET Holesky","amount":"1250000000000000000000"}}',
+		signMessage: '0x5f63f0e5bc324d1c3224e77c615bd89ab56b02dbe322a151b8af93b43d3a16031c0bfb39e2a41f6b8d9f5d491833ea47c9589f72347c6fa8be7bfc0c1cc886bf1b'
+	}
+
+	const data5 ={
+		message: '{"walletAddress":"0xD8b12054612119e9E45d5Deef40EDca38d54D3b5","data":{"receiptTx":"0xaf4580d0eb1695c1b67b390f3865674028eb55da8423a1afac5b1ed1c1d32ab3","publishKeys":["0x9A748729704174d411Fc646eFBd458F4C0E4ea40"],"nodes":1,"tokenName":"usdt","network":"ETH","amount":"1250000000000000000000"}}',
+		signMessage: '0xf1f499b3e696857b99bca6f32a477b80affbe46aa374fed6a21aa45ad2174d3b4f2d75a8214f67f5e8691005a2d63d065bfa793e18b91813822105dd7dfd58291b'
+	}
+
+	const data6 = {
+		message: '{"walletAddress":"0x8ab7B4BfE50738a8793735E7EB6948a0c7BAC9Ee","data":{"receiptTx":"0xae811b98c79479a649afe76844ca6602b1e2c81e19df4b88b261da11ad01693b","publishKeys":["0x6D77b7cDE0456518C26c6cfC7aF962fDF9267f92"],"nodes":1,"tokenName":"usdt","network":"ETH","amount":"1250000000000000000000"}}',
+		signMessage: '0x6f5bd812f913cf493f34f9832a4099dbc7daf91f459e87a9ba3ff1eeb53cbbc1401605aa470e200a43f7a3b142dbe3accb142e8e59ca1d251d9246c6b21c7fc01b'
+	}
+
+	const data7 = {
+		"message": "{\"walletAddress\":\"0x8ab7B4BfE50738a8793735E7EB6948a0c7BAC9Ee\",\"data\":{\"receiptTx\":\"0xdaefa5ed0632c6509bee7a50a6d137bcf9ac33912800390400ea0609e41abbf2\",\"publishKeys\":[\"0x165628C5d41F78BE3298849f4078cd2a7B56Ae50\"],\"nodes\":1,\"tokenName\":\"usdt\",\"network\":\"ETH\",\"amount\":\"1250000000000000000000\"}}",
+		"signMessage": "0xa314a1630553208612dcb82d25a5a27f3f6057f09be21d3074c332acc2d068526d61e6d546015d03798d14af8153a76ed52985ecda57db5213021229b850d34a1c"
+	}
+
+	const data8 = {
+		message: '{"walletAddress":"0xD8b12054612119e9E45d5Deef40EDca38d54D3b5","data":{"receiptTx":"0x50bdcf982b5bba271fbff3dbc2b076103539f799d5345201e03c08008ed40eca","publishKeys":["0x9A748729704174d411Fc646eFBd458F4C0E4ea40"],"nodes":1,"tokenName":"wusdt","network":"BSC","amount":"1250000000000000000000"}}',
+		signMessage: '0xcaeefcb25c8f433fa194527aeb8ad3f94b3032f32953d89cb0545e509955fc034215d8396df633f44e2299770ab5e87197af381870800dde01651495063a38871b'
+	}
+
+	const data = {
+		message: '{"walletAddress":"0xb8466Ddd33406E802a2032c279b6EE0e883eFB65","data":{"receiptTx":"0xe56876fcd93421ad12d42e146f990e67085fb456e7a84b8accd1a7cda841d7a9","publishKeys":["0x5eAcAe94018b8c73a4098cb59FCE458078897A90"],"nodes":1,"tokenName":"usdb","network":"Blast Mainnet","amount":"1250000000000000000000"}}',
+		signMessage: '0xfbc5131a040a7ebf853ebc7bc3333f51ff4d65840203149da209a1139e21e3b95eee37b94dcef217c396cfc021068613bb0a6621cfedbf10d081062e45779ce01b'
+	}
 
 	const obj = checkSignObj (data.message, data.signMessage)
 	logger (inspect(obj, false, 3, true))
@@ -2186,9 +2442,19 @@ const GuardianPlanPreCheck = async () => {
 		logger(colors.red(`txObj Error!`))
 		return false
 	}
+	if (txObj.tx1.from.toLowerCase()!== obj.walletAddress) {
+		logger(colors.red(`txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
+		return false
+	}
+
+	const networkName = getNetworkName(obj.data.tokenName)
+	if (!networkName) {
+		logger(colors.red(`Can't get network Name from token name Error ${obj.data.tokenName}`))
+	}
 
 	const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
-
+	const _checkTx = await txManager (obj.data.receiptTx, obj.data.tokenName, obj.walletAddress, obj.data.nodes, networkName, data.message, data.signMessage )
+	logger (_checkTx)
 	//		ERC20 Token payment
 	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
 		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
@@ -2196,7 +2462,7 @@ const GuardianPlanPreCheck = async () => {
 			return false
 		}
 
-		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount)
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName )
 		if (erc20Result === false) {
 			logger(colors.red(`checkErc20Tx Error!`))
 			return false
@@ -2210,11 +2476,14 @@ const GuardianPlanPreCheck = async () => {
 		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
 		return ret
 	}
+
 	const value = txObj.tx1.value.toString()
 	if (obj.data.amount !== value) {
 		logger(colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
 		return false
 	}
+
+
 
 	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
 	if (!kk) {
@@ -2226,9 +2495,167 @@ const GuardianPlanPreCheck = async () => {
 	return ret
 }
 
+
+const tetsGet = async () => {
+	// const data = [
+	// 	'0x38a9aC5bbc1C9424BF22462f6788633737D88c19',
+	// 	'0xeFA061e9aEe85EC6aa190191F23533d3BF69e45A',
+	// 	'0xD59aB5A4b567cA166B2EfDcA1e13Ed14913938bF',
+	// 	'0x97C2173fbd2CC9A233D174F3546D719D41c0e572',
+	// 	'0x971eF86e8C7242c60B9ce5cA4BdF00F1AaA3168A',
+	// 	'0x525E8040685D8583AfBb1DeF20Ed00eb68C59564',
+	// 	'0x279A9eB7982D913904B0E6dAE7FCDaaEd8928A8F',
+	// 	'0xc3b9C2143BED9cA0b7698E9b9C61BabE7e6B8Cd6',
+	// 	'0xc038f0D569d42828aaAcc8a57E3C27D8332A2cBD',
+	// 	'0x4154bbDED0d5006e158Eb3C768711Bb3FC10d64D',
+	// 	'0x985800Fd0dE9B965E0A43cdA0f6A97F8811EF748',
+	// 	'0xa2a1992c88C6088952BDa2B68ffCdf3BbC776404',
+	// 	'0x0EDc493Cad1605912AD91E890Ba3941bb8dF79aD',
+	// 	'0x31A88bb9ED30ba34455C6A523A51aF74A9cDd5dE',
+	// 	'0xcf7826e466bc6d14f7886b6e91dc9f3bbad046ec'
+	// ]
+	// transferCCNTP(data, '5000', () => {
+	// 	logger(`finished!`)
+	// })
+	// const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	// const fx168Contract = new ethers.Contract('0x15786Fc93F69807e16e2F25711C0B583Ab074fd0', fx168Abi, provider)
+	// try {
+	// 	const kk = await fx168Contract.getOwnerOrders('0x454428D883521C8aF9E88463e97e4D343c600914')
+	// 	logger(kk)
+	// } catch (ex) {
+	// 	logger(ex)
+	// }
+	const nodes: string[] = [
+		'0x28B2aE27e135E89D9BcB40595F859b411bF4846C',
+		'0x7619FC557e3575Ac1bA1C0D99307ac1E487FC83e'
+	]
+	const paymentAddress = '0xfEc7583160D24b2b77F51EafD9B024EaCAd8066a'
+	await sendGuardianNodesContract(masterSetup.claimableAdmin, nodes, paymentAddress)
+
+	// const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	// const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, provider)
+	// logger(wallet.signingKey)
+
+	//await sendClaimableAsset (masterSetup.claimableAdmin, realToClaimableContractAddress('usdb'), '0x0060f53fEac407a04f3d48E3EA0335580369cDC4', '1')
+
+}
+
+const transCleamableToken = async(tokenName: string, address: string, payTotal: string) => {
+	const retClaimableContractAddress = realToClaimableContractAddress(tokenName)
+	await sendClaimableAsset (masterSetup.claimableAdmin, retClaimableContractAddress, address, payTotal)
+	
+}
+
+
+
+const transNFT = async () => {
+	const wallet = '0xD8b12054612119e9E45d5Deef40EDca38d54D3b5'
+	const walletList = [
+		'0xC86BaA931E1661A52126795b87B7585C8f62845a',
+		// '0xaDe491848CF26d98927f5c47544cb33f1b2B9f29',
+		// '0x4d21bCD57909856D503B7684381e714413Cc00ca',
+		// '0x6025Fcb16EdC1D1625e5750BCBDE7b821F4D0e36',
+		// '0x611a79025D36036A313b0e57bFfbdbEd8f88aB77',
+		// '0x0AC0b4e4302C257e9e9aF547a579daDF086c6555',
+		// '0xA65D7a8cc8eeBf4aA1af402d36F722eE75d3B17C',
+		// '0x7016cf7D399Fa75673d031c9BefC178ab5999bf8',
+		// '0x15d1D21a1639c71BFc7C81ddbb7905101E93D0E3',
+		// '0x67C6bdb0cBeD959ff320A905693ea74dDeD76FCE'
+	]
+	// logger(inspect(walletList.map(n => ethers.getAddress(n)), false, 3, true))
+
+	// logger(ethers.isAddress(walletList[0]))
+	const tx = await sendGuardianNodesContract(masterSetup.claimableAdmin, walletList, wallet)
+	logger(tx)
+}
+
+const transferCCNTPToNodes = (walletList: string[], amount: string, callback: () => void) => {
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const wallet = new ethers.Wallet(masterSetup.claimableAdminForNode, provider)
+	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
+
+	const send: any = async () => {
+		const paymentList = walletList.map(n => ethers.parseEther(amount))
+		let tx
+		try {
+			tx = await cCNTPContract.multiTransferToken(walletList, paymentList)
+		} catch (ex) {
+			logger(colors.red(`transferCCNTP Error! maxLength = [${walletList.length}] ${amount}`), ex)
+			return setTimeout(async () => {
+				await send()
+			}, 1000)
+		}
+		logger (colors.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] success!`), tx)
+		callback()
+	}
+	send()
+}
+
+
+
+
+
+
+
+
+
+
+const walletList: string[] = [
+	'0x28B2aE27e135E89D9BcB40595F859b411bF4846C',
+	'0x7619FC557e3575Ac1bA1C0D99307ac1E487FC83e',
+	'0x9824fdF7BDE5821E5D5ba43daA1615f9C980F3Ce',
+	'0x314b5579a3Aa1F91333aed3392C3AD2d1FFF3714',
+	'0x13C933D953DF0449dcBbF26f088a5453FA5a536d',
+	'0x2B28eB6E3D06e49dAf4FAf5DB36Ef2365b783198',
+
+	'0x35a7fb2fB923d3329988762093Ed664320b12718',
+	'0x51Bbe99e4d2c60916befeb038CE07f7B9123Bf47',
+	'0x4a525bE5520c6d4673Fc357fb278Ef1C51c1BDAF',
+	'0xfe921582775A66487e717BAcad401F55684986b1',
+	'0x4C736f1B298947Ad73B4c87a9206b476CCB770B4',
+	'0xdEA83858Deda2708937E1309fDD96A94673EcBe6',
+	// '0x41EBF19F419470d7564078e40d569C5AF7baA313',
+	// '0x2664A57d0F6C54D9Fe2557E71aE2f45447F2567b',
+	// '0x0c39Fbd31F78CF301E7Ca05e50EDA2745782CF27',
+	// '0x01f28942A609Bf3e5043919148C4E6603a349118'
+]
+
+
+
+// const wallet = new ethers.Wallet(masterSetup.claimableAdmin)
+// logger(wallet.address)
+// transferCCNTPToNodes(walletList, '50000', () => {
+// 	logger('success')
+// })
+
+
+//transCleamableToken('wusdt', '0xD8b12054612119e9E45d5Deef40EDca38d54D3b5', '125')
+// nodesAirdrop()
+
+// nodesReferrals()
+
+
+
+
+// nodesAirdrop()
+// transNFT()
+// transferCCNTP(nodesWalletAddr, '0.0001', () => {
+// 	logger('success!')
+// })
+
+// tetsGet()
+// const transfer = async () => {
+// 	// const reciver = '0x8ab7B4BfE50738a8793735E7EB6948a0c7BAC9Ee'
+// 	// await sendClaimableAsset (masterSetup.claimableAdmin,Claimable_ETHUSDT, reciver, '375')
+// }
+
+// transfer()
+//GuardianPlanPreCheck()
 //const [,,...args] = process.argv
 //logger(getRefferRate(parseInt(args[0])))
 //test()
 
+
+// test()
 //listenEvent()
 /** */

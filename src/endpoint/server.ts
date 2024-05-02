@@ -2,10 +2,14 @@
  * 			
  * */
 import Express, { Router } from 'express'
+
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price, conetcash_getBalance, CoNET_SI_health, getIpAttack, getOraclePrice } from './help-database'
+import { CoNET_SI_Register, regiestFaucet, getLast5Price,
+	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
+	startListeningCONET_Holesky_EPOCH, addIpaddressToLivenessListeningPool, claimeToekn
+} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
@@ -13,8 +17,9 @@ import Cluster from 'node:cluster'
 import {readFileSync} from 'node:fs'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
 	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
-	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, 
-	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile} from '../util/util'
+	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName,
+	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc
+} from '../util/util'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -87,6 +92,7 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 
 
 
+
 class conet_dl_server {
 
 	private PORT = 8000
@@ -96,11 +102,13 @@ class conet_dl_server {
 	private serverID = ''
 
 	private si_pool: nodeType[] = []
-	private livenessListeningPool: Map <string, Response> = new Map()
+
 	private sendCommandWaitingPool: Map <string, snedMessageWaitingObj> = new Map()
 	private livenessHash = ''
 	private masterBalance: CNTPMasterBalance|null = null
 	private s3Pass: s3pass|null = null
+	private minerRate = 0
+	private EPOCH = '0'
 	private sendCommandToMasterAndWaiting: (cmd: clusterMessage) => Promise<clusterMessage|null> = (cmd ) => new Promise(resolve=> {
 		if ( process.connected && typeof process.send === 'function') {
 			const timeSet = setTimeout(() => {
@@ -119,81 +127,7 @@ class conet_dl_server {
 		return resolve(null)
 	})
 
-	private deleteConnetcing (key: string, n: Express.Response<any, Record<string, any>>) {
-		//logger (Colors.grey(`delete liveness Connetcing ${key}:${ n.socket?.remoteAddress }`))
-		this.livenessListeningPool.delete(key)
-		return sendDisConnecting(key)
-	}
 
-	private stratliveness = (returnData: any) => {
-
-		this.livenessListeningPool.forEach(async (n, key ) => {
-			if (n.writable && !n.closed) {
-				
-				return n.write( JSON.stringify(returnData)+'\r\n\r\n', err => {
-					if (err) {
-						return this.deleteConnetcing(key, n)
-					}
-					// logger (Colors.grey(`stratliveness send request to ${key}`))
-				})
-			}
-			
-			return this.deleteConnetcing(key, n)
-		})
-	}
-
-	public onMessage = (message: clusterMessage) => {
-		if (message.uuid) {
-			const obj = this.sendCommandWaitingPool.get (message.uuid)
-			if (obj) {
-				clearTimeout(obj.timeOutObj)
-				this.sendCommandWaitingPool.delete(message.uuid)
-				return obj.resolve(message)
-			}
-		}
-		switch (message.cmd) {
-			case 'si-node': {
-				this.si_pool = message.data[0]
-				return //logger (Colors.gray(`onMessage si-node [${this.si_pool.length}]`))
-			}
-
-			case 'livenessStart': {
-				this.si_pool = message.data[0]
-				const returnData = {
-					block: message.data[1],
-					rate: message.data[3],
-					online: message.data[2],
-					status: 200
-				}
-				this.stratliveness(returnData)
-				return logger (Colors.cyan(`onMessage livenessStart! uuid[${this.livenessHash}] to [${this.livenessListeningPool.size}] clients !`))
-			}
-
-			case 'stop-liveness': {
-				const obj: minerObj = message.data[0]
-				if (obj && obj.walletAddress) {
-
-					const res = this.livenessListeningPool.get(obj.walletAddress)
-					if (res) {
-						this.livenessListeningPool.delete(obj.walletAddress)
-						const returnData = {
-							ipaddress: obj.ipAddress,
-							status: 200
-						}
-						res.write(JSON.stringify(returnData)+'\r\n\r\n', err => {
-							res.end()
-						})
-						logger(Colors.grey(`On Message stop-liveness from cli STOP res [${obj.walletAddress }]`))
-					}
-				}
-				return
-			}
-			
-			default: {
-				return logger (Colors.cyan(`Got unknow message from Master`), inspect(message, false, 3, true))
-			}
-		}
-	}
 
 	private initSetupData = async () => {
 		
@@ -214,6 +148,8 @@ class conet_dl_server {
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.s3Pass = await s3fsPasswd()
 		this.startServer()
+
+		startListeningCONET_Holesky_EPOCH()
 	}
 
 	constructor () {
@@ -222,7 +158,7 @@ class conet_dl_server {
 
 	private ipaddressPool: Map<string, number[]>  = new Map()
 
-	private startServer = () => {
+	private startServer = async () => {
 		const staticFolder = join ( this.appsPath, 'static' )
 		const launcherFolder = join ( this.appsPath, 'launcher' )
 		const app = Express()
@@ -232,7 +168,6 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use ( Express.static ( staticFolder ))
         app.use ( Express.static ( launcherFolder ))
-        app.use ( Express.json({limit: '25mb'}))
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -240,6 +175,7 @@ class conet_dl_server {
 				res.status(404).end()
 				return res.socket?.end().destroy()
 			}
+
 
 			getIpAttack(ipaddress, this.serverID, (err, data) => {
 				if (err) {
@@ -249,6 +185,22 @@ class conet_dl_server {
 				if (data) {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
 					return res.status(404).end()
+				}
+				
+				if (/^post$/i.test(req.method)) {
+					
+					return Express.json({limit: '25mb'})(req, res, err => {
+						if (err) {
+							
+							res.sendStatus(400).end()
+							res.socket?.end().destroy()
+							return getIpAttack(ipaddress, this.serverID, (err) => {
+								logger(Colors.red(`Express.json return Error! STOP connecting ${ipaddress} getIpAttack return err ${err}`))
+							})
+							
+						}
+						return next()
+					})
 				}
 				
 				return next()
@@ -286,8 +238,7 @@ class conet_dl_server {
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
-
-	
+		
 	}
 
 	private router ( router: Router ) {
@@ -510,32 +461,8 @@ class conet_dl_server {
 			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
 		})
 
-		// router.post ('/authorizeCoNETCash', async (req, res ) => {
-		// 	const CoNETCash_authorizedObj = req.body?.CoNETCash_authorizedObj
-		// 	const authorizedObjHash = req.body?.authorizedObjHash
-		// 	const sign = req.body?.sign
-
-		// 	if (!CoNETCash_authorizedObj||!authorizedObjHash||!sign) {
-		// 		res.status(404).end()
-		// 		res.socket?.end().destroy()
-		// 		return logger (`/authorizeCoNETCash [${ splitIpAddr (req.ip) }] have no correct parameters!`, inspect(req.body, false, 3, true))
-		// 	}
-		// 	logger (Colors.blue (`/authorizeCoNETCash from [${ splitIpAddr (req.ip) }] call authorizeCoNETCash`))
-		// 	logger (inspect(req.body, false, 3, true ))
-		// 	const ret = await authorizeCoNETCash (CoNETCash_authorizedObj, authorizedObjHash, sign)
-		// 	if (!ret) {
-		// 		res.status(400).end()
-		// 		return res.socket?.end().destroy()
-		// 	}
-		// 	res.json ({id: ret}).end ()
-		// 	return res.socket?.end().destroy()
-		// })
-
-		router.post ('/livenessListening', async (req, res) => {
+		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			// const ipaddress = req.headers['cf-connecting-ip']||splitIpAddr(req.ip)
-			
-			
 			let message, signMessage
 			try {
 				message = req.body.message
@@ -546,7 +473,6 @@ class conet_dl_server {
 				return res.status(404).end()
 				
 			}
-			
 			if (!message||!this.initData||!signMessage) {
 				logger (Colors.grey(`Router /livenessListening !message||!this.initData||!signMessage Error!`))
 				return  res.status(404).end()
@@ -560,70 +486,22 @@ class conet_dl_server {
 				return res.status(404).end()
 			}
 
-			const index = listedServerIpAddress.findIndex(n => n.ipaddress === ipaddress)
 
-			if (!ipaddress || index > -1) {
-				logger (Colors.grey(`[${ipaddress}] /livenessListening !ipaddress Error!`))
-				return res.status(404).end()
-			}
-			
-			obj.ipAddress = typeof ipaddress === 'string' ? ipaddress : ipaddress[0]
-			
-			const comd: clusterMessage = {
-				cmd:'livenessStart',
-				data: [obj],
-				uuid: v4(),
-				err: null
-			}
-			//logger(Colors.grey(`[${obj.ipAddress}] /livenessListening`))
 
-			const responObj = await this.sendCommandToMasterAndWaiting(comd)
+			const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
-			if (!responObj) {
-				logger (Colors.grey(`[${ipaddress}] /livenessListening !responObj Error!`))
-				return res.status(404).end()
+			if (m !== true) {
+				return res.status(m).end()
 			}
-
-			const returnData = {
-				rate: responObj.data[1],
-				online: responObj.data[0],
-				ipaddress: obj.ipAddress,
-				status: 200
-			}
-			
-
-			if (responObj.err) {
-				logger (Colors.grey(`[${ipaddress}] /livenessListening has [${responObj.err}] Error!`))
-				switch (responObj.err) {
-					
-					case 'different IP': {
-						returnData.status = 401
-						return res.status(401).json(returnData).end()
-						
-					}
-					case 'has connecting': {
-						returnData.status = 402
-						return res.status(402).json(returnData).end()
-					}
-					default :{
-						returnData.status = 403
-						return res.status(403).json(returnData).end()
-					}
-				}
-			}
-			
-			//		Listening desconnect
 
 			res.setHeader('Cache-Control', 'no-cache')
             res.setHeader('Content-Type', 'text/event-stream')
             res.setHeader('Access-Control-Allow-Origin', '*')
             res.setHeader('Connection', 'keep-alive')
             res.flushHeaders() // flush the headers to establish SSE with client
-			
-			res.write(JSON.stringify (returnData)+'\r\n\r\n')
-			//logger (Colors.blue(`Router /livenessListening [${ipaddress}:${ obj.walletAddress }] SUCCESS!`))
-			return this.livenessListeningPool.set(obj.walletAddress, res)
-			
+			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
+			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
+
 		})
 
 		router.post ('/regiestProfileRoute', async (req, res ) => {
@@ -657,40 +535,6 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/registerReferrer', async (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj || !obj?.referrer || obj.walletAddress === undefined || obj.referrer === undefined ||obj.walletAddress === obj.referrer) {
-				logger (Colors.grey(`Router /registerReferrer !obj Error! ${ipaddress} `))
-				return res.status(404).end()
-			}
-
-			const cmd: clusterMessage = {
-				cmd:'registerReferrer',
-				data: [obj, ipaddress],
-				uuid: v4(),
-				err: null
-			}
-			const response = await this.sendCommandToMasterAndWaiting(cmd)
-
-			if (!response ) {
-				logger(Colors.grey(`/registerReferrer [${ obj.walletAddress }] waiting sendCommandToMasterAndWaiting TIMEOUT!`))
-				return res.status(403).end() 
-			}
-			logger(Colors.grey(`/registerReferrer [${ obj.walletAddress }] SUCCESS!`))
-			return res.json({referrer: obj.referrer}).end()
-		})
-
 		router.post ('/storageFragments', async (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -716,7 +560,7 @@ class conet_dl_server {
 			return res.status(200).json({}).end()
 		})
 
-		router.get ('/event', async ( req, res ) => {
+		router.post ('/claimToken', async ( req, res ) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -728,12 +572,12 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
-			const obj = checkSignObj (message, signMessage)
-			if (!obj ) {
-				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
-				return res.status(403).end()
+			
+			const response = await claimeToekn (message, signMessage)
+			if (response) {
+				return res.status(200).json({}).end()
 			}
-
+			return res.status(403).end()
 
 		})
 
@@ -780,6 +624,9 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
+			logger(Colors.magenta(`/Purchase-Guardian from ${ipaddress}`))
+			logger(inspect(obj, false, 3, true))
+
 			if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
 				logger(Colors.grey(`Router /Purchase-Guardian obj.data?.nodes !== obj.data?.publishKeys?.length Error!`), inspect(obj, false, 3, true))
 				return res.status(403).end()
@@ -792,14 +639,35 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
-			const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
+			if (txObj.tx1.from.toLowerCase()!== obj.walletAddress) {
+				logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
+				return res.status(403).end()
+			}
 
+			const networkName = getNetworkName(obj.data.tokenName)
+			if (!networkName) {
+				logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
+				return res.status(403).end()
+			}
+
+			const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
+			
+			const _checkTx = await txManager (obj.data.receiptTx, obj.data.tokenName, obj.walletAddress, obj.data.nodes, networkName, message, signMessage )
+
+			if (!_checkTx) {
+				logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
+				return res.status(403).end()
+			}
+
+			logger(Colors.blue(`${message}`))
+			logger(Colors.blue(`${signMessage}`))
+			
 			if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
 				if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
 					logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
 					return res.status(403).end()
 				}
-				const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount)
+				const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
 				if (erc20Result === false) {
 					logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
 					return res.status(403).end()
