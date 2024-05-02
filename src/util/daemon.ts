@@ -195,7 +195,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 		const referrals = mergeTransfers(addressList, payList)
 		
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
-		transferCCNTP(masterSetup.GuardianReferrals, referrals.walletList, referrals.payList, () => {
+		transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 			logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 		})
 		
