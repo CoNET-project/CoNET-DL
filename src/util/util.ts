@@ -65,7 +65,7 @@ let pointToRPC = 0
 const conet_point_contract = `0x113E91FC4296567f95B84D0FacDa6fC29c5E7238`.toLowerCase()
 const conet_Referral_contract = `0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD`.toLowerCase()
 
-const conet_Referral_contractV2 = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
+export const conet_Referral_contractV2 = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const CNTP_HoleskyMultiTransfer = '0x94217083059e7D1eFdd9D9f95039A43329D532ac'.toLowerCase()
 const CONET_Stroage_Contract = '0x7d9CF1dd164D6AF82C00514071990358805d8d80'.toLowerCase()
 const conet_ERC20_MultiTransfer_contract_blast = '0x8c40ecFE10665FA66C1De087b5e188916C73DB96'.toLowerCase()

@@ -3,12 +3,12 @@ import {logger} from './logger'
 import Color from 'colors/safe'
 import {inspect} from 'node:util'
 import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
-import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract} from './util'
+import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfers} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
 import {getMinerCount} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
-
+import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 
@@ -17,7 +17,7 @@ let transferEposh = 0
 const tokensEachEPOCH = 34.72
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
-
+const ReferralsMap: Map<string, string> = new Map()
 
 
 const guardianReferrals = async () => {
@@ -166,7 +166,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 		return transferEposh++
 	}
 
-	const minerRate = tokensEachEPOCH/data.count
+	const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))
 	const minerWallets: string[] = []
 	data.counts.forEach(n => {
 		const kk: string[] = JSON.parse(n.wallets)
@@ -174,55 +174,77 @@ const stratFreeMinerReferrals = async (block: number) => {
 			minerWallets.push(nn)
 		})
 	})
+
 	EPOCH = block
+	const addressList: string[] =[]
+	const payList: string[] = []
 
 	logger(Color.grey(`daemon EPOCH ${block} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
-	logger(inspect(minerWallets, false, 3, true))
+
+	eachOfLimit(minerWallets, 5, (n, index, next) => {
+		CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
+			if (err) {
+				return logger (Color.red(`CalculateReferrals Error!`), err)
+			}
+			addressList.push(...data1.addressList)
+			payList.push(...data1.payList)
+			next()
+		})
+	}, async err => {
+		
+		const referrals = mergeTransfers(addressList, payList)
+		
+		referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
+		transferCCNTP(masterSetup.GuardianReferrals, referrals.walletList, referrals.payList, () => {
+			logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
+		})
+		
+	})
 	
 }
 
-const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], privateKey: string, ReferralsMap: Map<string, string>, CallBack: (err:Error|null, data?: any) => void) => {
-	// let _walletAddress = walletAddress.toLowerCase()
-	// if (checkAddressArray.length) {
-	// 	const index = checkAddressArray.findIndex(n => n.toLowerCase() === _walletAddress)
-	// 	if (index <0) {
-	// 		return CallBack (new Error(`CalculateReferrals walletAddress [${_walletAddress}] hasn't in checkAddressArray! STOP CalculateReferrals`))
-	// 	}
-	// }
+const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, CallBack: (err:Error|null, data?: any) => void) => {
+	let _walletAddress = walletAddress.toLowerCase()
+	if (checkAddressArray.length) {
+		const index = checkAddressArray.findIndex(n => n.toLowerCase() === _walletAddress)
+		if (index <0) {
+			return CallBack (new Error(`CalculateReferrals walletAddress [${_walletAddress}] hasn't in checkAddressArray! STOP CalculateReferrals`))
+		}
+	}
 	
-	// const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, wallet)
+	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 	
-	// const addressList: string[] = []
-	// const payList: string[] = []
+	const addressList: string[] = []
+	const payList: string[] = []
 	
-	// for (let i of rewordArray) {
-	// 	let address: string
+	for (let i of rewordArray) {
+		let address: string
 
-	// 	try{
-	// 		address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
-	// 	} catch (ex: any) {
-	// 		provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	// 		continue
-	// 	}
+		try{
+			address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
+		} catch (ex: any) {
+			// provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+			continue
+		}
 		
-	// 	// logger (colors.blue(`CalculateReferrals get address = [${address}]`))
-	// 	if (address == '0x0000000000000000000000000000000000000000') {
-	// 		continue
-	// 	}
-	// 	ReferralsMap.set(_walletAddress, address)
-	// 	address = address.toLowerCase()
-	// 	if (checkAddressArray.length) {
-	// 		const index = checkAddressArray.findIndex(n => n.toLowerCase() === address)
-	// 		if (index< 0) {
-	// 			return CallBack(new Error(`CalculateReferrals walletAddress [${_walletAddress}'s up layer address ${address}] hasn't in checkAddressArray! STOP CalculateReferrals`))
-	// 		}
-	// 	}
-	// 	addressList.push(address)
-	// 	payList.push((parseFloat(totalToken)*i).toString())
-	// 	_walletAddress = address
-	// }
+		// logger (colors.blue(`CalculateReferrals get address = [${address}]`))
+		if (address == '0x0000000000000000000000000000000000000000') {
+			continue
+		}
+		ReferralsMap.set(_walletAddress, address)
+		address = address.toLowerCase()
+		if (checkAddressArray.length) {
+			const index = checkAddressArray.findIndex(n => n.toLowerCase() === address)
+			if (index< 0) {
+				return CallBack(new Error(`CalculateReferrals walletAddress [${_walletAddress}'s up layer address ${address}] hasn't in checkAddressArray! STOP CalculateReferrals`))
+			}
+		}
+		addressList.push(address)
+		payList.push((parseFloat(totalToken)*i).toString())
+		_walletAddress = address
+	}
 
-	// CallBack(null, {addressList, payList})
+	return CallBack(null, {addressList, payList})
 }
 
 export const transferCCNTP = (provateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
@@ -265,6 +287,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const startDaemonProcess = async (block: number) => {
+	stratFreeMinerReferrals(block)
 	guardianMining()
 	guardianReferrals()
 }
