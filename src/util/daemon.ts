@@ -132,11 +132,11 @@ const guardianMining = async () => {
 	const payNodes: string[] = nodesBoosts.map (n => (n*eachBoostToken).toFixed(10))
 	let total = 0
 	payNodes.forEach(n => total += parseFloat(n))
-	const kkkk = payNodes.sort((a,b) => parseFloat(b) - parseFloat(a))
-	const kkkkBoost = nodesBoosts.sort((a, b) => b-a)
+	// const kkkk = payNodes.sort((a,b) => parseFloat(b) - parseFloat(a))
+	// const kkkkBoost = nodesBoosts.sort((a, b) => b-a)
 	logger(Color.magenta(`total pay ${total} nodesAddress.length [${nodesAddress.length}] payNodes.legth [${payNodes.length}] `))
 	// logger(inspect(nodesAddress, false, 3, true))
-	logger(`Max pay [${kkkk[0]}] minPay [${kkkk[kkkk.length - 1]}] MacBoost = [${kkkkBoost[0]}] minBoost =[${kkkkBoost[kkkkBoost.length - 1]}] `)
+	// logger(`Max pay [${kkkk[0]}] minPay [${kkkk[kkkk.length - 1]}] MacBoost = [${kkkkBoost[0]}] minBoost =[${kkkkBoost[kkkkBoost.length - 1]}] `)
 	const yyy: Map<number, number> = new Map()
 	nodesBoosts.forEach (n => {
 		const kk = yyy.get(n)
@@ -149,6 +149,8 @@ const guardianMining = async () => {
 	yyy.forEach((n,key) => {
 		logger(inspect({n, key}, false, 3, true))
 	})
+	logger(inspect(nodesAddress, false,3, true))
+	logger(inspect(payNodes, false,3, true))
 	transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
 		logger(Color.green(`guardianMining transferCCNTP success!`))
 	})
@@ -247,7 +249,7 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 	return CallBack(null, {addressList, payList})
 }
 
-export const transferCCNTP = (provateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
+const transferCCNTP = (provateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(provateKey, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
@@ -287,9 +289,9 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const startDaemonProcess = async (block: number) => {
-	stratFreeMinerReferrals(block)
+	// stratFreeMinerReferrals(block)
 	guardianMining()
-	guardianReferrals()
+	// guardianReferrals()
 }
 
 
