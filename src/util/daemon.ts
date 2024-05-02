@@ -149,8 +149,8 @@ const guardianMining = async () => {
 	yyy.forEach((n,key) => {
 		logger(inspect({n, key}, false, 3, true))
 	})
-	logger(inspect(nodesAddress, false,3, true))
-	logger(inspect(payNodes, false,3, true))
+	// logger(inspect(nodesAddress, false,3, true))
+	// logger(inspect(payNodes, false,3, true))
 	transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
 		logger(Color.green(`guardianMining transferCCNTP success!`))
 	})
