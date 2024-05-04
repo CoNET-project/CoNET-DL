@@ -237,16 +237,6 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		logger (Color.grey(`regiestFaucet [${wallet_addr}:${ipAddr}] SUCCESS`))
 		await cassClient.shutdown ()
-		if ( process.connected && typeof process.send === 'function') {
-			const comd: clusterMessage = {
-				cmd:'sendCONET',
-				data: [wallet_addr],
-				uuid: '',
-				err: null
-			}
-			process.send (comd)
-		}
-
 		return resolve ('OK')
 		
 	})

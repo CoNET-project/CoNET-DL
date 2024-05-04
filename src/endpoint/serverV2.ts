@@ -18,11 +18,11 @@ import {readFileSync} from 'node:fs'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
 	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
 	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName,
-	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc
+	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-
+const sendCONET_Pool: string[] = []
 
 //	for production
 	import {createServer} from 'node:http'
@@ -36,6 +36,8 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
+const FaucetCount = '0.01'
+
 
 // const getRedirect = (req: Request, res: Response ) => {
 // 	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
@@ -435,7 +437,14 @@ class conet_dl_server {
 					res.status(400).end()
 					return res.socket?.end().destroy()
 				}
-				return res.json ().end ()
+				
+				const tx = sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
+				if (!tx) {
+					res.status(403).end()
+					return res.socket?.end().destroy()
+				}
+				logger(inspect(tx, false, 3, true))
+				return res.json ({tx}).end ()
 			})
 
 		})
