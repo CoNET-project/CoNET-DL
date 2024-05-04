@@ -259,6 +259,21 @@ class conet_dl_server {
 
 		})
 
+		router.get ('/health', async (req,res) => {
+
+			if (!this.initData) {
+				logger (Colors.red(`conet_dl_server /publishKey have no initData! response 404`))
+				res.status (404).end()
+				return res.socket?.end().destroy()
+			}
+			
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger (Colors.grey(` Router /health form [${ ipaddress}]`), inspect(req.headers, false, 3, true))
+
+			return res.json ({ health: true }).end()
+
+		})
+
 		router.post ('/newBlock', async (req,res) => {
 			let message, signMessage
 			try {
@@ -493,7 +508,7 @@ class conet_dl_server {
 			if (m !== true) {
 				return res.status(m).end()
 			}
-
+			res.status(200)
 			res.setHeader('Cache-Control', 'no-cache')
             res.setHeader('Content-Type', 'text/event-stream')
             res.setHeader('Access-Control-Allow-Origin', '*')

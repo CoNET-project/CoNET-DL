@@ -2187,7 +2187,7 @@ const sendClaimableAsset = async (privateKey: string, retClaimableContractAddres
 	}
 	trySend()
 })
-	
+
 
 const getReferralNode = async (contract: ethers.Contract, referrerAddr: string, tokenID: number) => {
 	let nodes
@@ -2425,6 +2425,7 @@ const GuardianPlanPreCheck = async () => {
 		signMessage: '0xfbc5131a040a7ebf853ebc7bc3333f51ff4d65840203149da209a1139e21e3b95eee37b94dcef217c396cfc021068613bb0a6621cfedbf10d081062e45779ce01b'
 	}
 
+
 	const obj = checkSignObj (data.message, data.signMessage)
 	logger (inspect(obj, false, 3, true))
 	if (!obj || !obj?.data) {
@@ -2526,17 +2527,22 @@ const tetsGet = async () => {
 	// 	logger(ex)
 	// }
 	const nodes: string[] = [
-		'0x28B2aE27e135E89D9BcB40595F859b411bF4846C',
-		'0x7619FC557e3575Ac1bA1C0D99307ac1E487FC83e'
+		'0xCA6C2233410a83aB8aC67ED6BbBd975dcD40b6cd',
+		'0xD1dc6FE4d9E805e4499fa16A64c9E281975f0b9a',
+		'0x3ca8162883A93D7a05a39165F2E16eff881Fa6fc',
+		'0x7523726C61A8B658d9e3bE57717e1a505AD0f5a8',
+		'0x072ee682Be9bb30EC3B8B7adBdA16B77A74339A3',
+		'0x3A90966D84a20Cee2C0d6968a7c6CC8E5f089D56',
+		'0xd19BA88a6aaEb27D214861F43E92371c63643e24'
 	]
-	const paymentAddress = '0xfEc7583160D24b2b77F51EafD9B024EaCAd8066a'
-	await sendGuardianNodesContract(masterSetup.claimableAdmin, nodes, paymentAddress)
+	const paymentAddress = '0x8FCb191a4e40D0AFA37B2fa610377688992f057f'
+	// await sendGuardianNodesContract(masterSetup.claimableAdmin, nodes, paymentAddress)
 
 	// const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	// const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, provider)
 	// logger(wallet.signingKey)
 
-	//await sendClaimableAsset (masterSetup.claimableAdmin, realToClaimableContractAddress('usdb'), '0x0060f53fEac407a04f3d48E3EA0335580369cDC4', '1')
+	await sendClaimableAsset (masterSetup.claimableAdmin, realToClaimableContractAddress('wusdt'), paymentAddress, '875')
 
 }
 
@@ -2590,11 +2596,6 @@ const transferCCNTPToNodes = (walletList: string[], amount: string, callback: ()
 	}
 	send()
 }
-
-
-
-
-
 
 
 
