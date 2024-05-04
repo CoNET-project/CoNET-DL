@@ -102,32 +102,8 @@ class conet_dl_server {
 	private serverID = ''
 
 	private si_pool: nodeType[] = []
-
-	private sendCommandWaitingPool: Map <string, snedMessageWaitingObj> = new Map()
-	private livenessHash = ''
 	private masterBalance: CNTPMasterBalance|null = null
 	private s3Pass: s3pass|null = null
-	private minerRate = 0
-	private EPOCH = '0'
-	private sendCommandToMasterAndWaiting: (cmd: clusterMessage) => Promise<clusterMessage|null> = (cmd ) => new Promise(resolve=> {
-		if ( process.connected && typeof process.send === 'function') {
-			const timeSet = setTimeout(() => {
-				logger (Colors.red(`sendCommandToMasterAndWaiting process.send (comd) & listen [${cmd.cmd}] response TIMEOUT Error!`))
-				resolve(null)
-			}, 10000)
-
-			const obj: snedMessageWaitingObj = {
-				resolve,
-				timeOutObj: timeSet
-			}
-			this.sendCommandWaitingPool.set(cmd.uuid, obj)
-			
-			return process.send (cmd)
-		}
-		return resolve(null)
-	})
-
-
 
 	private initSetupData = async () => {
 		
@@ -154,8 +130,6 @@ class conet_dl_server {
 	constructor () {
 		this.initSetupData ()
     }
-
-	private ipaddressPool: Map<string, number[]>  = new Map()
 
 	private startServer = async () => {
 		const staticFolder = join ( this.appsPath, 'static' )
