@@ -432,13 +432,13 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			return regiestFaucet(wallet_add, ipaddress).then (n => {
+			return regiestFaucet(wallet_add, ipaddress).then (async n => {
 				if (!n) {
 					res.status(400).end()
 					return res.socket?.end().destroy()
 				}
 				
-				const tx = sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
+				const tx = await sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
 				if (!tx) {
 					res.status(403).end()
 					return res.socket?.end().destroy()
