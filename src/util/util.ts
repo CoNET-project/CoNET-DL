@@ -755,7 +755,8 @@ export const sendCONET: (privateKey: string, amountInEther: string, receiverAddr
 			}
 
 			wallet.sendTransaction(tx)
-			.then((txObj) => {
+			.then(async (txObj) => {
+				await txObj.wait()
 				return resolve(txObj)
 			})
 			.catch (ex => {
