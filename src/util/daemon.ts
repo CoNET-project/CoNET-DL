@@ -56,7 +56,7 @@ const guardianReferrals = async () => {
 	let total = 0
 	referralsBoosts.forEach(n => total += n)
 
-	logger(Color.magenta(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
+	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
 	// logger(inspect(referralsBoosts, false, 3, true))
 	// logger(inspect(payReferralsBoost, false, 3, true))
@@ -93,7 +93,7 @@ const guardianMining = async () => {
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
 	} catch (ex: any) {
-		return logger(Color.red(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
+		return logger(Color.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
 	}
 	const _nodesAddress: string[] = nodes[0].map((n: string) => n)
 	const __nodesBoosts: number[] = nodes[1].map((n: BigInt) => n !== BigInt(3) ? parseInt(n.toString()) : 300)
@@ -118,7 +118,7 @@ const guardianMining = async () => {
 			nodesAddress.push(_nodesAddress[index])
 			nodesBoosts.push(_nodesBoosts[index])
 		} else {
-			logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))
+			//logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))
 		}
 	})
 
@@ -183,8 +183,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 	logger(Color.grey(`daemon EPOCH ${block} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
 
-	eachOfLimit(minerWallets, 5, (n, index, next) => {
-		CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
+	eachOfLimit(minerWallets, 5, (n, index, next) => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
 			if (err) {
 				return logger (Color.red(`CalculateReferrals Error!`), err)
 			}
@@ -193,9 +192,8 @@ const stratFreeMinerReferrals = async (block: number) => {
 			
 			next()
 			
-		})
-	}, async err => {
-		
+		}), async err => {
+		logger(Color.magenta(`stratFreeMinerReferrals finished CalculateReferrals addressList [${addressList.length!}]`))
 		const referrals = mergeTransfers(addressList, payList)
 		
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
