@@ -175,8 +175,8 @@ const stratFreeMinerReferrals = async (block: number) => {
 		kk.forEach(nn => {
 			minerWallets.push(nn)
 		})
+		
 	})
-
 	EPOCH = block
 	const addressList: string[] =[]
 	const payList: string[] = []
@@ -190,13 +190,20 @@ const stratFreeMinerReferrals = async (block: number) => {
 			}
 			addressList.push(...data1.addressList)
 			payList.push(...data1.payList)
+			
 			next()
+			
 		})
 	}, async err => {
 		
 		const referrals = mergeTransfers(addressList, payList)
 		
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
+		referrals.walletList.forEach((n, index) => {
+			if (n.toLowerCase() === '0x1eDF79c89b2f22d24Fc015ADeDe3d66e6A9029a4'.toLowerCase()) {
+				logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
+			}
+		})
 		transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 			logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 		})
@@ -218,21 +225,22 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 	
 	const addressList: string[] = []
 	const payList: string[] = []
-	
+
 	for (let i of rewordArray) {
 		let address: string
 
 		try{
 			address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
 		} catch (ex: any) {
-			// provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-			continue
+			logger(Color.red(`CalculateReferrals await contract.getReferrer(${_walletAddress}) Error! ${ex.message}`))
+			break
 		}
 		
 		// logger (colors.blue(`CalculateReferrals get address = [${address}]`))
-		if (address == '0x0000000000000000000000000000000000000000') {
-			continue
+		if (address === '0x0000000000000000000000000000000000000000') {
+			break
 		}
+
 		ReferralsMap.set(_walletAddress, address)
 		address = address.toLowerCase()
 		if (checkAddressArray.length) {

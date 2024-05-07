@@ -5,7 +5,7 @@ import { homedir, networkInterfaces } from 'node:os'
 import { join } from 'node:path'
 import { get } from 'node:http'
 import {reverse} from 'node:dns'
-import { request as requestHttps } from 'node:https'
+import { request as requestHttps, get as httpsGet } from 'node:https'
 import Cluster from 'node:cluster'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
@@ -1818,23 +1818,41 @@ const detailTransfer = async (transferHash: string, provideCONET: ethers.JsonRpc
 	
 }
 
-
-const listenEvent = async () => {
-	const cntp_conet_holasky_address = '0x113E91FC4296567f95B84D0FacDa6fC29c5E7238'
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(masterSetup.conetPointAdmin, provideCONET)
-	const fee = await provideCONET.getFeeData()
-	const erc20 = new ethers.Contract(cntp_conet_holasky_address, CONET_Point_ABI, wallet)
-	const gas = await erc20.approve.estimateGas('0x5B38Da6a701c568545dCfcB03FcB875f56beddC4', 100)
-	
-	const tx = {
-		to: "0x6E0d01A76C3Cf4288372a29124A26D4353EE51BE",
-		value: ethers.parseEther("0.05")
-	}
-	const gas1 = await wallet.estimateGas(tx)
-	logger(inspect(gas1, false, 3, true))
-	
+const getGuardianReferralsDetail = async (wallet: string) => {
+	return await getClaimableCNTPTransfer(wallet, '0x1283Fd1d846d292b23bD16c041C1BDf3ed1015D6')
 }
+
+const getClaimableCNTPTransfer = (wallet: string, from: string) => new Promise(resolve=> {
+	const reqUrl = `https://scan.conet.network/api/v2/addresses/${wallet}/token-transfers?type=ERC-20&filter=from%3A${from}&token=0x27A961F17E7244d8aA75eE19061f6360DeeDF76F`
+	httpsGet(reqUrl, (res) => {
+		let data = ''
+		res.on ('data', _data => {
+			data += _data
+		})
+		res.once ('error', err => {
+			logger(colors.magenta(`getClaimableCNTPTransfer res.on Error ${err.message}`))
+			return resolve (data)
+		})
+		res.once('end', () => {
+			let ret
+			try {
+				ret = JSON.parse(data)
+			} catch (ex) {
+				logger(colors.magenta(`getClaimableCNTPTransfer JSON.parse Error ${data}`))
+				return resolve (null)
+			}
+			return resolve (ret)
+		})
+
+	}).once ('error', err => {
+		logger(colors.magenta(`getClaimableCNTPTransfer httpsGet.on Error ${err.message}`))
+		return resolve (null)
+	})
+})
+	
+	
+
+
 
 const getNetwork = (networkName: string) => {
 	switch (networkName) {
@@ -2599,9 +2617,6 @@ const transferCCNTPToNodes = (walletList: string[], amount: string, callback: ()
 }
 
 
-
-
-
 const walletList: string[] = [
 	'0x28B2aE27e135E89D9BcB40595F859b411bF4846C',
 	'0x7619FC557e3575Ac1bA1C0D99307ac1E487FC83e',
@@ -2622,7 +2637,31 @@ const walletList: string[] = [
 	// '0x01f28942A609Bf3e5043919148C4E6603a349118'
 ]
 
+const burnFrom = async (claimeTokenName: string, wallet: string, _balance: string) => {
+	const balance = ethers.parseEther(_balance)
+	const smartContractAddress = getCONETHoleskyClaimableContractAddress(claimeTokenName)
+	if (!smartContractAddress) {
+		return false
+	}
+	const provide = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const claimableAdmin = new ethers.Wallet(masterSetup.claimableAdmin, provide)
+	const claimableContract = new ethers.Contract(smartContractAddress, claimableToken, claimableAdmin)
+	try {
+		const tx1 = await claimableContract.burnFrom(wallet, balance)
+		logger(inspect(tx1, false, 3, true))
+		
+	} catch (ex: any) {
+		logger(colors.red(`checkClaimeToeknbalance claimableContract.burnFrom||sc1d.transfer ERROR!`), ex.message)
+		return false
+	}
 
+}
+
+
+const test = async () => {
+	// const kkk = await burnFrom('cBNBUSDT', '0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF', '1375')
+	// logger(inspect(kkk, false, 3, true))
+}
 
 // const wallet = new ethers.Wallet(masterSetup.claimableAdmin)
 // logger(wallet.address)
@@ -2655,7 +2694,7 @@ const walletList: string[] = [
 //GuardianPlanPreCheck()
 //const [,,...args] = process.argv
 //logger(getRefferRate(parseInt(args[0])))
-//test()
+// test()
 
 
 // test()
