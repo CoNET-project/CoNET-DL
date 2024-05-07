@@ -127,7 +127,7 @@ const guardianMining = async () => {
 	let totalBoosts = 0
 	nodesBoosts.forEach(n => totalBoosts += n)
 	const eachBoostToken = nodesEachEPOCH/totalBoosts
-	logger(Color.magenta(`nodesAirdrop total boost [${totalBoosts}] eachBoostToken = ${eachBoostToken}`))
+	logger(Color.grey(`nodesAirdrop total boost [${totalBoosts}] eachBoostToken = ${eachBoostToken}`))
 
 	const payNodes: string[] = nodesBoosts.map (n => (n*eachBoostToken).toFixed(10))
 	let total = 0
@@ -146,9 +146,9 @@ const guardianMining = async () => {
 			yyy.set (n, kk + 1)
 		}
 	})
-	yyy.forEach((n,key) => {
-		logger(inspect({n, key}, false, 3, true))
-	})
+	// yyy.forEach((n,key) => {
+	// 	logger(inspect({n, key}, false, 3, true))
+	// })
 	// logger(inspect(nodesAddress, false,3, true))
 	// logger(inspect(payNodes, false,3, true))
 	transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
@@ -163,7 +163,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 	if (!data) {
 		if (EPOCH - transferEposh+1 < 3 ) {
-			return logger(Color.magenta(`transferMiners block [${transferEposh}] didn't ready!`))
+			return logger(Color.grey(`transferMiners block [${transferEposh}] didn't ready!`))
 		}
 		return transferEposh++
 	}
