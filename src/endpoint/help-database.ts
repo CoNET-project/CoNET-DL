@@ -3,7 +3,7 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations, conet_Holesky_rpc, transferCCNTP, checkSignObj, checkClaimeToeknbalance} from '../util/util'
+import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations, conet_Holesky_rpc, transferCCNTP, checkSignObj, checkClaimeToeknbalance, getServerIPV4Address} from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions} from 'node:http'
 import { request } from 'node:https'
@@ -665,7 +665,6 @@ export const freeMinerManager = async (ipaddress: string, wallet: string) => {
 	
 }
 
-
 export const deleteMiner = async (ipaddress: string, wallet: string) => {
 	const cassClient = new Client (option)
 	const cmd1 = `DELETE from conet_free_mining WHERE ipaddress = '${ipaddress}' AND wallet = '${wallet}' AND node_wallet = '${nodeWallet}'`
@@ -679,6 +678,7 @@ export const getMinerCount = async (_epoch: number) => {
 	const epoch = (_epoch - 1).toString()
 	
 	const counts = await getEpochNodeMiners(epoch)
+	clusterNodes = await getApiNodes()
 	if (!counts) {
 		logger(Color.red(`getMinerCount got empty array`))
 		return null
@@ -753,7 +753,7 @@ export let totalminerOnline = 0
 let minerRate = 0
 let transferEposh = 0
 const tokensEachEPOCH = 34.72
-const clusterNodes = 2
+let clusterNodes = 4
 
 interface livenessListeningPoolObj {
 	res: Response
@@ -790,7 +790,7 @@ const stratliveness = async (block: number) => {
 	
 	logger(Color.grey(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
 	EPOCH = block
-	
+	clusterNodes = await getApiNodes()
 	const processPool: any[] = []
 	
 	livenessListeningPool.forEach(async (n, key) => {
@@ -845,9 +845,12 @@ const transferMiners = async () => {
 		}
 		const localData = data.counts[index]
 		const paymentWallet: string[] = JSON.parse(localData.wallets)
-		transferCCNTP(paymentWallet, minerRate.toFixed(8), () => {
-			tryTransfer()
-		})
+		if (paymentWallet.length > 0) {
+			transferCCNTP(paymentWallet, minerRate.toFixed(8), () => {
+				tryTransfer()
+			})
+		}
+		
 		
 	}
 	
@@ -917,6 +920,39 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 	//const kk = await checkLastClaimeTime(data.tokenName, obj.walletAddress)
 	return await checkClaimeToeknbalance(obj.walletAddress, data.tokenName)
 }
+
+export const getApiNodes: () => Promise<number> = async () => new Promise(async resolve=> {
+
+	const cassClient = new Client (option)
+	const cmd = `SELECT ipaddress from conet_api_node`
+
+	try {
+		const uu = await cassClient.execute (cmd)
+		await cassClient.shutdown()
+		return resolve(uu.rows.length)
+	} catch(ex) {
+		await cassClient.shutdown()
+		return resolve (6)
+	}
+})
+
+
+export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(async resolve=> {
+
+	const cassClient = new Client (option)
+	const ipaddress = getServerIPV4Address(false)
+	const cmd1 = `INSERT INTO conet_api_node (wallet, ipaddress) VALUES ('${masterSetup.conetFaucetAdmin}', '${ipaddress[0]}')`
+	try {
+		cassClient.execute (cmd1)
+		await cassClient.shutdown()
+		return resolve(true)
+	} catch(ex) {
+		await cassClient.shutdown()
+		return resolve (false)
+	}
+})
+	
+
 
 
 

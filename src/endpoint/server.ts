@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { CoNET_SI_Register, regiestFaucet, getLast5Price,
 	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
-	startListeningCONET_Holesky_EPOCH, addIpaddressToLivenessListeningPool, claimeToekn
+	startListeningCONET_Holesky_EPOCH, addIpaddressToLivenessListeningPool, claimeToekn, regiestApiNode1
 } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
@@ -95,7 +95,7 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 
 class conet_dl_server {
 
-	private PORT = 8000
+	private PORT = masterSetup.PORT|| 8000
 	private appsPath = ''
 	private initData: ICoNET_NodeSetup|null = null
 	private debug = false
@@ -147,6 +147,8 @@ class conet_dl_server {
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.s3Pass = await s3fsPasswd()
+		await regiestApiNode1 ()
+		
 		this.startServer()
 
 		startListeningCONET_Holesky_EPOCH()
@@ -315,15 +317,6 @@ class conet_dl_server {
 			
 		})
 
-		router.get ('/conet-price', async (req,res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.blue(`Router /conet-price to [${ ipaddress }]`))
-			const prices = await getLast5Price ()
-			logger (inspect(prices, false, 3, true))
-			res.json (prices).end()
-			return res.socket?.end().destroy()
-
-		})
 
 		router.post ('/stop-liveness', async (req,res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -374,36 +367,6 @@ class conet_dl_server {
 			
 			return res.status(200).end()
 		})
-
-		router.post ('/conet-si-node-register', async ( req, res ) => {
-			const pgpMessage = req.body?.pgpMessage
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if ( !pgpMessage || !this.initData) {
-				logger (Colors.red(`/conet-si-node-register has unknow payload [${ipaddress}]`), inspect(req.body, false, 3, true))
-				res.status(404).end ()
-				return res.socket?.end().destroy()
-			}
-
-			const obj = <ICoNET_DL_POST_register_SI> await decryptPgpMessage (pgpMessage, this.initData.pgpKeyObj.privateKeyObj)
-
-			if (!obj || !ipaddress ) {
-				logger (Colors.red(`[${ipaddress}] => /conet-si-node-register decryptPgpMessage or no ipaddress {${ipaddress}} ERROR!`), inspect(req.body , false, 3, true))
-				res.status(404).end ()
-				return res.socket?.end().destroy()
-			}
-			obj.ipV4 = ipaddress
-			const ret = await CoNET_SI_Register ( obj)
-
-			if (!ret ) {
-				logger (Colors.red(`[${ ipaddress }] => /conet-si-node-register CoNET_SI_Register return null ERROR`))
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
-
-			res.json ({ nft_tokenid: ret }).end()
-			return res.socket?.end().destroy()
-			
-		})
 		
 		router.post('/si-health', async (req, res) => {
 			
@@ -442,28 +405,6 @@ class conet_dl_server {
 		router.post ('/myIpaddress', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			return res.json ({ipaddress}).end ()
-		})
-
-		//********************			V2    		****** */				
-		router.post ('/conet-faucet', (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
-			const wallet_add = req.body?.walletAddr
-
-			if (!wallet_add ||!ipaddress) {
-				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
-				res.status(400).end()
-				return res.socket?.end().destroy()
-			}
-
-			return regiestFaucet(wallet_add, ipaddress).then (n => {
-				if (!n) {
-					res.status(400).end()
-					return res.socket?.end().destroy()
-				}
-				return res.json ().end ()
-			})
-
 		})
 
 		router.post ('/conet-si-list', async ( req, res ) => {
@@ -575,27 +516,6 @@ class conet_dl_server {
 			return res.status(200).json({}).end()
 		})
 
-		router.post ('/claimToken', async ( req, res ) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-			
-			const response = await claimeToekn (message, signMessage)
-			if (response) {
-				return res.status(200).json({}).end()
-			}
-			return res.status(403).end()
-
-		})
-
 		router.get ('/asset-prices', async ( req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			
@@ -608,110 +528,6 @@ class conet_dl_server {
 			}
 			logger(Colors.gray(`/asset-prices from ${ipaddress} success!` ), inspect(kk, false, 3, true))
 			return res.status(200).json(kk).end()
-		})
-
-		router.post ('/Purchase-Guardian', async (req,res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			// const ipaddress = req.headers['cf-connecting-ip']||splitIpAddr(req.ip)
-			
-			
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /Purchase-Guardian message = req.body.message ERROR!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-				
-			}
-			
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return  res.status(403).end()
-				
-			}
-			
-			const obj = checkSignObj (message, signMessage)
-
-			if (!obj||!obj?.data) {
-				logger (Colors.grey(`Router /Purchase-Guardian checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-
-			logger(Colors.magenta(`/Purchase-Guardian from ${ipaddress}`))
-			logger(inspect(obj, false, 3, true))
-
-			if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
-				logger(Colors.grey(`Router /Purchase-Guardian obj.data?.nodes !== obj.data?.publishKeys?.length Error!`), inspect(obj, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const txObj = await checkTx (obj.data.receiptTx, obj.data.tokenName)
-
-			if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
-				logger(Colors.grey(`Router /Purchase-Guardian txObj Error!`), inspect(txObj, false, 3, true))
-				return res.status(403).end()
-			}
-
-			if (txObj.tx1.from.toLowerCase()!== obj.walletAddress) {
-				logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
-				return res.status(403).end()
-			}
-
-			const networkName = getNetworkName(obj.data.tokenName)
-			if (!networkName) {
-				logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
-				return res.status(403).end()
-			}
-
-			const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
-			
-			const _checkTx = await txManager (obj.data.receiptTx, obj.data.tokenName, obj.walletAddress, obj.data.nodes, networkName, message, signMessage )
-
-			if (!_checkTx) {
-				logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
-				return res.status(403).end()
-			}
-
-			logger(Colors.blue(`${message}`))
-			logger(Colors.blue(`${signMessage}`))
-			
-			if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
-				if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
-					logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
-					return res.status(403).end()
-				}
-				const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
-				if (erc20Result === false) {
-					logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
-					return res.status(403).end()
-				}
-				const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-				if (!kk) {
-					logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
-					return res.status(403).end()
-				}
-				const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
-				return res.status(200).json(ret).end()
-			}
-			
-			const value = txObj.tx1.value.toString()
-			if (obj.data.amount !== value) {
-				logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
-				return res.status(403).end()
-			}
-
-			const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-			if (!kk) {
-				logger(Colors.red(`checkValueOfGuardianPlan Error!`))
-				return res.status(403).end()
-			}
-			
-			const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-			const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
-			return res.status(200).json(ret).end()
 		})
 
 		router.all ('*', (req, res ) =>{

@@ -2280,6 +2280,9 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 }
 
 export const transferCCNTP = (walletList: string[], amount: string, callback: () => void) => {
+	if (walletList.length < 1) {
+		return callback ()
+	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)

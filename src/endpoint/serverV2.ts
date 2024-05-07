@@ -459,49 +459,6 @@ class conet_dl_server {
 			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
 		})
 
-		router.post ('/startMining', async (req, res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /livenessListening message = req.body.message ERROR!`))
-				return res.status(404).end()
-				
-			}
-			if (!message||!this.initData||!signMessage) {
-				logger (Colors.grey(`Router /livenessListening !message||!this.initData||!signMessage Error!`))
-				return  res.status(404).end()
-				
-			}
-
-			const obj = checkSignObj (message, signMessage)
-
-			if (!obj) {
-				logger (Colors.grey(`[${ipaddress}] to /livenessListening !obj Error!`))
-				return res.status(404).end()
-			}
-
-
-
-			const m = await freeMinerManager(ipaddress, obj.walletAddress)
-
-			if (m !== true) {
-				return res.status(m).end()
-			}
-			res.status(200)
-			res.setHeader('Cache-Control', 'no-cache')
-            res.setHeader('Content-Type', 'text/event-stream')
-            res.setHeader('Access-Control-Allow-Origin', '*')
-            res.setHeader('Connection', 'keep-alive')
-            res.flushHeaders() // flush the headers to establish SSE with client
-			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
-			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
-
-		})
-
 		router.post ('/regiestProfileRoute', async (req, res ) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)

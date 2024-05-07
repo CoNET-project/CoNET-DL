@@ -18,7 +18,9 @@ const tokensEachEPOCH = 34.72
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const ReferralsMap: Map<string, string> = new Map()
+let sendMineFromMinerPool_processing = false
 
+const sendMinerPool: sendMiner[] = []
 
 const guardianReferrals = async () => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -256,6 +258,9 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 }
 
 const transferCCNTP = (provateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
+	if (walletList.length < 1) {
+		return callback()
+	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(provateKey, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)

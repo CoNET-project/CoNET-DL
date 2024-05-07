@@ -98,6 +98,7 @@ interface ICoNET_DL_masterSetup {
 		key: string
 	}
 	passwd: string
+	PORT: number
 }
 
 interface ICoNET_IP_API_Result {
