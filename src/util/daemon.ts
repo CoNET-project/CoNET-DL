@@ -213,7 +213,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			logger(Color.magenta(`stratFreeMinerReferrals finished CalculateReferrals addressList [${addressList.length!}]`))
 			const referrals = mergeTransfersv1(addressList, payList)
 			
-			// referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
+			referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
 			referrals.walletList.forEach((n, index) => {
 				if (n.toLowerCase() === '0x1eDF79c89b2f22d24Fc015ADeDe3d66e6A9029a4'.toLowerCase()) {
 					logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
