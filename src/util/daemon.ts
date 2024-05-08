@@ -219,20 +219,20 @@ const stratFreeMinerReferrals = async (block: number) => {
 					logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
 				}
 			})
-
+			logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
 			// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 			// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 			// })
 
-			// transferPool.push({
-			// 	privateKey: masterSetup.GuardianReferralsFree,
-			// 	walletList: referrals.walletList,
-			// 	payList: referrals.payList
-			// })
-			// startTransfer()
+			transferPool.push({
+				privateKey: masterSetup.GuardianReferralsFree,
+				walletList: referrals.walletList,
+				payList: referrals.payList
+			})
+			startTransfer()
 
 
-			logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
+			
 			
 		})
 	
