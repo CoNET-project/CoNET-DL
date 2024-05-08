@@ -14,7 +14,7 @@ import type {Response, Request } from 'express'
 import Color from 'colors/safe'
 import {ethers} from 'ethers'
 import { Client, auth, types } from 'cassandra-driver'
-
+import {transferPool, startTransfer} from '../util/transferManager'
 const setup = join( homedir(),'.master.json' )
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
@@ -846,11 +846,17 @@ const transferMiners = async () => {
 		const localData = data.counts[index]
 		const paymentWallet: string[] = JSON.parse(localData.wallets)
 		if (paymentWallet.length > 0) {
-			transferCCNTP(paymentWallet, minerRate.toFixed(8), () => {
-				tryTransfer()
+			// transferCCNTP(paymentWallet, minerRate.toFixed(8), () => {
+			// 	tryTransfer()
+			// })
+
+			transferPool.push({
+				privateKey: masterSetup.conetFaucetAdmin,
+				walletList: paymentWallet,
+				payList: paymentWallet.map(n => minerRate.toFixed(8))
 			})
+			await startTransfer()
 		}
-		
 		
 	}
 	
