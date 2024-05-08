@@ -164,7 +164,7 @@ const guardianMining = async () => {
 	// transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
 	// 	logger(Color.green(`guardianMining transferCCNTP success!`))
 	// })
-	logger(Color.gray(`guardianMining payList = ${payNodes[0]},${payNodes[1]}`))
+	logger(Color.gray(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
 	transferPool.push({
 		privateKey: masterSetup.GuardianAdmin,
 		walletList: nodesAddress,
@@ -232,7 +232,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			// startTransfer()
 
 
-			logger(Color.blue(``))
+			logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
 			
 		})
 	
