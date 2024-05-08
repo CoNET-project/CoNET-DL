@@ -1133,7 +1133,7 @@ export const mergeTransfers = (_nodeList: string[], pay: string[]) => {
 				const currentIndex = payList.length - 1
 				const oldPay = parseFloat(payList[currentIndex])
 				const newPay = parseFloat(_pay)
-				payList[currentIndex] = (oldPay + newPay).toFixed(0)
+				payList[currentIndex] = (oldPay + newPay).toFixed(10)
 				nextIndexFun()
 			}
 			nextIndexFun()

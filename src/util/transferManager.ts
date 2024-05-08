@@ -15,24 +15,6 @@ let startTransfering = false
 let marginPooling = false
 
 
-
-const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
-	const _retWalletAddr: Map<string, string> = new Map()
-	const retReferralsBoost: string[] = []
-	walletAddr.forEach((n, index) => {
-		
-		if ( n !== '0x0000000000000000000000000000000000000000') {
-			_retWalletAddr.set(n, referralsBoost[index])
-		}
-	})
-	const retWalletAddr: string[] = []
-	_retWalletAddr.forEach((value, key) => {
-		retWalletAddr.push (key)
-		retReferralsBoost.push(value)
-	})
-	return [retWalletAddr, retReferralsBoost]
-}
-
 const marginPool = () => {
 	if (marginPooling) {
 		return logger(Color.red(`marginPool stoped because other marginPool is processing!`))
