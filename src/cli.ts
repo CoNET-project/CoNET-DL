@@ -2,7 +2,7 @@
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
-import { logger, getServerIPV4Address, saveSetup, getSetup, getCNTPMastersBalance, mergeTransfers, loadWalletAddress, multiTransfer_original_Blast, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit, splitPei, sendTokenToMiner, multiTransfer,free_Pei, nodesWalletAddr, listedServerIpAddress, sendCONET, checkReferralSign } from './util/util'
+import { logger, getServerIPV4Address, saveSetup, getSetup, getCNTPMastersBalance, loadWalletAddress, multiTransfer_original_Blast, startPackageSelfVersionCheckAndUpgrade, generatePgpKeyInit, sendTokenToMiner, multiTransfer,free_Pei, nodesWalletAddr, listedServerIpAddress, sendCONET, checkReferralSign } from './util/util'
 import {daemons} from './endpoint/daemon'
 //import {streamCoNET_USDCPrice} from './endpoint/help-database'
 
@@ -371,19 +371,6 @@ if ( Cluster.isPrimary) {
 		
 	}
 
-	const mergePool = (data: sendMiner) => {
-		
-		const merge = sendMinerPool.shift()
-		if (merge) {
-			const merge1 = {miner: mergeTransfers([...merge.miner.walletList, ...data.miner.walletList], [...merge.miner.payList, ...data.miner.payList]), 
-				referrals: mergeTransfers([...merge.referrals.walletList, ...data.referrals.walletList],[...merge.referrals.payList, ...data.referrals.payList])}
-			mergePool (merge1)
-			return
-		}
-		sendMinerPool.push(data)
-		sendMineFromMinerPool()
-	}
-
 	const onMessage = async (message: clusterMessage, fork: Worker) => {
 		switch (message.cmd) {
 			case 'si-node': {
@@ -408,72 +395,6 @@ if ( Cluster.isPrimary) {
 				
 			}
 
-			case 'newBlock': {
-				const blockNumber = message.data[0]
-				const soingMint = (parseInt(blockNumber) %2) > 0
-				if (!soingMint) {
-					broadcastStartlivenessMiner(blockNumber)
-					return logger(Colors.red(`onMessage newBlock skip THE BLOCK [${blockNumber}] EVENT`))
-				}
-				// if (livenessStart) {
-				// 	return logger(Colors.red(`onMessage newBlock but livenessStart === true, skip THE BLOCK [${blockNumber}] EVENT`))
-				// }
-				livenessStart = true
-				const walletAddressArray = Array.from(livenessListeningPool, ([name, value]) => name)
-				const final_walletAddressArray = walletAddressArray.filter(n => n !== undefined)
-
-				logger(Colors.magenta(`newBlock [${blockNumber}] walletAddressArray = ${final_walletAddressArray?.length}`))
-				broadcastStartlivenessMiner(blockNumber)
-				return splitPei (final_walletAddressArray, masterSetup.cnptReferralAdmin, ReferralsMap, async (data: sendMiner) => {
-
-					livenessStart = false
-					// await getNodesBalance(node_si_pool, masterSetup.conetPointAdmin)
-					logger(Colors.magenta(`newBlock splitPei callback success!`))
-					
-					mergePool(data)
-					
-					logger(Colors.magenta(`newBlock splitPei success! miner length = [${data.miner.payList.length}] referrals = [${data.referrals.payList.length}] pushed to sendMinerPool.length  [${ sendMinerPool.length }]`))
-					
-				})
-
-				return
-			}
-
-			case 'livenessStart': {
-				const obj: minerObj = message.data[0]
-				let ipMatch = false
-				let ipaddress=''
-				const _obj = livenessListeningPool.get (obj.walletAddress)
-
-				if (_obj ){
-					message.err = 'has connecting'
-					return fork.send(message)
-			
-				}
-				
-				const index = ReserveIPAddress.findIndex(n => n === obj.ipAddress)
-				const whiteListIndex = debugWhiteList.findIndex(n => n === obj.ipAddress)
-				if (index < 0) {
-					livenessListeningPool.forEach(n => {
-						if (n.ipAddress === obj.ipAddress) {
-							ipMatch = true
-							ipaddress = n.ipAddress
-						}
-					})
-				}
-				
-				if (whiteListIndex < 0 && (ipMatch||index > -1)) {
-					message.data=[ipaddress]
-					message.err = 'different IP'
-					return fork.send(message)
-				}
-				
-				obj.fork = fork
-				livenessListeningPool.set(obj.walletAddress, obj)
-				message.data=[livenessListeningPool.size, free_Pei]
-				logger(Colors.gray(`[${obj.walletAddress}:${obj.ipAddress}] added to livenessListeningPool total size is [${livenessListeningPool.size}]`))
-				return fork.send(message)
-			}
 
 			case 'sendCONET': {
 				

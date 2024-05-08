@@ -3,7 +3,7 @@ import {logger} from './logger'
 import Color from 'colors/safe'
 import {inspect} from 'node:util'
 import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
-import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfers} from './util'
+import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
 import {getMinerCount} from '../endpoint/help-database'
@@ -211,7 +211,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			
 		}), async err => {
 		logger(Color.magenta(`stratFreeMinerReferrals finished CalculateReferrals addressList [${addressList.length!}]`))
-		const referrals = mergeTransfers(addressList, payList)
+		const referrals = mergeTransfersv1(addressList, payList)
 		
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
 		referrals.walletList.forEach((n, index) => {

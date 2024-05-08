@@ -914,36 +914,6 @@ export const free_Pei = total_pie - nodes1_Pei - nodes2_Pei
 //			385.802469135802469 / min
 //			77.160493827160494 / block (5 blocks / min)
 
-export const splitPei = async (walletAddressList: string[], privateKeyReferrals: string, ReferralsMap: Map<string, string>,callback: (data: any)=> void) => {
-
-
-	const pay1 = nodes1_Pei / _nodes.length
-	const pay2 = nodes2_Pei / _nodes1.length
-	
-
-	const pay = _nodes.map(n => pay1)
-	const nodes = _nodes.map(n=>n)
-
-	const payList = pay.map(n => ethers.parseUnits(n.toFixed(18),'ether').toString())
-	
-	for (let i = 0; i < _nodes1.length; i ++) {
-		nodes.push (_nodes1[i])
-		payList.push (ethers.parseUnits(pay2.toFixed(18),'ether').toString())
-	}
-
-	const freeAddressList = []
-	const freePayList = []
-	if (walletAddressList?.length >0) {
-		const pay_free = (free_Pei / walletAddressList?.length).toFixed(18)
-		for (let i = 0; i < walletAddressList.length; i ++) {
-			freeAddressList.push (walletAddressList[i])
-			freePayList.push (ethers.parseUnits(pay_free,'ether').toString())
-		}
-	}
-
-	return ReferralsPay(nodes, payList, freeAddressList, freePayList, privateKeyReferrals, ReferralsMap, callback)
-
-}
 
 export const sendTokenToMiner = async (walletList: string[], payList: string[],  privateKey: string, nonceLock: nonceLock) => {
 	if (nonceLock.conetPointAdmin) {
@@ -1063,44 +1033,8 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 
 })
 
-const ReferralsPay = (nodeList: string[], nodePay: string[], freeList: string[], freePay: string[], privateKey: string, ReferralsMap: Map<string, string>, callback: (data: any)=> void) => {
 
-	const addressList: string[] =[]
-	const payList: string[] = []
-	eachOfLimit(nodeList, 5, (n, index, next) => {
-		CalculateReferrals(n, nodePay[parseInt(index.toString())],[.2, .1, .05], [], privateKey, ReferralsMap, (err, data) => {
-			if (err) {
-				return logger (colors.red(`CalculateReferrals Error!`), err)
-			}
-			// logger(colors.magenta(`CalculateReferrals return address [${n}] result!`), colors.gray(`${data.addressList}`), colors.gray(`${data.payList}`))
-			addressList.push(...data.addressList)
-			payList.push(...data.payList)
-
-			next()
-		})
-	}, err => {
-		eachOfLimit(freeList, 5, (n, index, next) => {
-			CalculateReferrals(n, freePay[parseInt(index.toString())],[.05, .03, .01], [], privateKey, ReferralsMap, (err, data1) => {
-				if (err) {
-					return logger (colors.red(`CalculateReferrals Error!`), err)
-				}
-				addressList.push(...data1.addressList)
-				payList.push(...data1.payList)
-				next()
-			})
-		}, async err => {
-			
-			const ret: sendMiner = {
-				miner: mergeTransfers([...nodeList, ...freeList], [...nodePay, ...freePay]),
-				referrals: mergeTransfers(addressList, payList)
-			}
-			
-			return callback(ret)
-		})
-	})
-}
-
-export const mergeTransfers = (_nodeList: string[], pay: string[]) => {
+export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 	const walletList: string[] = []
 	const payList: string[] = []
 	const beforeLength = _nodeList.length
@@ -1119,7 +1053,7 @@ export const mergeTransfers = (_nodeList: string[], pay: string[]) => {
 				return
 			}
 			walletList.push(item)
-			payList.push(payItem.split('.')[0])
+			payList.push(payItem)
 
 			const nextIndexFun = () => {
 				const nextIndex = _nodeList.findIndex(nn => nn === item)

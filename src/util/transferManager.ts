@@ -1,7 +1,7 @@
 
 import {logger} from './logger'
 import Color from 'colors/safe'
-import {conet_Holesky_rpc, cCNTP_Contract, mergeTransfers} from './util'
+import {conet_Holesky_rpc, cCNTP_Contract, mergeTransfersv1} from './util'
 import {ethers} from 'ethers'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 
@@ -25,7 +25,7 @@ const marginPool = () => {
 	const next = (obj: transferObj) => {
 		const index = transferPool.findIndex(n => n.privateKey === obj.privateKey)
 		if (index < 0) {
-			const margened = mergeTransfers(obj.walletList, obj.payList)
+			const margened = mergeTransfersv1(obj.walletList, obj.payList)
 			obj.walletList = margened.walletList
 			obj.payList = margened.payList
 			return
