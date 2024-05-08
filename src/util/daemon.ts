@@ -210,28 +210,28 @@ const stratFreeMinerReferrals = async (block: number) => {
 			next()
 			
 		}), async err => {
-		logger(Color.magenta(`stratFreeMinerReferrals finished CalculateReferrals addressList [${addressList.length!}]`))
-		const referrals = mergeTransfersv1(addressList, payList)
-		
-		referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
-		referrals.walletList.forEach((n, index) => {
-			if (n.toLowerCase() === '0x1eDF79c89b2f22d24Fc015ADeDe3d66e6A9029a4'.toLowerCase()) {
-				logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
-			}
-		})
+			logger(Color.magenta(`stratFreeMinerReferrals finished CalculateReferrals addressList [${addressList.length!}]`))
+			const referrals = mergeTransfersv1(addressList, payList)
+			
+			// referrals.payList = referrals.payList.map(n => ethers.formatEther(n))
+			referrals.walletList.forEach((n, index) => {
+				if (n.toLowerCase() === '0x1eDF79c89b2f22d24Fc015ADeDe3d66e6A9029a4'.toLowerCase()) {
+					logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
+				}
+			})
 
-		// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
-		// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
-		// })
+			// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
+			// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
+			// })
 
-		transferPool.push({
-			privateKey: masterSetup.GuardianReferralsFree,
-			walletList: referrals.walletList,
-			payList: referrals.payList
+			transferPool.push({
+				privateKey: masterSetup.GuardianReferralsFree,
+				walletList: referrals.walletList,
+				payList: referrals.payList
+			})
+			startTransfer()
+			
 		})
-		startTransfer()
-		
-	})
 	
 }
 
