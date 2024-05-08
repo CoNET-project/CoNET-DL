@@ -18,9 +18,6 @@ const tokensEachEPOCH = 34.72
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const ReferralsMap: Map<string, string> = new Map()
-let sendMineFromMinerPool_processing = false
-
-const sendMinerPool: sendMiner[] = []
 
 const guardianReferrals = async () => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -64,9 +61,18 @@ const guardianReferrals = async () => {
 	// logger(inspect(payReferralsBoost, false, 3, true))
 	// logger(inspect(_referralsAddress, false, 3, true))
 
-	transferCCNTP(masterSetup.GuardianReferrals, _referralsAddress, referralsBoosts.map(n =>n.toFixed(10)), () => {
-		logger(Color.green(`guardianReferrals transferCCNTP success!`))
+	// transferCCNTP(masterSetup.GuardianReferrals, _referralsAddress, referralsBoosts.map(n =>n.toFixed(10)), () => {
+	// 	logger(Color.green(`guardianReferrals transferCCNTP success!`))
+	// })
+
+
+	transferPool.push({
+		privateKey: masterSetup.GuardianReferrals,
+		walletList: _referralsAddress,
+		payList: referralsBoosts.map(n =>n.toFixed(10))
 	})
+	
+	startTransfer()
 }
 
 
@@ -153,9 +159,17 @@ const guardianMining = async () => {
 	// })
 	// logger(inspect(nodesAddress, false,3, true))
 	// logger(inspect(payNodes, false,3, true))
-	transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
-		logger(Color.green(`guardianMining transferCCNTP success!`))
+	
+	// transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
+	// 	logger(Color.green(`guardianMining transferCCNTP success!`))
+	// })
+
+	transferPool.push({
+		privateKey: masterSetup.GuardianAdmin,
+		walletList: nodesAddress,
+		payList: payNodes
 	})
+	startTransfer()
 
 }
 
@@ -204,9 +218,17 @@ const stratFreeMinerReferrals = async (block: number) => {
 				logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
 			}
 		})
-		transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
-			logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
+
+		// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
+		// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
+		// })
+
+		transferPool.push({
+			privateKey: masterSetup.GuardianReferralsFree,
+			walletList: referrals.walletList,
+			payList: referrals.payList
 		})
+		startTransfer()
 		
 	})
 	
@@ -387,6 +409,6 @@ const startTransfer = async () => {
 	})
 }
 
-startTransfer()
+// startTransfer()
 
-// startListeningCONET_Holesky_EPOCH()
+startListeningCONET_Holesky_EPOCH()
