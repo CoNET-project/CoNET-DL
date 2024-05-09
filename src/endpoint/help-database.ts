@@ -964,11 +964,11 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 
 /** */
 
-const test = async() => {
-	const kkk = await getMinerCount()
-	logger (inspect(oldData, false, 3, true))
+// const test = async() => {
+// 	const kkk = await getMinerCount()
+// 	logger (inspect(oldData, false, 3, true))
 
-}
+// }
 
 // const test = async () => {
 	
@@ -1002,4 +1002,4 @@ const testClaimeToekn = async () => {
 }
 
 // testClaimeToekn()
-test()
+// test()
