@@ -138,14 +138,14 @@ class conet_dl_server {
 		
 
 		router.post ('/ipaddress', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
+			const ipaddress = req.ip
 			const attackIpaddress = req.body?.ipaddress
 			logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body.ipaddress = [${ attackIpaddress }]`))
 			if (attackIpaddress && isV4Format(attackIpaddress)) {
 				iptablesIp(attackIpaddress)
 				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }]added [${attackIpaddress}] to iptables!`))
 			} else {
-				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body = [${ inspect(req.body, false, 3, true) }] Error!`))
+				logger (Colors.red(`Router /ipaddress to [${ ipaddress }] red.body = [${ inspect(req.body, false, 3, true) }] Error!`))
 				return res.status (404).end()
 			}
 			

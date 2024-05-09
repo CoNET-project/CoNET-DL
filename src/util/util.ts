@@ -630,7 +630,7 @@ export const addAttackToCluster = async (ipaddress: string) => {
 		}
 	}
 	const postData = {
-		attackIpaddress: ipaddress
+		ipaddress: ipaddress
 	}
 
 	const req = await request (option, res => {
