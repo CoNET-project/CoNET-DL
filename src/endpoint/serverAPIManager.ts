@@ -116,22 +116,6 @@ class conet_dl_server {
 
 	private initSetupData = async () => {
 		
-		this.initData = await getSetup ( true )
-		if ( !this.initData ) {
-			throw new Error (`getSetup had null ERROR!`)
-		}
-
-		this.initData.keyObj = await loadWalletAddress (this.initData.keychain )
-
-		await makePgpKeyObj ( this.initData.pgpKeyObj )
-
-		this.appsPath = this.initData.setupPath
-
-        logger (Colors.blue(`start local server!`))
-		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
-		this.serverID = getServerIPV4Address(false)[0]
-		logger(Colors.blue(`serverID = [${this.serverID}]`))
-		this.s3Pass = await s3fsPasswd()
 		this.startServer()
 
 	}
