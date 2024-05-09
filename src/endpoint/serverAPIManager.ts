@@ -198,7 +198,7 @@ class conet_dl_server {
 				iptablesIp(attackIpaddress)
 				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }]added [${attackIpaddress}] to iptables!`))
 			} else {
-				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body.ipaddress = [${ attackIpaddress }] Error!`))
+				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body = [${ inspect(req.body, false, 3, true) }] Error!`))
 				return res.status (404).end()
 			}
 			
