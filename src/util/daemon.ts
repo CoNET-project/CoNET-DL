@@ -143,7 +143,7 @@ const guardianMining = async () => {
 	payNodes.forEach(n => total += parseFloat(n))
 	// const kkkk = payNodes.sort((a,b) => parseFloat(b) - parseFloat(a))
 	// const kkkkBoost = nodesBoosts.sort((a, b) => b-a)
-	logger(Color.magenta(`total pay ${total} nodesAddress.length [${nodesAddress.length}] payNodes.legth [${payNodes.length}] `))
+	logger(Color.grey(`total pay ${total} nodesAddress.length [${nodesAddress.length}] payNodes.legth [${payNodes.length}] `))
 	// logger(inspect(nodesAddress, false, 3, true))
 	// logger(`Max pay [${kkkk[0]}] minPay [${kkkk[kkkk.length - 1]}] MacBoost = [${kkkkBoost[0]}] minBoost =[${kkkkBoost[kkkkBoost.length - 1]}] `)
 	const yyy: Map<number, number> = new Map()
@@ -198,7 +198,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 	const addressList: string[] =[]
 	const payList: string[] = []
 
-	logger(Color.grey(`daemon EPOCH ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
+	logger(Color.grey(`daemon EPOCH ${transferEposh+1} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
 
 	eachOfLimit(minerWallets, 5, (n, index, next) => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
 			if (err) {
@@ -210,7 +210,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			next()
 			
 		}), async err => {
-			logger(Color.magenta(`stratFreeMinerReferrals finished CalculateReferrals addressList [${addressList.length!}]`))
+			logger(Color.blue(`stratFreeMinerReferrals [${transferEposh+1}]finished CalculateReferrals addressList [${addressList.length!}]`))
 			const referrals = mergeTransfersv1(addressList, payList)
 			
 			referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
