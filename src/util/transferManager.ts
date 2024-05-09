@@ -46,7 +46,6 @@ const marginPool = () => {
 				transferPool.push (n)
 			})
 			marginPooling = false
-			startTransfer ()
 			return 
 		}
 		next(obj)
