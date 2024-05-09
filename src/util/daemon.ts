@@ -20,6 +20,13 @@ const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const ReferralsMap: Map<string, string> = new Map()
 
+
+interface leaderboard {
+	wallet: string
+	referrals: number
+	cntp: number
+}
+
 const guardianReferrals = async (block: number) => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
@@ -72,6 +79,8 @@ const guardianReferrals = async (block: number) => {
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
 	})
+
+	
 	storeLeaderboard(block.toString(), '', '', '', '')
 	startTransfer()
 }
@@ -224,7 +233,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 			// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 			// })
-			storeLeaderboard(block.toString(), '', '', '', '')
+			storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
 			transferPool.push({
 				privateKey: masterSetup.GuardianReferralsFree,
 				walletList: referrals.walletList,
