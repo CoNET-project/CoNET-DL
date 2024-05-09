@@ -6,7 +6,7 @@ import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
 import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
-import {getMinerCount} from '../endpoint/help-database'
+import {getMinerCount, storeLeaderboard} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -20,7 +20,7 @@ const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const ReferralsMap: Map<string, string> = new Map()
 
-const guardianReferrals = async () => {
+const guardianReferrals = async (block: number) => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
 	let nodes
@@ -72,7 +72,7 @@ const guardianReferrals = async () => {
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
 	})
-	
+	storeLeaderboard(block.toString(), '', '', '', '')
 	startTransfer()
 }
 
@@ -95,7 +95,7 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 }
 
 
-const guardianMining = async () => {
+const guardianMining = async (block: number) => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
 	let nodes
@@ -165,13 +165,14 @@ const guardianMining = async () => {
 	// 	logger(Color.green(`guardianMining transferCCNTP success!`))
 	// })
 	logger(Color.blue(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
+	storeLeaderboard(block.toString(), '', '', '', '')
 	transferPool.push({
 		privateKey: masterSetup.GuardianAdmin,
 		walletList: nodesAddress,
 		payList: payNodes
 	})
 	startTransfer()
-
+	
 }
 
 const stratFreeMinerReferrals = async (block: number) => {
@@ -223,7 +224,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 			// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 			// })
-
+			storeLeaderboard(block.toString(), '', '', '', '')
 			transferPool.push({
 				privateKey: masterSetup.GuardianReferralsFree,
 				walletList: referrals.walletList,
@@ -297,10 +298,11 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const startDaemonProcess = async (block: number) => {
-	logger('')
+	console.log('')
 	stratFreeMinerReferrals(block)
-	guardianMining()
-	guardianReferrals()
+	guardianMining(block)
+	guardianReferrals(block)
+	
 }
 
 startListeningCONET_Holesky_EPOCH()

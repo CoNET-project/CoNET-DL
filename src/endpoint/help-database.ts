@@ -957,18 +957,43 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 		return resolve (false)
 	}
 })
-	
 
+export const storeLeaderboard = async (epoch: string, guardians_referrals: string, guardians_cntp: string, free_referrals: string, free_cntp: string) => {
+	const cassClient = new Client (option)
+	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, free_referrals, free_cntp)  VALUES (` +
+		`'conet', '${epoch}'`
+		try {
+			cassClient.execute (cmd1)
+			await cassClient.shutdown()
+			return true
+		} catch(ex) {
+			await cassClient.shutdown()
+			return false
+		}
+}
+
+export const selectLeaderboard = async () => {
+	const cmd1 = `SELECT * from conet_leaderboard LIMIT 1`
+	const cassClient = new Client (option)
+	try {
+		const kk = await cassClient.execute (cmd1)
+		await cassClient.shutdown()
+		return kk.rows
+	} catch(ex) {
+		await cassClient.shutdown()
+		
+	}
+}
 
 
 
 /** */
 
-// const test = async() => {
-// 	const kkk = await getMinerCount()
-// 	logger (inspect(oldData, false, 3, true))
+const test = async() => {
+	const kkk = await selectLeaderboard()
+	logger (inspect(kkk, false, 3, true))
 
-// }
+}
 
 // const test = async () => {
 	
@@ -1001,5 +1026,6 @@ const testClaimeToekn = async () => {
 
 }
 
+
 // testClaimeToekn()
-// test()
+test()
