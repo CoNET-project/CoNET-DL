@@ -125,24 +125,11 @@ class conet_dl_server {
     }
 
 	private startServer = async () => {
-		const staticFolder = join ( this.appsPath, 'static' )
-		const launcherFolder = join ( this.appsPath, 'launcher' )
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
-		app.use ( Express.static ( staticFolder ))
-        app.use ( Express.static ( launcherFolder ))
-		app.use (async (req, res, next) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
-
-		})
 
 		app.use( '/api', router )
 
