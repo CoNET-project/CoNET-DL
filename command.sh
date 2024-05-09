@@ -4,3 +4,4 @@ curl -v -d '{"key1":"value1", "key2":"value2"}' -H "Content-Type: application/js
 
 curl  -H "Content-Type: application/json" "https://scan.conet.network/api?module=account&action=tokenbalance&contractaddress=0x0f43685B2cB08b9FB8Ca1D981fF078C22Fec84c5&address=0x3A5BC5DD073C8ED4BEC9AD66497FBBD9FC588A4A"
 
+iptables -I INPUT -s 175.8.252.12 -j DROP
