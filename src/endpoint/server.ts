@@ -191,14 +191,12 @@ class conet_dl_server {
 				
 				if (/^post$/i.test(req.method)) {
 					
-					return Express.json({limit: '25mb'})(req, res, err => {
+					return Express.json ({limit: '25mb'}) (req, res, err => {
 						if (err) {
 							
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
-							return getIpAttack(ipaddress, this.serverID, (err) => {
-								logger(Colors.red(`Express.json return Error! STOP connecting ${ipaddress} getIpAttack return err ${err}`))
-							})
+							
 							
 						}
 						return next()

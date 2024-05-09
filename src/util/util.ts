@@ -3,7 +3,7 @@ import type { RequestOptions } from 'node:http'
 import { stat, mkdir, writeFile, readFile, link } from 'node:fs'
 import { homedir, networkInterfaces } from 'node:os'
 import { join } from 'node:path'
-import { get } from 'node:http'
+import { get, request } from 'node:http'
 import {reverse} from 'node:dns'
 import { request as requestHttps, get as httpsGet } from 'node:https'
 import Cluster from 'node:cluster'
@@ -617,6 +617,38 @@ export const regiestCloudFlare = (ipAddr: string, gpgKeyID: string, setup: ICoNE
 		logger ( colors.blue(`${ gpgKeyID }.${setup.cloudflare.domainname} `), colors.grey(` => ${ipAddr} CloudFlare success!`))
 		return resolve (true)
 	})
+}
+
+export const addAttackToCluster = async (ipaddress: string) => {
+	const option: RequestOptions = {
+		hostname: '74.208.238.95',
+		path: `/api/ipaddress`,
+		port: 8000,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	const postData = {
+		attackIpaddress: ipaddress
+	}
+
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+			logger(colors.blue(`addAttackToCluster success! data = [${data}]`))
+		})
+	})
+
+	req.once('error', (e) => {
+		logger(colors.red(`addAttackToCluster request on Error! ${e.message}`))
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
 }
 
 export const startPackageSelfVersionCheckAndUpgrade = async (packageName: string ) => {
@@ -2596,6 +2628,7 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 
 
 const test = async () => {
+	await addAttackToCluster('119.188.246.221')
 	// const kkk = await burnFrom('cBNBUSDT', '0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF', '1375')
 	// logger(inspect(kkk, false, 3, true))
 }
@@ -2634,6 +2667,6 @@ const test = async () => {
 // test()
 
 
-// test()
+test()
 //listenEvent()
 /** */
