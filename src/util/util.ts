@@ -623,7 +623,7 @@ export const addAttackToCluster = async (ipaddress: string) => {
 	const option: RequestOptions = {
 		hostname: '74.208.238.95',
 		path: `/api/ipaddress`,
-		port: 8000,
+		port: 4100,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -2667,6 +2667,6 @@ const test = async () => {
 // test()
 
 
-// test()
+test()
 //listenEvent()
 /** */

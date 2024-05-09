@@ -36,52 +36,9 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
-const FaucetCount = '0.01'
-
-
-// const getRedirect = (req: Request, res: Response ) => {
-// 	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
-// 	switch (worker) {
-// 		case 4:
-// 		case 1: {
-// 			const localtion = `https://conettech.ca`
-// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-// 		case 2: {
-// 			const localtion = `https://kloak.io`
-// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-// 		case 3: {
-// 			const localtion = `https://kloak.app`
-// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-		
-// 		default : {
-// 			const localtion = `https://conettech.ca`
-// 			logger (Colors.red(`goto default [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-// 	}
-// }
 
 
 
-
-const sendDisConnecting = (walletAddress: string) => {
-	if ( process.connected && typeof process.send === 'function') {
-		const cmd: clusterMessage = {
-			cmd:'livenessLoseConnecting',
-			data: [walletAddress],
-			uuid: '',
-			err: null
-		}
-		
-		return process.send (cmd)
-	}
-}
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -105,14 +62,6 @@ const iptablesIp = (ipaddress: string) => {
 class conet_dl_server {
 
 	private PORT = 4100
-	private appsPath = ''
-	private initData: ICoNET_NodeSetup|null = null
-	private debug = false
-	private serverID = ''
-
-	private si_pool: nodeType[] = []
-	private masterBalance: CNTPMasterBalance|null = null
-	private s3Pass: s3pass|null = null
 
 	private initSetupData = async () => {
 		
@@ -129,13 +78,11 @@ class conet_dl_server {
 		const router = Router ()
 		app.disable('x-powered-by')
 		const Cors = require('cors')
+
 		app.use( Cors ())
+		app.use( Express.json())
 		app.use (async (req, res, next) => {
 		
-
-
-			
-				
 			
 			if (/^post$/i.test(req.method)) {
 				
