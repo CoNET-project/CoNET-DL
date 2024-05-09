@@ -853,7 +853,7 @@ const transferMiners = async () => {
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin,
 				walletList: paymentWallet,
-				payList: paymentWallet.map(n => minerRate.toFixed(8))
+				payList: paymentWallet.map(n => minerRate.toFixed(10))
 			})
 			await startTransfer()
 		}
@@ -965,12 +965,7 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 /** */
 
 const test = async() => {
-	const cmd = `Select * from conet_si_nodes WHERE nft_tokenid = '${ '98dccf558ff7b4b0a17056cc6484e1dd03d2e414efe29d2791bec4324caa4283' }'`
-	const cassClient = new Client (option)
-	await cassClient.connect ()
-	const res = await cassClient.execute (cmd)
-	const oldData = res.rows[0]
-	await cassClient.shutdown ()
+	const kkk = await getMinerCount()
 	logger (inspect(oldData, false, 3, true))
 
 }
@@ -1007,4 +1002,4 @@ const testClaimeToekn = async () => {
 }
 
 // testClaimeToekn()
-// test()
+test()

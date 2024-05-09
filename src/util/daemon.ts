@@ -198,7 +198,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 	const addressList: string[] =[]
 	const payList: string[] = []
 
-	logger(Color.grey(`daemon EPOCH ${block} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
+	logger(Color.grey(`daemon EPOCH ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
 
 	eachOfLimit(minerWallets, 5, (n, index, next) => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
 			if (err) {
