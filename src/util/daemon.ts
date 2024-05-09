@@ -230,9 +230,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 				payList: referrals.payList
 			})
 			startTransfer()
-
-
-			
+			transferEposh++
 			
 		})
 	
@@ -299,6 +297,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const startDaemonProcess = async (block: number) => {
+	logger('')
 	stratFreeMinerReferrals(block)
 	guardianMining()
 	guardianReferrals()

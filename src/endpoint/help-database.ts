@@ -685,7 +685,7 @@ export const getMinerCount = async (_epoch: number) => {
 	}
 
 	if (counts.length < clusterNodes) {
-		logger(Color.magenta(`getMinerCount getEpochNodeMiners data.length [${counts.length}] < clusterNodes [${clusterNodes}]`))
+		logger(Color.magenta(`getMinerCount getEpochNodeMiners [${_epoch}] data.length [${counts.length}] < clusterNodes [${clusterNodes}]`))
 		return null
 	}
 	counts.forEach(n => {
