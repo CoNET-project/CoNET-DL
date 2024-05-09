@@ -2,7 +2,7 @@
  * 			
  * */
 import Express, { Router } from 'express'
-
+import {isV4Format} from 'ip'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
@@ -198,12 +198,16 @@ class conet_dl_server {
 		router.post ('/ipaddress', async ( req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			const attackIpaddress = req.body.ipaddress
-			logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body.ipaddress = [${attackIpaddress}]`))
-			if (attackIpaddress) {
+			
+			if (attackIpaddress && isV4Format(attackIpaddress)) {
 				iptablesIp(attackIpaddress)
+				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }]added [${attackIpaddress}] to iptables!`))
+			} else {
+				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body.ipaddress = [${ attackIpaddress }] Error!`))
+				return res.status (404).end()
 			}
 			
-			res.json ({}).end()
+			res.status(200).json ({}).end()
 
 		})
 
