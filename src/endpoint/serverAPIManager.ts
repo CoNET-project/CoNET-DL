@@ -104,7 +104,7 @@ const iptablesIp = (ipaddress: string) => {
 
 class conet_dl_server {
 
-	private PORT = 8000
+	private PORT = 4100
 	private appsPath = ''
 	private initData: ICoNET_NodeSetup|null = null
 	private debug = false

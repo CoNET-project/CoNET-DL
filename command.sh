@@ -6,4 +6,4 @@ curl  -H "Content-Type: application/json" "https://scan.conet.network/api?module
 
 iptables -I INPUT -s 175.8.252.12 -j DROP
 
-curl -v -d '{"attackIpaddress":"119.188.246.221"}' -H "Content-Type: application/json" -X POST "http://74.208.238.95:8000/api/ipaddress"
+curl -v -d '{"attackIpaddress":"119.188.246.221"}' -H "Content-Type: application/json" -X POST "http://127.0.0.1:8000/api/ipaddress"
