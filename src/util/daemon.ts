@@ -6,7 +6,7 @@ import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
 import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
-import {getMinerCount, storeLeaderboard} from '../endpoint/help-database'
+import {getMinerCount} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -81,7 +81,7 @@ const guardianReferrals = async (block: number) => {
 	})
 
 	
-	storeLeaderboard(block.toString(), '', '', '', '')
+	//storeLeaderboard(block.toString(), '', '', '', '')
 	startTransfer()
 }
 
@@ -174,7 +174,7 @@ const guardianMining = async (block: number) => {
 	// 	logger(Color.green(`guardianMining transferCCNTP success!`))
 	// })
 	logger(Color.blue(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
-	storeLeaderboard(block.toString(), '', '', '', '')
+	//storeLeaderboard(block.toString(), '', '', '', '')
 	transferPool.push({
 		privateKey: masterSetup.GuardianAdmin,
 		walletList: nodesAddress,
@@ -233,7 +233,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 			// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 			// })
-			storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
+			//storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
 			transferPool.push({
 				privateKey: masterSetup.GuardianReferralsFree,
 				walletList: referrals.walletList,
