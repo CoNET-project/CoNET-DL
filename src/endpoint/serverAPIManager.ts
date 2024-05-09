@@ -130,7 +130,31 @@ class conet_dl_server {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
+		app.use (async (req, res, next) => {
+		
 
+
+			
+				
+			
+			if (/^post$/i.test(req.method)) {
+				
+				return Express.json ({limit: '1m'}) (req, res, err => {
+					if (err) {
+					
+						res.sendStatus(400).end()
+						res.socket?.end().destroy()
+						
+					}
+					return next()
+				})
+			}
+			
+			return next()
+			
+
+			
+		})
 		app.use( '/api', router )
 
 		app.once ( 'error', ( err: any ) => {
