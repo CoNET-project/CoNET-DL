@@ -168,7 +168,7 @@ class conet_dl_server {
 
 		router.post ('/ipaddress', async ( req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			const attackIpaddress = req.body.ipaddress
+			const attackIpaddress = req.body?.ipaddress
 			logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body.ipaddress = [${ attackIpaddress }]`))
 			if (attackIpaddress && isV4Format(attackIpaddress)) {
 				iptablesIp(attackIpaddress)
