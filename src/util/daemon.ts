@@ -292,10 +292,16 @@ const getFreeReferralsData = async (Referrals: string[]) => {
 
 	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 	const contractCNTP = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-	mapLimit(tableNodes, 5, async (n, next) => {
+	return mapLimit(tableNodes, 20, async (n, next) => {
 		n.referrals = (await contract.getReferees (n.wallet)).length.toString()
+		n.cntp = ethers.formatEther(await contractCNTP.balanceOf (n.wallet))
 	}, () => {
-		logger(inspect(tableNodes, false, 3, true))
+		const tableCNTP = tableNodes.map(n => n)
+		const tableReferrals = tableNodes.map(n => n)
+		tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
+		tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
+		logger(inspect(tableCNTP, false, 3, true))
+		logger(inspect(tableReferrals, false, 3, true))
 	})
 }
 
