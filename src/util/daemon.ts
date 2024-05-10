@@ -233,11 +233,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 		const referrals = mergeTransfersv1(addressList, payList)
 		
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
-		referrals.walletList.forEach((n, index) => {
-			if (n.toLowerCase() === '0x1eDF79c89b2f22d24Fc015ADeDe3d66e6A9029a4'.toLowerCase()) {
-				logger(Color.green(`wallet [${n}] <== pay ${referrals.payList[index]}`))
-			}
-		})
+		
 		logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
 		// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
 		// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
@@ -250,18 +246,17 @@ const stratFreeMinerReferrals = async (block: number) => {
 		// })
 		// startTransfer()
 
-
-
 		transferEposh++
-		
+		getFreeReferralsData (referrals.walletList)
 	})
 	
 }
 
 const getFreeReferralsData = async (Referrals: string[]) => {
 	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-	eachOfLimit(Referrals, 5, (n, index, next) => {
-		contract.
+	eachOfLimit(Referrals, 5, async (n, index, next) => {
+		const kk = await contract.getReferees (n)
+		logger(inspect(kk, false, 3, true))
 	})
 }
 
