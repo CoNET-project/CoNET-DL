@@ -46,7 +46,7 @@
 		"socks"
 	],
 	"dependencies": {
-		"async": "^3.2.5",
+		"async": "3.2.5",
 		"cassandra-driver": "^4.7.2",
 		"colors": "1.4.0",
 		"cors": "^2.8.5",
