@@ -74,12 +74,12 @@ const guardianReferrals = async (block: number) => {
 	// })
 
 
-	transferPool.push({
-		privateKey: masterSetup.GuardianReferrals,
-		walletList: _referralsAddress,
-		payList: referralsBoosts.map(n =>n.toFixed(10))
-	})
-	startTransfer()
+	// transferPool.push({
+	// 	privateKey: masterSetup.GuardianReferrals,
+	// 	walletList: _referralsAddress,
+	// 	payList: referralsBoosts.map(n =>n.toFixed(10))
+	// })
+	// startTransfer()
 
 	// const kk = {
 	// 	wallet: _referralsAddress,
@@ -90,7 +90,7 @@ const guardianReferrals = async (block: number) => {
 	
 
 	// logger(inspect(_referralsNodes, false, 3, true))
-	//getNodesReferralsData(_referralsAddress,_referralsNodes)
+	getNodesReferralsData(_referralsAddress,_referralsNodes)
 	
 	// storeLeaderboard(block.toString(), '', '', '', '')
 	
@@ -264,13 +264,16 @@ const stratFreeMinerReferrals = async (block: number) => {
 		// })
 		//storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
 
-		transferPool.push({
-			privateKey: masterSetup.GuardianReferralsFree,
-			walletList: referrals.walletList,
-			payList: referrals.payList
-		})
-		startTransfer()
-		// getFreeReferralsData (referrals.walletList)
+		// transferPool.push({
+		// 	privateKey: masterSetup.GuardianReferralsFree,
+		// 	walletList: referrals.walletList,
+		// 	payList: referrals.payList
+		// })
+		// startTransfer()
+
+
+
+		getFreeReferralsData (referrals.walletList)
 		transferEposh++
 		
 	})
@@ -360,7 +363,7 @@ const startDaemonProcess = async (block: number) => {
 	console.log('')
 
 	stratFreeMinerReferrals(block)
-	guardianMining(block)
+	// guardianMining(block)
 	guardianReferrals(block)
 	
 }
