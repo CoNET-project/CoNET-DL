@@ -355,12 +355,8 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 		return startDaemonProcess(parseInt(block.toString()))
 	})
 }
-let kk = false
+
 const startDaemonProcess = async (block: number) => {
-	if (kk) {
-		return
-	}
-	kk = true
 	console.log('')
 
 	stratFreeMinerReferrals(block)
