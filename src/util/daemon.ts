@@ -23,8 +23,8 @@ const ReferralsMap: Map<string, string> = new Map()
 
 interface leaderboard {
 	wallet: string
-	referrals: number
-	cntp: number
+	referrals: string
+	cntp: string
 }
 
 const guardianReferrals = async (block: number) => {
@@ -88,9 +88,30 @@ const guardianReferrals = async (block: number) => {
 	// }
 
 	logger(inspect(_referralsNodes, false, 3, true))
+	getNodesReferralsData(_referralsAddress,_referralsNodes)
 	
 	// storeLeaderboard(block.toString(), '', '', '', '')
 	// startTransfer()
+}
+
+const getNodesReferralsData = (wallets: string[], nodes: string[]) => {
+	const tableNodes = wallets.map ((n, index) => {
+		const ret: leaderboard = {
+			wallet: n,
+			cntp: '0',
+			referrals: nodes[index]
+		}
+		return ret
+	})
+
+	eachOfLimit(tableNodes, 5, async (n, index, next) => {
+		const contract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+		n.cntp = ethers.formatEther(await contract.balanceOf (n.wallet))
+		next()
+	}, () => {
+		logger(inspect(tableNodes, false, 3, true))
+	})
+	
 }
 
 
@@ -192,7 +213,7 @@ const guardianMining = async (block: number) => {
 	
 }
 
-let freeRe
+
 const stratFreeMinerReferrals = async (block: number) => {
 	
 	const data = await getMinerCount (transferEposh+1)
@@ -253,10 +274,23 @@ const stratFreeMinerReferrals = async (block: number) => {
 }
 
 const getFreeReferralsData = async (Referrals: string[]) => {
+	const tableNodes = Referrals.map (n => {
+		const ret: leaderboard = {
+			wallet: n,
+			cntp: '0',
+			referrals: '0'
+		}
+		return ret
+	})
+
 	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-	eachOfLimit(Referrals, 5, async (n, index, next) => {
-		const kk = await contract.getReferees (n)
-		logger(inspect(kk, false, 3, true))
+	const contractCNTP = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+	eachOfLimit(tableNodes, 5, async (n, index, next) => {
+		n.referrals = (await contract.getReferees (n.wallet)).length.toString()
+		n.cntp = ethers.formatEther(await contractCNTP.balanceOf (n.wallet))
+		next()
+	}, () => {
+		logger(inspect(tableNodes, false, 3, true))
 	})
 }
 
