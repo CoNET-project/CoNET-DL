@@ -74,11 +74,11 @@ const guardianReferrals = async (block: number) => {
 	// })
 
 
-	transferPool.push({
-		privateKey: masterSetup.GuardianReferrals,
-		walletList: _referralsAddress,
-		payList: referralsBoosts.map(n =>n.toFixed(10))
-	})
+	// transferPool.push({
+	// 	privateKey: masterSetup.GuardianReferrals,
+	// 	walletList: _referralsAddress,
+	// 	payList: referralsBoosts.map(n =>n.toFixed(10))
+	// })
 
 	// const kk = {
 	// 	wallet: _referralsAddress,
@@ -88,10 +88,10 @@ const guardianReferrals = async (block: number) => {
 	// }
 
 	// logger(inspect(_referralsNodes, false, 3, true))
-	// getNodesReferralsData(_referralsAddress,_referralsNodes)
+	getNodesReferralsData(_referralsAddress,_referralsNodes)
 	
 	// storeLeaderboard(block.toString(), '', '', '', '')
-	startTransfer()
+	// startTransfer()
 }
 
 const getNodesReferralsData = (wallets: string[], nodes: string[]) => {
@@ -261,15 +261,16 @@ const stratFreeMinerReferrals = async (block: number) => {
 		// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
 		// })
 		//storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
-		transferPool.push({
-			privateKey: masterSetup.GuardianReferralsFree,
-			walletList: referrals.walletList,
-			payList: referrals.payList
-		})
-		startTransfer()
 
+		// transferPool.push({
+		// 	privateKey: masterSetup.GuardianReferralsFree,
+		// 	walletList: referrals.walletList,
+		// 	payList: referrals.payList
+		// })
+		// startTransfer()
+		getFreeReferralsData (referrals.walletList)
 		transferEposh++
-		//getFreeReferralsData (referrals.walletList)
+		
 	})
 	
 }
@@ -358,7 +359,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 const startDaemonProcess = async (block: number) => {
 	console.log('')
 	stratFreeMinerReferrals(block)
-	guardianMining(block)
+	// guardianMining(block)
 	guardianReferrals(block)
 	
 }
