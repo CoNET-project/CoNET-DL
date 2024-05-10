@@ -639,12 +639,12 @@ export const addAttackToCluster = async (ipaddress: string) => {
 			data += _data
 		})
 		res.once('end', () => {
-			logger(colors.blue(`addAttackToCluster success! data = [${data}]`))
+			logger(colors.blue(`addAttackToCluster [${ipaddress}] success! data = [${data}]`))
 		})
 	})
 
 	req.once('error', (e) => {
-		logger(colors.red(`addAttackToCluster request on Error! ${e.message}`))
+		logger(colors.red(`addAttackToCluster r[${ipaddress}] equest on Error! ${e.message}`))
 	})
 
 	req.write(JSON.stringify(postData))
@@ -2628,7 +2628,7 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 
 
 const test = async () => {
-	await addAttackToCluster('119.188.246.221')
+	 addAttackToCluster('119.188.246.221')
 	// const kkk = await burnFrom('cBNBUSDT', '0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF', '1375')
 	// logger(inspect(kkk, false, 3, true))
 }
@@ -2667,6 +2667,6 @@ const test = async () => {
 // test()
 
 
-test()
+// test()
 //listenEvent()
 /** */

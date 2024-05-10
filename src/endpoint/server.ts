@@ -18,7 +18,7 @@ import {readFileSync} from 'node:fs'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
 	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
 	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName,
-	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc
+	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, addAttackToCluster
 } from '../util/util'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -191,12 +191,12 @@ class conet_dl_server {
 				
 				if (/^post$/i.test(req.method)) {
 					
-					return Express.json ({limit: '25mb'}) (req, res, err => {
+					return Express.json ({limit: '25mb'}) (req, res, async err => {
 						if (err) {
 							
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
-							
+							return await addAttackToCluster (ipaddress)
 							
 						}
 						return next()
