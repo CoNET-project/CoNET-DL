@@ -24,7 +24,7 @@ const ReferralsMap: Map<string, string> = new Map()
 interface leaderboard {
 	wallet: string
 	referrals: string
-	cntp: string
+	cntpRate: string
 }
 
 const guardianReferrals = async (block: number) => {
@@ -100,7 +100,7 @@ const getNodesReferralsData = (wallets: string[], nodes: string[], payList: stri
 	const tableNodes = wallets.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
-			cntp: (parseFloat(payList[index])/12).toString(),
+			cntpRate: (parseFloat(payList[index])/12).toString(),
 			referrals: nodes[index]
 		}
 		return ret
@@ -108,7 +108,7 @@ const getNodesReferralsData = (wallets: string[], nodes: string[], payList: stri
 	
 	const tableCNTP = tableNodes.map(n => n)
 	const tableReferrals = tableNodes.map(n => n)
-	tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
+	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
@@ -284,7 +284,7 @@ const getFreeReferralsData = async (Referrals: string[], payList: string[]) => {
 	const tableNodes = Referrals.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
-			cntp: (parseFloat(payList[index])/12).toString(),
+			cntpRate: (parseFloat(payList[index])/12).toString(),
 			referrals: '0'
 		}
 		return ret
@@ -296,7 +296,7 @@ const getFreeReferralsData = async (Referrals: string[], payList: string[]) => {
 	}, () => {
 		const tableCNTP = tableNodes.map(n => n)
 		const tableReferrals = tableNodes.map(n => n)
-		tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
+		tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
 		tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 		const finalCNTP = tableCNTP.slice(0, 10)
 		const finalReferrals = tableReferrals.slice(0, 10)
