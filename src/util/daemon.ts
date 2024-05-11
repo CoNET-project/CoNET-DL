@@ -110,10 +110,14 @@ const getNodesReferralsData = (wallets: string[], nodes: string[]) => {
 
 	
 	mapLimit(tableNodes, 5, async (n, next) => {
-		
 		n.cntp = ethers.formatEther(await contract.balanceOf (n.wallet))
 	}, err => {
-		logger(inspect(tableNodes, false, 3, true))
+		const tableCNTP = tableNodes.map(n => n)
+		const tableReferrals = tableNodes.map(n => n)
+		tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
+		tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
+		logger(inspect(tableCNTP, false, 3, true))
+		logger(inspect(tableReferrals, false, 3, true))
 	})
 	
 }
