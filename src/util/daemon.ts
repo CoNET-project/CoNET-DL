@@ -90,35 +90,31 @@ const guardianReferrals = async (block: number) => {
 	
 
 	// logger(inspect(_referralsNodes, false, 3, true))
-	getNodesReferralsData(_referralsAddress,_referralsNodes)
+	getNodesReferralsData(_referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
 	
 	// storeLeaderboard(block.toString(), '', '', '', '')
 	
 }
 
-const getNodesReferralsData = (wallets: string[], nodes: string[]) => {
+const getNodesReferralsData = (wallets: string[], nodes: string[], payList: string[]) => {
 	const tableNodes = wallets.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
-			cntp: '0',
+			cntp: (parseFloat(payList[index])/12).toString(),
 			referrals: nodes[index]
 		}
 		return ret
 	})
-	const contract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-
-
 	
-	mapLimit(tableNodes, 5, async (n, next) => {
-		n.cntp = ethers.formatEther(await contract.balanceOf (n.wallet))
-	}, err => {
-		const tableCNTP = tableNodes.map(n => n)
-		const tableReferrals = tableNodes.map(n => n)
-		tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
-		tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-		logger(inspect(tableCNTP, false, 3, true))
-		logger(inspect(tableReferrals, false, 3, true))
-	})
+	const tableCNTP = tableNodes.map(n => n)
+	const tableReferrals = tableNodes.map(n => n)
+	tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
+	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
+	const finalCNTP = tableCNTP.slice(0, 10)
+	const finalReferrals = tableReferrals.slice(0, 10)
+	logger(inspect(finalCNTP, false, 3, true))
+	logger(inspect(finalReferrals, false, 3, true))
+	
 	
 }
 
@@ -284,28 +280,28 @@ const stratFreeMinerReferrals = async (block: number) => {
 	
 }
 
-const getFreeReferralsData = async (Referrals: string[]) => {
-	const tableNodes = Referrals.map (n => {
+const getFreeReferralsData = async (Referrals: string[], payList: string[]) => {
+	const tableNodes = Referrals.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
-			cntp: '0',
+			cntp: (parseFloat(payList[index])/12).toString(),
 			referrals: '0'
 		}
 		return ret
 	})
 
 	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-	const contractCNTP = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 	return mapLimit(tableNodes, 20, async (n, next) => {
 		n.referrals = (await contract.getReferees (n.wallet)).length.toString()
-		n.cntp = ethers.formatEther(await contractCNTP.balanceOf (n.wallet))
 	}, () => {
 		const tableCNTP = tableNodes.map(n => n)
 		const tableReferrals = tableNodes.map(n => n)
 		tableCNTP.sort((a, b) => parseFloat(b.cntp) - parseFloat(a.cntp))
 		tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-		logger(inspect(tableCNTP, false, 3, true))
-		logger(inspect(tableReferrals, false, 3, true))
+		const finalCNTP = tableCNTP.slice(0, 10)
+		const finalReferrals = tableReferrals.slice(0, 10)
+		logger(inspect(finalCNTP, false, 3, true))
+		logger(inspect(finalReferrals, false, 3, true))
 	})
 }
 
