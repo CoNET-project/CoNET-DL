@@ -273,7 +273,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 
 
-		getFreeReferralsData (referrals.walletList)
+		getFreeReferralsData (referrals.walletList, referrals.payList)
 		transferEposh++
 		
 	})
