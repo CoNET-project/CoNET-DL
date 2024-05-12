@@ -961,7 +961,7 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 export const storeLeaderboardGuardians_referrals = async (epoch: string, guardians_referrals ='', guardians_cntp='') => {
 	const cassClient = new Client (option)
 
-	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, free_referrals, free_cntp)  VALUES (` +
+	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp)  VALUES (` +
 		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}')`
 		try {
 			cassClient.execute (cmd1)
