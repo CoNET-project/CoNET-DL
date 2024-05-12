@@ -16,11 +16,13 @@ import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
 	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
-	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName, addAttackToCluster, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
+	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 
 import {ethers} from 'ethers'
 import { exec } from 'node:child_process'
+import type { RequestOptions } from 'node:http'
+import {request} from 'node:https'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -80,16 +82,38 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	return ipaddress
 }
 
-
-const iptablesIp = (ipaddress: string) => {
-	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
-	exec (cmd, err => {
-		if (err) {
-			return logger(Colors.red(`iptablesIp Error ${err.message}`))
+const addAttackToCluster = async (ipaddress: string) => {
+	const option: RequestOptions = {
+		hostname: 'apiv2.conet.network',
+		path: `/api/ipaddress`,
+		port: 4100,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
 		}
-		return logger(Colors.red(`iptablesIp Added ${ipaddress} success!`))
+	}
+	const postData = {
+		ipaddress: ipaddress
+	}
+
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+			logger(Colors.blue(`addAttackToCluster [${ipaddress}] success! data = [${data}]`))
+		})
 	})
+
+	req.once('error', (e) => {
+		logger(Colors.red(`addAttackToCluster r[${ipaddress}] equest on Error! ${e.message}`))
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
 }
+
 
 class conet_dl_server {
 
@@ -157,7 +181,7 @@ class conet_dl_server {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
 					res.status(404).end()
 					res.socket?.end().destroy()
-					return iptablesIp (ipaddress)
+					return addAttackToCluster (ipaddress)
 				}
 				
 				if (/^post$/i.test(req.method)) {
@@ -167,7 +191,7 @@ class conet_dl_server {
 							
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
-							return iptablesIp (ipaddress)
+							return addAttackToCluster (ipaddress)
 							
 						}
 						return next()

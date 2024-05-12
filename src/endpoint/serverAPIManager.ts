@@ -38,8 +38,6 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 
 
-
-
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -51,7 +49,7 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 
 
 const iptablesIp = (ipaddress: string) => {
-	const cmd = `iptables -I INPUT -s ${ipaddress} -j DROP`
+	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
 	exec (cmd, err => {
 		if (err) {
 			logger(Colors.red(`iptablesIp Error ${err.message}`))
@@ -62,7 +60,6 @@ const iptablesIp = (ipaddress: string) => {
 class conet_dl_server {
 
 	private PORT = 4100
-
 	private initSetupData = async () => {
 		
 		this.startServer()
