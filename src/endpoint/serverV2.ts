@@ -8,21 +8,21 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { CoNET_SI_Register, regiestFaucet, getLast5Price,
 	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
-	startListeningCONET_Holesky_EPOCH, addIpaddressToLivenessListeningPool, claimeToekn
+	addIpaddressToLivenessListeningPool, claimeToekn
 } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import {readFileSync} from 'node:fs'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
 	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
 	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName,
 	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 
+import {ethers} from 'ethers'
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-const sendCONET_Pool: string[] = []
 
 //	for production
 	import {createServer} from 'node:http'
@@ -30,7 +30,6 @@ const sendCONET_Pool: string[] = []
 //	for debug
 	// import {createServer as createServerForDebug} from 'node:http'
 
-const nodesPath = join(homedir(),'nodes,son')
 const setup = join( homedir(),'.master.json' )
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
@@ -38,36 +37,17 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 const FaucetCount = '0.01'
 
+let EPOCH = 0
 
-// const getRedirect = (req: Request, res: Response ) => {
-// 	const worker = Cluster?.worker?.id ? Cluster.worker.id : 5
-// 	switch (worker) {
-// 		case 4:
-// 		case 1: {
-// 			const localtion = `https://conettech.ca`
-// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-// 		case 2: {
-// 			const localtion = `https://kloak.io`
-// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-// 		case 3: {
-// 			const localtion = `https://kloak.app`
-// 			logger (Colors.red(`get [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
+export const startListeningCONET_Holesky_EPOCH = async () => {
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	EPOCH = await provideCONET.getBlockNumber()
+	
+	provideCONET.on('block', async block => {
 		
-// 		default : {
-// 			const localtion = `https://conettech.ca`
-// 			logger (Colors.red(`goto default [${ splitIpAddr (req.ip) }] => ${ req.method } [http://${ req.headers.host }${ req.url }] redirect to ${ localtion }!`))
-// 			return res.writeHead(301, { "Location": localtion }).end ()
-// 		}
-// 	}
-// }
-
-
+		
+	})
+}
 
 
 const sendDisConnecting = (walletAddress: string) => {
@@ -126,6 +106,7 @@ class conet_dl_server {
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.s3Pass = await s3fsPasswd()
 		this.startServer()
+		
 
 	}
 

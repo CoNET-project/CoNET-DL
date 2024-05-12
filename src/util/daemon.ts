@@ -74,12 +74,12 @@ const guardianReferrals = async (block: number) => {
 	// })
 
 
-	// transferPool.push({
-	// 	privateKey: masterSetup.GuardianReferrals,
-	// 	walletList: _referralsAddress,
-	// 	payList: referralsBoosts.map(n =>n.toFixed(10))
-	// })
-	// startTransfer()
+	transferPool.push({
+		privateKey: masterSetup.GuardianReferrals,
+		walletList: _referralsAddress,
+		payList: referralsBoosts.map(n =>n.toFixed(10))
+	})
+	startTransfer()
 
 	// const kk = {
 	// 	wallet: _referralsAddress,
@@ -111,8 +111,8 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
-	logger(inspect(finalCNTP, false, 3, true))
-	logger(inspect(finalReferrals, false, 3, true))
+	// logger(inspect(finalCNTP, false, 3, true))
+	// logger(inspect(finalReferrals, false, 3, true))
 	
 	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP))
 }
@@ -263,13 +263,13 @@ const stratFreeMinerReferrals = async (block: number) => {
 		// })
 		//storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
 
-		// transferPool.push({
-		// 	privateKey: masterSetup.GuardianReferralsFree,
-		// 	walletList: referrals.walletList,
-		// 	payList: referrals.payList
-		// })
+		transferPool.push({
+			privateKey: masterSetup.GuardianReferralsFree,
+			walletList: referrals.walletList,
+			payList: referrals.payList
+		})
 
-		// startTransfer()
+		startTransfer()
 
 		
 		transferEposh++
@@ -298,8 +298,8 @@ const getFreeReferralsData = (block: string, Referrals: string[], payList: strin
 		tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 		const finalCNTP = tableCNTP.slice(0, 10)
 		const finalReferrals = tableReferrals.slice(0, 10)
-		logger(inspect(finalCNTP, false, 3, true))
-		logger(inspect(finalReferrals, false, 3, true))
+		// logger(inspect(finalCNTP, false, 3, true))
+		// logger(inspect(finalReferrals, false, 3, true))
 		storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP))
 
 	})
@@ -369,7 +369,7 @@ const startDaemonProcess = async (block: number) => {
 	console.log('')
 
 	stratFreeMinerReferrals(block)
-	// guardianMining(block)
+	guardianMining(block)
 	guardianReferrals(block)
 	
 }
