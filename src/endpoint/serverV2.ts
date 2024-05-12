@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { CoNET_SI_Register, regiestFaucet, getLast5Price,
 	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
-	addIpaddressToLivenessListeningPool, claimeToekn
+	addIpaddressToLivenessListeningPool, claimeToekn, selectLeaderboard
 } from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
@@ -16,11 +16,11 @@ import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
 	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
-	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName,
-	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
+	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName, addAttackToCluster, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 
 import {ethers} from 'ethers'
+import { exec } from 'node:child_process'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -38,14 +38,22 @@ const version = packageJson.version
 const FaucetCount = '0.01'
 
 let EPOCH = 0
+let LeaderboardData = {
+	epoch: '',
+	free_cntp: null,
+	free_referrals: null,
+	guardians_cntp: null, 
+	guardians_referrals: null
+} 
 
 export const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-	
+	//@ts-ignore
+	LeaderboardData = await selectLeaderboard()
 	provideCONET.on('block', async block => {
-		
-		
+		//@ts-ignore
+		LeaderboardData = await selectLeaderboard()
 	})
 }
 
@@ -73,7 +81,15 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 }
 
 
-
+const iptablesIp = (ipaddress: string) => {
+	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
+	exec (cmd, err => {
+		if (err) {
+			return logger(Colors.red(`iptablesIp Error ${err.message}`))
+		}
+		return logger(Colors.red(`iptablesIp Added ${ipaddress} success!`))
+	})
+}
 
 class conet_dl_server {
 
@@ -132,15 +148,16 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-
-			getIpAttack(ipaddress, this.serverID, (err, data) => {
+			return getIpAttack(ipaddress, this.serverID, (err, data) => {
 				if (err) {
 					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
 					return res.status(404).end()
 				}
 				if (data) {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
-					return res.status(404).end()
+					res.status(404).end()
+					res.socket?.end().destroy()
+					return iptablesIp (ipaddress)
 				}
 				
 				if (/^post$/i.test(req.method)) {
@@ -150,9 +167,7 @@ class conet_dl_server {
 							
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
-							return getIpAttack(ipaddress, this.serverID, (err) => {
-								logger(Colors.red(`Express.json return Error! STOP connecting ${ipaddress} getIpAttack return err ${err}`))
-							})
+							return iptablesIp (ipaddress)
 							
 						}
 						return next()
@@ -224,52 +239,11 @@ class conet_dl_server {
 			}
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(` Router /health form [${ ipaddress}]`), inspect(req.headers, false, 3, true))
+			logger (Colors.grey(` Router /health form [${ ipaddress}]`))
 
 			res.json ({ health: true }).end()
 			return res.socket?.end().destroy()
 
-		})
-
-		router.post ('/newBlock', async (req,res) => {
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-			} catch (ex) {
-				logger (Colors.red(`${req.ip} request /livenessListening message = req.body.message ERROR!`))
-				return res.status(404)
-				
-			}
-			if (!message || !signMessage) {
-				logger (Colors.red(`Router /newBlock has not  !message || !signMessage Error!`))
-				res.status(404).end ()
-				return res.socket?.end().destroy() 
-			}
-			const obj = checkSign (message, signMessage, '0x80E5C4c2e85b946515a8FaEe5C1D52Ac630350B1')
-			if (!obj||!obj.blockNumber) {
-				logger (Colors.red(`Router /newBlock checkSignObj Error!`), message, obj)
-				res.status(404).end ()
-				return res.socket?.end().destroy() 
-			}
-			
-			const ipaddress = getIpAddressFromForwardHeader(req)
-
-			const blockNumber = obj.blockNumber
-			logger (Colors.blue (`Router /newBlock blockNumber = [${blockNumber}] headers ${inspect(ipaddress, false, 3, true)}`))
-			res.sendStatus(200).end()
-
-			const comd: clusterMessage = {
-				cmd:'newBlock',
-				data: [blockNumber],
-				uuid: '',
-				err: null
-			}
-			if ( process.connected && typeof process.send === 'function') {
-				return process.send (comd)
-			}
-			logger (Colors.red (`Router /newBlock !(process.connected && typeof process.send === 'function') ERROR!`))
-			
 		})
 
 		router.get ('/conet-price', async (req,res) => {
@@ -428,12 +402,6 @@ class conet_dl_server {
 				return res.json ({tx}).end ()
 			})
 
-		})
-
-		router.post ('/conet-si-list', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.grey(`POST ${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }]`), inspect(this.si_pool[0], false, 2, true))
-			res.json(this.si_pool).end()
 		})
 
 		router.get ('/conet-nodes', async ( req, res ) => {
@@ -633,6 +601,12 @@ class conet_dl_server {
 			const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
 			const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
 			return res.status(200).json(ret).end()
+		})
+
+		router.get ('/leaderboardData',  async (req,res) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.grey(` ${ipaddress} GET /leaderboardData`))
+			return res.status(200).json(LeaderboardData).end()
 		})
 
 		router.all ('*', (req, res ) =>{

@@ -994,7 +994,22 @@ export const selectLeaderboard = async () => {
 	try {
 		const kk = await cassClient.execute (cmd1)
 		await cassClient.shutdown()
-		return kk.rows
+		const result = kk.rows.filter(n => n.free_cntp && n.free_referrals)[0]
+		try {
+			const ret = {
+				epoch: result.epoch,
+				free_cntp: JSON.parse(result.free_cntp),
+				free_referrals: JSON.parse(result.free_referrals),
+				guardians_cntp: JSON.parse(result.guardians_cntp),
+				guardians_referrals: JSON.parse(result.guardians_referrals)
+			}
+			return ret
+		} catch (ex) {
+			logger(Color.red(`selectLeaderboard JSON.parse catch ERROR!`))
+			logger(inspect(result, false, 3, true))
+			return null
+		}
+		
 	} catch(ex) {
 		await cassClient.shutdown()
 		
