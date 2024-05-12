@@ -114,7 +114,7 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
 	
-	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP))
+	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 }
 
 
@@ -300,7 +300,7 @@ const getFreeReferralsData = (block: string, Referrals: string[], payList: strin
 		const finalReferrals = tableReferrals.slice(0, 10)
 		// logger(inspect(finalCNTP, false, 3, true))
 		// logger(inspect(finalReferrals, false, 3, true))
-		storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP))
+		storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 
 	})
 }
