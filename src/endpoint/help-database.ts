@@ -958,10 +958,26 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 	}
 })
 
-export const storeLeaderboard = async (epoch: string, guardians_referrals ='', guardians_cntp='', free_referrals='', free_cntp='') => {
+export const storeLeaderboardGuardians_referrals = async (epoch: string, guardians_referrals ='', guardians_cntp='') => {
 	const cassClient = new Client (option)
+
 	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, free_referrals, free_cntp)  VALUES (` +
-		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${free_referrals}','${free_cntp}')`
+		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}')`
+		try {
+			cassClient.execute (cmd1)
+			await cassClient.shutdown()
+			return true
+		} catch(ex) {
+			await cassClient.shutdown()
+			return false
+		}
+}
+
+export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals='', free_cntp='') => {
+	const cassClient = new Client (option)
+
+	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, free_referrals, free_cntp)  VALUES (` +
+		`'conet', '${epoch}', '${free_referrals}','${free_cntp}')`
 		try {
 			cassClient.execute (cmd1)
 			await cassClient.shutdown()

@@ -6,7 +6,7 @@ import { mapLimit} from 'async'
 import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
-import {getMinerCount, storeLeaderboard} from '../endpoint/help-database'
+import {getMinerCount, storeLeaderboardGuardians_referrals, storeLeaderboardFree_referrals} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -90,13 +90,12 @@ const guardianReferrals = async (block: number) => {
 	
 
 	// logger(inspect(_referralsNodes, false, 3, true))
-	getNodesReferralsData(_referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
-	
-	// storeLeaderboard(block.toString(), '', '', '', '')
+	await getNodesReferralsData(block.toString(), _referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
+
 	
 }
 
-const getNodesReferralsData = (wallets: string[], nodes: string[], payList: string[]) => {
+const getNodesReferralsData = async (block: string, wallets: string[], nodes: string[], payList: string[]) => {
 	const tableNodes = wallets.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
@@ -115,7 +114,7 @@ const getNodesReferralsData = (wallets: string[], nodes: string[], payList: stri
 	logger(inspect(finalCNTP, false, 3, true))
 	logger(inspect(finalReferrals, false, 3, true))
 	
-	
+	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP))
 }
 
 
@@ -269,18 +268,17 @@ const stratFreeMinerReferrals = async (block: number) => {
 		// 	walletList: referrals.walletList,
 		// 	payList: referrals.payList
 		// })
+
 		// startTransfer()
 
-
-
-		getFreeReferralsData (referrals.walletList, referrals.payList)
-		transferEposh++
 		
+		transferEposh++
+		getFreeReferralsData (transferEposh.toString(), referrals.walletList, referrals.payList)
 	})
 	
 }
 
-const getFreeReferralsData = async (Referrals: string[], payList: string[]) => {
+const getFreeReferralsData = (block: string, Referrals: string[], payList: string[]) => {
 	const tableNodes = Referrals.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
@@ -302,6 +300,8 @@ const getFreeReferralsData = async (Referrals: string[], payList: string[]) => {
 		const finalReferrals = tableReferrals.slice(0, 10)
 		logger(inspect(finalCNTP, false, 3, true))
 		logger(inspect(finalReferrals, false, 3, true))
+		storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP))
+
 	})
 }
 

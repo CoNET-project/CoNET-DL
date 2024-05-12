@@ -179,21 +179,22 @@ class conet_dl_server {
 			}
 
 
-			getIpAttack(ipaddress, this.serverID, (err, data) => {
+			getIpAttack(ipaddress, this.serverID, async (err, data) => {
 				if (err) {
 					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
 					return res.status(404).end()
 				}
 				if (data) {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
-					return res.status(404).end()
+					res.status(404).end()
+					return await addAttackToCluster (ipaddress)
 				}
 				
 				if (/^post$/i.test(req.method)) {
 					
 					return Express.json ({limit: '25mb'}) (req, res, async err => {
 						if (err) {
-							
+							logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
 							return await addAttackToCluster (ipaddress)
