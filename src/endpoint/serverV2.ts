@@ -164,6 +164,7 @@ class conet_dl_server {
 
 	constructor () {
 		this.initSetupData ()
+		startListeningCONET_Holesky_EPOCH()
     }
 
 	private startServer = async () => {
