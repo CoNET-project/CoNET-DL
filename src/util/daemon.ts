@@ -90,7 +90,7 @@ const guardianReferrals = async (block: number) => {
 	
 
 	// logger(inspect(_referralsNodes, false, 3, true))
-	await getNodesReferralsData(block.toString(), _referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
+	// await getNodesReferralsData(block.toString(), _referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
 
 	
 }
@@ -273,7 +273,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 		
 		transferEposh++
-		getFreeReferralsData (transferEposh.toString(), referrals.walletList, referrals.payList)
+		// getFreeReferralsData (transferEposh.toString(), referrals.walletList, referrals.payList)
 	})
 	
 }

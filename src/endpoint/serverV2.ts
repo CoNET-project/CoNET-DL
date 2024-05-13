@@ -39,39 +39,51 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 const FaucetCount = '0.01'
 
-let EPOCH = 0
-let LeaderboardData = {
+let leaderboardData = {
 	epoch: '',
 	free_cntp: null,
 	free_referrals: null,
 	guardians_cntp: null, 
 	guardians_referrals: null
-} 
+}
+
+interface rate_list {
+	wallet: string
+	cntpRate: string
+	referrals: string
+}
+let free_referrals_rate_lists: rate_list[] = []
+
+let guardians_referrals_rate_lists: rate_list[] = []
+
+const makeLeaderboardData = async () => {
+	
+	//@ts-ignore
+	const LeaderboardData = await selectLeaderboard()
+	if (!LeaderboardData) {
+		return
+	}
+	leaderboardData.epoch = LeaderboardData.epoch
+	leaderboardData.free_cntp = LeaderboardData.free_cntp
+	leaderboardData.free_referrals = LeaderboardData.free_referrals
+	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
+	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
+	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
+	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
+}
 
 export const startListeningCONET_Holesky_EPOCH = async () => {
+	
+	
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	EPOCH = await provideCONET.getBlockNumber()
-	//@ts-ignore
-	LeaderboardData = await selectLeaderboard()
+	
 	provideCONET.on('block', async block => {
-		//@ts-ignore
-		LeaderboardData = await selectLeaderboard()
+		await makeLeaderboardData()
 	})
+
+	await makeLeaderboardData()
 }
 
-
-const sendDisConnecting = (walletAddress: string) => {
-	if ( process.connected && typeof process.send === 'function') {
-		const cmd: clusterMessage = {
-			cmd:'livenessLoseConnecting',
-			data: [walletAddress],
-			uuid: '',
-			err: null
-		}
-		
-		return process.send (cmd)
-	}
-}
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -627,10 +639,26 @@ class conet_dl_server {
 			return res.status(200).json(ret).end()
 		})
 
-		router.get ('/leaderboardData',  async (req,res) =>{
+		router.post ('/leaderboardData',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.grey(` ${ipaddress} GET /leaderboardData`))
-			return res.status(200).json(LeaderboardData).end()
+			let wallet: string
+			try {
+				wallet = req.body.wallet
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
+				return res.status(403).end()
+			}
+
+
+			logger(Colors.grey(` ${ipaddress} GET /leaderboardData wallet [${wallet}]`))
+
+			const ret = {
+				leaderboardData,
+				free_referrals_rate: wallet ? free_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '',
+				guardians_referrals_rate: wallet ? guardians_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: ''
+			}
+
+			return res.status(200).json(ret).end()
 		})
 
 		router.all ('*', (req, res ) =>{

@@ -1001,7 +1001,9 @@ export const selectLeaderboard = async () => {
 				free_cntp: JSON.parse(result.free_cntp),
 				free_referrals: JSON.parse(result.free_referrals),
 				guardians_cntp: JSON.parse(result.guardians_cntp),
-				guardians_referrals: JSON.parse(result.guardians_referrals)
+				guardians_referrals: JSON.parse(result.guardians_referrals),
+				free_referrals_rate_list: JSON.parse(result.free_referrals_rate_list),
+				guardians_referrals_rate_list: JSON.parse(result.guardians_referrals_rate_list),
 			}
 			return ret
 		} catch (ex) {
@@ -1023,6 +1025,7 @@ export const selectLeaderboard = async () => {
 const test = async() => {
 	const kkk = await selectLeaderboard()
 	logger (inspect(kkk, false, 3, true))
+	logger(JSON.stringify(kkk).length)
 
 }
 
