@@ -138,10 +138,10 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 
 const stratFreeMinerReferrals = async (block: number) => {
 	
-	const data = await getMinerCount (transferEposh+1)
+	const data = await getMinerCount (transferEposh)
 
 	if (!data) {
-		if (EPOCH - transferEposh+1 < 3 ) {
+		if (EPOCH - transferEposh < 3 ) {
 			return logger(Color.grey(`transferMiners block [${transferEposh}] didn't ready!`))
 		}
 		return transferEposh++
@@ -273,7 +273,7 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-	transferEposh = EPOCH + 5
+	transferEposh = EPOCH -3
 
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
@@ -286,7 +286,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 
 const startDaemonProcess = async (block: number) => {
 	console.log('')
-
+	EPOCH = block
 	stratFreeMinerReferrals(block)
 	// guardianMining(block)
 	guardianReferrals(block)
