@@ -178,6 +178,7 @@ class conet_dl_server {
 					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
 					return res.status(404).end()
 				}
+				
 				if (data) {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
 					res.status(404).end()

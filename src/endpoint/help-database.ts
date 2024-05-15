@@ -206,7 +206,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 20 && ipAddr !== '75.157.212.2') {
+		if ( result?.rowLength > 10 && ipAddr !== '75.157.212.2') {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
@@ -577,7 +577,7 @@ export const getIpAttack = async (ipaddress: string, node: string, callback: (er
 		return callback(null, false)
 	}
 	await cassClient.shutdown()
-	if (data.rowLength > AttackTTL*5) {
+	if (data.rowLength > AttackTTL *5 ) {
 		return callback(null, true)
 	}
 	return callback(null, false)
