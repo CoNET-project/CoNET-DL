@@ -276,7 +276,7 @@ class conet_dl_server {
 			}
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(` Router /health form [${ ipaddress}]`))
+			//logger (Colors.grey(` Router /health form [${ ipaddress}]`))
 
 			res.json ({ health: true }).end()
 			return res.socket?.end().destroy()
