@@ -139,7 +139,7 @@ class conet_dl_server {
 			const attackIpaddress = req.body?.ipaddress
 			logger (Colors.blue(`Router /ipaddress to [${ ipaddress }] red.body.ipaddress = [${ attackIpaddress }]`))
 			if (attackIpaddress && isV4Format(attackIpaddress)) {
-				iptablesIp(attackIpaddress)
+				// iptablesIp(attackIpaddress)
 				logger (Colors.blue(`Router /ipaddress to [${ ipaddress }]added [${attackIpaddress}] to iptables!`))
 			} else {
 				logger (Colors.red(`Router /ipaddress to [${ ipaddress }] red.body = [${ inspect(req.body, false, 3, true) }] Error!`))
