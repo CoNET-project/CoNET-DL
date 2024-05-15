@@ -173,37 +173,23 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			return getIpAttack(ipaddress, this.serverID, (err, data) => {
-				if (err) {
-					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
-					return res.status(404).end()
-				}
-
-				if (data) {
-					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
-					res.status(404).end()
-					res.socket?.end().destroy()
-					logger(Colors.red(`Too many access Attack black ${ipaddress} !`))
-					return addAttackToCluster (ipaddress)
-				}
+			
 				
-				if (/^post$/i.test(req.method)) {
-					
-					return Express.json({limit: '25mb'})(req, res, err => {
-						if (err) {
-							res.sendStatus(400).end()
-							res.socket?.end().destroy()
-							logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
-							logger(inspect(req.body, false, 3, true))
-							return addAttackToCluster (ipaddress)
-							
-						}
-						return next()
-					})
-				}
+			if (/^post$/i.test(req.method)) {
 				
-				return next()
-			})
+				return Express.json({limit: '25mb'})(req, res, err => {
+					if (err) {
+						res.sendStatus(400).end()
+						res.socket?.end().destroy()
+						logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
+						logger(inspect(req.body, false, 3, true))
+						return addAttackToCluster (ipaddress)
+						
+					}
+					return next()
+				})
+			}
+				
 
 			
 		})
