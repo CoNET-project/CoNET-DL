@@ -569,18 +569,20 @@ export const getIpAttack = async (ipaddress: string, node: string, callback: (er
 	const cmd1 = `SELECT * from const_api_attack WHERE ipaddress = '${ ipaddress }'`
 	let data
 	try {
-		await cassClient.execute (cmd)
 		data = await cassClient.execute (cmd1)
+		if (data.rowLength > AttackTTL * 5 ) {
+			return callback(null, true)
+		}
+		callback(null, false)
+		await cassClient.execute (cmd)
 	} catch (ex: any) {
 		await cassClient.shutdown()
 		logger (ex)
 		return callback(null, false)
 	}
+
 	await cassClient.shutdown()
-	if (data.rowLength > AttackTTL *5 ) {
-		return callback(null, true)
-	}
-	return callback(null, false)
+	
 	
 }
 
