@@ -178,7 +178,7 @@ class conet_dl_server {
 					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
 					return res.status(404).end()
 				}
-				
+
 				if (data) {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
 					res.status(404).end()
@@ -193,7 +193,8 @@ class conet_dl_server {
 						if (err) {
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
-							logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} !`))
+							logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
+							logger(inspect(req.body, false, 3, true))
 							return addAttackToCluster (ipaddress)
 							
 						}
