@@ -206,7 +206,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 10 && ipAddr !== '75.157.212.2') {
+		if ( result?.rowLength > 5 && ipAddr !== '75.157.212.2') {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)
