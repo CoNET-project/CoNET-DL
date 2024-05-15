@@ -237,7 +237,6 @@ const stratFreeMinerReferrals = async (block: number) => {
 		})
 		
 	})
-	EPOCH = block
 	const addressList: string[] =[]
 	const payList: string[] = []
 
@@ -367,7 +366,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 
 const startDaemonProcess = async (block: number) => {
 	console.log('')
-
+	EPOCH= block
 	stratFreeMinerReferrals(block)
 	guardianMining(block)
 	guardianReferrals(block)
