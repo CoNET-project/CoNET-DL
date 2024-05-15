@@ -58,10 +58,9 @@ let guardians_referrals_rate_lists: rate_list[] = []
 
 const makeLeaderboardData = async () => {
 	
-	//@ts-ignore
 	const LeaderboardData = await selectLeaderboard()
 	if (!LeaderboardData) {
-		return
+		return 
 	}
 	leaderboardData.epoch = LeaderboardData.epoch
 	leaderboardData.free_cntp = LeaderboardData.free_cntp
@@ -201,7 +200,6 @@ class conet_dl_server {
 					
 					return Express.json({limit: '25mb'})(req, res, err => {
 						if (err) {
-							
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
 							return addAttackToCluster (ipaddress)

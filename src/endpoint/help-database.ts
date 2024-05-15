@@ -560,7 +560,7 @@ export const authorizeCoNETCash = async ( Cobj: CoNETCash_authorized, objHash: s
 	
 }
 
-const AttackTTL = 30 
+const AttackTTL = 15
 
 export const getIpAttack = async (ipaddress: string, node: string, callback: (err:Error|null, isAttack?: any)=> void) => {
 	const cassClient = new Client (option)
@@ -574,10 +574,10 @@ export const getIpAttack = async (ipaddress: string, node: string, callback: (er
 	} catch (ex: any) {
 		await cassClient.shutdown()
 		logger (ex)
-		return callback(ex)
+		return callback(null, false)
 	}
 	await cassClient.shutdown()
-	if (data.rowLength > AttackTTL) {
+	if (data.rowLength > AttackTTL*3) {
 		return callback(null, true)
 	}
 	return callback(null, false)
@@ -995,26 +995,21 @@ export const selectLeaderboard = async () => {
 		const kk = await cassClient.execute (cmd1)
 		await cassClient.shutdown()
 		const result = kk.rows.filter(n => n.free_cntp && n.free_referrals)[0]
-		try {
-			const ret = {
-				epoch: result.epoch,
-				free_cntp: JSON.parse(result.free_cntp),
-				free_referrals: JSON.parse(result.free_referrals),
-				guardians_cntp: JSON.parse(result.guardians_cntp),
-				guardians_referrals: JSON.parse(result.guardians_referrals),
-				free_referrals_rate_list: JSON.parse(result.free_referrals_rate_list),
-				guardians_referrals_rate_list: JSON.parse(result.guardians_referrals_rate_list),
-			}
-			return ret
-		} catch (ex) {
-			logger(Color.red(`selectLeaderboard JSON.parse catch ERROR!`))
-			logger(inspect(result, false, 3, true))
-			return null
+		
+		const ret = {
+			epoch: result.epoch,
+			free_cntp: JSON.parse(result.free_cntp),
+			free_referrals: JSON.parse(result.free_referrals),
+			guardians_cntp: JSON.parse(result.guardians_cntp),
+			guardians_referrals: JSON.parse(result.guardians_referrals),
+			free_referrals_rate_list: JSON.parse(result.free_referrals_rate_list),
+			guardians_referrals_rate_list: JSON.parse(result.guardians_referrals_rate_list),
 		}
+		return ret
 		
 	} catch(ex) {
 		await cassClient.shutdown()
-		
+		return null
 	}
 }
 
