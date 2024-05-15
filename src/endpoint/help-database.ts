@@ -577,7 +577,7 @@ export const getIpAttack = async (ipaddress: string, node: string, callback: (er
 		return callback(null, false)
 	}
 	await cassClient.shutdown()
-	if (data.rowLength > AttackTTL*3) {
+	if (data.rowLength > AttackTTL*5) {
 		return callback(null, true)
 	}
 	return callback(null, false)
