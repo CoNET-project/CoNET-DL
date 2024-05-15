@@ -193,6 +193,7 @@ class conet_dl_server {
 					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
 					res.status(404).end()
 					res.socket?.end().destroy()
+					logger(Colors.red(`Too many access Attack black ${ipaddress} !`))
 					return addAttackToCluster (ipaddress)
 				}
 				
@@ -202,6 +203,7 @@ class conet_dl_server {
 						if (err) {
 							res.sendStatus(400).end()
 							res.socket?.end().destroy()
+							logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} !`))
 							return addAttackToCluster (ipaddress)
 							
 						}
