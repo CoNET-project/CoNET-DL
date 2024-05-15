@@ -435,7 +435,6 @@ class conet_dl_server {
 					res.status(403).end()
 					return res.socket?.end().destroy()
 				}
-				logger(inspect(tx, false, 3, true))
 				return res.json ({tx}).end ()
 			})
 
