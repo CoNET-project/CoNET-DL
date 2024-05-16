@@ -275,7 +275,7 @@ const stratFreeMinerReferrals = async () => {
 			payList: referrals.payList
 		})
 
-		await startTransfer()
+		startTransfer()
 
 		transferEposh++
 		if (EPOCH > transferEposh) {
