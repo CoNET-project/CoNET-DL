@@ -218,8 +218,8 @@ const guardianMining = async (block: number) => {
 
 
 const stratFreeMinerReferrals = async (block: number) => {
-	
-	const data = await getMinerCount (transferEposh+1)
+	logger(Color.magenta(`stratFreeMinerReferrals block [${transferEposh}]!`))
+	const data = await getMinerCount (transferEposh)
 
 	if (!data) {
 		if (EPOCH - transferEposh+1 < 3 ) {
@@ -354,20 +354,21 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-	transferEposh = EPOCH + 5
+	transferEposh = EPOCH -5
 
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
 		if (block <= EPOCH) {
 			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
 		}
+		EPOCH = block
 		return startDaemonProcess(parseInt(block.toString()))
 	})
 }
 
 const startDaemonProcess = async (block: number) => {
 	console.log('')
-	EPOCH= block
+	
 	stratFreeMinerReferrals(block)
 	guardianMining(block)
 	guardianReferrals(block)
