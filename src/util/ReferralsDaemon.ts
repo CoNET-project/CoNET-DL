@@ -165,9 +165,9 @@ const stratFreeMinerReferrals = async (block: number) => {
 	const payList: string[] = []
 
 	logger(Color.grey(`daemon EPOCH ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
-
+	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 	mapLimit(minerWallets, 8, async (n, next) => 
-		await new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
+		await new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, contract, (err, data1) => {
 			if (err) {
 				return logger (Color.red(`CalculateReferrals Error!`), err)
 			}
@@ -236,7 +236,7 @@ const getFreeReferralsData = (block: string, Referrals: string[], payList: strin
 
 
 
-const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, CallBack: (err:Error|null, data?: any) => void) => {
+const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, contract: ethers.Contract, CallBack: (err:Error|null, data?: any) => void) => {
 	let _walletAddress = walletAddress.toLowerCase()
 	if (checkAddressArray.length) {
 		const index = checkAddressArray.findIndex(n => n.toLowerCase() === _walletAddress)
@@ -245,7 +245,7 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 		}
 	}
 	
-	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+
 	
 	const addressList: string[] = []
 	const payList: string[] = []
