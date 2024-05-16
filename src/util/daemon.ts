@@ -354,7 +354,7 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-	transferEposh = EPOCH -5
+	transferEposh = EPOCH -3
 
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
