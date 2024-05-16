@@ -222,7 +222,7 @@ const stratFreeMinerReferrals = async () => {
 	if (runningTransferEposh === transferEposh) {
 		return logger(Color.magenta(`stratFreeMinerReferrals already running! STOP!`))
 	}
-
+	runningTransferEposh = transferEposh
 	logger(Color.magenta(`stratFreeMinerReferrals EPOCH = [${EPOCH}] transferEposh = [${transferEposh}]`))
 	
 	const data = await getMinerCount (transferEposh)
