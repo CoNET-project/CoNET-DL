@@ -242,7 +242,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 	logger(Color.grey(`daemon EPOCH ${transferEposh+1} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
 
-	mapLimit(minerWallets, 2, async (n, next) => new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
+	mapLimit(minerWallets, 1, async (n, next) => new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
 			if (err) {
 				return logger (Color.red(`CalculateReferrals Error!`), err)
 			}
