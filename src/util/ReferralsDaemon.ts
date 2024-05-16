@@ -135,9 +135,13 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	return [retWalletAddr, retReferralsBoost]
 }
 
-
+let runningTransferEposh = 0
 const stratFreeMinerReferrals = async (block: number) => {
-	
+	if (runningTransferEposh === transferEposh) {
+		return logger(Color.magenta(`stratFreeMinerReferrals already running! STOP!`))
+	}
+	logger(Color.magenta(`stratFreeMinerReferrals EPOCH = [${EPOCH}] transferEposh = [${transferEposh}]`))
+	runningTransferEposh = transferEposh
 	const data = await getMinerCount (transferEposh)
 
 	if (!data) {
@@ -160,7 +164,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 	const addressList: string[] =[]
 	const payList: string[] = []
 
-	logger(Color.grey(`daemon EPOCH ${transferEposh+1} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
+	logger(Color.grey(`daemon EPOCH ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
 
 	mapLimit(minerWallets, 1, async (n, next) => new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
 			if (err) {
@@ -171,7 +175,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 			resolve()
 		})
 	), async () => {
-		logger(Color.blue(`stratFreeMinerReferrals [${transferEposh+1}]finished CalculateReferrals addressList [${addressList.length!}]`))
+		logger(Color.blue(`stratFreeMinerReferrals [${transferEposh}]finished CalculateReferrals addressList [${addressList.length!}]`))
 		const referrals = mergeTransfersv1(addressList, payList)
 		
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
@@ -191,13 +195,18 @@ const stratFreeMinerReferrals = async (block: number) => {
 		// startTransfer()
 
 		
+		
+		await getFreeReferralsData (transferEposh.toString(), referrals.walletList, referrals.payList)
 		transferEposh++
-		getFreeReferralsData (transferEposh.toString(), referrals.walletList, referrals.payList)
+		if (EPOCH > transferEposh) {
+			return stratFreeMinerReferrals(EPOCH)
+		}
+
 	})
 	
 }
 
-const getFreeReferralsData = (block: string, Referrals: string[], payList: string[]) => {
+const getFreeReferralsData = (block: string, Referrals: string[], payList: string[]) => new Promise(resolve => {
 	const tableNodes = Referrals.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
@@ -210,7 +219,7 @@ const getFreeReferralsData = (block: string, Referrals: string[], payList: strin
 	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 	return mapLimit(tableNodes, 20, async (n, next) => {
 		n.referrals = (await contract.getReferees (n.wallet)).length.toString()
-	}, () => {
+	}, async () => {
 		const tableCNTP = tableNodes.map(n => n)
 		const tableReferrals = tableNodes.map(n => n)
 		tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
@@ -219,10 +228,12 @@ const getFreeReferralsData = (block: string, Referrals: string[], payList: strin
 		const finalReferrals = tableReferrals.slice(0, 10)
 		// logger(inspect(finalCNTP, false, 3, true))
 		// logger(inspect(finalReferrals, false, 3, true))
-		storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
-
+		await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
+		return resolve(true)
 	})
-}
+})
+
+
 
 const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, CallBack: (err:Error|null, data?: any) => void) => {
 	let _walletAddress = walletAddress.toLowerCase()
@@ -273,7 +284,7 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-	transferEposh = EPOCH -3
+	transferEposh = EPOCH - 3
 
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
