@@ -182,18 +182,15 @@ const stratFreeMinerReferrals = async (block: number) => {
 		referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
 		
 		logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
-		// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
-		// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
-		// })
-		//storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
 
-		// transferPool.push({
-		// 	privateKey: masterSetup.GuardianReferralsFree,
-		// 	walletList: referrals.walletList,
-		// 	payList: referrals.payList
-		// })
 
-		// startTransfer()
+		transferPool.push({
+			privateKey: masterSetup.GuardianReferralsFree,
+			walletList: referrals.walletList,
+			payList: referrals.payList
+		})
+
+		startTransfer()
 
 		
 		
