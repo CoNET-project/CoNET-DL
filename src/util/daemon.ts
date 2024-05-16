@@ -333,8 +333,9 @@ const CalculateReferrals = async (walletAddress: string, totalToken: string, rew
 			break
 		}
 
-		ReferralsMap.set(_walletAddress, address)
+		
 		address = address.toLowerCase()
+		ReferralsMap.set(_walletAddress, address)
 		if (checkAddressArray.length) {
 			const index = checkAddressArray.findIndex(n => n.toLowerCase() === address)
 			if (index< 0) {
