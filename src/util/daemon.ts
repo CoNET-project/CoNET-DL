@@ -242,7 +242,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 	logger(Color.grey(`daemon EPOCH ${transferEposh+1} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
 
-	mapLimit(minerWallets, 1, async (n, next) => new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
+	mapLimit(minerWallets, 20, async (n, next) => new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, (err, data1) => {
 			if (err) {
 				return logger (Color.red(`CalculateReferrals Error!`), err)
 			}
@@ -288,7 +288,7 @@ const getFreeReferralsData = (block: string, Referrals: string[], payList: strin
 	})
 
 	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-	return mapLimit(tableNodes, 20, async (n, next) => {
+	return mapLimit(tableNodes, 2, async (n, next) => {
 		n.referrals = (await contract.getReferees (n.wallet)).length.toString()
 	}, () => {
 		const tableCNTP = tableNodes.map(n => n)
