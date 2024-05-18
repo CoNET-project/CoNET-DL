@@ -169,7 +169,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 
 	logger(Color.grey(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
 
-	mapLimit(minerWallets, 8, async (n, next) => 
+	mapLimit(minerWallets, 4, async (n, next) => 
 		await new Promise(
 			resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc)), (err, data1) => {
 			if (err) {
