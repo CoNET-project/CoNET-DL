@@ -167,7 +167,7 @@ const stratFreeMinerReferrals = async (block: number) => {
 	const addressList: string[] =[]
 	const payList: string[] = []
 
-	logger(Color.grey(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
+	logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
 
 	mapLimit(minerWallets, 4, async (n, next) => 
 		await new Promise(
