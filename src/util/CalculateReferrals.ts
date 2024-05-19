@@ -1,5 +1,4 @@
 
-import { logger } from './logger'
 import {inspect} from 'node:util'
 import {ethers} from 'ethers'
 import {conet_Referral_contractV2} from './util'
@@ -38,7 +37,7 @@ const saveReferrer = (id: string, address: string) => new Promise( resolve => {
 const countReword = (reword: number, wallet: string, totalToken: number, callback: (data: null|{wallet: string,pay: string}) => void) => {
 	return getReferrer(wallet, async (err, data: any) => {
 		if (err) {
-			logger(`getReferrer return err`, err)
+			console.error(`getReferrer return err`, err)
 			return callback (null)
 		}
 	
@@ -52,7 +51,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		try {
 			address = await contract.getReferrer(wallet)
 		} catch (ex) {
-			logger(`contract.getReferrer Error!`, ex)
+			console.error(`contract.getReferrer Error!`, ex)
 			return callback (null)
 		}
 		if (address === '0x0000000000000000000000000000000000000000') {
@@ -81,7 +80,7 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack: (data: returnData|null) => void) => {
 	mySql.connect(err => {
 		if (err) {
-			logger(`CalculateReferrals mySql.connect Error try again!`, err)
+			console.error(`CalculateReferrals mySql.connect Error try again!`, err)
 			return setTimeout(() => {
 				return CalculateReferrals (walletAddress, totalToken, CallBack)
 			}, 500)
@@ -94,28 +93,28 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 
 		return countReword(.05, _walletAddress, totalToken, data1 => {
 			if (!data1) {
-				logger(`countReword(0.5) return null data`)
+				console.debug(`countReword(0.5) return null data`)
 				return constCalculateReferralsCallback(addressList, payList, CallBack)
 			}
-			logger(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
+			console.debug(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
 			addressList.push(data1.wallet)
 			payList.push(data1.pay)
 
 			return countReword(.03, data1.wallet, totalToken, data2 => {
 				if (!data2) {
-					logger(`countReword(0.3) return null data!`)
+					console.debug(`countReword(0.3) return null data!`)
 					return constCalculateReferralsCallback(addressList, payList, CallBack)
 				}
 				addressList.push(data2.wallet)
 				payList.push(data2.pay)
-				logger(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
+				console.debug(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
 				return countReword(.01, data2.wallet, totalToken, data3 => {
 					if (!data3) {
 						return constCalculateReferralsCallback(addressList, payList, CallBack)
 					}
 					addressList.push(data3.wallet)
 					payList.push(data3.pay)
-					logger(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
+					console.debug(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
 					return constCalculateReferralsCallback(addressList, payList, CallBack)
 				})
 			})
@@ -145,6 +144,6 @@ if (wallet && rate > 0 ) {
 		console.log (JSON.stringify(data))
 	})
 } else {
-	logger.(`wallet ${wallet} rate ${rate} Error!`)
+	console.error(`wallet ${wallet} rate ${rate} Error!`)
 }
 
