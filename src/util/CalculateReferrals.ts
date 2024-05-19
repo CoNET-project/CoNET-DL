@@ -142,7 +142,10 @@ args.forEach ((n, index ) => {
 })
 if (wallet && rate ) {
 	CalculateReferrals(wallet, rate, (data)=> {
+		console.log (`End!`)
 		console.log (JSON.stringify(data))
 	})
+} else {
+	logger(`wallet ${wallet} rate ${rate} Error!`)
 }
 
