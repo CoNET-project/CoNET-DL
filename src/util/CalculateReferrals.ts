@@ -77,6 +77,7 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack: (data: returnData|null) => void) => {
 	mySql.connect(err => {
 		if (err) {
+			logger(`CalculateReferrals mySql.connect Error try again!`, err)
 			return setTimeout(() => {
 				return CalculateReferrals (walletAddress, totalToken, CallBack)
 			}, 500)
@@ -117,7 +118,8 @@ mySql.connect(err => {
 	if (err) {
 		return logger(err)
 	}
-	return CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, ( data)=> {
+	return CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
+		
 		mySql.end(() => {
 			logger (`mySql.end!`)
 			logger(inspect(data, false, 3, true))
