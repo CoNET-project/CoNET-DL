@@ -174,9 +174,10 @@ interface leaderboard {
 		const payList: string[] = []
 
 		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
-
+		let i = 0
 		mapLimit(minerWallets, 12, async (n, next) => {
 			const data1: any = await doWorker (n, minerRate.toString())
+			logger(Color.magenta(`await doWorker finished ${++i}`))
 			if (data1?.addressList?.length) {
 				addressList.push(...data1.addressList)
 				payList.push(...data1.payList)
@@ -268,6 +269,7 @@ interface leaderboard {
 			
 			try{
 				const ret1 = JSON.parse(ret)
+
 				return resolve (ret1)
 			} catch (ex) {
 				logger(Color.red(`doWorker JSON.parse(ret) Error! ret=${ret}`))
