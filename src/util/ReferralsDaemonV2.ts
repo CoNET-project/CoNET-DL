@@ -182,6 +182,7 @@ interface leaderboard {
 				// 	resolve()
 				// 	return logger (Color.red(`CalculateReferrals Error! STOP!`), err)
 				// }
+
 				addressList.push(...data1.addressList)
 				payList.push(...data1.payList)
 				
@@ -265,10 +266,11 @@ interface leaderboard {
 
 	startListeningCONET_Holesky_EPOCH()
 
-	const doWorker = (wallet: string, rate: string) => new Promise(resolve=> {
+	const doWorker = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
+		logger(Color.blue(`doWorker command = [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
-			logger(`doWorker exit!`)
+			logger(Color.red(`doWorker exit!`))
 			logger(`error`, error)
 			logger(`stdout`, stdout)
 			logger(`stderr`, stderr)
