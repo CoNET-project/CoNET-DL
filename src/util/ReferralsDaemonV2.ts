@@ -270,9 +270,14 @@ interface leaderboard {
 		logger(Color.blue(`doWorker command = [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
-			logger(Color.red(`doWorker exit! ${JSON.stringify(stdout)} ret=${ret}`))
 			
-			return resolve (ret)
+			try{
+				const ret1 = JSON.parse(ret)
+				return resolve (ret1)
+			} catch (ex) {
+				logger(Color.red(`doWorker JSON.parse(ret) Error! ret=${ret}`))
+			}
+			return resolve (null)
 		})
 	})
 
