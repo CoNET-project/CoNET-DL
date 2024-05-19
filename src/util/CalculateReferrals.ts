@@ -51,14 +51,15 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 		let address
 		try {
-			address = (await contract.getReferrer(wallet)).toLowerCase()
+			address = await contract.getReferrer(wallet)
 		} catch (ex) {
-
+			logger(`contract.getReferrer Error!`, ex)
+			return callback (null)
 		}
 		if (address === '0x0000000000000000000000000000000000000000') {
 			return callback (null)
 		}
-		
+		address = address.toLowerCase()
 		await saveReferrer(wallet, address)
 		return ({wallet: address, pay: (totalToken * reword).toFixed(0)})
 	})
@@ -94,6 +95,7 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 
 		return countReword(.05, _walletAddress, totalToken, data1 => {
 			if (!data1) {
+				logger(`countReword(0.5) return null data`)
 				return constCalculateReferralsCallback(addressList, payList, CallBack)
 			}
 			logger(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
