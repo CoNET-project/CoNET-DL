@@ -177,7 +177,7 @@ interface leaderboard {
 
 		mapLimit(minerWallets, 4, async (n, next) => {
 			const data1: any = await doWorker (n, minerRate.toString())
-			if (data1) {
+			if (data1?.addressList?.length) {
 				addressList.push(...data1.addressList)
 				payList.push(...data1.payList)
 			}
