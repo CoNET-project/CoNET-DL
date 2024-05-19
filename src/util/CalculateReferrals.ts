@@ -95,9 +95,10 @@ mySql.connect(err => {
 		return logger(err)
 	}
 	return getReferrer('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', (err, data)=> {
-		if (err) {
-			return logger (err)
-		}
-		logger(inspect(data, false, 3, true))
+		mySql.end(() => {
+			logger (`mySql.end!`)
+			logger(inspect(data, false, 3, true))
+		})
+		
 	})
 })
