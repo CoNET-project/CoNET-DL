@@ -130,17 +130,21 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 
 
 let wallet = ''
-let rate = 0
+let rate = 0.0
 const [,,...args] = process.argv
 args.forEach ((n, index ) => {
-
-	if (/\wallet/i.test(n)) {
+	if (/$wallet/i.test(n)) {
 		wallet = n.split('=')[1]
-	} else if (/\rate/.test(n)) {
-		rate = parseFloat(n.split('=')[1])
+	}
+	if (/$rate/.test(n)) {
+		const kk = n.split('=')[1]
+		logger(`kk = ${kk}`)
+		rate = parseFloat(kk)
 	}
 })
-if (wallet && rate ) {
+
+logger(`args length = ${args.length}`)
+if (wallet && rate > 0 ) {
 	CalculateReferrals(wallet, rate, (data)=> {
 		console.log (`End!`)
 		console.log (JSON.stringify(data))
