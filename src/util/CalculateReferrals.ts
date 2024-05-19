@@ -60,7 +60,12 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 	})
 }
 
-const constCalculateReferralsCallback = (addressList: string[], payList: string[], CallBack: (data?: any) => void) => {
+interface returnData {
+	addressList: string[]
+	payList: string[]
+}
+
+const constCalculateReferralsCallback = (addressList: string[], payList: string[], CallBack: (data: returnData|null) => void) => {
 	return mySql.end(() => {
 		if (addressList.length <1) {
 			return CallBack (null)
@@ -69,8 +74,8 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 	})
 }
 
-const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack: (data?: any) => void) => {
-	return mySql.connect(err => {
+const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack: (data: returnData|null) => void) => {
+	mySql.connect(err => {
 		if (err) {
 			return setTimeout(() => {
 				return CalculateReferrals (walletAddress, totalToken, CallBack)
