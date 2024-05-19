@@ -90,10 +90,14 @@ const CalculateReferrals = (walletAddress: string, totalToken: string, rewordArr
 	})
 	
 }
-
-getReferrer('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', (err, data)=> {
+mySql.connect(err => {
 	if (err) {
-		return logger (err)
+		return logger(err)
 	}
-	logger(inspect(data, false, 3, true))
+	return getReferrer('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', (err, data)=> {
+		if (err) {
+			return logger (err)
+		}
+		logger(inspect(data, false, 3, true))
+	})
 })
