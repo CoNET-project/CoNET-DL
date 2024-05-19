@@ -42,9 +42,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 			return callback (null)
 		}
 	
-		logger(`getReferrer return no Err`, inspect(data, false, 3, true))
 		if (data) {
-			
 			return callback ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
 		}
 
@@ -133,24 +131,20 @@ let wallet = ''
 let rate = 0.0
 const [,,...args] = process.argv
 args.forEach ((n, index ) => {
-	logger(n)
 	if (/^wallet\=/i.test(n)) {
 		wallet = n.split('=')[1]
 	}
 	if (/^rate\=/i.test(n)) {
 		const kk = n.split('=')[1]
-		logger(`kk = ${kk}`)
 		rate = parseFloat(kk)
 	}
 })
 
-logger(`args length = ${args.length}`)
 if (wallet && rate > 0 ) {
 	CalculateReferrals(wallet, rate, (data)=> {
-		console.log (`End!`)
 		console.log (JSON.stringify(data))
 	})
 } else {
-	logger(`wallet ${wallet} rate ${rate} Error!`)
+	logger.(`wallet ${wallet} rate ${rate} Error!`)
 }
 
