@@ -270,7 +270,7 @@ interface leaderboard {
 		logger(Color.blue(`doWorker command = [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			logger(Color.red(`doWorker exit!`))
-			return resolve (stdout)
+			return resolve (stdout.split('\r\n')[1])
 		})
 	})
 
