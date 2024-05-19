@@ -133,10 +133,11 @@ let wallet = ''
 let rate = 0.0
 const [,,...args] = process.argv
 args.forEach ((n, index ) => {
-	if (/$wallet/i.test(n)) {
+	logger(n)
+	if (/^wallet\=/i.test(n)) {
 		wallet = n.split('=')[1]
 	}
-	if (/$rate/.test(n)) {
+	if (/^rate\=/i.test(n)) {
 		const kk = n.split('=')[1]
 		logger(`kk = ${kk}`)
 		rate = parseFloat(kk)
@@ -145,10 +146,10 @@ args.forEach ((n, index ) => {
 
 logger(`args length = ${args.length}`)
 if (wallet && rate > 0 ) {
-	CalculateReferrals(wallet, rate, (data)=> {
+	// CalculateReferrals(wallet, rate, (data)=> {
 		console.log (`End!`)
-		console.log (JSON.stringify(data))
-	})
+		//console.log (JSON.stringify(data))
+	// 
 } else {
 	logger(`wallet ${wallet} rate ${rate} Error!`)
 }
