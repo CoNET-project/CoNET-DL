@@ -22,9 +22,7 @@ const getReferrer = (address: string, callbak: (err: Error|null, data?: any) => 
 			return callbak (err)
 		}
 		const ret = results[0]
-		logger(`getReferrer results!`)
-		logger(inspect(ret, false, 3, true))
-		logger(JSON.stringify(ret))
+		
 		return callbak(null, ret)
 	})
 }
@@ -40,11 +38,14 @@ const saveReferrer = (id: string, address: string) => new Promise( resolve => {
 const countReword = (reword: number, wallet: string, totalToken: number, callback: (data: null|{wallet: string,pay: string}) => void) => {
 	return getReferrer(wallet, async (err, data: any) => {
 		if (err) {
+			logger(`getReferrer return err`, err)
 			return callback (null)
 		}
-
+	
+		logger(`getReferrer return no Err`, inspect(data, false, 3, true))
 		if (data) {
-			return ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
+			
+			return callback ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
 		}
 
 		const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -61,7 +62,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		}
 		address = address.toLowerCase()
 		await saveReferrer(wallet, address)
-		return ({wallet: address, pay: (totalToken * reword).toFixed(0)})
+		return callback ({wallet: address, pay: (totalToken * reword).toFixed(0)})
 	})
 }
 
