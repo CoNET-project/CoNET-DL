@@ -146,10 +146,10 @@ args.forEach ((n, index ) => {
 
 logger(`args length = ${args.length}`)
 if (wallet && rate > 0 ) {
-	// CalculateReferrals(wallet, rate, (data)=> {
+	CalculateReferrals(wallet, rate, (data)=> {
 		console.log (`End!`)
-		//console.log (JSON.stringify(data))
-	// 
+		console.log (JSON.stringify(data))
+	})
 } else {
 	logger(`wallet ${wallet} rate ${rate} Error!`)
 }
