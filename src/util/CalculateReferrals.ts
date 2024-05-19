@@ -1,10 +1,10 @@
-import {ConnectionConfig, createConnection} from 'mysql'
+
 import { logger } from './logger'
 import {inspect} from 'node:util'
 import {ethers} from 'ethers'
 import {conet_Referral_contractV2} from './util'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
-
+import {ConnectionConfig, createConnection} from 'mysql'
 
 const connectObj:ConnectionConfig = {
 	host     : 'localhost',
@@ -127,10 +127,22 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 	
 }
 
-CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
-	
-	logger(`CalculateReferrals finished!`)
-	logger(inspect(data, false, 3, true))
 
+
+let wallet = ''
+let rate = 0
+const [,,...args] = process.argv
+args.forEach ((n, index ) => {
+
+	if (/\wallet/i.test(n)) {
+		wallet = n.split('=')[1]
+	} else if (/\rate/.test(n)) {
+		rate = parseFloat(n.split('=')[1])
+	}
 })
+if (wallet && rate ) {
+	CalculateReferrals(wallet, rate, (data)=> {
+		console.log (JSON.stringify(data))
+	})
+}
 
