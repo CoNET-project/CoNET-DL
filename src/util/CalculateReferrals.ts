@@ -114,11 +114,8 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 	})
 	
 }
-mySql.connect(err => {
-	if (err) {
-		return logger(err)
-	}
-	return CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
+
+	CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
 		
 		mySql.end(() => {
 			logger (`mySql.end!`)
@@ -126,4 +123,4 @@ mySql.connect(err => {
 		})
 		
 	})
-})
+

@@ -179,16 +179,7 @@ class conet_dl_server {
 			}
 
 
-			getIpAttack(ipaddress, this.serverID, async (err, data) => {
-				if (err) {
-					logger(Colors.red(`getIpAttack return Error! STOP connecting`), err)
-					return res.status(404).end()
-				}
-				if (data) {
-					logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} ATTACK stop request`))
-					res.status(404).end()
-					return await addAttackToCluster (ipaddress)
-				}
+			
 				
 				if (/^post$/i.test(req.method)) {
 					
@@ -208,7 +199,7 @@ class conet_dl_server {
 			})
 
 			
-		})
+		
 
 		app.use( '/api', router )
 
