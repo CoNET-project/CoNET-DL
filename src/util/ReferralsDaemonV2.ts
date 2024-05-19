@@ -182,13 +182,12 @@ interface leaderboard {
 				// 	resolve()
 				// 	return logger (Color.red(`CalculateReferrals Error! STOP!`), err)
 				// }
-
-				addressList.push(...data1.addressList)
-				payList.push(...data1.payList)
-				
+			logger(Color.blue(`mapLimit finished ${n} data1 = ${data1}`))
+			// addressList.push(...data1.addressList)
+			// payList.push(...data1.payList)
 			
 		}, async () => {
-			logger(Color.blue(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList [${addressList.length!}]`))
+			logger(Color.red(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList [${addressList.length!}]`))
 			// const referrals = mergeTransfersv1(addressList, payList)
 			
 			// referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
@@ -271,9 +270,6 @@ interface leaderboard {
 		logger(Color.blue(`doWorker command = [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			logger(Color.red(`doWorker exit!`))
-			logger(`error`, error)
-			logger(`stdout`, stdout)
-			logger(`stderr`, stderr)
 			return resolve (stdout)
 		})
 	})
