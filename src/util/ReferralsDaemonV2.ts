@@ -175,19 +175,16 @@ interface leaderboard {
 
 		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
 
-		mapLimit(minerWallets, 1, async (n, next) => {
+		mapLimit(minerWallets, 8, async (n, next) => {
 			const data1: any = await doWorker (n, minerRate.toString())
-				// resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc)), (err, data1) => {
-				// if (err) {
-				// 	resolve()
-				// 	return logger (Color.red(`CalculateReferrals Error! STOP!`), err)
-				// }
-			logger(Color.blue(`mapLimit finished ${n} data1 = `), inspect(data1, false, 3, true ))
-			// addressList.push(...data1.addressList)
-			// payList.push(...data1.payList)
+			if (data1) {
+				logger(Color.blue(`mapLimit finished ${n} data1 = `), inspect(data1, false, 3, true ))
+				addressList.push(...data1.addressList)
+				payList.push(...data1.payList)
+			}
 			
 		}, async () => {
-			logger(Color.red(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList [${addressList.length!}]`))
+			logger(Color.red(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList length  [${addressList.length!}] payList length [${payList.length}]`))
 			// const referrals = mergeTransfersv1(addressList, payList)
 			
 			// referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
