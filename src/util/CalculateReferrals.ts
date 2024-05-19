@@ -46,6 +46,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		if (data) {
 			return ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
 		}
+
 		const conet_Holesky_rpc = 'https://rpc.conet.network'
 		const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
 		let address
@@ -95,20 +96,25 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 			if (!data1) {
 				return constCalculateReferralsCallback(addressList, payList, CallBack)
 			}
+			logger(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
 			addressList.push(data1.wallet)
 			payList.push(data1.pay)
+
 			return countReword(.03, data1.wallet, totalToken, data2 => {
 				if (!data2) {
+					logger(`countReword(0.3) return null data!`)
 					return constCalculateReferralsCallback(addressList, payList, CallBack)
 				}
 				addressList.push(data2.wallet)
 				payList.push(data2.pay)
+				logger(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
 				return countReword(.01, data2.wallet, totalToken, data3 => {
 					if (!data3) {
 						return constCalculateReferralsCallback(addressList, payList, CallBack)
 					}
 					addressList.push(data3.wallet)
 					payList.push(data3.pay)
+					logger(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
 					return constCalculateReferralsCallback(addressList, payList, CallBack)
 				})
 			})
@@ -120,9 +126,8 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 
 CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
 	
-	
-		logger(inspect(data, false, 3, true))
-	
-	
+	logger(`CalculateReferrals finished!`)
+	logger(inspect(data, false, 3, true))
+
 })
 
