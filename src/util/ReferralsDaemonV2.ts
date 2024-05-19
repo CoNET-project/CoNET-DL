@@ -175,7 +175,7 @@ interface leaderboard {
 
 		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
 
-		mapLimit(minerWallets, 4, async (n, next) => {
+		mapLimit(minerWallets, 12, async (n, next) => {
 			const data1: any = await doWorker (n, minerRate.toString())
 			if (data1?.addressList?.length) {
 				addressList.push(...data1.addressList)
