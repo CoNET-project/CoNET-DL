@@ -175,10 +175,9 @@ interface leaderboard {
 
 		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
 
-		mapLimit(minerWallets, 8, async (n, next) => {
+		mapLimit(minerWallets, 4, async (n, next) => {
 			const data1: any = await doWorker (n, minerRate.toString())
 			if (data1) {
-				logger(Color.blue(`mapLimit finished ${n} data1 = `), inspect(data1, false, 3, true ))
 				addressList.push(...data1.addressList)
 				payList.push(...data1.payList)
 			}
@@ -264,7 +263,6 @@ interface leaderboard {
 
 	const doWorker = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
-		logger(Color.blue(`doWorker command = [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
 			
