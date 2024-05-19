@@ -96,25 +96,25 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 				console.debug(`countReword(0.5) return null data`)
 				return constCalculateReferralsCallback(addressList, payList, CallBack)
 			}
-			console.debug(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
+			console.error(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
 			addressList.push(data1.wallet)
 			payList.push(data1.pay)
 
 			return countReword(.03, data1.wallet, totalToken, data2 => {
 				if (!data2) {
-					console.debug(`countReword(0.3) return null data!`)
+					console.error(`countReword(0.3) return null data!`)
 					return constCalculateReferralsCallback(addressList, payList, CallBack)
 				}
 				addressList.push(data2.wallet)
 				payList.push(data2.pay)
-				console.debug(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
+				console.error(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
 				return countReword(.01, data2.wallet, totalToken, data3 => {
 					if (!data3) {
 						return constCalculateReferralsCallback(addressList, payList, CallBack)
 					}
 					addressList.push(data3.wallet)
 					payList.push(data3.pay)
-					console.debug(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
+					console.error(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
 					return constCalculateReferralsCallback(addressList, payList, CallBack)
 				})
 			})
