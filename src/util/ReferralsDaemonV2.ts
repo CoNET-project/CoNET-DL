@@ -269,8 +269,10 @@ interface leaderboard {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
 		logger(Color.blue(`doWorker command = [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
-			logger(Color.red(`doWorker exit!`))
-			return resolve (stdout.split('\r\n')[1])
+			const ret = stdout.split('ret=')[1]
+			logger(Color.red(`doWorker exit! ${JSON.stringify(stdout)} ret=${ret}`))
+			
+			return resolve (ret)
 		})
 	})
 
