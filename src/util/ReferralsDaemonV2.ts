@@ -182,7 +182,7 @@ interface leaderboard {
 				// 	resolve()
 				// 	return logger (Color.red(`CalculateReferrals Error! STOP!`), err)
 				// }
-			logger(Color.blue(`mapLimit finished ${n} data1 = ${data1}`))
+			logger(Color.blue(`mapLimit finished ${n} data1 = `), inspect(data1, false, 3, true ))
 			// addressList.push(...data1.addressList)
 			// payList.push(...data1.payList)
 			
