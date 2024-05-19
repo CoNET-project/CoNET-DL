@@ -18,7 +18,7 @@ const getReferrer = (address: string, callbak: (err: Error|null, data?: any) => 
 			return callbak (err)
 		}
 		logger(`getReferrer results!`)
-		logger(inspect(results, false, 3, true))
+		logger(inspect(results[0], false, 3, true))
 		callbak(null, results)
 	})
 }
