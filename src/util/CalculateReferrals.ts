@@ -21,9 +21,11 @@ const getReferrer = (address: string, callbak: (err: Error|null, data?: any) => 
 		if (err) {
 			return callbak (err)
 		}
+		const ret = results[0]
 		logger(`getReferrer results!`)
-		logger(inspect(results[0], false, 3, true))
-		return callbak(null, results)
+		logger(inspect(ret, false, 3, true))
+		logger(JSON.stringify(ret))
+		return callbak(null, ret)
 	})
 }
 
@@ -40,8 +42,9 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		if (err) {
 			return callback (null)
 		}
+
 		if (data) {
-			return ({wallet: data.RowDataPacket.wallet, pay: (totalToken * reword).toFixed(0)})
+			return ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
 		}
 		const conet_Holesky_rpc = 'https://rpc.conet.network'
 		const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
@@ -115,12 +118,11 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 	
 }
 
-	CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
-		
-		mySql.end(() => {
-			logger (`mySql.end!`)
-			logger(inspect(data, false, 3, true))
-		})
-		
-	})
+CalculateReferrals('0x8c96953df8ddf2ff9141be66d196c8bf69800e39', 16928327600000000, (data)=> {
+	
+	
+		logger(inspect(data, false, 3, true))
+	
+	
+})
 
