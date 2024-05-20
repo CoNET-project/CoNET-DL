@@ -287,49 +287,49 @@ const stratFreeMinerReferrals = async (block: string) => {
 
 	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${minerWallets.length}]`))
 	let i = 0
-	mapLimit(minerWallets, 4, async (n, next) => {
-		console.error(Color.grey(`mapLimit start [${n}] [${i++}]`))
-		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
-		const addressList: any[] = data1?.addressList
-		const payList: any[] = data1?.payList
-		if (addressList) {
-			addressList.forEach((n, index) => {
-				const kk = walletTotal.get (n)||{
-					cntp: 0,
-					count: 0
-				}
-				kk.cntp = parseFloat(payList[index])+ kk.cntp
-				++ kk.count
-				walletTotal.set(n, kk)
+	// mapLimit(minerWallets, 4, async (n, next) => {
+	// 	console.error(Color.grey(`mapLimit start [${n}] [${i++}]`))
+	// 	const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
+	// 	const addressList: any[] = data1?.addressList
+	// 	const payList: any[] = data1?.payList
+	// 	if (addressList) {
+	// 		addressList.forEach((n, index) => {
+	// 			const kk = walletTotal.get (n)||{
+	// 				cntp: 0,
+	// 				count: 0
+	// 			}
+	// 			kk.cntp = parseFloat(payList[index])+ kk.cntp
+	// 			++ kk.count
+	// 			walletTotal.set(n, kk)
 				
-			})
+	// 		})
 
-		}
+	// 	}
 		
-	}, async () => {
+	// }, async () => {
 		
-		console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}]!`))
-		const walletList: string[] = []
-		const payList: string[] = []
-		const countList: leaderboard[] = []
-		walletTotal.forEach((n, key) => {
-			walletList.push(key)
-			payList.push(ethers.formatEther(n.cntp.toFixed(0)))
-			countList.push({
-				wallet: key,
-				cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
-				referrals: n.count.toString()
-			})
-		})
-		logger(Color.magenta(` Pre finished doEpoch [${epoch}] `))
-		await getFreeReferralsData (block, countList)
-		// sendPaymentToPool (walletList, payList, () => {
+	// 	console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}]!`))
+	// 	const walletList: string[] = []
+	// 	const payList: string[] = []
+	// 	const countList: leaderboard[] = []
+	// 	walletTotal.forEach((n, key) => {
+	// 		walletList.push(key)
+	// 		payList.push(ethers.formatEther(n.cntp.toFixed(0)))
+	// 		countList.push({
+	// 			wallet: key,
+	// 			cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
+	// 			referrals: n.count.toString()
+	// 		})
+	// 	})
+	// 	logger(Color.magenta(` Pre finished doEpoch [${epoch}] `))
+	// 	await getFreeReferralsData (block, countList)
+	// 	// sendPaymentToPool (walletList, payList, () => {
 			
-		// })
+	// 	// })
 	
-		logger(Color.magenta(`Finished doEpoch [${epoch}] `))
+	// 	logger(Color.magenta(`Finished doEpoch [${epoch}] `))
 		
-	})
+	// })
 	
 }
 
