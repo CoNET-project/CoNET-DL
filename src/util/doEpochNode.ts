@@ -41,11 +41,11 @@ const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals:
 		cassClient.execute (cmd1)
 	} catch(ex) {
 		await cassClient.shutdown()
-		logger(Color.blue(`storeLeaderboardGuardians_referrals Error!`), ex)
+		logger(Color.red(`storeLeaderboardGuardians_referrals Error!`), ex)
 		return resolve(false)
 	}
 	await cassClient.shutdown()
-	logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
+	logger(Color.magenta(`storeLeaderboardGuardians_referrals [${epoch}] finished`))
 	resolve(true)
 })
 
