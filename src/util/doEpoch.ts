@@ -5,7 +5,7 @@ import {request} from 'node:http'
 import {GuardianNodes_ContractV2, masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
-import {getMinerCount, storeLeaderboardFree_referrals} from '../endpoint/help-database'
+
 import { mapLimit} from 'async'
 import {transferPool, startTransfer} from './transferManager'
 import { logger } from './logger'
@@ -58,6 +58,72 @@ const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals:
 	logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
 	resolve(true)
 })
+
+const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
+	const cassClient = new Client (option)
+
+	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, free_referrals, free_cntp, free_referrals_rate_list)  VALUES (` +
+		`'conet', '${epoch}', '${free_referrals}','${free_cntp}', '${free_referrals_rate_list}')`
+		try {
+			cassClient.execute (cmd1)
+			await cassClient.shutdown()
+			return true
+		} catch(ex) {
+			await cassClient.shutdown()
+			return false
+		}
+}
+
+const getEpochNodeMiners = async (epoch: string) => {
+	const cassClient = new Client (option)
+	const cmd3 = `SELECT * FROM conet_free_mining_cluster WHERE epoch = '${epoch}'`
+	let miners
+	try{
+		miners = await cassClient.execute (cmd3)
+	} catch (ex) {
+		logger (Color.red(`getEpochNodeMiners error`), ex)
+	}
+	await cassClient.shutdown()
+	return miners?.rows
+	
+}
+
+const getApiNodes: () => Promise<number> = async () => new Promise(async resolve=> {
+
+	const cassClient = new Client (option)
+	const cmd = `SELECT ipaddress from conet_api_node`
+
+	try {
+		const uu = await cassClient.execute (cmd)
+		await cassClient.shutdown()
+		return resolve(uu.rows.length)
+	} catch(ex) {
+		await cassClient.shutdown()
+		return resolve (6)
+	}
+})
+let clusterNodes = 9
+const getMinerCount = async (_epoch: number) => {
+	let count = 0
+	const epoch = (_epoch).toString()
+	
+	const counts = await getEpochNodeMiners(epoch)
+	clusterNodes = await getApiNodes()
+	if (!counts) {
+		logger(Color.red(`getMinerCount got empty array`))
+		return null
+	}
+
+	if (counts.length < clusterNodes) {
+		logger(Color.magenta(`getMinerCount getEpochNodeMiners [${_epoch}] data.length [${counts.length}] < clusterNodes [${clusterNodes}]`))
+		return null
+	}
+	counts.forEach(n => {
+		count += n.miner_count
+	})
+	return {count, counts}
+	
+}
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	const option: RequestOptions = {
