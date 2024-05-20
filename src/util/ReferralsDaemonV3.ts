@@ -24,7 +24,7 @@ const startDaemonProcess = async (block: number) => {
 
 const doWorkerCom: (command: string) => Promise<boolean> = (command: string) => new Promise(resolve => {
 	exec(command, (error, stdout, stderr) => {
-		
+		logger(stdout)
 		logger(stderr)
 		return resolve (true)
 
