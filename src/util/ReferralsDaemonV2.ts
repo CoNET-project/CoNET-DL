@@ -6,7 +6,7 @@ import {GuardianNodes_ContractV2, masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {exec} from 'node:child_process'
 
-import {getMinerCount, storeLeaderboardGuardians_referrals, storeLeaderboardFree_referrals} from '../endpoint/help-database'
+import {getMinerCount, storeLeaderboardFree_referrals} from '../endpoint/help-database'
 
 
 const conet_Holesky_rpc = 'https://rpc.conet.network'

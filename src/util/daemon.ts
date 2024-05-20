@@ -6,7 +6,7 @@ import { mapLimit} from 'async'
 import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
-import {getMinerCount, storeLeaderboardGuardians_referrals, storeLeaderboardFree_referrals} from '../endpoint/help-database'
+import {getMinerCount, storeLeaderboardFree_referrals} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -93,28 +93,6 @@ const guardianReferrals = async (block: number) => {
 	// await getNodesReferralsData(block.toString(), _referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
 
 	
-}
-
-const getNodesReferralsData = async (block: string, wallets: string[], nodes: string[], payList: string[]) => {
-	const tableNodes = wallets.map ((n, index) => {
-		const ret: leaderboard = {
-			wallet: n,
-			cntpRate: (parseFloat(payList[index])/12).toString(),
-			referrals: nodes[index]
-		}
-		return ret
-	})
-	
-	const tableCNTP = tableNodes.map(n => n)
-	const tableReferrals = tableNodes.map(n => n)
-	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
-	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-	const finalCNTP = tableCNTP.slice(0, 10)
-	const finalReferrals = tableReferrals.slice(0, 10)
-	// logger(inspect(finalCNTP, false, 3, true))
-	// logger(inspect(finalReferrals, false, 3, true))
-	
-	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 }
 
 

@@ -2,13 +2,16 @@ import {ethers} from 'ethers'
 import {inspect} from 'node:util'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
+import {GuardianNodes_ContractV2, masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
-import {getMinerCount, storeLeaderboardGuardians_referrals, storeLeaderboardFree_referrals} from '../endpoint/help-database'
+import {getMinerCount, storeLeaderboardFree_referrals} from '../endpoint/help-database'
 import { mapLimit} from 'async'
 import {transferPool, startTransfer} from './transferManager'
 import { logger } from './logger'
+import { Client, auth, types } from 'cassandra-driver'
+import type { TLSSocketOptions } from 'node:tls'
+
 interface leaderboard {
 	wallet: string
 	referrals: string
@@ -23,7 +26,39 @@ interface walletCount {
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 const tokensEachEPOCH = 34.72
 const nodeRferralsEachEPOCH = 16.742770167427702
+const sslOptions: TLSSocketOptions = {
+	key : masterSetup.Cassandra.certificate.key,
+	cert : masterSetup.Cassandra.certificate.cert,
+	ca : masterSetup.Cassandra.certificate.ca,
+	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
+}
 
+const option = {
+	contactPoints : masterSetup.Cassandra.databaseEndPoints,
+	localDataCenter: 'dc1',
+	authProvider: new auth.PlainTextAuthProvider ( masterSetup.Cassandra.auth.username, masterSetup.Cassandra.auth.password ),
+	sslOptions: sslOptions,
+	keyspace: masterSetup.Cassandra.keyspace,
+	protocolOptions: { maxVersion: types.protocolVersion.v4 }
+}
+
+export const storeLeaderboardGuardians_referrals = async (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
+	const cassClient = new Client (option)
+
+	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
+		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
+	logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
+	try {
+		cassClient.execute (cmd1)
+	} catch(ex) {
+		await cassClient.shutdown()
+		logger(Color.blue(`storeLeaderboardGuardians_referrals Error!`), ex)
+		return resolve(false)
+	}
+	await cassClient.shutdown()
+	logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
+	return resolve(true)
+})
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	const option: RequestOptions = {

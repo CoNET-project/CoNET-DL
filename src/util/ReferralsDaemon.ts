@@ -6,7 +6,7 @@ import { mapLimit} from 'async'
 import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
-import {getMinerCount, storeLeaderboardGuardians_referrals, storeLeaderboardFree_referrals} from '../endpoint/help-database'
+import {getMinerCount, storeLeaderboardFree_referrals} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'

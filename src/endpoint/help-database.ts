@@ -960,23 +960,6 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 	}
 })
 
-export const storeLeaderboardGuardians_referrals = async (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
-	const cassClient = new Client (option)
-
-	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
-		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
-	logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
-	try {
-		cassClient.execute (cmd1)
-	} catch(ex) {
-		await cassClient.shutdown()
-		logger(Color.blue(`storeLeaderboardGuardians_referrals Error!`), ex)
-		return resolve(false)
-	}
-	await cassClient.shutdown()
-	logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
-	return resolve(true)
-})
 
 export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
 	const cassClient = new Client (option)
