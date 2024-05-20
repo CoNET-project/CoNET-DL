@@ -73,6 +73,7 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	
 	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	logger(`getNodesReferralsData finished!`)
+	process.abort()
 }
 
 
