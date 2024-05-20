@@ -263,8 +263,11 @@ const guardianReferrals = async (block: string) => {
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
 
-	//await getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
-	logger(Color.grey(`nodesReferrals Success!`))
+	getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
+	.then (n => {
+		logger(Color.grey(`nodesReferrals Success!`))
+	})
+	
 }
 
 const stratFreeMinerReferrals = async (block: string) => {
