@@ -198,10 +198,10 @@ interface walletCount {
 			const countList: leaderboard[] = []
 			walletTotal.forEach((n, key) => {
 				walletList.push(key)
-				payList.push(n.cntp.toFixed(0))
+				payList.push(ethers.formatEther(n.cntp.toFixed(0)))
 				countList.push({
 					wallet: key,
-					cntpRate: (n.cntp/12).toString(),
+					cntpRate: ethers.formatEther((n.cntp/12).toString()),
 					referrals: n.count.toString()
 				})
 			})
@@ -253,7 +253,7 @@ interface walletCount {
 		console.log('')
 		EPOCH = block
 		stratFreeMinerReferrals(block)
-		//guardianReferrals(block)
+		guardianReferrals(block)
 		
 	}
 
