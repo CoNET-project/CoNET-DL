@@ -510,6 +510,9 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
+			if (!leaderboardData.epoch||!free_referrals_rate_lists||!guardians_referrals_rate_lists) {
+				return res.status(502).json({}).end()
+			}
 
 			const ret = {
 				leaderboardData,

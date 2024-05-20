@@ -982,6 +982,7 @@ export const selectLeaderboard = async () => {
 	try {
 		const kk = await cassClient.execute (cmd1)
 		await cassClient.shutdown()
+		logger(inspect(kk.rows, false, 3, true))
 		const result = kk.rows.filter(n => n.free_cntp && n.free_referrals)[0]
 		
 		const ret = {
@@ -1002,12 +1003,45 @@ export const selectLeaderboard = async () => {
 }
 
 
+const selectLeaderboardEpoch = async (epoch: string) => {
+	const cmd1 = `SELECT * from conet_leaderboard WHERE conet = 'conet' AND epoch = '${epoch}' `
+	const cassClient = new Client (option)
+	let kk
+	try {
+		kk = await cassClient.execute (cmd1)
+		
+	} catch(ex) {
+		await cassClient.shutdown()
+		return null
+	}
+	await cassClient.shutdown()
+	logger(inspect(kk, false, 3, true))
+	return (kk.rows)
+}
+
+const testInsert = async () => {
+	const cmd = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES ('conet', '572751', '[{"wallet":"0xD8b12054612119e9E45d5Deef40EDca38d54D3b5","cntpRate":"0.41704892865000004","referrals":"63"},{"wallet":"0x8FCb191a4e40D0AFA37B2fa610377688992f057f","cntpRate":"0.34461887985833334","referrals":"53"},{"wallet":"0x561e9A11B3D11d237e2FD8ddd29926aE97933Aa7","cntpRate":"0.186954184375","referrals":"30"},{"wallet":"0x967B11540B7b0F891E01Aae8509Ec9fecF34b942","cntpRate":"0.14143848325833333","referrals":"23"},{"wallet":"0x8ab7B4BfE50738a8793735E7EB6948a0c7BAC9Ee","cntpRate":"0.09083151410833333","referrals":"15"},{"wallet":"0x0D4C91541400beD3AC4e1315aAA647030FF035Ea","cntpRate":"0.06609241951666667","referrals":"11"},{"wallet":"0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF","cntpRate":"0.0356976669","referrals":"6"},{"wallet":"0xcF6AD29f268f4B62a0c2d0CB9816d46e4a0F1f94","cntpRate":"0.0356976669","referrals":"6"},{"wallet":"0x6C13339dF37027CDE88D0DCd6B8E9850809EDA52","cntpRate":"0.023704379600000002","referrals":"4"},{"wallet":"0x8AD17A0E7F2725b7A073E5D4e1f053e9d53041fD","cntpRate":"0.023704379600000002","referrals":"4"}]', '[{"wallet":"0xD8b12054612119e9E45d5Deef40EDca38d54D3b5","cntpRate":"0.41704892865000004","referrals":"63"},{"wallet":"0x8FCb191a4e40D0AFA37B2fa610377688992f057f","cntpRate":"0.34461887985833334","referrals":"53"},{"wallet":"0x561e9A11B3D11d237e2FD8ddd29926aE97933Aa7","cntpRate":"0.186954184375","referrals":"30"},{"wallet":"0x967B11540B7b0F891E01Aae8509Ec9fecF34b942","cntpRate":"0.14143848325833333","referrals":"23"},{"wallet":"0x8ab7B4BfE50738a8793735E7EB6948a0c7BAC9Ee","cntpRate":"0.09083151410833333","referrals":"15"},{"wallet":"0x0D4C91541400beD3AC4e1315aAA647030FF035Ea","cntpRate":"0.06609241951666667","referrals":"11"},{"wallet":"0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF","cntpRate":"0.0356976669","referrals":"6"},{"wallet":"0xcF6AD29f268f4B62a0c2d0CB9816d46e4a0F1f94","cntpRate":"0.0356976669","referrals":"6"},{"wallet":"0x6C13339dF37027CDE88D0DCd6B8E9850809EDA52","cntpRate":"0.023704379600000002","referrals":"4"},{"wallet":"0x8AD17A0E7F2725b7A073E5D4e1f053e9d53041fD","cntpRate":"0.023704379600000002","referrals":"4"}]', '[{"wallet":"0xD8b12054612119e9E45d5Deef40EDca38d54D3b5","cntpRate":"0.41704892865000004","referrals":"63"},{"wallet":"0x8ab7B4BfE50738a8793735E7EB6948a0c7BAC9Ee","cntpRate":"0.09083151410833333","referrals":"15"},{"wallet":"0x916d1508b4776C43131E11dA27A626c00dA6D864","cntpRate":"0.0058790624","referrals":"1"},{"wallet":"0x8FCb191a4e40D0AFA37B2fa610377688992f057f","cntpRate":"0.34461887985833334","referrals":"53"},{"wallet":"0x561e9A11B3D11d237e2FD8ddd29926aE97933Aa7","cntpRate":"0.186954184375","referrals":"30"},{"wallet":"0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF","cntpRate":"0.0356976669","referrals":"6"},{"wallet":"0xcF6AD29f268f4B62a0c2d0CB9816d46e4a0F1f94","cntpRate":"0.0356976669","referrals":"6"},{"wallet":"0x967B11540B7b0F891E01Aae8509Ec9fecF34b942","cntpRate":"0.14143848325833333","referrals":"23"},{"wallet":"0x6C13339dF37027CDE88D0DCd6B8E9850809EDA52","cntpRate":"0.023704379600000002","referrals":"4"},{"wallet":"0x8AD17A0E7F2725b7A073E5D4e1f053e9d53041fD","cntpRate":"0.023704379600000002","referrals":"4"},{"wallet":"0x527DadE4e0B11b1d13d5D528E58A01F6639Fdf57","cntpRate":"0.0058790624","referrals":"1"},{"wallet":"0xCb872981EC9C2A11fE614C6F04D4d533df02BF4F","cntpRate":"0.0118051573","referrals":"2"},{"wallet":"0xca10bEB7692fb90c86a3b113489dDD985A6A7046","cntpRate":"0.0058790624","referrals":"1"},{"wallet":"0x0D4C91541400beD3AC4e1315aAA647030FF035Ea","cntpRate":"0.06609241951666667","referrals":"11"}]')`
+	const cassClient = new Client (option)
+	let kk
+	try {
+		kk = await cassClient.execute (cmd)
+	} catch(ex) {
+		logger(ex)
+		await cassClient.shutdown()
+		return null
+	}
+	await cassClient.shutdown()
+	logger(inspect(kk, false, 3, true))
+	return (kk.rows)
+
+}
 
 /** */
 
 const test = async() => {
-	const kkk = await selectLeaderboard()
-	logger (inspect(kkk, false, 3, true))
+	//await testInsert()
+	const kkk = await selectLeaderboardEpoch('572750')
+	// logger (inspect(kkk, false, 3, true))
 	logger(JSON.stringify(kkk).length)
 
 }
@@ -1040,9 +1074,8 @@ const testClaimeToekn = async () => {
 	}
 	await claimeToekn(data.message, data.signMessage)
 	
-
 }
 
 
 // testClaimeToekn()
-// test()
+test()
