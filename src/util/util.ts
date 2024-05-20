@@ -1106,7 +1106,7 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 				payList[currentIndex] = (oldPay + newPay).toFixed(10)
 				nextIndexFun()
 			}
-			
+
 			nextIndexFun()
 		
 	}
@@ -2653,7 +2653,6 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 	}
 
 }
-
 
 const test = async () => {
 	 addAttackToCluster('119.188.246.221')

@@ -265,8 +265,6 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) =>
 	logger(Color.gray(`getFreeReferralsData finished!`))
 }
 
-
-
 const stratFreeMinerReferrals = async (block: string) => {
 
 	const data = await getMinerCount (parseInt(block))

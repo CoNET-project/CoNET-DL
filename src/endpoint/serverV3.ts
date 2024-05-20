@@ -19,6 +19,52 @@ import {logger} from '../util/logger'
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
+const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
+
+const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) => {
+	const blockDetail = await provider.getBlock(block)
+	if (!blockDetail?.transactions) {
+		return logger(Colors.gray(`Block ${block} hasn't transactions SKIP!`))
+	}
+
+	for (let u of blockDetail.transactions) {
+		await detailTransfer(u, provider)
+	}
+
+}
+const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
+	const transObj = await provider.getTransactionReceipt(transferHash)
+	const toAddr = transObj?.to
+	if ( toAddr && toAddr.toLowerCase() === ReferralsV2Addr) {
+		
+		const wallet = transObj.from.toLowerCase()
+		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
+		let address
+		try {
+			const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+			address = await contract.getReferrer(wallet)
+		} catch (ex){
+			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
+			return
+		}
+
+		if (!address || address === '0x0000000000000000000000000000000000000000') {
+			return logger(Colors.red(`detailTransfer contract.getReferrer get null address`))
+		}
+		address = address.toLowerCase()
+		ReferralsMap.set(wallet, address)
+		logger(Colors.blue(`detailTransfer add Referrer [${wallet} => ${address}] to ReferralsMap success! ReferralsMap length = [${ReferralsMap.size}]`))
+	}
+}
+
+const startListeningCONET_Holesky_EPOCH = async () => {
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	provideCONET.on('block', async block => {
+		return checkBlockEvent (block, provideCONET)
+
+	})
+}
+
 
 class conet_dl_v3_server {
 
@@ -60,6 +106,7 @@ class conet_dl_v3_server {
 		})
 
 		server.listen(this.PORT, '127.0.0.1', () => {
+			startListeningCONET_Holesky_EPOCH()
 			return console.table([
                 { 'CoNET Server V3': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
