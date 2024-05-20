@@ -53,7 +53,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		}
 		console.error(`getReferrer return ${inspect(data, false, 3, true)}`)
 		if (data) {
-			return callback ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
+			return callback ({ wallet: data.address, pay: (totalToken * reword).toFixed(0)})
 		}
 
 	})
