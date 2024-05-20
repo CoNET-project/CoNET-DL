@@ -177,26 +177,23 @@ class conet_dl_server {
 				res.status(404).end()
 				return res.socket?.end().destroy()
 			}
-
-
+				
+			if (/^post$/i.test(req.method)) {
+				
+				return Express.json ({limit: '25mb'}) (req, res, async err => {
+					if (err) {
+						logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
+						res.sendStatus(400).end()
+						res.socket?.end().destroy()
+						return await addAttackToCluster (ipaddress)
+						
+					}
+					return next()
+				})
+			}
 			
-				
-				if (/^post$/i.test(req.method)) {
-					
-					return Express.json ({limit: '25mb'}) (req, res, async err => {
-						if (err) {
-							logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
-							res.sendStatus(400).end()
-							res.socket?.end().destroy()
-							return await addAttackToCluster (ipaddress)
-							
-						}
-						return next()
-					})
-				}
-				
-				return next()
-			})
+			return next()
+		})
 
 			
 		

@@ -60,7 +60,7 @@ const makeLeaderboardData = async () => {
 	
 	const LeaderboardData = await selectLeaderboard()
 	if (!LeaderboardData) {
-		return 
+		return
 	}
 	leaderboardData.epoch = LeaderboardData.epoch
 	leaderboardData.free_cntp = LeaderboardData.free_cntp
@@ -510,9 +510,6 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
-
-
-			
 
 			const ret = {
 				leaderboardData,

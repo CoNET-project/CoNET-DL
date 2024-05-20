@@ -298,7 +298,6 @@ const startDaemonProcess = async (block: number) => {
 	console.log('')
 	EPOCH = block
 	stratFreeMinerReferrals(block)
-	// guardianMining(block)
 	guardianReferrals(block)
 	
 }

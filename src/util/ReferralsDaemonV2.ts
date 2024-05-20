@@ -189,62 +189,51 @@ interface walletCount {
 					logger(Color.gray(`${n}`),inspect(kk))
 				})
 			}
-			logger(Color.magenta(`await doWorker finished ${++i} walletTotal length = [${walletTotal.size}]`))
 			
 		}, async () => {
 			
-
-			// const referrals = mergeTransfersv1(addressList, payList)
-			
-			// referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
-			
 			logger(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}]!`))
+			const walletList: string[] = []
+			const payList: string[] = []
+			const countList: leaderboard[] = []
+			walletTotal.forEach((n, key) => {
+				walletList.push(key)
+				payList.push(n.cntp.toFixed(0))
+				countList.push({
+					wallet: key,
+					cntpRate: (n.cntp/12).toString(),
+					referrals: n.count.toString()
+				})
+			})
 
+			transferPool.push({
+				privateKey: masterSetup.GuardianReferralsFree,
+				walletList: walletList,
+				payList: payList
+			})
 
-			// transferPool.push({
-			// 	privateKey: masterSetup.GuardianReferralsFree,
-			// 	walletList: referrals.walletList,
-			// 	payList: referrals.payList
-			// })
-
-			// startTransfer()
+			startTransfer()
 			
-			// await getFreeReferralsData (transferEposh.toString(), referrals.walletList, referrals.payList)
-			// transferEposh++
-			// if (EPOCH > transferEposh) {
-			// 	return stratFreeMinerReferrals(EPOCH)
-			// }
+			await getFreeReferralsData (transferEposh.toString(), countList)
+			transferEposh++
+			if (EPOCH > transferEposh) {
+				return stratFreeMinerReferrals(EPOCH)
+			}
 
 		})
 		
 	}
 
-	const getFreeReferralsData = (block: string, Referrals: string[], payList: string[]) => new Promise(resolve => {
-		const tableNodes = Referrals.map ((n, index) => {
-			const ret: leaderboard = {
-				wallet: n,
-				cntpRate: (parseFloat(payList[index])/12).toString(),
-				referrals: '0'
-			}
-			return ret
-		})
+	const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) => {
 
-		const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-		return mapLimit(tableNodes, 1, async (n, next) => {
-			n.referrals = (await contract.getReferees (n.wallet)).length.toString()
-		}, async () => {
 			const tableCNTP = tableNodes.map(n => n)
 			const tableReferrals = tableNodes.map(n => n)
 			tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
 			tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 			const finalCNTP = tableCNTP.slice(0, 10)
 			const finalReferrals = tableReferrals.slice(0, 10)
-			// logger(inspect(finalCNTP, false, 3, true))
-			// logger(inspect(finalReferrals, false, 3, true))
 			await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
-			return resolve(true)
-		})
-	})
+	}
 
 	const startListeningCONET_Holesky_EPOCH = async () => {
 		const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -264,7 +253,6 @@ interface walletCount {
 		console.log('')
 		EPOCH = block
 		stratFreeMinerReferrals(block)
-		// guardianMining(block)
 		//guardianReferrals(block)
 		
 	}
