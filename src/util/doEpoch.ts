@@ -189,7 +189,7 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 			console.debug(`countReword(0.5) return null data`)
 			return constCalculateReferralsCallback(addressList, payList, resolve)
 		}
-		console.error(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
+		//console.error(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
 		addressList.push(data1.wallet)
 		payList.push(data1.pay)
 
@@ -200,14 +200,14 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 			}
 			addressList.push(data2.wallet)
 			payList.push(data2.pay)
-			console.error(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
+			//console.error(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
 			return countReword(.01, data2.wallet, totalToken, data3 => {
 				if (!data3) {
 					return constCalculateReferralsCallback(addressList, payList, resolve)
 				}
 				addressList.push(data3.wallet)
 				payList.push(data3.pay)
-				console.error(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
+				//console.error(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
 				return constCalculateReferralsCallback(addressList, payList, resolve)
 			})
 		})
@@ -303,7 +303,6 @@ const stratFreeMinerReferrals = async (block: string) => {
 				kk.cntp = parseFloat(payList[index])+ kk.cntp
 				++ kk.count
 				walletTotal.set(n, kk)
-				
 			})
 
 		}
