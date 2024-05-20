@@ -36,7 +36,7 @@ const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals:
 	const cassClient = new Client (option)
 	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
 		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
-	logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
+	//logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
 	try {
 		cassClient.execute (cmd1)
 	} catch(ex) {

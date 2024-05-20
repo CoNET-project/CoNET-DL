@@ -46,6 +46,7 @@ const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: str
 
 	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, free_referrals, free_cntp, free_referrals_rate_list)  VALUES (` +
 		`'conet', '${epoch}', '${free_referrals}','${free_cntp}', '${free_referrals_rate_list}')`
+		logger(Color.blue(`storeLeaderboardFree_referrals`), cmd1)
 		try {
 			cassClient.execute (cmd1)
 			await cassClient.shutdown()
