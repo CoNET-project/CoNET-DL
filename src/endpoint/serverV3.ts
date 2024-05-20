@@ -35,7 +35,7 @@ class conet_dl_v3_server {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
-
+		app.use(Express.json())
 		app.use( '/api', router )
 
 		app.once ( 'error', ( err: any ) => {
