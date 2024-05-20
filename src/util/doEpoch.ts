@@ -186,7 +186,6 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 
 	return countReword(.05, _walletAddress, totalToken, data1 => {
 		if (!data1) {
-			console.debug(`countReword(0.5) return null data`)
 			return constCalculateReferralsCallback(addressList, payList, resolve)
 		}
 		//console.error(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
@@ -195,7 +194,6 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 
 		return countReword(.03, data1.wallet, totalToken, data2 => {
 			if (!data2) {
-				console.error(`countReword(0.3) return null data!`)
 				return constCalculateReferralsCallback(addressList, payList, resolve)
 			}
 			addressList.push(data2.wallet)
