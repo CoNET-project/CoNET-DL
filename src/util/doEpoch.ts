@@ -300,7 +300,7 @@ const guardianReferrals = async (block: string) => {
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 	const kkk = referralsBoosts.map(n =>n.toFixed(10))
 
-	getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, kkk)
+	//getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, kkk)
 	
 	
 }
