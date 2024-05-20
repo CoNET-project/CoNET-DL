@@ -6,7 +6,7 @@ import {request} from 'node:http'
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	const option: RequestOptions = {
 		hostname: 'localhost',
-		path: `/api/ipaddress`,
+		path: `/api/wallet`,
 		port: 8001,
 		method: 'POST',
 		headers: {
