@@ -108,6 +108,11 @@ const getMinerCount = async (_epoch: number) => {
 }
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
+	if (!address) {
+		const err = `Call getReferrer address null error!`
+		console.error(Color.red(err))
+		return callbak (new Error(err))
+	}
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/wallet`,
