@@ -68,8 +68,8 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
-	logger(inspect(finalCNTP, false, 3, true))
-	logger(inspect(finalReferrals, false, 3, true))
+	// logger(inspect(finalCNTP, false, 3, true))
+	// logger(inspect(finalReferrals, false, 3, true))
 	
 	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	logger(`getNodesReferralsData finished!`)
