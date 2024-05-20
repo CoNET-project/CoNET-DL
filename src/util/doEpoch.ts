@@ -155,7 +155,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 			console.error(`getReferrer return err`, err)
 			return callback (null)
 		}
-		console.error(`getReferrer return ${inspect(data, false, 3, true)}`)
+		
 		if (data?.address !== '0x0000000000000000000000000000000000000000') {
 			return callback ({ wallet: data.address, pay: (totalToken * reword).toFixed(0)})
 		}
@@ -291,7 +291,6 @@ const stratFreeMinerReferrals = async (block: string) => {
 	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${minerWallets.length}]`))
 	let i = 0
 	mapLimit(minerWallets, 2, async (n, next) => {
-		console.error(Color.grey(`mapLimit start [${n}] [${i++}]`))
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
