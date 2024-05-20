@@ -186,7 +186,6 @@ interface walletCount {
 					kk.cntp=parseFloat(data1.payList[index])+ kk.cntp
 					++ kk.count
 					walletTotal.set(n, kk)
-					logger(Color.gray(`${n}`),inspect(kk))
 				})
 			}
 			
@@ -205,7 +204,7 @@ interface walletCount {
 					referrals: n.count.toString()
 				})
 			})
-
+			logger(Color.blue(`stratFreeMinerReferrals payList ${payList[0]},${payList[1]},${payList[2]}`))
 			transferPool.push({
 				privateKey: masterSetup.GuardianReferralsFree,
 				walletList: walletList,

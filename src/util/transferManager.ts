@@ -100,7 +100,7 @@ const transferCCNTP = (provateKey: string, walletList: string[], PayList: string
 		try {
 			tx = await cCNTPContract.multiTransferToken(walletList, payList)
 		} catch (ex) {
-			logger(Color.red(`transferCCNTP Error! = [${walletList.length}] Wallet = [${wallet.address}]`), ex)
+			logger(Color.red(`transferCCNTP Error! = [${walletList.length}] Wallet = [${wallet.address}]`))
 			return setTimeout(() => {
 				return send()
 			}, 1000)
