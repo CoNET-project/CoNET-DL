@@ -262,8 +262,6 @@ interface leaderboard {
 		logger(Color.gray(`doWorker [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
-			logger(Color.grey(`stderr\n${stderr}`))
-			logger(Color.grey(`error\n${error}`))
 			try{
 				const ret1 = JSON.parse(ret)
 				return resolve (ret1)
