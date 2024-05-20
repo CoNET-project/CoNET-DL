@@ -14,7 +14,6 @@ import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
-import v3Server from '../endpoint/serverV3'
 
 let EPOCH = 0
 let transferEposh = 0
@@ -29,8 +28,6 @@ interface leaderboard {
 	referrals: string
 	cntpRate: string
 }
-
-new v3Server()
 
 	const guardianReferrals = async (block: number) => {
 		const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -258,16 +255,16 @@ new v3Server()
 		
 	}
 
-	startListeningCONET_Holesky_EPOCH()
+
 
 	const doWorker = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
-			
+			logger(Color.grey(`stderr\n${stderr}`))
+			logger(Color.grey(`error\n${error}`))
 			try{
 				const ret1 = JSON.parse(ret)
-
 				return resolve (ret1)
 			} catch (ex) {
 				logger(Color.red(`doWorker JSON.parse(ret) Error! ret=${ret}`))
@@ -275,4 +272,6 @@ new v3Server()
 			return resolve (null)
 		})
 	})
+
+	startListeningCONET_Holesky_EPOCH()
 

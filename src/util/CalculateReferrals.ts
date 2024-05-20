@@ -4,7 +4,8 @@ import {ethers} from 'ethers'
 import {conet_Referral_contractV2} from './util'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 import {ConnectionConfig, createConnection} from 'mysql'
-import {get} from 'node:http'
+import type { RequestOptions } from 'node:http'
+import {request} from 'node:http'
 
 const connectObj:ConnectionConfig = {
 	host     : 'localhost',
@@ -14,11 +15,45 @@ const connectObj:ConnectionConfig = {
 }
 const mySql = createConnection (connectObj)
 
-const getReferrer = (address: string, callbak: (err: Error|null, data?: any) => void)=> {
-	const url = `http://localhost/api/wallet?wallet=${address}`
-	return get(url, res => {
-		
+const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path: `/api/ipaddress`,
+		port: 8001,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	const postData = {
+		wallet: address
+	}
+
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+
+			try {
+				const ret = JSON.parse(data)
+				return callbak (null, ret)
+			} catch (ex: any) {
+				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				return callbak (ex)
+			}
+			
+		})
 	})
+
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (e)
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
 }
 
 
@@ -28,26 +63,11 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 			console.error(`getReferrer return err`, err)
 			return callback (null)
 		}
-	
+		console.error(`getReferrer return ${inspect(data, false, 3, true)}`)
 		if (data) {
 			return callback ({ wallet: data.wallet, pay: (totalToken * reword).toFixed(0)})
 		}
 
-		const conet_Holesky_rpc = 'https://rpc.conet.network'
-		const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-		let address
-		try {
-			address = await contract.getReferrer(wallet)
-		} catch (ex) {
-			console.error(`contract.getReferrer Error!`, ex)
-			return callback (null)
-		}
-		if (address === '0x0000000000000000000000000000000000000000') {
-			return callback (null)
-		}
-		address = address.toLowerCase()
-		await saveReferrer(wallet, address)
-		return callback ({wallet: address, pay: (totalToken * reword).toFixed(0)})
 	})
 }
 
