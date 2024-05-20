@@ -14,7 +14,7 @@ import {abi as CONET_Referral_ABI} from './conet-referral.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
-
+import v3Server from '../endpoint/serverV3'
 
 let EPOCH = 0
 let transferEposh = 0
@@ -30,7 +30,7 @@ interface leaderboard {
 	cntpRate: string
 }
 
-
+new v3Server()
 
 	const guardianReferrals = async (block: number) => {
 		const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -156,8 +156,6 @@ interface leaderboard {
 			}
 			return transferEposh++
 		}
-
-
 
 		const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))
 		const minerWallets: string[] = []

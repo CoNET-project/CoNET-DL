@@ -4,6 +4,7 @@ import {ethers} from 'ethers'
 import {conet_Referral_contractV2} from './util'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
 import {ConnectionConfig, createConnection} from 'mysql'
+import {get} from 'node:http'
 
 const connectObj:ConnectionConfig = {
 	host     : 'localhost',
@@ -14,24 +15,11 @@ const connectObj:ConnectionConfig = {
 const mySql = createConnection (connectObj)
 
 const getReferrer = (address: string, callbak: (err: Error|null, data?: any) => void)=> {
-	const _address = address.toLowerCase()
-	const query = `SELECT wallet FROM referrer WHERE id = '${_address}'`
-	return mySql.query(query, (err, results, fields) => {
-		if (err) {
-			return callbak (err)
-		}
-		const ret = results[0]
+	const url = `http://localhost/api/wallet?wallet=${address}`
+	return get(url, res => {
 		
-		return callbak(null, ret)
 	})
 }
-
-const saveReferrer = (id: string, address: string) => new Promise( resolve => {
-	const query = `INSERT INTO referrer (id, wallet) VALUES ('${id}', '${address}')`
-	return mySql.query(query, (err, results, fields) => {
-		return resolve(true)
-	})
-})
 
 
 const countReword = (reword: number, wallet: string, totalToken: number, callback: (data: null|{wallet: string,pay: string}) => void) => {
