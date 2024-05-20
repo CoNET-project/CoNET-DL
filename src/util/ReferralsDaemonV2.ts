@@ -216,7 +216,7 @@ interface leaderboard {
 		})
 
 		const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-		return mapLimit(tableNodes, 10, async (n, next) => {
+		return mapLimit(tableNodes, 1, async (n, next) => {
 			n.referrals = (await contract.getReferees (n.wallet)).length.toString()
 		}, async () => {
 			const tableCNTP = tableNodes.map(n => n)
