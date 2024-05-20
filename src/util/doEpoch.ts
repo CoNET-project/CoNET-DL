@@ -149,9 +149,9 @@ const getNodesReferralsData =(block: string, wallets: string[], nodes: string[],
 	logger(inspect(finalCNTP, false, 3, true))
 	logger(inspect(finalReferrals, false, 3, true))
 	
-	storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes)).then (n => {
-		logger(inspect(finalReferrals, false, 3, true))
-	})
+	// storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes)).then (n => {
+	// 	logger(inspect(finalReferrals, false, 3, true))
+	// })
 	
 }
 
@@ -300,7 +300,7 @@ const guardianReferrals = async (block: string) => {
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 	const kkk = referralsBoosts.map(n =>n.toFixed(10))
 
-	//getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, kkk)
+	getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, kkk)
 	
 	
 }
