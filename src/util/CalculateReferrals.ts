@@ -1,19 +1,7 @@
 
 import {inspect} from 'node:util'
-import {ethers} from 'ethers'
-import {conet_Referral_contractV2} from './util'
-import {abi as CONET_Referral_ABI} from './conet-referral.json'
-import {ConnectionConfig, createConnection} from 'mysql'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-
-const connectObj:ConnectionConfig = {
-	host     : 'localhost',
-	user     : 'conet',
-	password : 'DTx2BNX/yb5sr5K/GYg=',
-	database : 'conet'
-}
-const mySql = createConnection (connectObj)
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	const option: RequestOptions = {
@@ -77,23 +65,16 @@ interface returnData {
 }
 
 const constCalculateReferralsCallback = (addressList: string[], payList: string[], CallBack: (data: returnData|null) => void) => {
-	return mySql.end(() => {
-		if (addressList.length <1) {
-			return CallBack (null)
-		}
-		return CallBack ({addressList, payList})
-	})
+	
+	if (addressList.length <1) {
+		return CallBack (null)
+	}
+	return CallBack ({addressList, payList})
+	
 }
 
 const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack: (data: returnData|null) => void) => {
-	mySql.connect(err => {
-		if (err) {
-			console.error(`CalculateReferrals mySql.connect Error try again!`, err)
-			return setTimeout(() => {
-				return CalculateReferrals (walletAddress, totalToken, CallBack)
-			}, 500)
-			
-		}
+	
 		let _walletAddress = walletAddress.toLowerCase()
 	
 		const addressList: string[] = []
@@ -128,8 +109,6 @@ const CalculateReferrals = (walletAddress: string, totalToken: number, CallBack:
 			})
 		})
 
-	})
-	
 }
 
 

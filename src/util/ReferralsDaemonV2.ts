@@ -259,6 +259,7 @@ interface leaderboard {
 
 	const doWorker = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
+		logger(Color.gray(`doWorker [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
 			logger(Color.grey(`stderr\n${stderr}`))
