@@ -965,14 +965,14 @@ export const storeLeaderboardGuardians_referrals = async (epoch: string, guardia
 
 	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
 		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
-		try {
-			cassClient.execute (cmd1)
-			await cassClient.shutdown()
-			return true
-		} catch(ex) {
-			await cassClient.shutdown()
-			return false
-		}
+	try {
+		cassClient.execute (cmd1)
+		await cassClient.shutdown()
+		return true
+	} catch(ex) {
+		await cassClient.shutdown()
+		return false
+	}
 }
 
 export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {

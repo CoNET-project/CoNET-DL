@@ -114,7 +114,8 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	logger(inspect(finalCNTP, false, 3, true))
 	logger(inspect(finalReferrals, false, 3, true))
 	
-	// await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
+	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
+	logger(inspect(finalReferrals, false, 3, true))
 }
 
 const CalculateReferrals = (walletAddress: string, totalToken: number) => new Promise(resolve=> {
