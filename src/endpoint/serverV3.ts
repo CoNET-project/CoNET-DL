@@ -96,8 +96,9 @@ class conet_dl_v3_server {
 				address = '0x0000000000000000000000000000000000000000'
 			}
 			address = address.toLowerCase()
-			logger(Colors.grey(`address = [${address}]`))
+			
 			ReferralsMap.set(wallet, address)
+			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
 			return res.status(200).json({address}).end()
 		})
 
