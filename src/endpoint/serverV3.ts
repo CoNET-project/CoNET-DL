@@ -96,12 +96,12 @@ class conet_dl_v3_server {
 				address = '0x0000000000000000000000000000000000000000'
 			}
 			address = address.toLowerCase()
+			logger(Colors.grey(`address = [${address}]`))
+			ReferralsMap.set(wallet, address)
 			if (address === '0x0000000000000000000000000000000000000000') {
-				res.status(200).json({}).end()
+				return res.status(200).json({}).end()
 			}
 			
-			
-			ReferralsMap.set(wallet, address)
 			return res.status(200).json({address}).end()
 		})
 
