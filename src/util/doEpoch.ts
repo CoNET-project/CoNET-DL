@@ -42,7 +42,7 @@ const option = {
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
 }
 
-export const storeLeaderboardGuardians_referrals = async (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
+const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
 
 	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
@@ -149,9 +149,9 @@ const getNodesReferralsData =(block: string, wallets: string[], nodes: string[],
 	logger(inspect(finalCNTP, false, 3, true))
 	logger(inspect(finalReferrals, false, 3, true))
 	
-	// storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes)).then (n => {
-	// 	logger(inspect(finalReferrals, false, 3, true))
-	// })
+	storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes)).then (n => {
+		logger(inspect(finalReferrals, false, 3, true))
+	})
 	
 }
 
