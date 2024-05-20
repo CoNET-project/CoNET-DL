@@ -20,7 +20,6 @@ let transferEposh = 0
 const tokensEachEPOCH = 34.72
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
-const ReferralsMap: Map<string, string> = new Map()
 
 
 interface leaderboard {
@@ -159,7 +158,7 @@ interface walletCount {
 			return transferEposh++
 		}
 
-		const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))
+		const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(0))
 		const minerWallets: string[] = []
 		data.counts.forEach(n => {
 			const kk: string[] = JSON.parse(n.wallets)
@@ -172,7 +171,7 @@ interface walletCount {
 
 		const walletTotal : Map<string, walletCount> = new Map()
 
-		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
+		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(0))}] MinerWallets length = [${minerWallets.length}]`))
 		let i = 0
 		mapLimit(minerWallets, 40, async (n, next) => {
 			const data1 = await doWorker (n, minerRate.toString())
@@ -200,7 +199,7 @@ interface walletCount {
 				payList.push(ethers.formatEther(n.cntp.toFixed(0)))
 				countList.push({
 					wallet: key,
-					cntpRate: ethers.formatEther((n.cntp/12).toString()),
+					cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
 					referrals: n.count.toString()
 				})
 			})
