@@ -158,7 +158,7 @@ interface walletCount {
 			return transferEposh++
 		}
 
-		const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(0))
+		const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(18))
 		const minerWallets: string[] = []
 		data.counts.forEach(n => {
 			const kk: string[] = JSON.parse(n.wallets)
@@ -259,6 +259,7 @@ interface walletCount {
 
 	const doWorker: (wallet: string, rate: string) => Promise<null|{addressList: string[], payList: string[]}> = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
+		logger()
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
 			try{
