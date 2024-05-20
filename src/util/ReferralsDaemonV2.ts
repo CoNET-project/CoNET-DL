@@ -212,7 +212,7 @@ interface walletCount {
 
 			startTransfer()
 			
-			await getFreeReferralsData (transferEposh.toString(), countList)
+			getFreeReferralsData (transferEposh.toString(), countList)
 			transferEposh++
 			if (EPOCH > transferEposh) {
 				return stratFreeMinerReferrals(EPOCH)
