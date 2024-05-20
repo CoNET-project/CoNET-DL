@@ -173,7 +173,7 @@ interface walletCount {
 
 		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(0))}] MinerWallets length = [${minerWallets.length}]`))
 		let i = 0
-		mapLimit(minerWallets, 40, async (n, next) => {
+		mapLimit(minerWallets, 80, async (n, next) => {
 			const data1 = await doWorker (n, minerRate.toString())
 			
 			if (data1) {
