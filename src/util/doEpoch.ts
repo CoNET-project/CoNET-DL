@@ -55,6 +55,7 @@ const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: str
 			return false
 		}
 		await cassClient.shutdown()
+		logger(Color.magenta(`storeLeaderboard Free_referrals [${epoch}] success!`))
 		return true
 }
 
