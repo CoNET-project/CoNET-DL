@@ -106,7 +106,7 @@ class conet_dl_v3_server {
 			let walletList: string[]
 			let payList: string[]
 			try {
-				walletList = req.body.wallet
+				walletList = req.body.walletList
 				payList = req.body.payList
 			} catch (ex) {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
