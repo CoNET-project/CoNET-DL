@@ -183,10 +183,10 @@ interface walletCount {
 						cntp: 0,
 						count: 0
 					}
-					kk.cntp=parseFloat(data1.payList[index])
+					kk.cntp=parseFloat(data1.payList[index])+ kk.cntp
 					++ kk.count
 					walletTotal.set(n, kk)
-					logger(inspect(kk))
+					logger(Color.gray(`${n}`),inspect(kk))
 				})
 			}
 			logger(Color.magenta(`await doWorker finished ${++i} walletTotal length = [${walletTotal.size}]`))
