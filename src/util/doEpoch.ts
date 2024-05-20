@@ -264,6 +264,7 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) =>
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
 	await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
+	logger(Color.gray(`getFreeReferralsData finished!`))
 }
 
 
@@ -322,8 +323,9 @@ const stratFreeMinerReferrals = async (block: string) => {
 				referrals: n.count.toString()
 			})
 		})
-		logger(Color.magenta(`Pre finished doEpoch [${epoch}] `))
+		
 		await getFreeReferralsData (block, countList)
+		logger(Color.magenta(`Pre finished doEpoch [${epoch}] `))
 		// sendPaymentToPool (walletList, payList, () => {
 		// 	logger(Color.magenta(`Finished doEpoch [${epoch}] `))
 		// })
