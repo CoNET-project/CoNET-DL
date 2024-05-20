@@ -44,7 +44,6 @@ const option = {
 
 const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
-
 	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
 		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
 	logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
@@ -57,7 +56,7 @@ const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals:
 	}
 	await cassClient.shutdown()
 	logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
-	return resolve(true)
+	resolve(true)
 })
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
@@ -130,7 +129,7 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 	
 }
 
-const getNodesReferralsData =(block: string, wallets: string[], nodes: string[], payList: string[]) => {
+const getNodesReferralsData = async (block: string, wallets: string[], nodes: string[], payList: string[]) => {
 	const tableNodes = wallets.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
@@ -149,9 +148,7 @@ const getNodesReferralsData =(block: string, wallets: string[], nodes: string[],
 	logger(inspect(finalCNTP, false, 3, true))
 	logger(inspect(finalReferrals, false, 3, true))
 	
-	storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes)).then (n => {
-		logger(inspect(finalReferrals, false, 3, true))
-	})
+	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
 }
 
