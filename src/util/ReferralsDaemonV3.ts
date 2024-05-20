@@ -22,14 +22,10 @@ const startDaemonProcess = async (block: number) => {
 
 const doWorkerCom: (command: string) => Promise<boolean> = (command: string) => new Promise(resolve => {
 	exec(command, (error, stdout, stderr) => {
-		const ret = stdout.split('ret=')[1]
-		try{
-			const ret1 = JSON.parse(ret)
-			return resolve (true)
-		} catch (ex) {
-			logger(Color.red(`doEpochNode JSON.parse(ret) Error! ret=${ret}`))
-		}
-		return resolve (false)
+		
+		logger(stderr)
+		return resolve (true)
+
 	})
 })
 
