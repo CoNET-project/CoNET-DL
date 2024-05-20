@@ -29,6 +29,11 @@ interface leaderboard {
 	cntpRate: string
 }
 
+interface walletCount {
+	cntp: number
+	count: number
+}
+
 	const guardianReferrals = async (block: number) => {
 		const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 		const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
@@ -165,27 +170,35 @@ interface leaderboard {
 		})
 
 
-		const addressList: string[] =[]
-		const payList: string[] = []
+		const walletTotal : Map<string, walletCount> = new Map()
 
 		logger(Color.blue(`daemon EPOCH = [${EPOCH}]  transferEposh = ${transferEposh} starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))}] MinerWallets length = [${minerWallets.length}] ReferralsMap length = [${ReferralsMap.size}]`))
 		let i = 0
 		mapLimit(minerWallets, 20, async (n, next) => {
-			const data1: any = await doWorker (n, minerRate.toString())
-			logger(Color.magenta(`await doWorker finished ${++i}`))
-			if (data1?.addressList?.length) {
-				addressList.push(...data1.addressList)
-				payList.push(...data1.payList)
+			const data1 = await doWorker (n, minerRate.toString())
+			
+			if (data1) {
+				data1.addressList.forEach((n, index) => {
+					const kk = walletTotal.get (n)||{
+						cntp: 0,
+						count: 0
+					}
+					kk.cntp=parseFloat(data1.payList[index])
+					++ kk.count
+					walletTotal.set(n, kk)
+					logger(inspect(kk))
+				})
 			}
+			logger(Color.magenta(`await doWorker finished ${++i} walletTotal length = [${walletTotal.size}]`))
 			
 		}, async () => {
-			logger(Color.blue(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList length  [${addressList.length!}] payList length [${payList.length}]`))
+			
 
-			const referrals = mergeTransfersv1(addressList, payList)
+			// const referrals = mergeTransfersv1(addressList, payList)
 			
-			referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
+			// referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
 			
-			logger(Color.blue(`stratFreeMinerReferrals payList [${referrals.payList.length}] walletList [${referrals.walletList.length}] walletCount [${referrals.countList.size}]`))
+			logger(Color.blue(`stratFreeMinerReferrals walletTotal [${walletTotal.size}]`))
 
 
 			// transferPool.push({
@@ -258,7 +271,7 @@ interface leaderboard {
 
 
 
-	const doWorker = (wallet: string, rate: string) => new Promise(resolve => {
+	const doWorker: (wallet: string, rate: string) => Promise<null|{addressList: string[], payList: string[]}> = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
