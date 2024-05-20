@@ -203,7 +203,7 @@ interface walletCount {
 					referrals: n.count.toString()
 				})
 			})
-			logger(Color.blue(`stratFreeMinerReferrals payList ${payList[0]},${payList[1]},${payList[2]}`))
+			
 			transferPool.push({
 				privateKey: masterSetup.GuardianReferralsFree,
 				walletList: walletList,

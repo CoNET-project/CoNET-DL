@@ -677,7 +677,7 @@ export const deleteMiner = async (ipaddress: string, wallet: string) => {
 
 export const getMinerCount = async (_epoch: number) => {
 	let count = 0
-	const epoch = (_epoch - 1).toString()
+	const epoch = (_epoch).toString()
 	
 	const counts = await getEpochNodeMiners(epoch)
 	clusterNodes = await getApiNodes()
