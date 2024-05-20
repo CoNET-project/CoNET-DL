@@ -1,15 +1,13 @@
 import {ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
-import {inspect} from 'node:util'
 import { mapLimit} from 'async'
-import {GuardianNodes_ContractV2, masterSetup, cCNTP_Contract, conet_Referral_contractV2, mergeTransfersv1} from './util'
+import {GuardianNodes_ContractV2, masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {exec} from 'node:child_process'
 
 import {getMinerCount, storeLeaderboardGuardians_referrals, storeLeaderboardFree_referrals} from '../endpoint/help-database'
-import {abi as CONET_Point_ABI} from './conet-point.json'
-import {abi as CONET_Referral_ABI} from './conet-referral.json'
+
 
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 

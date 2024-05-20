@@ -7,13 +7,13 @@ import Colors from 'colors/safe'
 
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
-
+import {transferPool, startTransfer} from '../util/transferManager'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
 import {createServer} from 'node:http'
-import {conet_Referral_contractV2} from '../util/util'
+import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 const ReferralsMap: Map<string, string> = new Map()
@@ -100,6 +100,27 @@ class conet_dl_v3_server {
 			ReferralsMap.set(wallet, address)
 			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
 			return res.status(200).json({address}).end()
+		})
+
+		router.post ('/pay',  async (req, res) =>{
+			let walletList: string[]
+			let payList: string[]
+			try {
+				walletList = req.body.wallet
+				payList = req.body.payList
+			} catch (ex) {
+				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
+				return res.status(403).end()
+			}
+			res.status(200).end()
+			
+			transferPool.push({
+				privateKey: masterSetup.GuardianReferralsFree,
+				walletList: walletList,
+				payList: payList
+			})
+			
+			return startTransfer()
 		})
 
 		router.all ('*', (req, res ) =>{

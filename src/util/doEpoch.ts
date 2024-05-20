@@ -151,6 +151,46 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 		})
 	})
 })
+
+const sendPaymentToPool = async (walletList: string[], payList: string[], callbak: (err?: Error)=> void) => {
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path: `/api/pay`,
+		port: 8001,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	const postData = {
+		walletList, payList
+	}
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+
+			try {
+				const ret = JSON.parse(data)
+				return callbak ()
+			} catch (ex: any) {
+				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				return callbak (ex)
+			}
+			
+		})
+	})
+
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (e)
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
+}
 	
 
 const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) => {
@@ -246,7 +286,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 
 	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${minerWallets.length}]`))
 	let i = 0
-	mapLimit(minerWallets, 1, async (n, next) => {
+	mapLimit(minerWallets, 4, async (n, next) => {
 		console.error(Color.grey(`mapLimit start [${n}] [${i++}]`))
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
@@ -280,17 +320,13 @@ const stratFreeMinerReferrals = async (block: string) => {
 				referrals: n.count.toString()
 			})
 		})
-		
-		transferPool.push({
-			privateKey: masterSetup.GuardianReferralsFree,
-			walletList: walletList,
-			payList: payList
-		})
-
+		await getFreeReferralsData (block, countList)
+		// sendPaymentToPool (walletList, payList, () => {
+			
+		// })
+	
 		
 		
-		getFreeReferralsData (block, countList)
-		await startTransfer()
 	})
 	
 }
