@@ -324,7 +324,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 		// logger(Color.magenta(` Pre finished doEpoch [${epoch}] `))
 		// await getFreeReferralsData (block, countList)
 		// sendPaymentToPool (walletList, payList, () => {
-			
+			logger()
 		// })
 	
 		logger(Color.magenta(`Finished doEpoch [${epoch}] `))
@@ -345,7 +345,7 @@ args.forEach ((n, index ) => {
 if (epoch) {
 	logger(Color.magenta(`Start doEpoch [${epoch}] `))
 	stratFreeMinerReferrals(epoch)
-	//guardianReferrals(epoch)
+	guardianReferrals(epoch)
 } else {
 	console.error(`wallet ${epoch} Error!`)
 }
