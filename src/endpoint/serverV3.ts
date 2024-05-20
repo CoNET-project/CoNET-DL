@@ -20,7 +20,7 @@ const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 
-class conet_dl_v2_server {
+class conet_dl_v3_server {
 
 	private PORT = 8001
 
@@ -114,4 +114,4 @@ class conet_dl_v2_server {
 	}
 }
 
-export default conet_dl_v2_server
+new conet_dl_v3_server()
