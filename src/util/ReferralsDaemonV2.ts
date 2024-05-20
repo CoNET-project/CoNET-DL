@@ -179,12 +179,13 @@ interface leaderboard {
 			}
 			
 		}, async () => {
-			logger(Color.red(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList length  [${addressList.length!}] payList length [${payList.length}]`))
-			// const referrals = mergeTransfersv1(addressList, payList)
+			logger(Color.blue(`stratFreeMinerReferrals [${transferEposh}] finished CalculateReferrals addressList length  [${addressList.length!}] payList length [${payList.length}]`))
+
+			const referrals = mergeTransfersv1(addressList, payList)
 			
-			// referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
+			referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
 			
-			// logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
+			logger(Color.blue(`stratFreeMinerReferrals payList [${referrals.payList.length}] walletList [${referrals.walletList.length}] walletCount [${referrals.countList.size}]`))
 
 
 			// transferPool.push({
@@ -259,7 +260,6 @@ interface leaderboard {
 
 	const doWorker = (wallet: string, rate: string) => new Promise(resolve => {
 		const command = `node dist/util/CalculateReferrals wallet=${wallet} rate=${rate}`
-		logger(Color.gray(`doWorker [${command}]`))
 		return exec(command, (error, stdout, stderr) => {
 			const ret = stdout.split('ret=')[1]
 			try{

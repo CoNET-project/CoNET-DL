@@ -1069,6 +1069,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 	const walletList: string[] = []
 	const payList: string[] = []
+	const countList: Map<string, number> = new Map()
 	const beforeLength = _nodeList.length
 	//logger(colors.blue(`mergeTransfers _nodeList length [${_nodeList.length}] pay length [${pay.length}]`))
 	const nextItem = () => {
@@ -1079,20 +1080,23 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 				// logger(colors.magenta(`the end of Array`))
 				return 
 			}
+
 			const payItem = pay.shift()
+
 			if (!payItem) {
 				logger(colors.red(`mergeTransfers _nodeList length [${_nodeList.length}] !== pay length [${pay.length}]`))
 				return
 			}
 			walletList.push(item)
 			payList.push(payItem)
-
+			const count = countList.get (item)||0
+			countList.set (item, count+1)
+			
 			const nextIndexFun = () => {
 				const nextIndex = _nodeList.findIndex(nn => nn === item)
 				//		no more item
 				if (nextIndex<0) {
 					return nextItem()
-
 				}
 				_nodeList.splice(nextIndex, 1)[0]
 				const _pay = pay.splice(nextIndex, 1)[0]
@@ -1108,8 +1112,8 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 
 	nextItem()
 	//logger(colors.blue(`mergeTransfers length from [${beforeLength}] to [${payList.length}]`))
-
-	return {walletList, payList}
+	
+	return {walletList, payList, countList}
 }
 
 export const multiTransfer = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
