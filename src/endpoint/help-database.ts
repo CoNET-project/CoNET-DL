@@ -970,12 +970,13 @@ export const storeLeaderboardGuardians_referrals = async (epoch: string, guardia
 		cassClient.execute (cmd1)
 		await cassClient.shutdown()
 		logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
-		return resolve(true)
+		
 	} catch(ex) {
 		await cassClient.shutdown()
 		logger(Color.blue(`storeLeaderboardGuardians_referrals Error!`), ex)
 		return resolve(false)
 	}
+	return resolve(true)
 })
 
 export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
