@@ -244,9 +244,10 @@ const stratFreeMinerReferrals = async (block: string) => {
 	})
 	const walletTotal : Map<string, walletCount> = new Map()
 
-	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ ethers.parseEther((tokensEachEPOCH/data.count).toFixed(0))}] MinerWallets length = [${minerWallets.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${minerWallets.length}]`))
 	let i = 0
-	mapLimit(minerWallets, 50, async (n, next) => {
+	mapLimit(minerWallets, 1, async (n, next) => {
+		console.error(Color.grey(`mapLimit start [${n}] [${i++}]`))
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
@@ -259,7 +260,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 				kk.cntp = parseFloat(payList[index])+ kk.cntp
 				++ kk.count
 				walletTotal.set(n, kk)
-				console.error(Color.gray(`mapLimit [${++i}] n pay[${kk.cntp}]`))
+				
 			})
 
 		}
