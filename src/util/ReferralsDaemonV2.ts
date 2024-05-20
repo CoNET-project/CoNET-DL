@@ -198,7 +198,7 @@ interface walletCount {
 			
 			// referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
 			
-			logger(Color.blue(`stratFreeMinerReferrals walletTotal [${walletTotal.size}]`))
+			logger(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}]!`))
 
 
 			// transferPool.push({
