@@ -23,9 +23,8 @@ interface walletCount {
 	count: number
 }
 
-const conet_Holesky_rpc = 'https://rpc.conet.network'
 const tokensEachEPOCH = 34.72
-const nodeRferralsEachEPOCH = 16.742770167427702
+
 const sslOptions: TLSSocketOptions = {
 	key : masterSetup.Cassandra.certificate.key,
 	cert : masterSetup.Cassandra.certificate.cert,
@@ -41,23 +40,6 @@ const option = {
 	keyspace: masterSetup.Cassandra.keyspace,
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
 }
-
-const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
-	const cassClient = new Client (option)
-	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
-		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
-	logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
-	try {
-		cassClient.execute (cmd1)
-	} catch(ex) {
-		await cassClient.shutdown()
-		logger(Color.blue(`storeLeaderboardGuardians_referrals Error!`), ex)
-		return resolve(false)
-	}
-	await cassClient.shutdown()
-	logger(Color.blue(`storeLeaderboardGuardians_referrals finished`))
-	resolve(true)
-})
 
 const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
 	const cassClient = new Client (option)
@@ -195,28 +177,6 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 	
 }
 
-const getNodesReferralsData = async (block: string, wallets: string[], nodes: string[], payList: string[]) => {
-	const tableNodes = wallets.map ((n, index) => {
-		const ret: leaderboard = {
-			wallet: n,
-			cntpRate: (parseFloat(payList[index])/12).toString(),
-			referrals: nodes[index]
-		}
-		return ret
-	})
-	
-	const tableCNTP = tableNodes.map(n => n)
-	const tableReferrals = tableNodes.map(n => n)
-	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
-	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-	const finalCNTP = tableCNTP.slice(0, 10)
-	const finalReferrals = tableReferrals.slice(0, 10)
-	logger(inspect(finalCNTP, false, 3, true))
-	logger(inspect(finalReferrals, false, 3, true))
-	
-	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
-	
-}
 
 const CalculateReferrals = (walletAddress: string, totalToken: number) => new Promise(resolve=> {
 	let _walletAddress = walletAddress.toLowerCase()
@@ -307,66 +267,6 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) =>
 }
 
 
-const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
-	const _retWalletAddr: Map<string, string> = new Map()
-	const retReferralsBoost: string[] = []
-	walletAddr.forEach((n, index) => {
-		
-		if ( n !== '0x0000000000000000000000000000000000000000') {
-			_retWalletAddr.set(n, referralsBoost[index])
-		}
-	})
-	const retWalletAddr: string[] = []
-	_retWalletAddr.forEach((value, key) => {
-		retWalletAddr.push (key)
-		retReferralsBoost.push(value)
-	})
-	return [retWalletAddr, retReferralsBoost]
-}
-
-const guardianReferrals = async (block: string) => {
-	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
-	let nodes
-	try {
-		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
-	} catch (ex: any) {
-		console.error(Color.red(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
-	}
-	const referralsAddress: string[] = nodes[2].map((n: string) => n)
-	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())
-	
-	const [_referralsAddress, _referralsNodes] = mergeReferrals(referralsAddress, referralsBoost)
-
-	const payReferralsBoost: number[] = _referralsNodes.map(n => {
-		const nodes = parseInt(n)
-		const ret = nodes < 1000 ? (nodes === 1 ? 1000 : (1000 + 2 * (nodes))) : 3000
-		return ret
-	})
-
-	let totalBoostPiece = 0
-
-	payReferralsBoost.forEach((n, index) => 
-		totalBoostPiece += n * parseInt(_referralsNodes[index])
-	)
-
-	let totalNodes = 0
-	_referralsNodes.forEach(n => totalNodes += parseInt(n))
-
-	const eachBoostToken = nodeRferralsEachEPOCH/totalBoostPiece
-
-	const referralsBoosts = payReferralsBoost.map((n, index) => n * eachBoostToken * parseInt(_referralsNodes[index]))
-
-	let total = 0
-	referralsBoosts.forEach(n => total += n)
-
-	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
-	const kkk = referralsBoosts.map(n =>n.toFixed(10))
-
-	getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, kkk)
-	
-	
-}
 
 const stratFreeMinerReferrals = async (block: string) => {
 
@@ -423,13 +323,12 @@ const stratFreeMinerReferrals = async (block: string) => {
 				referrals: n.count.toString()
 			})
 		})
-		// logger(Color.magenta(` Pre finished doEpoch [${epoch}] `))
-		// await getFreeReferralsData (block, countList)
-		// sendPaymentToPool (walletList, payList, () => {
-			logger()
-		// })
+		logger(Color.magenta(`Pre finished doEpoch [${epoch}] `))
+		await getFreeReferralsData (block, countList)
+		sendPaymentToPool (walletList, payList, () => {
+			logger(Color.magenta(`Finished doEpoch [${epoch}] `))
+		})
 	
-		logger(Color.magenta(`Finished doEpoch [${epoch}] `))
 		
 	})
 	
@@ -446,8 +345,7 @@ args.forEach ((n, index ) => {
 
 if (epoch) {
 	logger(Color.magenta(`Start doEpoch [${epoch}] `))
-	// stratFreeMinerReferrals(epoch)
-	guardianReferrals(epoch)
+	stratFreeMinerReferrals(epoch)
 } else {
 	console.error(`wallet ${epoch} Error!`)
 }

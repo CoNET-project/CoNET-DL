@@ -77,8 +77,6 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 }
 
 
-
-
 const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	const _retWalletAddr: Map<string, string> = new Map()
 	const retReferralsBoost: string[] = []
