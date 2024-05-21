@@ -980,16 +980,18 @@ export const storeLeaderboardGuardians_referralsv2 = (epoch: string, guardians_r
 export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
 	const cassClient = new Client (option)
 
-	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, free_referrals, free_cntp, free_referrals_rate_list)  VALUES (` +
-		`'conet', '${epoch}', '${free_referrals}','${free_cntp}', '${free_referrals_rate_list}')`
+	const cmd1 = `UPDATE conet_leaderboard SET free_referrals = '${free_referrals}', free_cntp = '${free_cntp}', free_referrals_rate_list = '${free_referrals_rate_list}' WHERE conet = 'conet' AND epoch = '${epoch}'`
+		
 		try {
 			cassClient.execute (cmd1)
-			await cassClient.shutdown()
-			return true
 		} catch(ex) {
+			logger(`storeLeaderboardFree_referrals Error`, ex)
 			await cassClient.shutdown()
 			return false
 		}
+		await cassClient.shutdown()
+		logger(Color.magenta(`storeLeaderboard Free_referrals [${epoch}] success!`))
+		return true
 }
 
 export const selectLeaderboard = async () => {

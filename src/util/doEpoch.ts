@@ -154,7 +154,47 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	req.write(JSON.stringify(postData))
 	req.end()
 }
+const postReferrals = async (cntp: string, referrals: string, referrals_rate_list: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
 
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path: `/api/free-data`,
+		port: 8001,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	const postData = {
+		cntp, referrals, referrals_rate_list, epoch
+	}
+
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+
+			try {
+				
+				return callbak (null)
+			} catch (ex: any) {
+				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				return callbak (ex)
+			}
+			
+		})
+	})
+
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (e)
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
+}
 
 const countReword = (reword: number, wallet: string, totalToken: number, callback: (data: null|{wallet: string,pay: string}) => void) => {
 	return getReferrer(wallet, async (err, data: any) => {
@@ -268,8 +308,11 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) =>
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
-	await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
-	logger(Color.gray(`getFreeReferralsData finished!`))
+	await postReferrals(JSON.stringify(finalCNTP), JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, err => {
+		logger(Color.gray(`getFreeReferralsData finished!`))
+	})
+	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
+	
 }
 
 const stratFreeMinerReferrals = async (block: string) => {

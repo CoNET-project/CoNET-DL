@@ -8,7 +8,7 @@ import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
-import {storeLeaderboardGuardians_referralsv2} from './help-database'
+import {storeLeaderboardGuardians_referralsv2, storeLeaderboardFree_referrals} from './help-database'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
@@ -187,6 +187,26 @@ class conet_dl_v3_server {
 			}
 			await storeLeaderboardGuardians_referralsv2(epoch, referrals, cntp, referrals_rate_list)
 			logger(Colors.blue(`/guardians-data storeLeaderboardGuardians_referralsv2 finished`))
+			return res.status(200).end()
+			
+		})
+
+		router.post ('/free-data',  async (req, res) =>{
+			let cntp: string
+			let referrals: string
+			let referrals_rate_list: string
+			let epoch
+			try {
+				cntp = req.body.cntp
+				referrals = req.body.referrals
+				referrals_rate_list = req.body.referrals_rate_list
+				epoch = req.body.epoch
+			} catch (ex) {
+				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
+				return res.status(403).end()
+			}
+			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list)
+			logger(Colors.blue(`/free-data storeLeaderboardFree_referrals finished`))
 			return res.status(200).end()
 			
 		})
