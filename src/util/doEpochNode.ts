@@ -32,7 +32,7 @@ const option = {
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
 }
 
-const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
+const storeLeaderboardGuardians_referralsv2 = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
 	const cmd1 = `UPDATE conet_leaderboard SET guardians_referrals = '${guardians_referrals}', guardians_cntp='${guardians_cntp}',guardians_referrals_rate_list = '${guardians_referrals_rate_list}' WHERE conet = 'conet' AND epoch = '${epoch}'`
 	//logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
@@ -48,7 +48,21 @@ const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals:
 	resolve(true)
 })
 
-
+const storeLeaderboardGuardians_referralsV1 = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
+	const cassClient = new Client (option)
+	const cmd1 = `UPDATE conet_leaderboard_v1 SET referrals = '${guardians_referrals}', cntp='${guardians_cntp}',referrals_rate_list = '${guardians_referrals_rate_list}' WHERE conet = 'guardians' AND epoch = '${epoch}'`
+	//logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
+	try {
+		cassClient.execute (cmd1)
+	} catch(ex) {
+		await cassClient.shutdown()
+		logger(Color.red(`storeLeaderboardGuardians_referrals Error!`), ex)
+		return resolve(false)
+	}
+	await cassClient.shutdown()
+	logger(Color.magenta(`storeLeaderboardGuardians_referrals [${epoch}] finished`))
+	resolve(true)
+})
 
 
 const getNodesReferralsData = async (block: string, wallets: string[], nodes: string[], payList: string[]) => {
@@ -70,7 +84,7 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
 	
-	await storeLeaderboardGuardians_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
+	await storeLeaderboardGuardians_referralsV1(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	logger(`getNodesReferralsData finished!`)
 	process.abort()
 }
