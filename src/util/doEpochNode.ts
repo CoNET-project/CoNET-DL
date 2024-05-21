@@ -34,8 +34,7 @@ const option = {
 
 const storeLeaderboardGuardians_referrals = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
-	const cmd1 = `INSERT INTO conet_leaderboard (conet, epoch, guardians_referrals, guardians_cntp, guardians_referrals_rate_list)  VALUES (` +
-		`'conet', '${epoch}', '${guardians_referrals}', '${guardians_cntp}', '${guardians_referrals_rate_list}')`
+	const cmd1 = `UPDATE conet_leaderboard SET guardians_referrals = '${guardians_referrals}', guardians_cntp='${guardians_cntp}',guardians_referrals_rate_list = '${guardians_referrals_rate_list}' WHERE conet = 'conet' AND epoch = '${epoch}'`
 	//logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
 	try {
 		cassClient.execute (cmd1)

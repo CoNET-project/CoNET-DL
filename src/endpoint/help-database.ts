@@ -1040,9 +1040,9 @@ const testInsert = async () => {
 
 const test = async() => {
 	// await testInsert()
-	const kkk = await  selectLeaderboard()
-	// const kkk1 = await selectLeaderboardEpoch('572750')
-	logger (inspect(kkk, false, 3, true))
+	// const kkk = await  selectLeaderboard()
+	const kkk1 = await selectLeaderboardEpoch('573540')
+	// logger (inspect(kkk, false, 3, true))
 	// logger(JSON.stringify(kkk).length)
 
 }
