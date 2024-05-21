@@ -1000,9 +1000,7 @@ export const selectLeaderboard = async () => {
 	try {
 		const kk = await cassClient.execute (cmd1)
 		await cassClient.shutdown()
-		logger(inspect(kk.rows, false, 3, true))
 		const result = kk.rows.filter(n => n.free_cntp && n.free_referrals)[0]
-		
 		const ret = {
 			epoch: result.epoch,
 			free_cntp: JSON.parse(result.free_cntp),
