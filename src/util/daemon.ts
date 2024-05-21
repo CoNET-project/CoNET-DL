@@ -194,7 +194,8 @@ const guardianMining = async (block: number) => {
 	
 }
 
-let runningTransferEposh = 0 
+let runningTransferEposh = 0
+
 const stratFreeMinerReferrals = async () => {
 
 	if (runningTransferEposh === transferEposh) {
@@ -262,7 +263,6 @@ const stratFreeMinerReferrals = async () => {
 	})
 	
 }
-
 
 const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, contract: ethers.Contract, CallBack: (err:Error|null, data?: any) => void) => {
 	let _walletAddress = walletAddress.toLowerCase()

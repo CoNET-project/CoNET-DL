@@ -995,7 +995,7 @@ export const storeLeaderboardFree_referrals = async (epoch: string, free_referra
 }
 
 export const selectLeaderboard = async () => {
-	const cmd1 = `SELECT * from conet_leaderboard`
+	const cmd1 = `SELECT * from conet_leaderboard limit 10`
 	const cassClient = new Client (option)
 	try {
 		const kk = await cassClient.execute (cmd1)
@@ -1073,7 +1073,7 @@ export const testInsert = async () => {
 
 const test = async() => {
 	// await testInsert()
-	const kkk = await  selectLeaderboard()
+	const kkk = await selectLeaderboard()
 	//const kkk1 = await selectLeaderboardEpoch('573822')
 	// logger (inspect(kkk, false, 3, true))
 	// logger(JSON.stringify(kkk).length)
