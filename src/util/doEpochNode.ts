@@ -60,7 +60,7 @@ const storeLeaderboardGuardians_referralsV1 = (epoch: string, guardians_referral
 		return resolve(false)
 	}
 	await cassClient.shutdown()
-	console.error(Color.magenta(`storeLeaderboardGuardians_referrals [${epoch}] finished`))
+	console.error(Color.magenta(`storeLeaderboardGuardians_referrals [${epoch}] finished`), cmd1)
 	resolve(true)
 })
 
