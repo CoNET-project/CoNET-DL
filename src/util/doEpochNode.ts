@@ -3,10 +3,11 @@ import {inspect} from 'node:util'
 import {GuardianNodes_ContractV2, masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
-
+import type { RequestOptions } from 'node:http'
 import { logger } from './logger'
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
+import {request} from 'node:http'
 
 interface leaderboard {
 	wallet: string
@@ -83,10 +84,11 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	const finalReferrals = tableReferrals.slice(0, 10)
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
+	await postReferrals (JSON.stringify(finalCNTP), JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, () => {
+		logger(`getNodesReferralsData finished!`)
+	})
+	// await storeLeaderboardGuardians_referralsv2(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
-	await storeLeaderboardGuardians_referralsV1(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
-	logger(`getNodesReferralsData finished!`)
-	process.abort()
 }
 
 
@@ -105,6 +107,48 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 		retReferralsBoost.push(value)
 	})
 	return [retWalletAddr, retReferralsBoost]
+}
+
+const postReferrals = async (cntp: string, referrals: string, referrals_rate_list: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
+
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path: `/api/guardians-data`,
+		port: 8001,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	const postData = {
+		cntp, referrals, referrals_rate_list, epoch
+	}
+
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+
+			try {
+				
+				return callbak (null)
+			} catch (ex: any) {
+				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				return callbak (ex)
+			}
+			
+		})
+	})
+
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (e)
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
 }
 
 const guardianReferrals = async (block: string) => {
