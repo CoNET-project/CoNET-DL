@@ -373,7 +373,6 @@ const stratFreeMinerReferrals = async (block: string) => {
 		logger(Color.magenta(`Pre finished doEpoch [${epoch}] `))
 		sendPaymentToPool (walletList, payList, () => {
 			logger(Color.magenta(`Finished doEpoch [${epoch}] `))
-			process.abort()
 		})
 		
 		
