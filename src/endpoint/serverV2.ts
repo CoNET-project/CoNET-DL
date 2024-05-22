@@ -2,25 +2,20 @@
  * 			
  * */
 import Express, { Router } from 'express'
-
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price,
-	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
-	addIpaddressToLivenessListeningPool, claimeToekn, selectLeaderboard
-} from './help-database'
+import {regiestFaucet, getLast5Price, getOraclePrice, txManager, claimeToekn, selectLeaderboard} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
-	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
-	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
+import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
+	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
-
+import CGPNsABI from '../util/CGPNs.json'
+import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
-import { exec } from 'node:child_process'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 
@@ -75,12 +70,12 @@ export const startListeningCONET_Holesky_EPOCH = async () => {
 	
 	
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	
+	getAllOwnershipOfGuardianNodes(provideCONET)
 	provideCONET.on('block', async block => {
-		await makeLeaderboardData()
+		// await makeLeaderboardData()
 	})
 
-	await makeLeaderboardData()
+	// await makeLeaderboardData()
 }
 
 
@@ -123,6 +118,54 @@ const addAttackToCluster = async (ipaddress: string) => {
 
 	req.write(JSON.stringify(postData))
 	req.end()
+}
+const CGPNsAddr = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
+
+const guardianNodesList: string[] = []
+ 
+const unlockCNTP = async (wallet: string, privateKey: string) => {
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const walletObj = new ethers.Wallet(privateKey, provider)
+	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CNTPAbi, walletObj)
+	let tx
+	try {
+		tx = await cCNTPContract.changeAddressInWhitelist(wallet, true)
+	} catch (ex: any) {
+		logger(Colors.red(`unlockCNTP error! Try again`), ex.message)
+		return setTimeout(() => {
+			unlockCNTP(wallet, privateKey)
+		}, Math.round( 10 * Math.random()) * 1000)
+	}
+	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
+}
+
+const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvider) => {
+	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI,provideCONET)
+	let nodes
+	try {
+		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
+	} catch (ex: any) {
+		return logger(Colors.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
+	}
+	const _nodesAddress: string[] = nodes[0].map((n: string) => n.toLowerCase())
+
+	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
+
+	let NFTAssets: number[]
+
+	try {
+		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
+	} catch (ex: any) {
+		return logger(Colors.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
+	}
+
+
+	NFTAssets.forEach((n, index) => {
+		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index]) {
+			guardianNodesList.push(_nodesAddress[index])
+		}
+	})
+	logger(Colors.blue(`guardianNodesList length = [${guardianNodesList.length}]`))
 }
 
 
@@ -524,6 +567,38 @@ class conet_dl_server {
 			return res.status(200).json(ret).end()
 		})
 
+		router.post ('/unlockCONET',  async (req, res) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let wallet: string
+			try {
+				wallet = req.body.wallet
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
+				return res.status(403).json({}).end()
+			}
+			
+			if (!wallet||typeof wallet !=='string') {
+				return res.status(403).json({}).end()
+			}
+			let isWallet = false
+			try {
+				isWallet = ethers.isAddress(wallet=wallet.toLowerCase())
+			} catch (ex) {
+				logger(Colors.red(`ethers.isAddress(${wallet}) Error!`))
+				return res.status(403).json({}).end()
+			}
+			if (!isWallet) {
+				return res.status(403).json({}).end()
+			}
+
+			const index = guardianNodesList.findIndex(n => n === wallet )
+			if (index < 0) {
+				unlockCNTP(wallet, masterSetup.claimableAdmin)
+				return res.status(200).json({ublock: true}).end()
+			}
+			return res.status(403).json({}).end()
+		})
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
@@ -534,3 +609,5 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+unlockCNTP('0x454428D883521C8aF9E88463e97e4D343c600914', masterSetup.claimableAdmin)

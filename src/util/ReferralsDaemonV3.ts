@@ -26,6 +26,7 @@ const doWorkerCom: (command: string) => Promise<boolean> = (command: string) => 
 	exec(command, (error, stdout, stderr) => {
 		logger(stdout)
 		logger(stderr)
+		logger()
 		return resolve (true)
 
 	})

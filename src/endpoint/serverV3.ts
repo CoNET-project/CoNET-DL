@@ -32,6 +32,7 @@ const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) 
 	}
 
 }
+
 const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
 	const transObj = await provider.getTransactionReceipt(transferHash)
 	const toAddr = transObj?.to

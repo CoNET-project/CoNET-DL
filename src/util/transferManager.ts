@@ -84,12 +84,12 @@ export const startTransfer = async () => {
 	})
 }
 
-const transferCCNTP = (provateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
+const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
 	if (walletList.length < 1) {
 		return callback()
 	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(provateKey, provider)
+	const wallet = new ethers.Wallet(privateKey, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 	let amount = 0
 	PayList.forEach(n => amount += parseFloat(n))
