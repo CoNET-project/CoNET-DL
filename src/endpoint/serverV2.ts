@@ -569,34 +569,28 @@ class conet_dl_server {
 
 		router.post ('/unlockCONET',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			let wallet: string
+			let message, signMessage
 			try {
-				wallet = req.body.wallet
+				message = req.body.message
+				signMessage = req.body.signMessage
+
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).json({}).end()
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(403).end()
 			}
-			
-			if (!wallet||typeof wallet !=='string') {
-				return res.status(403).json({}).end()
-			}
-			let isWallet = false
-			try {
-				isWallet = ethers.isAddress(wallet=wallet.toLowerCase())
-			} catch (ex) {
-				logger(Colors.red(`ethers.isAddress(${wallet}) Error!`))
-				return res.status(403).json({}).end()
-			}
-			if (!isWallet) {
-				return res.status(403).json({}).end()
+			const obj = checkSignObj (message, signMessage)
+			if (!obj || !obj?.data || !this.s3Pass) {
+				logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
+				return res.status(403).end()
 			}
 
-			const index = guardianNodesList.findIndex(n => n === wallet )
+			const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
 			if (index < 0) {
-				unlockCNTP(wallet, masterSetup.claimableAdmin)
+				unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
 				return res.status(200).json({ublock: true}).end()
 			}
-			return res.status(403).json({}).end()
+
+			return res.status(403).json({ublock: true}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
