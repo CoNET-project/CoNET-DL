@@ -609,5 +609,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-
-unlockCNTP('0x454428D883521C8aF9E88463e97e4D343c600914', masterSetup.claimableAdmin)
