@@ -579,7 +579,7 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 			const obj = checkSignObj (message, signMessage)
-			if (!obj || !obj?.data || !this.s3Pass) {
+			if (!obj) {
 				logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
 				return res.status(403).end()
 			}
