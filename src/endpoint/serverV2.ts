@@ -72,10 +72,10 @@ export const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	getAllOwnershipOfGuardianNodes(provideCONET)
 	provideCONET.on('block', async block => {
-		// await makeLeaderboardData()
+		await makeLeaderboardData()
 	})
 
-	// await makeLeaderboardData()
+	await makeLeaderboardData()
 }
 
 
@@ -554,6 +554,7 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 			if (!leaderboardData.epoch||!free_referrals_rate_lists||!guardians_referrals_rate_lists) {
+
 				return res.status(502).json({}).end()
 			}
 
