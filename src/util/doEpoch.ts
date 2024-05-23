@@ -259,7 +259,7 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 	})
 })
 
-const sendPaymentToPool = async (walletList: string[], payList: string[], callbak: (err?: Error)=> void) => {
+const sendPaymentToPool = async (totalMiner: string, walletList: string[], payList: string[], callbak: (err?: Error)=> void) => {
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/pay`,
@@ -270,7 +270,7 @@ const sendPaymentToPool = async (walletList: string[], payList: string[], callba
 		}
 	}
 	const postData = {
-		walletList, payList
+		walletList, payList, totalMiner
 	}
 	const req = await request (option, res => {
 		let data = ''
@@ -370,7 +370,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 		})
 		
 		await getFreeReferralsData (block, countList, minerWallets.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-		sendPaymentToPool (walletList, payList, () => {
+		sendPaymentToPool (data.count.toString(), walletList, payList, () => {
 			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		})
 		

@@ -66,7 +66,7 @@ const storeLeaderboardGuardians_referralsV1 = (epoch: string, guardians_referral
 })
 
 
-const getNodesReferralsData = async (block: string, wallets: string[], nodes: string[], payList: string[]) => {
+const getNodesReferralsData = async (block: string, totalNodes: string, wallets: string[], nodes: string[], payList: string[]) => {
 	const tableNodes = wallets.map ((n, index) => {
 		const ret: leaderboard = {
 			wallet: n,
@@ -84,7 +84,7 @@ const getNodesReferralsData = async (block: string, wallets: string[], nodes: st
 	const finalReferrals = tableReferrals.slice(0, 10)
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
-	await postReferrals (JSON.stringify(finalCNTP), JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, () => {
+	await postReferrals (JSON.stringify(finalCNTP),totalNodes, JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, () => {
 		logger(`getNodesReferralsData finished!`)
 	})
 	// await storeLeaderboardGuardians_referralsv2(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
@@ -109,7 +109,7 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	return [retWalletAddr, retReferralsBoost]
 }
 
-const postReferrals = async (cntp: string, referrals: string, referrals_rate_list: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
+const postReferrals = async (cntp: string, totalNodes: string, referrals: string, referrals_rate_list: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
 
 	const option: RequestOptions = {
 		hostname: 'localhost',
@@ -121,7 +121,7 @@ const postReferrals = async (cntp: string, referrals: string, referrals_rate_lis
 		}
 	}
 	const postData = {
-		cntp, referrals, referrals_rate_list, epoch
+		cntp, referrals, referrals_rate_list, epoch, totalNodes
 	}
 
 	const req = await request (option, res => {
@@ -160,10 +160,27 @@ const guardianReferrals = async (block: string) => {
 	} catch (ex: any) {
 		console.error(Color.red(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
 	}
+	const _nodesAddress: string[] = nodes[0].map((n: string) => n)
 	const referralsAddress: string[] = nodes[2].map((n: string) => n)
 	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())
 	
 	const [_referralsAddress, _referralsNodes] = mergeReferrals(referralsAddress, referralsBoost)
+	let NFTAssets: number[]
+	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
+	try {
+		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
+
+	} catch (ex: any) {
+		return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
+	}
+	const nodesAddress: string[] = []
+	NFTAssets.forEach((n, index) => {
+		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index].toLowerCase()) {
+			nodesAddress.push(_nodesAddress[index])
+		} else {
+			//logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))
+		}
+	})
 
 	const payReferralsBoost: number[] = _referralsNodes.map(n => {
 		const nodes = parseInt(n)
@@ -187,10 +204,10 @@ const guardianReferrals = async (block: string) => {
 	let total = 0
 	referralsBoosts.forEach(n => total += n)
 
-	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
+	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes [${ nodesAddress.length }] [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 	const kkk = referralsBoosts.map(n =>n.toFixed(10))
 
-	getNodesReferralsData(block.toString(), _referralsAddress, _referralsNodes, kkk)
+	getNodesReferralsData(block.toString(), nodesAddress.length.toString(), _referralsAddress, _referralsNodes, kkk)
 	
 	
 }

@@ -16,10 +16,14 @@ import {createServer} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
+import epochRateABI from '../util/epochRate.json'
+
+
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
+const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 
 const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) => {
 	const blockDetail = await provider.getBlock(block)
@@ -32,6 +36,14 @@ const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) 
 	}
 
 }
+
+interface epochRate {
+	totalNodes:string
+	epoch: string
+	totalMiner: string
+}
+
+const epochRate: epochRate[]= []
 
 const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
 	const transObj = await provider.getTransactionReceipt(transferHash)
@@ -65,6 +77,22 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 		return checkBlockEvent (block, provideCONET)
 	})
 }
+
+const storeToChain = async (data: epochRate) => {
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
+	const cCNTPContract = new ethers.Contract(epochRateAddr, epochRateABI, wallet)
+	let tx
+	try {
+		tx = await cCNTPContract.updateEpoch(data.totalMiner, data.totalNodes, data.epoch)
+	} catch (ex: any) {
+		logger(Colors.red(`storeToChain Error! try Again!`), ex.message)
+		await storeToChain (data)
+		return
+	}
+	return logger(Colors.bgGreen(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
+}
+
 
 
 class conet_dl_v3_server {
@@ -112,8 +140,6 @@ class conet_dl_v3_server {
                 { 'CoNET Server V3': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
-		
-		
 	}
 
 	private router ( router: Router ) {
@@ -169,27 +195,36 @@ class conet_dl_v3_server {
 				payList: payList
 			})
 			
-			return startTransfer()
+			return await startTransfer()
 		})
 
 		router.post ('/guardians-data',  async (req, res) =>{
 			let cntp: string
 			let referrals: string
 			let referrals_rate_list: string
-			let epoch
+			let epoch: string
+			let totalNodes: string
 			try {
 				cntp = req.body.cntp
 				referrals = req.body.referrals
 				referrals_rate_list = req.body.referrals_rate_list
 				epoch = req.body.epoch
+				totalNodes = req.body.totalNodes
 			} catch (ex) {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
+			res.status(200).end()
 			await storeLeaderboardGuardians_referralsv2(epoch, referrals, cntp, referrals_rate_list)
-			logger(Colors.blue(`/guardians-data storeLeaderboardGuardians_referralsv2 finished`))
-			return res.status(200).end()
-			
+			const index = epochRate.findIndex(n => n.epoch=== epoch)
+			if (index < 0) {
+				epochRate.push({
+					epoch, totalNodes, totalMiner: ''
+				})
+			}
+			const kk = epochRate.splice(index, 1)[0]
+			kk.totalNodes = totalNodes
+			await storeToChain(kk)
 		})
 
 		router.post ('/free-data',  async (req, res) =>{
@@ -211,11 +246,20 @@ class conet_dl_v3_server {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
+			res.status(200).end()
 			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
 			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
 			logger(Colors.blue(`/free-data storeLeaderboardFree_referrals finished`))
-			return res.status(200).end()
 			
+			const index = epochRate.findIndex(n => n.epoch=== epoch)
+			if (index < 0) {
+				epochRate.push({
+					epoch, totalNodes:'', totalMiner
+				})
+			}
+			const kk = epochRate.splice(index, 1)[0]
+			kk.totalMiner = totalMiner
+			await storeToChain(kk)
 		})
 
 		router.all ('*', (req, res ) =>{

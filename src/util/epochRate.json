@@ -1,0 +1,104 @@
+[
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "freeRateEachSecond",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            }
+        ],
+        "name": "getFreeMiningRate",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "rate",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalFreeMiner",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            }
+        ],
+        "name": "getGuardianMiningNoBoostRate",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "rate",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalGuardianNodes",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "guardianRateEachSecond",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_freeMinerCount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_guardianNodeCount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            }
+        ],
+        "name": "updateEpoch",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
