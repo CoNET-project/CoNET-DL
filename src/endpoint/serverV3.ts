@@ -79,6 +79,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const storeToChain = async (data: epochRate) => {
+	logger(inspect())
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
 	const cCNTPContract = new ethers.Contract(epochRateAddr, epochRateABI, wallet)
@@ -225,6 +226,7 @@ class conet_dl_v3_server {
 					epoch, totalNodes, totalMiner: ''
 				})
 			}
+			epochRate[index].totalNodes = totalNodes
 			await storeToChain(epochRate[index])
 			epochRate.splice(index, 1)[0]
 		})
@@ -259,6 +261,7 @@ class conet_dl_v3_server {
 					epoch, totalNodes:'', totalMiner
 				})
 			}
+			epochRate[index].totalMiner = totalMiner
 			await storeToChain(epochRate[index])
 			epochRate.splice(index, 1)[0]
 		})
