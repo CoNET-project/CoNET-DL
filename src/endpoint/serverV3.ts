@@ -87,7 +87,10 @@ const storeToChain = async (data: epochRate) => {
 		tx = await cCNTPContract.updateEpoch(data.totalMiner, data.totalNodes, data.epoch)
 	} catch (ex: any) {
 		logger(Colors.red(`storeToChain Error! try Again!`), ex.message)
-		await storeToChain (data)
+		setTimeout(async () => {
+			await storeToChain (data)
+		}, 1000)
+		
 		return
 	}
 	return logger(Colors.bgGreen(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
@@ -218,7 +221,7 @@ class conet_dl_v3_server {
 			await storeLeaderboardGuardians_referralsv2(epoch, referrals, cntp, referrals_rate_list)
 			const index = epochRate.findIndex(n => n.epoch=== epoch)
 			if (index < 0) {
-				epochRate.push({
+				return epochRate.push({
 					epoch, totalNodes, totalMiner: ''
 				})
 			}
@@ -253,7 +256,7 @@ class conet_dl_v3_server {
 			
 			const index = epochRate.findIndex(n => n.epoch=== epoch)
 			if (index < 0) {
-				epochRate.push({
+				return epochRate.push({
 					epoch, totalNodes:'', totalMiner
 				})
 			}
