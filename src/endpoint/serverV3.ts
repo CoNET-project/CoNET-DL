@@ -211,6 +211,7 @@ class conet_dl_v3_server {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
+			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
 			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner, minerRate)
 			logger(Colors.blue(`/free-data storeLeaderboardFree_referrals finished`))
 			return res.status(200).end()
