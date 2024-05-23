@@ -93,7 +93,7 @@ const storeToChain = async (data: epochRate) => {
 		
 		return
 	}
-	return logger(Colors.bgGreen(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
+	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
 
@@ -225,9 +225,8 @@ class conet_dl_v3_server {
 					epoch, totalNodes, totalMiner: ''
 				})
 			}
-			const kk = epochRate.splice(index, 1)[0]
-			kk.totalNodes = totalNodes
-			await storeToChain(kk)
+			await storeToChain(epochRate[index])
+			epochRate.splice(index, 1)[0]
 		})
 
 		router.post ('/free-data',  async (req, res) =>{
@@ -260,9 +259,8 @@ class conet_dl_v3_server {
 					epoch, totalNodes:'', totalMiner
 				})
 			}
-			const kk = epochRate.splice(index, 1)[0]
-			kk.totalMiner = totalMiner
-			await storeToChain(kk)
+			await storeToChain(epochRate[index])
+			epochRate.splice(index, 1)[0]
 		})
 
 		router.all ('*', (req, res ) =>{
