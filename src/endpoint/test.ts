@@ -11,7 +11,7 @@ const test = async () => {
 	// await selectLeaderboardEpoch ('573893')
 	//const kkk = await checkSignObj (message.message, message.signMessage)
 	const kkk = await selectLeaderboard()
-	logger(``)
+	logger(inspect(kkk, false, 3, true))
 }
 
 test()

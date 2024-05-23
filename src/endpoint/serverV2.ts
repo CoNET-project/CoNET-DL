@@ -51,6 +51,9 @@ let free_referrals_rate_lists: rate_list[] = []
 
 let guardians_referrals_rate_lists: rate_list[] = []
 
+let minerRate = ''
+let totalMiner = ''
+
 const makeLeaderboardData = async () => {
 	
 	const LeaderboardData = await selectLeaderboard()
@@ -64,6 +67,8 @@ const makeLeaderboardData = async () => {
 	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
 	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
 	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
+	minerRate = LeaderboardData.minerRate
+	totalMiner = LeaderboardData.totalMiner
 }
 
 export const startListeningCONET_Holesky_EPOCH = async () => {
@@ -561,7 +566,8 @@ class conet_dl_server {
 			const ret = {
 				leaderboardData,
 				free_referrals_rate: wallet ? free_referrals_rate_lists?.filter ? free_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': '',
-				guardians_referrals_rate: wallet ? guardians_referrals_rate_lists?.filter ? guardians_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': ''
+				guardians_referrals_rate: wallet ? guardians_referrals_rate_lists?.filter ? guardians_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': '',
+				totalMiner, minerRate
 			}
 			//logger(Colors.grey(` ${ipaddress} GET /leaderboardData wallet [${wallet}] free_referrals_rate = [${ret.free_referrals_rate}] guardians_referrals_rate = [${ret.guardians_referrals_rate}]`))
 

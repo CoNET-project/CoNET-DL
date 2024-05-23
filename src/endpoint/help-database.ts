@@ -1001,6 +1001,7 @@ export const selectLeaderboard = async () => {
 		const kk = await cassClient.execute (cmd1)
 		await cassClient.shutdown()
 		const result = kk.rows.filter(n => n.free_cntp && n.free_referrals)[0]
+		
 		const ret = {
 			epoch: result.epoch,
 			free_cntp: JSON.parse(result.free_cntp),
@@ -1009,8 +1010,8 @@ export const selectLeaderboard = async () => {
 			guardians_referrals: JSON.parse(result.guardians_referrals),
 			free_referrals_rate_list: JSON.parse(result.free_referrals_rate_list),
 			guardians_referrals_rate_list: JSON.parse(result.guardians_referrals_rate_list),
-			minerRate: result.minerRate,
-			totalMiner: result.totalMiner
+			minerRate: result.minerrate,
+			totalMiner: result.totalminer
 		}
 		return ret
 		
