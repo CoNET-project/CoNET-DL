@@ -67,7 +67,7 @@ const makeLeaderboardData = async () => {
 	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
 	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
 	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
-	minerRate = LeaderboardData.minerRate
+	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
 	totalMiner = LeaderboardData.totalMiner
 }
 
