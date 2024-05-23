@@ -197,16 +197,21 @@ class conet_dl_v3_server {
 			let referrals: string
 			let referrals_rate_list: string
 			let epoch
+			let minerRate
+			let totalMiner
 			try {
 				cntp = req.body.cntp
 				referrals = req.body.referrals
 				referrals_rate_list = req.body.referrals_rate_list
 				epoch = req.body.epoch
+				minerRate = req.body.minerRate
+				totalMiner = req.body.totalMiner
+
 			} catch (ex) {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
-			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list)
+			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner, minerRate)
 			logger(Colors.blue(`/free-data storeLeaderboardFree_referrals finished`))
 			return res.status(200).end()
 			

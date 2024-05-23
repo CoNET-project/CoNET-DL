@@ -154,7 +154,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	req.write(JSON.stringify(postData))
 	req.end()
 }
-const postReferrals = async (cntp: string, referrals: string, referrals_rate_list: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
+const postReferrals = async (cntp: string, referrals: string, referrals_rate_list: string, epoch: string, totalMiner: string, minerRate: string, callbak: (err: Error|null, data?: any) => void)=> {
 
 	const option: RequestOptions = {
 		hostname: 'localhost',
@@ -166,7 +166,7 @@ const postReferrals = async (cntp: string, referrals: string, referrals_rate_lis
 		}
 	}
 	const postData = {
-		cntp, referrals, referrals_rate_list, epoch
+		cntp, referrals, referrals_rate_list, epoch, totalMiner, minerRate
 	}
 
 	const req = await request (option, res => {
@@ -300,7 +300,7 @@ const sendPaymentToPool = async (walletList: string[], payList: string[], callba
 }
 	
 
-const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) => {
+const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], totalMiner: string, minerRate: string) => {
 
 	const tableCNTP = tableNodes.map(n => n)
 	const tableReferrals = tableNodes.map(n => n)
@@ -308,7 +308,7 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[]) =>
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
-	await postReferrals(JSON.stringify(finalCNTP), JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, err => {
+	await postReferrals(JSON.stringify(finalCNTP), JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, totalMiner, minerRate, err => {
 		logger(Color.gray(`getFreeReferralsData finished!`))
 	})
 	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
@@ -369,10 +369,9 @@ const stratFreeMinerReferrals = async (block: string) => {
 			})
 		})
 		
-		await getFreeReferralsData (block, countList)
-		logger(Color.magenta(`Pre finished doEpoch [${epoch}] `))
+		await getFreeReferralsData (block, countList, (parseFloat(minerRate.toString())/10**18).toFixed(10), minerWallets.length.toString())
 		sendPaymentToPool (walletList, payList, () => {
-			logger(Color.magenta(`Finished doEpoch [${epoch}] `))
+			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		})
 		
 		
@@ -390,7 +389,7 @@ args.forEach ((n, index ) => {
 })
 
 if (epoch) {
-	logger(Color.magenta(`Start doEpoch [${epoch}] `))
+	logger(Color.magenta(`stratFreeMinerReferrals doEpoch [${epoch}] `))
 	stratFreeMinerReferrals(epoch)
 } else {
 	console.error(`wallet ${epoch} Error!`)

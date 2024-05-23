@@ -977,10 +977,10 @@ export const storeLeaderboardGuardians_referralsv2 = (epoch: string, guardians_r
 })
 
 
-export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
+export const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string, totalMiner: string, minerRate: string) => {
 	const cassClient = new Client (option)
 
-	const cmd1 = `UPDATE conet_leaderboard SET free_referrals = '${free_referrals}', free_cntp = '${free_cntp}', free_referrals_rate_list = '${free_referrals_rate_list}' WHERE conet = 'conet' AND epoch = '${epoch}'`
+	const cmd1 = `UPDATE conet_leaderboard SET free_referrals = '${free_referrals}', free_cntp = '${free_cntp}', free_referrals_rate_list = '${free_referrals_rate_list}', totalMiner = '${totalMiner}', minerRate= '${minerRate}' WHERE conet = 'conet' AND epoch = '${epoch}'`
 		
 		try {
 			cassClient.execute (cmd1)
@@ -1009,6 +1009,8 @@ export const selectLeaderboard = async () => {
 			guardians_referrals: JSON.parse(result.guardians_referrals),
 			free_referrals_rate_list: JSON.parse(result.free_referrals_rate_list),
 			guardians_referrals_rate_list: JSON.parse(result.guardians_referrals_rate_list),
+			minerRate: result.minerRate,
+			totalMiner: result.totalMiner
 		}
 		return ret
 		

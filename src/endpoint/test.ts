@@ -9,8 +9,8 @@ const message =  {
 const test = async () => {
 	// await testInsert()
 	// await selectLeaderboardEpoch ('573893')
-	const kkk = await checkSignObj (message.message, message.signMessage)
-	// const kkk = await selectLeaderboard()
+	//const kkk = await checkSignObj (message.message, message.signMessage)
+	const kkk = await selectLeaderboard()
 	logger(inspect(kkk, false, 3, true))
 }
 
