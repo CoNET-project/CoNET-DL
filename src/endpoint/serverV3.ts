@@ -79,7 +79,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const storeToChain = async (data: epochRate) => {
-	logger(inspect())
+	logger(inspect(data, false, 3, true))
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
 	const cCNTPContract = new ethers.Contract(epochRateAddr, epochRateABI, wallet)
