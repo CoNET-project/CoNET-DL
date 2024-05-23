@@ -61,8 +61,8 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	provideCONET.on('block', async block => {
+		startTransfer()
 		return checkBlockEvent (block, provideCONET)
-
 	})
 }
 
@@ -212,7 +212,7 @@ class conet_dl_v3_server {
 				return res.status(403).end()
 			}
 			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
-			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner, minerRate)
+			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
 			logger(Colors.blue(`/free-data storeLeaderboardFree_referrals finished`))
 			return res.status(200).end()
 			

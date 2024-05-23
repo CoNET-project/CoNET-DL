@@ -369,7 +369,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 			})
 		})
 		
-		await getFreeReferralsData (block, countList, (parseFloat(minerRate.toString())/10**18).toFixed(10), minerWallets.length.toString())
+		await getFreeReferralsData (block, countList, minerWallets.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
 		sendPaymentToPool (walletList, payList, () => {
 			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		})

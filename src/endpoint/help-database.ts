@@ -981,7 +981,7 @@ export const storeLeaderboardFree_referrals = async (epoch: string, free_referra
 	const cassClient = new Client (option)
 
 	const cmd1 = `UPDATE conet_leaderboard SET free_referrals = '${free_referrals}', free_cntp = '${free_cntp}', free_referrals_rate_list = '${free_referrals_rate_list}', totalMiner = '${totalMiner}', minerRate= '${minerRate}' WHERE conet = 'conet' AND epoch = '${epoch}'`
-		
+	logger(Color.blue(`storeLeaderboardFree_referrals totalMiner epoch [${epoch}] [${totalMiner}] minerRate[${minerRate}]`))
 		try {
 			cassClient.execute (cmd1)
 		} catch(ex) {
