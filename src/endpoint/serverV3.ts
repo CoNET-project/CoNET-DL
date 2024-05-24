@@ -235,7 +235,7 @@ class conet_dl_v3_server {
 			let cntp: string
 			let referrals: string
 			let referrals_rate_list: string
-			let epoch
+			let epoch: string
 			let minerRate
 			let totalMiner
 			try {
