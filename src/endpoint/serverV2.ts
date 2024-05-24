@@ -32,7 +32,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
-const FaucetCount = '0.02'
+const FaucetCount = '0.01'
 
 let leaderboardData = {
 	epoch: '',
