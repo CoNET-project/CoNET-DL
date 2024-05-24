@@ -19,7 +19,7 @@ const setup = join( homedir(),'.master.json' )
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
-const FaucetCount = '0.1'
+
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://rpc1.openpgp.online`
 const USDCNET = `https://rpc1.openpgp.online/usdc`
