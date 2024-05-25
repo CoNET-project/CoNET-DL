@@ -364,21 +364,21 @@ class conet_dl_server {
 				res.status(400).end()
 				return res.socket?.end().destroy()
 			}
-			res.status(502).end()
-			return res.socket?.end().destroy()
-			// return regiestFaucet(wallet_add, ipaddress).then (async n => {
-			// 	if (!n) {
-			// 		res.status(400).end()
-			// 		return res.socket?.end().destroy()
-			// 	}
+			// res.status(502).end()
+			// return res.socket?.end().destroy()
+			return regiestFaucet(wallet_add, ipaddress).then (async n => {
+				if (!n) {
+					res.status(400).end()
+					return res.socket?.end().destroy()
+				}
 				
-			// 	const tx = await sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
-			// 	if (!tx) {
-			// 		res.status(403).end()
-			// 		return res.socket?.end().destroy()
-			// 	}
-			// 	return res.json ({tx}).end ()
-			// })
+				const tx = await sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
+				if (!tx) {
+					res.status(403).end()
+					return res.socket?.end().destroy()
+				}
+				return res.json ({tx}).end ()
+			})
 
 		})
 
