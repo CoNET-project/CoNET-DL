@@ -231,22 +231,7 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
-		
-		router.get ('/publishGPGKeyArmored', async (req,res) => {
 
-			if (!this.initData) {
-				logger (Colors.red(`conet_dl_server /publishKey have no initData! response 404`))
-				res.status (404).end()
-				return res.socket?.end().destroy()
-			}
-			
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(` Router /publishKey form [${ ipaddress}]`), inspect(req.headers, false, 3, true))
-
-			res.json ({ publishGPGKey: this.initData.pgpKeyObj.publicKeyArmored }).end()
-			return res.socket?.end().destroy()
-
-		})
 
 		router.get ('/health', async (req,res) => {
 
@@ -263,46 +248,6 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/newBlock', async (req,res) => {
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-			} catch (ex) {
-				logger (Colors.red(`${req.ip} request /livenessListening message = req.body.message ERROR!`))
-				return res.status(404)
-				
-			}
-			if (!message || !signMessage) {
-				logger (Colors.red(`Router /newBlock has not  !message || !signMessage Error!`))
-				res.status(404).end ()
-				return res.socket?.end().destroy() 
-			}
-			const obj = checkSign (message, signMessage, '0x80E5C4c2e85b946515a8FaEe5C1D52Ac630350B1')
-			if (!obj||!obj.blockNumber) {
-				logger (Colors.red(`Router /newBlock checkSignObj Error!`), message, obj)
-				res.status(404).end ()
-				return res.socket?.end().destroy() 
-			}
-			
-			const ipaddress = getIpAddressFromForwardHeader(req)
-
-			const blockNumber = obj.blockNumber
-			logger (Colors.blue (`Router /newBlock blockNumber = [${blockNumber}] headers ${inspect(ipaddress, false, 3, true)}`))
-			res.sendStatus(200).end()
-
-			const comd: clusterMessage = {
-				cmd:'newBlock',
-				data: [blockNumber],
-				uuid: '',
-				err: null
-			}
-			if ( process.connected && typeof process.send === 'function') {
-				return process.send (comd)
-			}
-			logger (Colors.red (`Router /newBlock !(process.connected && typeof process.send === 'function') ERROR!`))
-			
-		})
 
 
 		router.post ('/stop-liveness', async (req,res) => {
@@ -355,54 +300,6 @@ class conet_dl_server {
 			return res.status(200).end()
 		})
 		
-		router.post('/si-health', async (req, res) => {
-			
-			const pgpMessage = req.body?.pgpMessage
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if ( !pgpMessage) {
-				logger (Colors.red(`[${ipaddress}] ==> /si-health has unknow payload `), inspect(req.body, false, 3, true))
-				return res.status(404).end ()
-			}
-
-			const obj = await decryptPgpMessage (pgpMessage, this.initData?.pgpKeyObj.privateKeyObj)
-
-			if (!obj || !ipaddress) {
-				logger (Colors.red(`[${ipaddress}] => /si-health decryptPgpMessage || null ipaddress [${ipaddress}] ERROR!`), inspect(req.body, false, 3, true))
-				return res.status(404).end ()
-				
-			}
-
-				// @ts-ignore
-			const hObj: ICoNET_DL_POST_register_SI = obj
-			hObj.ipV4 = ipaddress
-			const ret = await CoNET_SI_health ( hObj )
-
-			if ( !ret ) {
-				logger (Colors.red(`/si-health from ${ipaddress} has none message && signature ERROR!`), inspect( req.body, false, 3, true ))
-				logger (`/si-health CoNET_SI_health ERROR!`)
-				return res.status(404).end ()
-				
-			}
-
-			logger (Colors.grey(`[${ipaddress}] ==> /si-health SUCCESS!`))
-			return res.json (this.si_pool).end()
-			
-		})
-
-		router.post ('/myIpaddress', (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			return res.json ({ipaddress}).end ()
-		})
-
-		router.post ('/conet-si-list', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.grey(`POST ${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }]`), inspect(this.si_pool[0], false, 2, true))
-			res.json(this.si_pool).end()
-		})
-
-		router.get ('/conet-nodes', async ( req, res ) => {
-			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
-		})
 
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -445,76 +342,6 @@ class conet_dl_server {
 			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
 			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
 
-		})
-
-		router.post ('/regiestProfileRoute', async (req, res ) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			const pgpMessage = req.body?.pgpMessage
-
-			if ( !pgpMessage?.length || !this.initData) {
-				logger (Colors.red(`Router /regiestProfileRouter [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] pgpMessage null Error!`))
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
-
-			let obj = <ICoNET_Profile|null> await decryptPgpMessage (pgpMessage, this.initData.pgpKeyObj.privateKeyObj)
-
-			if (!obj) {
-				logger (Colors.red(`Router /regiestProfileRoute [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] decryptPgpMessage Error!`))
-				res.status(400).end()
-				return res.socket?.end().destroy()
-			}
-
-			const obj1 = await decryptPayload (obj)
-			if ( !obj1 ) {
-				res.status(400).end()
-				return res.socket?.end().destroy()
-			}
-			logger(Colors.gray(``))
-			return res.json({}).end()
-			
-			//await postRouterToPublic (null, obj1, this.s3pass)
-
-		})
-
-		router.post ('/storageFragments', async (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-
-			if (!obj || !obj?.data || !this.s3Pass) {
-				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
-				return res.status(403).end()
-			}
-			const uu = await storageWalletProfile(obj, this.s3Pass)
-			if (!uu) {
-				return res.status(504).end()
-			}
-			return res.status(200).json({}).end()
-		})
-
-		router.get ('/asset-prices', async ( req, res ) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			
-			let kk
-			try {
-				kk = await getOraclePrice()
-			} catch (ex) {
-				logger(Colors.gray(`/asset-prices from ${ipaddress} Error!` ), ex)
-				return res.status(403).json({}).end()
-			}
-			logger(Colors.gray(`/asset-prices from ${ipaddress} success!` ), inspect(kk, false, 3, true))
-			return res.status(200).json(kk).end()
 		})
 
 		router.all ('*', (req, res ) =>{
