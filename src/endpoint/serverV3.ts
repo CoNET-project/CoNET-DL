@@ -10,7 +10,7 @@ import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 import {storeLeaderboardGuardians_referralsv2, storeLeaderboardFree_referrals} from './help-database'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-
+import compression from 'compression'
 
 import {createServer} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
@@ -116,6 +116,7 @@ class conet_dl_v3_server {
 		app.use( Cors ())
 		app.use(Express.json())
 		app.use( '/api', router )
+		
 		app.use(Express.json({limit: '100mb'}));
 		app.use(Express.urlencoded({limit: '100mb'}));
 		app.once ( 'error', ( err: any ) => {

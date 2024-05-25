@@ -772,7 +772,7 @@ export const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provi
 const testMinerCOnnecting = (res: Response<any, Record<string, any>>, returnData: any, wallet: string, ipaddress: string) => new Promise (resolve=> {
 	returnData['wallet'] = wallet
 	if (res.writable && !res.closed) {
-		return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
+		res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
 			if (err) {
 				deleteMiner(ipaddress, wallet)
 				logger(Color.grey (`stratliveness write Error! delete ${wallet}`))
@@ -780,6 +780,7 @@ const testMinerCOnnecting = (res: Response<any, Record<string, any>>, returnData
 			}
 			return resolve (true)
 		})
+		return res.flush()
 	}
 	deleteMiner(ipaddress, wallet)
 	livenessListeningPool.delete(wallet)
