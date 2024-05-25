@@ -272,6 +272,7 @@ const sendPaymentToPool = async (totalMiner: string, walletList: string[], payLi
 	const postData = {
 		walletList, payList, totalMiner
 	}
+	
 	const req = await request (option, res => {
 		let data = ''
 		res.on('data', _data => {

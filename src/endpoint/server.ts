@@ -247,60 +247,7 @@ class conet_dl_server {
 			return res.json ({ health: true }).end()
 
 		})
-
-
-
-		router.post ('/stop-liveness', async (req,res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			// const ipaddress = req.headers['cf-connecting-ip']||splitIpAddr(req.ip)
-			
-			
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /stop-liveness message = req.body.message ERROR!`))
-				return res.status(404).end()
-				
-			}
-			
-			if (!message||!this.initData||!signMessage) {
-				logger (Colors.grey(`Router /stop-liveness !message||!this.initData||!signMessage Error!`))
-				return  res.status(404).end()
-				
-			}
-			
-			const obj = checkSignObj (message, signMessage)
-
-			if (!obj) {
-				logger (Colors.grey(`Router/stop-liveness !obj Error!`))
-				return res.status(404).end()
-			}
-
-
-			if (!ipaddress) {
-				logger (Colors.grey(`Router /stop-liveness !ipaddress Error!`))
-				return res.status(404).end()
-			}
-			
-			obj.ipAddress = ipaddress
-			const cmd: clusterMessage = {
-				cmd:'stop-liveness',
-				data: [obj],
-				uuid: v4(),
-				err: null
-			}
-			logger(Colors.grey(`[${obj.ipAddress}] /stop-liveness`))
-			if ( process.connected && typeof process.send === 'function') {
-				process.send (cmd)
-			}
-			
-			return res.status(200).end()
-		})
 		
-
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
