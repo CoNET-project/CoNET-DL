@@ -288,7 +288,7 @@ class conet_dl_server {
             res.flushHeaders() // flush the headers to establish SSE with client
 			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
 			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
-			res.flush()
+
 		})
 
 		router.all ('*', (req, res ) =>{
