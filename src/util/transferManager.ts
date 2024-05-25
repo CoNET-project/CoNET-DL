@@ -55,7 +55,7 @@ const marginPool = () => {
 	margin()
 }
 
-const checkGasPrice = 1300000000
+const checkGasPrice = 1150000000
 export const startTransfer = async () => {
 	if (startTransfering) {
 		return
