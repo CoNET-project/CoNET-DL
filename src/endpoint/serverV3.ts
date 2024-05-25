@@ -116,8 +116,8 @@ class conet_dl_v3_server {
 		app.use( Cors ())
 		app.use(Express.json())
 		app.use( '/api', router )
-		app.use(Express.json({limit: '50mb'}));
-		app.use(Express.urlencoded({limit: '50mb'}));
+		app.use(Express.json({limit: '100mb'}));
+		app.use(Express.urlencoded({limit: '100mb'}));
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
