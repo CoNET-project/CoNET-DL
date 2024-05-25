@@ -643,15 +643,17 @@ export const freeMinerManager = async (ipaddress: string, wallet: string) => {
 	
 
 	if (idata.rowLength) {
-		if (ipaddress !== '75.157.212.2') {
+		if (ipaddress !== '23.16.211.100') {
 			await cassClient.shutdown()
 			return 401
 		}
 		
 	}
 	if (wdata.rowLength) {
-		await cassClient.shutdown()
-		return 402
+		if (ipaddress !== '23.16.211.100') {
+			await cassClient.shutdown()
+			return 402
+		}
 	}
 
 	const oo: any = await getIpaddressLocaltion ( ipaddress )

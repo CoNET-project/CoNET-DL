@@ -273,8 +273,6 @@ class conet_dl_server {
 				return res.status(404).end()
 			}
 
-
-
 			const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
 			if (m !== true) {
