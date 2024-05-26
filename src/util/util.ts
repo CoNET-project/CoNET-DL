@@ -2669,7 +2669,7 @@ const test = async () => {
 // test()
 //listenEvent()
 
-transferCCNTPToNodes(walletyoutubeFromMari20240516, '3800', () => {
-	logger(`success`)
-})
+// transferCCNTPToNodes(walletyoutubeFromMari20240516, '3800', () => {
+// 	logger(`success`)
+// })
 /** */
