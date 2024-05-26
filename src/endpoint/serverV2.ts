@@ -63,11 +63,11 @@ const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: st
 		// console.log('statusCode:', res.statusCode)
   		// console.log('headers:', res.headers)
 		if (res.statusCode !== 200) {
-			logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
+			//logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
 			return resolve('')
 		}
 		res.once('error', err => {
-			logger(Colors.red(`getWasabiFile res Error [${err.message}]`))
+			logger(Colors.red(`getWasabiFile ${fileName} res Error [${err.message}]`))
 			return resolve('')
 		})
 		let data = ''
@@ -79,7 +79,7 @@ const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: st
 		})
 
 	}).once('error', err => {
-		logger(Colors.red(`getWasabiFile HttpsRequest Error [${err.message}]`), err)
+		logger(Colors.red(`getWasabiFile HttpsRequest ${fileName} Error [${err.message}]`), err)
 		return resolve('')
 	})
 	// const req = HttpsRequest({
@@ -119,7 +119,7 @@ export const selectLeaderboard: (block: number) => Promise<boolean> = (block) =>
 		getWasabiFile(`${block}_free`)
 	])
 	if (!_node||!_free) {
-		logger(Colors.blue(`selectLeaderboard can't find block [${block}] data Error!! try again`))
+		//logger(Colors.blue(`selectLeaderboard can't find block [${block}] data Error!! try again`))
 		return resolve(await selectLeaderboard(block-1))
 	}
 	let node, free
@@ -130,6 +130,7 @@ export const selectLeaderboard: (block: number) => Promise<boolean> = (block) =>
 		logger(Colors.blue(`selectLeaderboard JSON.parse [${ block }] data Error!`))
 		return resolve(false)
 	}
+	logger(Colors.blue(`selectLeaderboard got [${block}] data!`))
 	leaderboardData.epoch = block.toString()
 	leaderboardData.free_cntp = free.cntp
 	leaderboardData.free_referrals = free.referrals
