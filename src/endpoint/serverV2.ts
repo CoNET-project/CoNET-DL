@@ -60,8 +60,8 @@ const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: st
 	//const cloudStorageEndpointPath = `/conet-mvp/storage/FragmentOcean/${fileName}`
 	const cloudStorageEndpointUrl = `https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/${fileName}`
 	HttpsGet(cloudStorageEndpointUrl, res => {
-		console.log('statusCode:', res.statusCode)
-  		console.log('headers:', res.headers)
+		// console.log('statusCode:', res.statusCode)
+  		// console.log('headers:', res.headers)
 		if (res.statusCode !== 200) {
 			logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
 			return resolve('')
@@ -113,7 +113,7 @@ const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: st
 })
 
 
-export const selectLeaderboard: (block: number) => Promise<string[]> = (block) => new Promise(async resolve => {
+export const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
 	const [_node, _free] = await Promise.all([
 		getWasabiFile(`${block}_node`),
 		getWasabiFile(`${block}_free`)
@@ -128,7 +128,7 @@ export const selectLeaderboard: (block: number) => Promise<string[]> = (block) =
 		free = JSON.parse(_free)
 	} catch (ex) {
 		logger(Colors.blue(`selectLeaderboard JSON.parse [${ block }] data Error!`))
-		return 
+		return resolve(false)
 	}
 	leaderboardData.epoch = block.toString()
 	leaderboardData.free_cntp = free.cntp
@@ -137,48 +137,11 @@ export const selectLeaderboard: (block: number) => Promise<string[]> = (block) =
 	leaderboardData.guardians_referrals = node.referrals
 	free_referrals_rate_lists = free.referrals_rate_list
 	guardians_referrals_rate_lists = node.referrals_rate_list
-	// minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
-	// totalMiner = LeaderboardData.totalMiner
-	return resolve([node, free])
+	minerRate = free.minerRate
+	totalMiner = free.totalMiner
+	return (true)
 })
 
-
-
-
-// const makeLeaderboardDataV1 = async () => {
-	
-// 	const LeaderboardData = await selectLeaderboard()
-// 	if (!LeaderboardData) {
-// 		return
-// 	}
-// 	leaderboardData.epoch = LeaderboardData.epoch
-// 	leaderboardData.free_cntp = LeaderboardData.free_cntp
-// 	leaderboardData.free_referrals = LeaderboardData.free_referrals
-// 	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
-// 	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
-// 	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
-// 	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
-// 	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
-// 	totalMiner = LeaderboardData.totalMiner
-// }
-
-
-// const makeLeaderboardData = async () => {
-	
-// 	const LeaderboardData = await selectLeaderboard()
-// 	if (!LeaderboardData) {
-// 		return
-// 	}
-// 	leaderboardData.epoch = LeaderboardData.epoch
-// 	leaderboardData.free_cntp = LeaderboardData.free_cntp
-// 	leaderboardData.free_referrals = LeaderboardData.free_referrals
-// 	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
-// 	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
-// 	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
-// 	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
-// 	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
-// 	totalMiner = LeaderboardData.totalMiner
-// }
 
 export const startListeningCONET_Holesky_EPOCH = async () => {
 	
