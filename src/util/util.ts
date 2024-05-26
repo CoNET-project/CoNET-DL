@@ -1230,50 +1230,6 @@ export const getCNTPMastersBalance = async (privateKey: string) => {
 	
 }
 
-const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], privateKey: string, ReferralsMap: Map<string, string>, CallBack: (err:Error|null, data?: any) => void) => {
-	let _walletAddress = walletAddress.toLowerCase()
-	if (checkAddressArray.length) {
-		const index = checkAddressArray.findIndex(n => n.toLowerCase() === _walletAddress)
-		if (index <0) {
-			return CallBack (new Error(`CalculateReferrals walletAddress [${_walletAddress}] hasn't in checkAddressArray! STOP CalculateReferrals`))
-		}
-	}
-	const wallet = new ethers.Wallet(privateKey, provide_write)
-	const contract = new ethers.Contract(conet_Referral_contract, CONET_Referral_ABI, wallet)
-	
-	const addressList: string[] = []
-	const payList: string[] = []
-	
-	for (let i of rewordArray) {
-		let address: string
-
-		try{
-			address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
-		} catch (ex: any) {
-			provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-			continue
-		}
-		
-		// logger (colors.blue(`CalculateReferrals get address = [${address}]`))
-		if (address == '0x0000000000000000000000000000000000000000') {
-			continue
-		}
-		ReferralsMap.set(_walletAddress, address)
-		address = address.toLowerCase()
-		if (checkAddressArray.length) {
-			const index = checkAddressArray.findIndex(n => n.toLowerCase() === address)
-			if (index< 0) {
-				return CallBack(new Error(`CalculateReferrals walletAddress [${_walletAddress}'s up layer address ${address}] hasn't in checkAddressArray! STOP CalculateReferrals`))
-			}
-		}
-		addressList.push(address)
-		payList.push((parseFloat(totalToken)*i).toString())
-		_walletAddress = address
-	}
-
-	CallBack(null, {addressList, payList})
-}
-
 /**
  * 
  * 		TEST 
@@ -2267,7 +2223,7 @@ export const transferCCNTP = (walletList: string[], amount: string, callback: ()
 		try {
 			await cCNTPContract.multiTransferToken(walletList, paymentList)
 		} catch (ex) {
-			logger(colors.red(`transferCCNTP Error!  = [${walletList.length}]`))
+			logger(colors.red(`transferCCNTP Error! = [${walletList.length}]`))
 			return setTimeout(() => {
 				return send()
 			}, 1000)
@@ -2635,6 +2591,20 @@ const walletList20FromMari20240518: string[] = [
 	'0x737CbA3844f1D76Cc8BE0Ca62eD4B34e914B90CB',
 	'0xc971c589B0210B9d93e50F054eD9987001E21eF2'
 ]
+//    https://scan.conet.network/tx/0x632dec9e279dcac4249d1135bb2c9eb0ff489c029c815b41b324f2ce68d102bb
+const walletyoutubeFromMari20240516: string[] = [
+	'0xBd0c11A07A55378e90FCC00da49E663D6E1Ee896',
+	'0x43ff8Dda6812145846399BA32D354ac88a0AE592',
+	'0x9d0cAf70b882033509702185D3e2DDfBB07dfeBc',
+	'0xfB0467152527e766565eEf67c8F746E2220bFEeb',
+	'0xFF10899a9372D5C5E54bf5212caF486eBA6efA2A',
+	'0xC43Fc8E2d0Ac5eE20620460F9Cba0F081c6C920A',
+	'0xCf140EfA70f2722AF882A3591318299fa88FD1fE',
+	'0x74d8b2306Ec433aa255660752D9E1FDe5FDc1323',
+	'xCE0d514B464fD5555081cE4Bd71Ce90ed79f0Ed2',
+	'0xd1a5ACC6474d6AEfEd25f79aE21fEFBb3f186CA9'
+]
+
 
 const burnFrom = async (claimeTokenName: string, wallet: string, _balance: string) => {
 	const balance = ethers.parseEther(_balance)
@@ -2698,4 +2668,8 @@ const test = async () => {
 
 // test()
 //listenEvent()
+
+transferCCNTPToNodes(walletyoutubeFromMari20240516, '3800', () => {
+	logger(`success`)
+})
 /** */

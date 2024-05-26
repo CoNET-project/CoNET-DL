@@ -110,3 +110,4 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 	}
 	send()
 }
+

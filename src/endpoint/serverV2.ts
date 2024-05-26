@@ -54,6 +54,29 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
+const cloudStorageEndpointUrl = 'https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/'
+const selectLeaderboard = (block: number) => {
+	const fileUrl = cloudStorageEndpointUrl + `${block}`
+}
+
+const makeLeaderboardDataV1 = async () => {
+	
+	const LeaderboardData = await selectLeaderboard()
+	if (!LeaderboardData) {
+		return
+	}
+	leaderboardData.epoch = LeaderboardData.epoch
+	leaderboardData.free_cntp = LeaderboardData.free_cntp
+	leaderboardData.free_referrals = LeaderboardData.free_referrals
+	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
+	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
+	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
+	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
+	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
+	totalMiner = LeaderboardData.totalMiner
+}
+
+
 const makeLeaderboardData = async () => {
 	
 	const LeaderboardData = await selectLeaderboard()
