@@ -21,9 +21,9 @@ const test = async () => {
 	const block = await provideCONET.getBlockNumber ()
 	// const kkk = await selectLeaderboard()
 	logger(Colors.blue(`Start selectLeaderboard ${block}`))
-	const [kkk, kk1] = await selectLeaderboard(block)
+	const kkkk = await selectLeaderboard(block)
 
-	logger(inspect(Object.keys(kk1), false, 3, true))
+	// logger(inspect(Object.keys(kk1), false, 3, true))
 }
 
 test()
