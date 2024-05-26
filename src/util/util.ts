@@ -1703,7 +1703,7 @@ export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass
 			logger(colors.red(`storageWalletProfile s3.putObject Error`),ex)
 			return resolve(false)
 		}
-		logger(colors.grey(`storageWalletProfile hash [${ hash }] data length = [${ obj.data.length }] success`))
+		logger(colors.grey(`storageWalletProfile hash [${ obj.hash }] data length = [${ obj.data.length }] success`))
 		return resolve(true)
 	})
 }
