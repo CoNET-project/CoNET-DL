@@ -2204,7 +2204,9 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 	}
 	
 	ret.guardianNodesTx = await sendGuardianNodesContract(privateKey, nodeAddr, paymentWallet)
-
+	transferCCNTP(nodeAddr, '20000', () => {
+		return logger(colors.blue(`transferCCNTP GuardianNodes ${inspect(nodeAddr, false, 3, true)} each 2000 success!`))
+	})
 	return (ret)
 
 }
