@@ -1671,9 +1671,12 @@ const listeningStorgaeEvent = (CallBack:(data: any)=>void) => {
 	})
 }
 
-export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
+export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass: s3pass) => {
+
 	return new Promise (async resolve => {
-		
+		if (!obj?.hash || !obj?.data) {
+			return resolve(false)
+		}
 		const wo = wasabiObj.us_east_1
 		
 		const option: S3.S3ClientConfig = {
@@ -1700,7 +1703,7 @@ export const storageWalletProfile = (obj: minerObj, s3pass: s3pass) => {
 			logger(colors.red(`storageWalletProfile s3.putObject Error`),ex)
 			return resolve(false)
 		}
-		logger(inspect(req, false, 3, true))
+		logger(colors.grey(`storageWalletProfile hash [${ hash }] data length = [${ obj.data.length }] success`))
 		return resolve(true)
 	})
 }

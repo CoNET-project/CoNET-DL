@@ -1,6 +1,6 @@
 import {ethers} from 'ethers'
 import {inspect} from 'node:util'
-import {GuardianNodes_ContractV2, masterSetup} from './util'
+import {GuardianNodes_ContractV2, masterSetup, storageWalletProfile, s3fsPasswd} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
 import type { RequestOptions } from 'node:http'
@@ -33,38 +33,18 @@ const option = {
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
 }
 
-const storeLeaderboardGuardians_referralsv2 = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
-	const cassClient = new Client (option)
-	const cmd1 = `UPDATE conet_leaderboard SET guardians_referrals = '${guardians_referrals}', guardians_cntp='${guardians_cntp}',guardians_referrals_rate_list = '${guardians_referrals_rate_list}' WHERE conet = 'conet' AND epoch = '${epoch}'`
-	//logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
-	try {
-		cassClient.execute (cmd1)
-	} catch(ex) {
-		await cassClient.shutdown()
-		logger(Color.red(`storeLeaderboardGuardians_referrals Error!`), ex)
-		return resolve(false)
-	}
-	await cassClient.shutdown()
-	logger(Color.magenta(`storeLeaderboardGuardians_referrals [${epoch}] finished`))
-	resolve(true)
-})
 
-const storeLeaderboardGuardians_referralsV1 = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
-	const cassClient = new Client (option)
-	const cmd1 = `UPDATE conet_leaderboard_v1 SET referrals = '${guardians_referrals}', cntp='${guardians_cntp}',referrals_rate_list = '${guardians_referrals_rate_list}' WHERE conet = 'guardians' AND epoch = '${epoch}'`
-	//logger(Color.blue(`storeLeaderboardGuardians_referrals ${cmd1}`))
-	try {
-		cassClient.execute (cmd1)
-	} catch(ex) {
-		await cassClient.shutdown()
-		console.error(Color.red(`storeLeaderboardGuardians_referrals [${epoch}] Error!`), ex)
-		return resolve(false)
+let s3Pass: s3pass | null
+const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[]}) => {
+	if (!s3Pass) {
+		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
 	}
-	await cassClient.shutdown()
-	console.error(Color.magenta(`storeLeaderboardGuardians_referrals [${epoch}] finished`), cmd1)
-	resolve(true)
-})
-
+	const obj = {
+		data: JSON.stringify(data),
+		hash: `${epoch}_node`
+	}
+	await storageWalletProfile(obj, s3Pass)
+}
 
 const getNodesReferralsData = async (block: string, totalNodes: string, wallets: string[], nodes: string[], payList: string[]) => {
 	const tableNodes = wallets.map ((n, index) => {
@@ -84,8 +64,8 @@ const getNodesReferralsData = async (block: string, totalNodes: string, wallets:
 	const finalReferrals = tableReferrals.slice(0, 10)
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
-	await postReferrals (JSON.stringify(finalCNTP),totalNodes, JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, () => {
-		logger(`getNodesReferralsData finished!`)
+	postReferrals (totalNodes, block, async () => {
+		await store_Leaderboard_Free_referrals_toS3(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes})
 	})
 	// await storeLeaderboardGuardians_referralsv2(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
@@ -109,7 +89,7 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	return [retWalletAddr, retReferralsBoost]
 }
 
-const postReferrals = async (cntp: string, totalNodes: string, referrals: string, referrals_rate_list: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
+const postReferrals = async (totalNodes: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
 
 	const option: RequestOptions = {
 		hostname: 'localhost',
@@ -121,7 +101,7 @@ const postReferrals = async (cntp: string, totalNodes: string, referrals: string
 		}
 	}
 	const postData = {
-		cntp, referrals, referrals_rate_list, epoch, totalNodes
+		epoch, totalNodes
 	}
 
 	const req = await request (option, res => {
@@ -158,8 +138,9 @@ const guardianReferrals = async (block: string) => {
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
 	} catch (ex: any) {
-		console.error(Color.red(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
+		return console.error(Color.red(`guardianReferrals guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
 	}
+	s3Pass = await s3fsPasswd()
 	const _nodesAddress: string[] = nodes[0].map((n: string) => n)
 	const referralsAddress: string[] = nodes[2].map((n: string) => n)
 	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())

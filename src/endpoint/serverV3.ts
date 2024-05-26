@@ -204,16 +204,11 @@ class conet_dl_v3_server {
 			return await startTransfer()
 		})
 
-		router.post ('/guardians-data',  async (req, res) =>{
-			let cntp: string
-			let referrals: string
-			let referrals_rate_list: string
+		router.post ('/guardians-data',  async (req, res) => {
+
 			let epoch: string
 			let totalNodes: string
 			try {
-				cntp = req.body.cntp
-				referrals = req.body.referrals
-				referrals_rate_list = req.body.referrals_rate_list
 				epoch = req.body.epoch
 				totalNodes = req.body.totalNodes
 			} catch (ex) {
@@ -221,8 +216,8 @@ class conet_dl_v3_server {
 				return res.status(403).end()
 			}
 			res.status(200).end()
-			await storeLeaderboardGuardians_referralsv2(epoch, referrals, cntp, referrals_rate_list)
-			const index = epochRate.findIndex(n => n.epoch=== epoch)
+			// await storeLeaderboardGuardians_referralsv2(epoch,)
+			const index = epochRate.findIndex ( n => n.epoch === epoch )
 			if (index < 0) {
 				return epochRate.push({
 					epoch, totalNodes, totalMiner: ''
@@ -234,16 +229,10 @@ class conet_dl_v3_server {
 		})
 
 		router.post ('/free-data',  async (req, res) =>{
-			let cntp: string
-			let referrals: string
-			let referrals_rate_list: string
 			let epoch: string
 			let minerRate
 			let totalMiner
 			try {
-				cntp = req.body.cntp
-				referrals = req.body.referrals
-				referrals_rate_list = req.body.referrals_rate_list
 				epoch = req.body.epoch
 				minerRate = req.body.minerRate
 				totalMiner = req.body.totalMiner
@@ -254,8 +243,7 @@ class conet_dl_v3_server {
 			}
 			res.status(200).end()
 			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
-			await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
-			logger(Colors.blue(`/free-data storeLeaderboardFree_referrals finished`))
+			// await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
 			
 			const index = epochRate.findIndex(n => n.epoch=== epoch)
 			if (index < 0) {

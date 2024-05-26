@@ -1,13 +1,10 @@
 import {ethers} from 'ethers'
-import {inspect} from 'node:util'
+
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {GuardianNodes_ContractV2, masterSetup} from './util'
-import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import {masterSetup, s3fsPasswd, storageWalletProfile} from './util'
 import Color from 'colors/safe'
-
 import { mapLimit} from 'async'
-import {transferPool, startTransfer} from './transferManager'
 import { logger } from './logger'
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
@@ -41,22 +38,19 @@ const option = {
 	protocolOptions: { maxVersion: types.protocolVersion.v4 }
 }
 
-const storeLeaderboardFree_referrals = async (epoch: string, free_referrals: string, free_cntp: string, free_referrals_rate_list: string) => {
-	const cassClient = new Client (option)
 
-	const cmd1 = `UPDATE conet_leaderboard SET free_referrals = '${free_referrals}', free_cntp = '${free_cntp}', free_referrals_rate_list = '${free_referrals_rate_list}' WHERE conet = 'conet' AND epoch = '${epoch}'`
-		
-		try {
-			cassClient.execute (cmd1)
-		} catch(ex) {
-			logger(`storeLeaderboardFree_referrals Error`, ex)
-			await cassClient.shutdown()
-			return false
-		}
-		await cassClient.shutdown()
-		logger(Color.magenta(`storeLeaderboard Free_referrals [${epoch}] success!`))
-		return true
+
+const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[]}) => {
+	if (!s3Pass) {
+		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
+	}
+	const obj = {
+		data: JSON.stringify(data),
+		hash: `${epoch}_free`
+	}
+	await storageWalletProfile(obj, s3Pass)
 }
+
 
 const getEpochNodeMiners = async (epoch: string) => {
 	const cassClient = new Client (option)
@@ -86,6 +80,8 @@ const getApiNodes: () => Promise<number> = async () => new Promise(async resolve
 		return resolve (6)
 	}
 })
+
+
 let clusterNodes = 9
 const getMinerCount = async (_epoch: number) => {
 	let count = 0
@@ -154,7 +150,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	req.write(JSON.stringify(postData))
 	req.end()
 }
-const postReferrals = async (cntp: string, referrals: string, referrals_rate_list: string, epoch: string, totalMiner: string, minerRate: string, callbak: (err: Error|null, data?: any) => void)=> {
+const postReferrals = async (epoch: string, totalMiner: string, minerRate: string, callbak: (err: Error|null, data?: any) => void )=> {
 
 	const option: RequestOptions = {
 		hostname: 'localhost',
@@ -166,7 +162,7 @@ const postReferrals = async (cntp: string, referrals: string, referrals_rate_lis
 		}
 	}
 	const postData = {
-		cntp, referrals, referrals_rate_list, epoch, totalMiner, minerRate
+		epoch, totalMiner, minerRate
 	}
 
 	const req = await request (option, res => {
@@ -174,10 +170,9 @@ const postReferrals = async (cntp: string, referrals: string, referrals_rate_lis
 		res.on('data', _data => {
 			data += _data
 		})
-		res.once('end', () => {
 
+		res.once('end', () => {
 			try {
-				
 				return callbak (null)
 			} catch (ex: any) {
 				console.error(`getReferrer JSON.parse(data) Error!`, data)
@@ -309,21 +304,22 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalCNTP = tableCNTP.slice(0, 10)
 	const finalReferrals = tableReferrals.slice(0, 10)
-	await postReferrals(JSON.stringify(finalCNTP), JSON.stringify(finalReferrals), JSON.stringify(tableNodes), block, totalMiner, minerRate, err => {
-		logger(Color.gray(`getFreeReferralsData finished!`))
+	postReferrals(block, totalMiner, minerRate, async err => {
+		await store_Leaderboard_Free_referrals_toS3 ( block, {referrals:finalReferrals, cntp: finalCNTP, referrals_rate_list: tableNodes} )
 	})
+	
 	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
 }
-
+let s3Pass: s3pass | null
 const stratFreeMinerReferrals = async (block: string) => {
-
+	
 	const data = await getMinerCount (parseInt(block))
 	
 	if (!data) {
 		return
 	}
-
+	s3Pass = await s3fsPasswd()
 	const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(18))
 	const minerWallets: string[] = []
 	data.counts.forEach(n => {
