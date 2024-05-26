@@ -2528,7 +2528,7 @@ const transNFT = async () => {
 
 const transferCCNTPToNodes = (walletList: string[], amount: string, callback: () => void) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(masterSetup.claimableAdminForNode, provider)
+	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 
 	const send: any = async () => {
@@ -2592,7 +2592,7 @@ const walletList20FromMari20240518: string[] = [
 	'0xc971c589B0210B9d93e50F054eD9987001E21eF2'
 ]
 //    https://scan.conet.network/tx/0x632dec9e279dcac4249d1135bb2c9eb0ff489c029c815b41b324f2ce68d102bb
-const walletyoutubeFromMari20240516: string[] = [
+const walletyoutubeFromMari20240526: string[] = [
 	'0xBd0c11A07A55378e90FCC00da49E663D6E1Ee896',
 	'0x43ff8Dda6812145846399BA32D354ac88a0AE592',
 	'0x9d0cAf70b882033509702185D3e2DDfBB07dfeBc',
@@ -2669,7 +2669,7 @@ const test = async () => {
 // test()
 //listenEvent()
 
-// transferCCNTPToNodes(walletyoutubeFromMari20240516, '3800', () => {
-// 	logger(`success`)
-// })
+transferCCNTPToNodes(walletyoutubeFromMari20240526, '3800', () => {
+	logger(`success`)
+})
 /** */
