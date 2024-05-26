@@ -2546,6 +2546,9 @@ const transferCCNTPToNodes = (walletList: string[], amount: string, callback: ()
 		callback()
 	}
 	send()
+
+	// const kkk = walletList.map(n => ethers.isAddress(n))
+	// logger(inspect(kkk, false, 3, true))
 }
 
 
@@ -2601,7 +2604,7 @@ const walletyoutubeFromMari20240526: string[] = [
 	'0xC43Fc8E2d0Ac5eE20620460F9Cba0F081c6C920A',
 	'0xCf140EfA70f2722AF882A3591318299fa88FD1fE',
 	'0x74d8b2306Ec433aa255660752D9E1FDe5FDc1323',
-	'xCE0d514B464fD5555081cE4Bd71Ce90ed79f0Ed2',
+	'0xCE0d514B464fD5555081cE4Bd71Ce90ed79f0Ed2',
 	'0xd1a5ACC6474d6AEfEd25f79aE21fEFBb3f186CA9'
 ]
 
@@ -2669,7 +2672,7 @@ const test = async () => {
 // test()
 //listenEvent()
 
-transferCCNTPToNodes(walletyoutubeFromMari20240526, '3800', () => {
-	logger(`success`)
-})
+// transferCCNTPToNodes(walletyoutubeFromMari20240526, '3800', () => {
+// 	logger(`success`)
+// })
 /** */
