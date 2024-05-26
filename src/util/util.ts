@@ -2594,7 +2594,7 @@ const walletList20FromMari20240518: string[] = [
 	'0x737CbA3844f1D76Cc8BE0Ca62eD4B34e914B90CB',
 	'0xc971c589B0210B9d93e50F054eD9987001E21eF2'
 ]
-//    https://scan.conet.network/tx/0x632dec9e279dcac4249d1135bb2c9eb0ff489c029c815b41b324f2ce68d102bb
+//    https://scan1.conet.network/tx/0xf2e277deed0bcabccab20722a7a8a24b5faab1314aa08b758f6ba9878e31acbe
 const walletyoutubeFromMari20240526: string[] = [
 	'0xBd0c11A07A55378e90FCC00da49E663D6E1Ee896',
 	'0x43ff8Dda6812145846399BA32D354ac88a0AE592',
@@ -2608,7 +2608,28 @@ const walletyoutubeFromMari20240526: string[] = [
 	'0xd1a5ACC6474d6AEfEd25f79aE21fEFBb3f186CA9'
 ]
 
-
+//    https://scan.conet.network/tx/0xe1d02f95de54e9ff3fc05021a839d1e4035324d8e6ca332369955a020e37e39d
+const walletNodes20240526: string[] = [
+	'0xB51dBdF750C5250bA10DEe4D4590Ca8715e440B3',
+	'0x309AA7759ec0c7EEdECB5bfa55267314B3f0Cdfc',
+	'0x59bAd2fb21bF382Aba50f3731cE03a399344ea9A',
+	'0xb456270777B0cB0890426bAcB7010C931495433E',
+	'0x719b5584799a933647e18D02e0065B34A96d23C3',
+	'0x1813Bf979c90963827B337ecE852ef16b146F5eA',
+	'0x94B89A1D01d3578aB25d45E7889d697133a67577',
+	'0xcEfb6dE69ba2365cd1923c225dE7cfFcd66b4E71',
+	'0xA0cbA4AC4B51c698c83fF815F680e3Ec3798Cdee',
+	'0xAce73D105cD07BBa2f41aec37f15DC5f6A73F2Fc',
+	'0xCDab970c8EAC5D6D69eF2933AA900113EEDF3CB3',
+	'0xFcCF0d8634c84850869e69d9Cb8D4de5eb0Dfc65',
+	'0x91E8174d07611296c62944f25d543515F2db57a7',
+	'0x54d92cDa36314F9D1cB5215420E359BB95893668',
+	'0xd26493ae4D706E7623AE365563215732a82C2942',
+	'0x4fbaf3F2cFca363B4B0a8c8096C4F6BCd43b7a8f',
+	'0xfafD3669C633E54Be82bFbBb93E3d259B197bE9E',
+	'0xB92843166E0d1E7057C55681600581F40C1bb42e',
+	'0xA7f00d56574DBF1E2eeC8cF597142aba9fC3ec00'
+]
 const burnFrom = async (claimeTokenName: string, wallet: string, _balance: string) => {
 	const balance = ethers.parseEther(_balance)
 	const smartContractAddress = getCONETHoleskyClaimableContractAddress(claimeTokenName)
@@ -2672,7 +2693,7 @@ const test = async () => {
 // test()
 //listenEvent()
 
-// transferCCNTPToNodes(walletyoutubeFromMari20240526, '3800', () => {
+// transferCCNTPToNodes(walletNodes20240526, '20000', () => {
 // 	logger(`success`)
 // })
 /** */

@@ -5,7 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {regiestFaucet, getLast5Price, getOraclePrice, txManager, claimeToekn, selectLeaderboard} from './help-database'
+import {regiestFaucet, getLast5Price, getOraclePrice, txManager, claimeToekn} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
@@ -16,8 +16,10 @@ import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20A
 import CGPNsABI from '../util/CGPNs.json'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
-import type { RequestOptions } from 'node:http'
+import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
+
+import {request as HttpsRequest, get as HttpsGet} from 'node:https'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -54,56 +56,142 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
-const cloudStorageEndpointUrl = 'https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/'
-const selectLeaderboard = (block: number) => {
-	const fileUrl = cloudStorageEndpointUrl + `${block}`
-}
+const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
+	//const cloudStorageEndpointPath = `/conet-mvp/storage/FragmentOcean/${fileName}`
+	const cloudStorageEndpointUrl = `https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/${fileName}`
+	HttpsGet(cloudStorageEndpointUrl, res => {
+		console.log('statusCode:', res.statusCode)
+  		console.log('headers:', res.headers)
+		if (res.statusCode !== 200) {
+			logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
+			return resolve('')
+		}
+		res.once('error', err => {
+			logger(Colors.red(`getWasabiFile res Error [${err.message}]`))
+			return resolve('')
+		})
+		let data = ''
+		res.on('data', _data => {
+			data+=_data
+		})
+		res.once ('end', () => {
+			return resolve (data)
+		})
 
-const makeLeaderboardDataV1 = async () => {
-	
-	const LeaderboardData = await selectLeaderboard()
-	if (!LeaderboardData) {
-		return
+	}).once('error', err => {
+		logger(Colors.red(`getWasabiFile HttpsRequest Error [${err.message}]`), err)
+		return resolve('')
+	})
+	// const req = HttpsRequest({
+	// 	hostname: 's3.us-east-1.wasabisys.com',
+	// 	path: cloudStorageEndpointUrl,
+	// 	host: 's3.us-east-1.wasabisys.com',
+	// 	method: 'GET',
+	// 	port: 443
+	// }, res => {
+	// 	if (res.statusCode !== 200) {
+	// 		logger(Colors.red(`getWasabiFile got response status [${res.statusCode}] Error!`))
+	// 		return resolve('')
+	// 	}
+	// 	res.once('error', err => {
+	// 		logger(Colors.red(`getWasabiFile res Error [${err.message}]`))
+	// 		return resolve('')
+	// 	})
+	// 	let data = ''
+	// 	res.on('data', _data => {
+	// 		data+=_data
+	// 	})
+	// 	res.once ('end', () => {
+	// 		return resolve (data)
+	// 	})
+	// })
+	// req.once ('error', err => {
+	// 	logger(Colors.red(`getWasabiFile HttpsRequest Error [${err.message}]`), err)
+	// 	return resolve('')
+	// })
+	// req.end()
+})
+
+
+export const selectLeaderboard: (block: number) => Promise<string[]> = (block) => new Promise(async resolve => {
+	const [_node, _free] = await Promise.all([
+		getWasabiFile(`${block}_node`),
+		getWasabiFile(`${block}_free`)
+	])
+	if (!_node||!_free) {
+		logger(Colors.blue(`selectLeaderboard can't find block [${block}] data Error!! try again`))
+		return resolve(await selectLeaderboard(block-1))
 	}
-	leaderboardData.epoch = LeaderboardData.epoch
-	leaderboardData.free_cntp = LeaderboardData.free_cntp
-	leaderboardData.free_referrals = LeaderboardData.free_referrals
-	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
-	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
-	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
-	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
-	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
-	totalMiner = LeaderboardData.totalMiner
-}
-
-
-const makeLeaderboardData = async () => {
-	
-	const LeaderboardData = await selectLeaderboard()
-	if (!LeaderboardData) {
-		return
+	let node, free
+	try {
+		node = JSON.parse(_node)
+		free = JSON.parse(_free)
+	} catch (ex) {
+		logger(Colors.blue(`selectLeaderboard JSON.parse [${ block }] data Error!`))
+		return 
 	}
-	leaderboardData.epoch = LeaderboardData.epoch
-	leaderboardData.free_cntp = LeaderboardData.free_cntp
-	leaderboardData.free_referrals = LeaderboardData.free_referrals
-	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
-	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
-	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
-	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
-	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
-	totalMiner = LeaderboardData.totalMiner
-}
+	leaderboardData.epoch = block.toString()
+	leaderboardData.free_cntp = free.cntp
+	leaderboardData.free_referrals = free.referrals
+	leaderboardData.guardians_cntp = node.cntp
+	leaderboardData.guardians_referrals = node.referrals
+	free_referrals_rate_lists = free.referrals_rate_list
+	guardians_referrals_rate_lists = node.referrals_rate_list
+	// minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
+	// totalMiner = LeaderboardData.totalMiner
+	return resolve([node, free])
+})
+
+
+
+
+// const makeLeaderboardDataV1 = async () => {
+	
+// 	const LeaderboardData = await selectLeaderboard()
+// 	if (!LeaderboardData) {
+// 		return
+// 	}
+// 	leaderboardData.epoch = LeaderboardData.epoch
+// 	leaderboardData.free_cntp = LeaderboardData.free_cntp
+// 	leaderboardData.free_referrals = LeaderboardData.free_referrals
+// 	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
+// 	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
+// 	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
+// 	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
+// 	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
+// 	totalMiner = LeaderboardData.totalMiner
+// }
+
+
+// const makeLeaderboardData = async () => {
+	
+// 	const LeaderboardData = await selectLeaderboard()
+// 	if (!LeaderboardData) {
+// 		return
+// 	}
+// 	leaderboardData.epoch = LeaderboardData.epoch
+// 	leaderboardData.free_cntp = LeaderboardData.free_cntp
+// 	leaderboardData.free_referrals = LeaderboardData.free_referrals
+// 	leaderboardData.guardians_cntp = LeaderboardData.guardians_cntp
+// 	leaderboardData.guardians_referrals = LeaderboardData.guardians_referrals
+// 	free_referrals_rate_lists = LeaderboardData.free_referrals_rate_list
+// 	guardians_referrals_rate_lists = LeaderboardData.guardians_referrals_rate_list
+// 	minerRate = (parseFloat(LeaderboardData.minerRate)/12).toFixed(10)
+// 	totalMiner = LeaderboardData.totalMiner
+// }
 
 export const startListeningCONET_Holesky_EPOCH = async () => {
 	
 	
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const block = await provideCONET.getBlockNumber()
 	getAllOwnershipOfGuardianNodes(provideCONET)
+
 	provideCONET.on('block', async block => {
-		await makeLeaderboardData()
+		await selectLeaderboard(block)
 	})
 
-	await makeLeaderboardData()
+	await selectLeaderboard(block)
 }
 
 
@@ -634,3 +722,5 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+
