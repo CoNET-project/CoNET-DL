@@ -140,12 +140,13 @@ const guardianReferrals = async (block: string) => {
 	} catch (ex: any) {
 		return console.error(Color.red(`guardianReferrals guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
 	}
-	s3Pass = await s3fsPasswd()
+	
 	const _nodesAddress: string[] = nodes[0].map((n: string) => n)
 	const referralsAddress: string[] = nodes[2].map((n: string) => n)
 	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())
 	
 	const [_referralsAddress, _referralsNodes] = mergeReferrals(referralsAddress, referralsBoost)
+	s3Pass = await s3fsPasswd()
 	let NFTAssets: number[]
 	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
 	try {
@@ -204,6 +205,7 @@ args.forEach ((n, index ) => {
 
 if (epoch) {
 	logger(Color.magenta(`Start doEpoch nodes [${epoch}] `))
+	
 	guardianReferrals(epoch)
 } else {
 	console.error(`wallet ${epoch} Error!`)
