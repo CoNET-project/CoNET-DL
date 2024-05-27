@@ -15,7 +15,7 @@ interface leaderboard {
 	cntpRate: string
 }
 
-const conet_Holesky_rpc = 'https://rpc.conet.network'
+const conet_Holesky_rpc = 'http://207.90.195.83:9999'
 const nodeRferralsEachEPOCH = 16.742770167427702
 const sslOptions: TLSSocketOptions = {
 	key : masterSetup.Cassandra.certificate.key,
