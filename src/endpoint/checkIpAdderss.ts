@@ -1,7 +1,9 @@
 import {readFile} from 'node:fs'
 import { logger } from '../util/logger'
 import Colors from 'colors/safe'
+
 import {exec} from 'node:child_process'
+
 
 const iptablesIp = (ipaddress: string) => {
 	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
@@ -12,6 +14,7 @@ const iptablesIp = (ipaddress: string) => {
 		logger(Colors.red(`iptablesIp added ${ipaddress}`),'\n')
 	})
 }
+
 
 const startFilter = () => {
 	return readFile('kk', (err, data) => {

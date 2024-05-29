@@ -8,12 +8,19 @@
 // check();
 
 
-import {checkIpAddress} from './help-database'
+
 import {readFile} from 'node:fs'
 import { logger } from '../util/logger'
 import Colors from 'colors/safe'
 import {exec} from 'node:child_process'
 import { mapLimit} from 'async'
+import { join } from 'node:path'
+import { homedir, platform } from 'node:os'
+
+const setup = join( homedir(),'.master.json' )
+import { Client, auth, types } from 'cassandra-driver'
+import type { TLSSocketOptions } from 'node:tls'
+
 
 const iptablesIp = (ipaddress: string) => {
 	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
@@ -25,6 +32,36 @@ const iptablesIp = (ipaddress: string) => {
 	})
 }
 
+const masterSetup: ICoNET_DL_masterSetup = require ( setup )
+
+const sslOptions: TLSSocketOptions = {
+	key : masterSetup.Cassandra.certificate.key,
+	cert : masterSetup.Cassandra.certificate.cert,
+	ca : masterSetup.Cassandra.certificate.ca,
+	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
+}
+const option = {
+	contactPoints : masterSetup.Cassandra.databaseEndPoints,
+	localDataCenter: 'dc1',
+	authProvider: new auth.PlainTextAuthProvider ( masterSetup.Cassandra.auth.username, masterSetup.Cassandra.auth.password ),
+	sslOptions: sslOptions,
+	keyspace: masterSetup.Cassandra.keyspace,
+	protocolOptions: { maxVersion: types.protocolVersion.v4 }
+}
+
+const checkIpAddress = async (cassClient: Client, ipaddress: string) => {
+	
+	const cmd = `SELECT ipaddress from conet_free_mining WHERE ipaddress = '${ipaddress}'`
+	try {
+		const jj = await cassClient.execute (cmd)
+		
+		return (jj.rowLength)
+	} catch (ex) {
+		
+		return null
+	}
+	
+}
 
 const startFilter = () => {
 	const addressM: Map<string, number> = new Map()
@@ -34,11 +71,11 @@ const startFilter = () => {
 		}
 		const kk = data.toString()
 		const ll = kk.split('\n')
-		
+		const cassClient = new Client (option)
 		logger(Colors.red(`IP address Length [${ll.length}]`))
-		mapLimit(ll, 3, async (n, index) => {
+		mapLimit(ll, 5, async (n, index) => {
 			const ipaddress = n.split(' ')[0]
-			const kk = await checkIpAddress(ipaddress)
+			const kk = await checkIpAddress(cassClient, ipaddress)
 			if (!kk||kk<1) {
 				const kkk = addressM.get(ipaddress)
 				if (kkk) {
@@ -48,7 +85,8 @@ const startFilter = () => {
 					addressM.set(ipaddress, 1)
 				}
 			}
-		}, err => {
+		}, async err => {
+			await cassClient.shutdown()
 			logger(Colors.blue (`startFilter success!`))
 		})
 		
