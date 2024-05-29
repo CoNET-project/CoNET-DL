@@ -13,7 +13,7 @@ import {readFile} from 'node:fs'
 import { logger } from '../util/logger'
 import Colors from 'colors/safe'
 import {exec} from 'node:child_process'
-
+import { mapLimit} from 'async'
 
 const iptablesIp = (ipaddress: string) => {
 	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
@@ -35,7 +35,7 @@ const startFilter = () => {
 		const ll = kk.split('\n')
 		
 		logger(Colors.red(`IP address Length [${ll.length}]`))
-		ll.forEach(async n => {
+		mapLimit(ll, 3, async (n, index) => {
 			const ipaddress = n.split(' ')[0]
 			const kk = await checkIpAddress(ipaddress)
 			if (!kk||kk<1) {
@@ -47,7 +47,10 @@ const startFilter = () => {
 					addressM.set(ipaddress, 1)
 				}
 			}
+		}, err => {
+			logger(Colors.blue (`startFilter success!`))
 		})
+		
 		
 	})
 }
