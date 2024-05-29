@@ -7,8 +7,9 @@ const iptablesIp = (ipaddress: string) => {
 	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
 	exec (cmd, err => {
 		if (err) {
-			logger(Colors.red(`iptablesIp Error ${err.message}`))
+			return logger(Colors.red(`iptablesIp Error ${err.message}`))
 		}
+		logger(Colors.red(`iptablesIp added ${ipaddress}`))
 	})
 }
 
@@ -25,6 +26,7 @@ const startFilter = () => {
 			const ipaddress = n.split(' ')[0]
 			if (ipaddress.length) {
 				iptablesIp(ipaddress)
+				
 			}
 			
 			

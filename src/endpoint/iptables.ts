@@ -19,8 +19,9 @@ const iptablesIp = (ipaddress: string) => {
 	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
 	exec (cmd, err => {
 		if (err) {
-			logger(Colors.red(`iptablesIp Error ${err.message}`))
+			return logger(Colors.red(`iptablesIp Error ${err.message}`))
 		}
+		logger(Colors.red(`iptablesIp added ${ipaddress}`))
 	})
 }
 
@@ -41,7 +42,7 @@ const startFilter = () => {
 			if (!kk||kk<1) {
 				const kkk = addressM.get(ipaddress)
 				if (kkk) {
-					logger(Colors.red(`added ipaddress [${ipaddress}] to Filter`))
+					
 					return iptablesIp (ipaddress)
 				} else {
 					addressM.set(ipaddress, 1)
