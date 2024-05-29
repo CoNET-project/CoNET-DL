@@ -23,7 +23,10 @@ const startFilter = () => {
 		logger(Colors.red(`IP address Length [${ll.length}]`))
 		ll.forEach(n => {
 			const ipaddress = n.split(' ')[0]
-			iptablesIp(ipaddress)
+			if (ipaddress.length) {
+				iptablesIp(ipaddress)
+			}
+			
 			
 		})
 		
