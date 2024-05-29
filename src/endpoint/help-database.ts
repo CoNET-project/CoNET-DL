@@ -947,6 +947,20 @@ export const getApiNodes: () => Promise<number> = async () => new Promise(async 
 	}
 })
 
+export const checkIpAddress = async (ipaddress: string) => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT ipaddress from conet_free_mining WHERE ipaddress = '${ipaddress}'`
+	try {
+		const jj = await cassClient.execute (cmd)
+		await cassClient.shutdown()
+		return (jj.rowLength)
+	} catch (ex) {
+		await cassClient.shutdown()
+		return null
+	}
+	
+}
+
 
 export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(async resolve=> {
 
