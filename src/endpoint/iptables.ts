@@ -15,8 +15,18 @@ import Colors from 'colors/safe'
 import {exec} from 'node:child_process'
 
 
+const iptablesIp = (ipaddress: string) => {
+	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
+	exec (cmd, err => {
+		if (err) {
+			logger(Colors.red(`iptablesIp Error ${err.message}`))
+		}
+	})
+}
+
 
 const startFilter = () => {
+	const addressM: Map<string, number> = new Map()
 	return readFile('kk', (err, data) => {
 		if (err) {
 			return logger(`startFilter error!`)
@@ -29,7 +39,12 @@ const startFilter = () => {
 			const ipaddress = n.split(' ')[0]
 			const kk = await checkIpAddress(ipaddress)
 			if (!kk||kk<1) {
-				logger(Colors.blue(`${n}`))
+				const kkk = addressM.get(ipaddress)
+				if (kk) {
+					iptablesIp (ipaddress)
+				} else {
+					addressM.set(ipaddress, 1)
+				}
 			}
 		})
 		
