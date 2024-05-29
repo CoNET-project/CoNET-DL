@@ -21,7 +21,7 @@ const iptablesIp = (ipaddress: string) => {
 		if (err) {
 			return logger(Colors.red(`iptablesIp Error ${err.message}`))
 		}
-		logger(Colors.red(`iptablesIp added ${ipaddress}`))
+		logger(Colors.red(`iptablesIp added ${ipaddress}\n`))
 	})
 }
 
