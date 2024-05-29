@@ -40,9 +40,9 @@ const startFilter = () => {
 			const kk = await checkIpAddress(ipaddress)
 			if (!kk||kk<1) {
 				const kkk = addressM.get(ipaddress)
-				if (kk) {
+				if (kkk) {
 					logger(Colors.red(`added ipaddress [${ipaddress}] to Filter`))
-					iptablesIp (ipaddress)
+					return iptablesIp (ipaddress)
 				} else {
 					addressM.set(ipaddress, 1)
 				}
