@@ -41,6 +41,7 @@ const startFilter = () => {
 			if (!kk||kk<1) {
 				const kkk = addressM.get(ipaddress)
 				if (kk) {
+					logger(Colors.red(`added ipaddress [${ipaddress}] to Filter`))
 					iptablesIp (ipaddress)
 				} else {
 					addressM.set(ipaddress, 1)
