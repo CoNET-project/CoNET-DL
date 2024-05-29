@@ -8,6 +8,7 @@ const startFilter = () => {
 		}
 		const kk = data.toString()
 		const ll = kk.split('\r\n')
+		logger(Colors.red(`IP address Length [${ll.length}]`))
 		ll.forEach(n => {
 			const ipaddress = n.split(' ')[0]
 			logger(Colors.blue(`ipaddress [${ipaddress}]`))
