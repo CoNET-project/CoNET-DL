@@ -76,14 +76,13 @@ const startFilter = () => {
 		mapLimit(ll, 5, async (n, index) => {
 			const ipaddress = n.split(' ')[0]
 			const kk = await checkIpAddress(cassClient, ipaddress)
-			if (!kk||kk<1) {
+			if (!kk|| kk < 1 ) {
 				const kkk = addressM.get(ipaddress)
 				if (kkk) {
-					
 					return iptablesIp (ipaddress)
-				} else {
-					addressM.set(ipaddress, 1)
 				}
+				addressM.set(ipaddress, 1)
+				
 			}
 		}, async err => {
 			await cassClient.shutdown()
