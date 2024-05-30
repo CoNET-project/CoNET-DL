@@ -21,15 +21,20 @@ const setup = join( homedir(),'.master.json' )
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
 
-
+const added = new Map()
 const iptablesIp = (ipaddress: string) => {
-	const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
-	exec (cmd, err => {
-		if (err) {
-			return logger(Colors.red(`iptablesIp Error ${err.message}`))
-		}
-		logger(Colors.red(`iptablesIp added ${ipaddress}`),'\n')
-	})
+	const kkk = added.get(ipaddress)
+	if (!kkk) {
+		const cmd = `sudo iptables -I INPUT -s ${ipaddress} -j DROP`
+		exec (cmd, err => {
+			if (err) {
+				return logger(Colors.red(`iptablesIp Error ${err.message}`))
+			}
+			added.set(ipaddress, 1)
+			logger(Colors.red(`iptablesIp added ${ipaddress}`),'\n')
+		})
+	}
+	
 }
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
