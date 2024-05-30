@@ -84,7 +84,7 @@ const startFilter = () => {
 			if (!kk|| kk < 1 ) {
 				const kkk = addressM.get(ipaddress)
 				if (kkk) {
-					logger(Colors.blue(`${n}`))
+					
 					return iptablesIp (ipaddress)
 				}
 				addressM.set(ipaddress, 1)
