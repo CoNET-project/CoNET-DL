@@ -148,8 +148,8 @@ const checkMiner = (ipaddress: string, wallet: string ) => new Promise(resolve=>
 	const sendData = {
 		message, signMessage
 	}
-
-	return sendMesageToCluster('/api/minerCheck',sendData, (err, data) => {
+	logger(inspect(sendData, false, 3, true))
+	return sendMesageToCluster('/api/minerCheck', sendData, (err, data) => {
 		if (err) {
 			logger(Colors.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err.message}`))
 			//	let client try again
