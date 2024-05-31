@@ -85,10 +85,7 @@ const storeToChain = async (data: epochRate) => {
 	try {
 		tx = await cCNTPContract.updateEpoch(data.totalMiner, data.totalNodes, data.epoch)
 	} catch (ex: any) {
-		logger(Colors.red(`storeToChain Error! try Again!`), ex.message)
-		setTimeout(async () => {
-			await storeToChain (data)
-		}, 1000)
+		logger(Colors.red(`storeToChain Error!`), ex.message)
 		
 		return
 	}
