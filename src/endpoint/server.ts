@@ -99,35 +99,7 @@ class conet_dl_server {
 	private appsPath = ''
 	private initData: ICoNET_NodeSetup|null = null
 	private debug = false
-	private serverID = ''
-
-	private si_pool: nodeType[] = []
-
-	private sendCommandWaitingPool: Map <string, snedMessageWaitingObj> = new Map()
-	private livenessHash = ''
-	private masterBalance: CNTPMasterBalance|null = null
-	private s3Pass: s3pass|null = null
-	private minerRate = 0
-	private EPOCH = '0'
-	private sendCommandToMasterAndWaiting: (cmd: clusterMessage) => Promise<clusterMessage|null> = (cmd ) => new Promise(resolve=> {
-		if ( process.connected && typeof process.send === 'function') {
-			const timeSet = setTimeout(() => {
-				logger (Colors.red(`sendCommandToMasterAndWaiting process.send (comd) & listen [${cmd.cmd}] response TIMEOUT Error!`))
-				resolve(null)
-			}, 10000)
-
-			const obj: snedMessageWaitingObj = {
-				resolve,
-				timeOutObj: timeSet
-			}
-			this.sendCommandWaitingPool.set(cmd.uuid, obj)
-			
-			return process.send (cmd)
-		}
-		return resolve(null)
-	})
-
-
+	private serverIpaddress = ''
 
 	private initSetupData = async () => {
 		
@@ -143,10 +115,8 @@ class conet_dl_server {
 		this.appsPath = this.initData.setupPath
 
         logger (Colors.blue(`start local server!`))
-		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
-		this.serverID = getServerIPV4Address(false)[0]
-		logger(Colors.blue(`serverID = [${this.serverID}]`))
-		this.s3Pass = await s3fsPasswd()
+		this.serverIpaddress = getServerIPV4Address(false)[0]
+		logger(Colors.blue(`server IP address = [${ this.serverIpaddress }]`))
 		await regiestApiNode1 ()
 		
 		this.startServer()
@@ -158,8 +128,6 @@ class conet_dl_server {
 		this.initSetupData ()
     }
 
-	private ipaddressPool: Map<string, number[]>  = new Map()
-
 	private startServer = async () => {
 		const staticFolder = join ( this.appsPath, 'static' )
 		const launcherFolder = join ( this.appsPath, 'launcher' )
@@ -170,6 +138,7 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use ( Express.static ( staticFolder ))
         app.use ( Express.static ( launcherFolder ))
+		app.use( '/api', router )
 		app.use (async (req, res, next) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -184,9 +153,8 @@ class conet_dl_server {
 					if (err) {
 						logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
 						res.sendStatus(400).end()
-						res.socket?.end().destroy()
-						return await addAttackToCluster (ipaddress)
-						
+						return res.socket?.end().destroy()
+						// return await addAttackToCluster (ipaddress)
 					}
 					return next()
 				})
@@ -195,10 +163,6 @@ class conet_dl_server {
 			return next()
 		})
 
-			
-		
-
-		app.use( '/api', router )
 
 		app.once ( 'error', ( err: any ) => {
 			/**
@@ -217,7 +181,7 @@ class conet_dl_server {
 
 		app.all ('*', (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
@@ -232,21 +196,6 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 
-
-		router.get ('/health', async (req,res) => {
-
-			if (!this.initData) {
-				logger (Colors.red(`conet_dl_server /publishKey have no initData! response 404`))
-				res.status (404).end()
-				return res.socket?.end().destroy()
-			}
-			
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(` Router /health form [${ ipaddress}]`), inspect(req.headers, false, 3, true))
-
-			return res.json ({ health: true }).end()
-
-		})
 		
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -256,12 +205,12 @@ class conet_dl_server {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /livenessListening message = req.body.message ERROR!`))
+				logger (Colors.grey(`${ipaddress} request /livenessListening message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 				
 			}
-			if (!message||!this.initData||!signMessage) {
-				logger (Colors.grey(`Router /livenessListening !message||!this.initData||!signMessage Error!`))
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /livenessListening !message||!signMessage Error! [${ipaddress}]`))
 				return  res.status(404).end()
 				
 			}
@@ -276,6 +225,7 @@ class conet_dl_server {
 			const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
 			if (m !== true) {
+				logger(Colors.grey(`${ipaddress}:${obj.walletAddress} /startMining freeMinerManager false!`))
 				return res.status(m).end()
 			}
 			res.status(200)

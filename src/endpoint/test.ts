@@ -1,5 +1,5 @@
 import { logger } from '../util/logger'
-import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, testInsert} from './help-database'
+import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, testInsert, regiestMiningNode} from './help-database'
 import {inspect} from 'node:util'
 import {conet_Holesky_rpc, cCNTP_Contract, mergeTransfersv1, checkSignObj} from '../util/util'
 import {ethers} from 'ethers'
@@ -10,6 +10,8 @@ const message =  {
 	signMessage: '0xb14ec93a35ff00ff3610e502dbabfb2b743e9e7b83fb307d50c0716340dd4a1b2a8a0e48d8dbae7bd04ca3b78750d7c5b54ff065839303a18ad4eb10a98ecceb1c'
 }
 const checkGasPrice = 2084388438
+
+
 const test = async () => {
 	// await testInsert()
 	
@@ -21,9 +23,13 @@ const test = async () => {
 	const block = await provideCONET.getBlockNumber ()
 	// const kkk = await selectLeaderboard()
 	logger(Colors.blue(`Start selectLeaderboard ${block}`))
-	const kkkk = await selectLeaderboard(block)
+	// const kkkk = await selectLeaderboard(block)
 
 	// logger(inspect(Object.keys(kk1), false, 3, true))
 }
 
-test()
+const testDatabase = async () => {
+	await regiestMiningNode()
+}
+
+testDatabase()

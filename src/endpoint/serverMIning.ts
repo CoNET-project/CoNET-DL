@@ -95,8 +95,13 @@ const storeToChain = async (data: epochRate) => {
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
+const minerWallet: Map<string, string> = new Map()
+const walletList: Map<string, string> = new Map()
+const miningNodes: Map<string, string> = new Map()				//	nodes
 
-
+const getAllNodes = () => {
+	
+}
 class conet_dl_v3_server {
 
 	private PORT = 8001
@@ -148,7 +153,7 @@ class conet_dl_v3_server {
 
 	private router ( router: Router ) {
 		
-		router.post ('/wallet',  async (req, res) =>{
+		router.post ('/minerSearch',  async (req, res) =>{
 			let wallet: string
 			try {
 				wallet = req.body.wallet
@@ -179,79 +184,6 @@ class conet_dl_v3_server {
 			ReferralsMap.set(wallet, address)
 			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
 			return res.status(200).json({address}).end()
-		})
-
-		router.post ('/pay',  async (req, res) =>{
-			let walletList: string[]
-			let payList: string[]
-			try {
-				walletList = req.body.walletList
-				payList = req.body.payList
-			} catch (ex) {
-				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			res.status(200).end()
-			
-			transferPool.push({
-				privateKey: masterSetup.GuardianReferralsFree,
-				walletList: walletList,
-				payList: payList
-			})
-			
-			return await startTransfer()
-		})
-
-		router.post ('/guardians-data',  async (req, res) => {
-
-			let epoch: string
-			let totalNodes: string
-			try {
-				epoch = req.body.epoch
-				totalNodes = req.body.totalNodes
-			} catch (ex) {
-				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			res.status(200).end()
-			// await storeLeaderboardGuardians_referralsv2(epoch,)
-			const index = epochRate.findIndex ( n => n.epoch === epoch )
-			if (index < 0) {
-				return epochRate.push({
-					epoch, totalNodes, totalMiner: ''
-				})
-			}
-			epochRate[index].totalNodes = totalNodes
-			await storeToChain(epochRate[index])
-			epochRate.splice(index, 1)[0]
-		})
-
-		router.post ('/free-data',  async (req, res) =>{
-			let epoch: string
-			let minerRate
-			let totalMiner
-			try {
-				epoch = req.body.epoch
-				minerRate = req.body.minerRate
-				totalMiner = req.body.totalMiner
-
-			} catch (ex) {
-				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			res.status(200).end()
-			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
-			// await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
-			
-			const index = epochRate.findIndex(n => n.epoch=== epoch)
-			if (index < 0) {
-				return epochRate.push({
-					epoch, totalNodes:'', totalMiner
-				})
-			}
-			epochRate[index].totalMiner = totalMiner
-			await storeToChain(epochRate[index])
-			epochRate.splice(index, 1)[0]
 		})
 
 		router.all ('*', (req, res ) =>{

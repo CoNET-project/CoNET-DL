@@ -656,9 +656,9 @@ export const freeMinerManager = async (ipaddress: string, wallet: string) => {
 		}
 	}
 
-	const oo: any = await getIpaddressLocaltion ( ipaddress )
+	// const oo: any = await getIpaddressLocaltion ( ipaddress )
 	// logger(inspect(oo, false, 3, true))
-	const cmd3 = `INSERT INTO conet_free_mining (ipaddress, wallet, region, country, node_wallet) VALUES ('${ipaddress}', '${wallet.toLowerCase()}', '${oo.region}', '${oo.country}', '${nodeWallet.toLowerCase()}')`
+	const cmd3 = `INSERT INTO conet_free_mining (ipaddress, wallet, region, country, node_wallet) VALUES ('${ipaddress}', '${wallet.toLowerCase()}', '', '', '${nodeWallet.toLowerCase()}')`
 	try {
 		await cassClient.execute (cmd3)
 	} catch (ex) {
@@ -790,6 +790,31 @@ const testMinerCOnnecting = (res: Response<any, Record<string, any>>, returnData
 	return resolve (true)
 })
 
+
+export const regiestMiningNode = async () => {
+	
+	const ipaddress = getServerIPV4Address(false)[0]
+	if (!ipaddress) {
+		return logger(Color.red(`regiestMiningNode Mining Server only has local IP address Error!`))
+	}
+	const wallet = (await new ethers.Wallet(masterSetup.conetFaucetAdmin).getAddress()).toLowerCase()
+	
+
+	const cmd = `UPDATE conet_mining_nodes SET node_ipaddress = '${ipaddress}' wallet = '${wallet}'`
+	const cassClient = new Client (option)
+	try {
+		await cassClient.execute(cmd)
+		await cassClient.shutdown()
+	} catch(ex: any) {
+		return logger(Color.red(`regiestMiningNode save data to Database ${cmd} Error ${ex.message}`))
+	}
+	logger(Color.blue(`regiestMiningNode ${cmd} success!`))
+}
+
+export const getAllMinerNodes = () => {
+
+}
+
 const stratliveness = async (block: number) => {
 	
 	
@@ -895,7 +920,7 @@ export const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: s
 		status: 200,
 		epoch: EPOCH
 	}
-	logger (Color.cyan(` [${ipaddress}:${wallet}] Added to livenessListeningPool!`))
+	logger (Color.cyan(` [${ipaddress}:${wallet}] Added to livenessListeningPool [${livenessListeningPool.size}]!`))
 	return returnData
 }
 
