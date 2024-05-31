@@ -110,6 +110,7 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error
 	
 	const req = await HttpsRequest (option, res => {
 		let data = ''
+		logger(Colors.blue(`sendMesageToCluster got response res Status ${res.statusCode}`))
 		res.on('data', _data => {
 			data += _data
 		})
