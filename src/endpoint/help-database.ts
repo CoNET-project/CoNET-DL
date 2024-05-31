@@ -797,10 +797,8 @@ export const regiestMiningNode = async () => {
 	if (!ipaddress) {
 		return logger(Color.red(`regiestMiningNode Mining Server only has local IP address Error!`))
 	}
-	const wallet = (await new ethers.Wallet(masterSetup.conetFaucetAdmin).getAddress()).toLowerCase()
 	
-
-	const cmd = `UPDATE conet_mining_nodes SET node_ipaddress = '${ipaddress}' wallet = '${wallet}'`
+	const cmd = `UPDATE conet_mining_nodes SET node_ipaddress = '${ipaddress}' wallet = '${nodeWallet}'`
 	const cassClient = new Client (option)
 	try {
 		await cassClient.execute(cmd)
@@ -808,7 +806,7 @@ export const regiestMiningNode = async () => {
 	} catch(ex: any) {
 		return logger(Color.red(`regiestMiningNode save data to Database ${cmd} Error ${ex.message}`))
 	}
-	logger(Color.blue(`regiestMiningNode ${cmd} success!`))
+	return logger(Color.blue(`regiestMiningNode ${cmd} success!`))
 }
 
 export const getAllMinerNodes = async () => {
@@ -951,15 +949,14 @@ const stratlivenessV2 = async (block: number) => {
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-	// transferEposh = EPOCH + 5
-	// await cleanupNodeMainers()
-	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
+	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
 		if (block <= EPOCH) {
 			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
 		}
 		return stratlivenessV2(block.toString())
 	})
+	await regiestMiningNode()
 }
 
 
@@ -1046,10 +1043,13 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 
 	const cassClient = new Client (option)
 	const ipaddress = getServerIPV4Address(false)
-	const cmd1 = `INSERT INTO conet_api_node (wallet, ipaddress) VALUES ('${masterSetup.conetFaucetAdmin}', '${ipaddress[0]}')`
+	const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin)
+
+	const cmd1 = `INSERT INTO conet_api_node (wallet, ipaddress) VALUES ('${wallet.address}', '${ipaddress[0]}')`
 	try {
 		cassClient.execute (cmd1)
 		await cassClient.shutdown()
+		logger(Color.blue(`regiestApiNode1 [`+Color.yellow(`${ipaddress}:#{}`)+`] success!`))
 		return resolve(true)
 	} catch(ex) {
 		await cassClient.shutdown()

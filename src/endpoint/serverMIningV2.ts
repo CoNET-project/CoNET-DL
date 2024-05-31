@@ -100,9 +100,7 @@ const storeToChain = async (data: epochRate) => {
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
-const minerWallet: Map<string, string> = new Map()
-const walletList: Map<string, string> = new Map()
-const miningNodes: Map<string, string> = new Map()				//	nodes
+
 
 class conet_mining_server {
 
@@ -146,7 +144,7 @@ class conet_mining_server {
 		})
 
 		server.listen(this.PORT, '127.0.0.1', () => {
-
+			
 			return console.table([
                 { 'serverMIningV2 ': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])

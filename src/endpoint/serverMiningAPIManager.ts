@@ -37,6 +37,9 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
+const minerWallet: Map<string, string> = new Map()
+const walletList: Map<string, string> = new Map()
+const miningNodes: Map<string, string> = new Map()				//	nodes
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
