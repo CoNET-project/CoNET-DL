@@ -112,9 +112,14 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error
 	const req = await HttpsRequest (option, res => {
 		let data = ''
 		logger(Colors.blue(`sendMesageToCluster got response res Status ${res.statusCode}`))
+		if (res.statusCode !== 200) {
+			return callbak(new Error('no 200 error'))
+		}
+
 		res.on('data', _data => {
 			data += _data
 		})
+		
 		res.once('end', () => {
 
 			try {
@@ -148,7 +153,9 @@ const checkMiner = (ipaddress: string, wallet: string ) => new Promise(resolve=>
 	const sendData = {
 		message, signMessage
 	}
+
 	logger(inspect(sendData, false, 3, true))
+
 	return sendMesageToCluster('/api/minerCheck', sendData, (err, data) => {
 		if (err) {
 			logger(Colors.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err.message}`))
@@ -234,13 +241,14 @@ class conet_mining_server {
 				logger (Colors.grey(`[${ipaddress}] to /livenessListening !obj Error!`))
 				return res.status(404).end()
 			}
+			const m = await checkMiner(ipaddress, obj.walletAddress)
 
 			// const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
-			// if (m !== true) {
-			// 	logger(Colors.grey(`${ipaddress}:${obj.walletAddress} /startMining freeMinerManager false!`))
-			// 	return res.status(m).end()
-			// }
+			if (m !== true) {
+				logger(Colors.grey(`${ipaddress}:${obj.walletAddress} /startMining freeMinerManager false!`))
+				return res.status(m).end()
+			}
 			res.status(200)
 			res.setHeader('Cache-Control', 'no-cache')
             res.setHeader('Content-Type', 'text/event-stream')
@@ -249,12 +257,7 @@ class conet_mining_server {
             res.flushHeaders() // flush the headers to establish SSE with client
 			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
 			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
-			sendMesageToCluster('/api/minerCheck', {data: 'data'}, (err, data) => {
-				if (err) {
-					return logger(Colors.blue(`send data to /minerCheck got Error [${err?.message}]`))
-				}
-				return logger(Colors.blue(`send data to /minerCheck Success [${inspect(data, false, 3, true)}]`))
-			})
+			
 		})
 
 		router.all ('*', (req, res ) =>{
