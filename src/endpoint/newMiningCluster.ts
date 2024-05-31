@@ -292,6 +292,6 @@ class conet_dl_v3_server {
 	}
 }
 
-// new conet_dl_v3_server()
+new conet_dl_v3_server()
 
 initdata()
