@@ -99,7 +99,7 @@ const minerWallet: Map<string, string> = new Map()
 const walletList: Map<string, string> = new Map()
 const miningNodes: Map<string, string> = new Map()				//	nodes
 
-class conet_dl_v3_server {
+class conet_mining_server {
 
 	private PORT = 8002
 
@@ -150,7 +150,7 @@ class conet_dl_v3_server {
 
 	private router ( router: Router ) {
 		
-		router.post ('/minerSearch',  async (req, res) =>{
+		router.post ('/minerSearch',  async (req, res) => {
 			let wallet: string
 			try {
 				wallet = req.body.wallet
@@ -192,4 +192,4 @@ class conet_dl_v3_server {
 	}
 }
 
-new conet_dl_v3_server()
+new conet_mining_server()
