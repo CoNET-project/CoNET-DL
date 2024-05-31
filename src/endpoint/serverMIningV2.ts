@@ -151,7 +151,7 @@ const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve 
 	}
 	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
 	const sendData = {
 		message, signMessage
 	}
