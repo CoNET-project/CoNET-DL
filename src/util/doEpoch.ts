@@ -39,7 +39,6 @@ const option = {
 }
 
 
-
 const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
 	if (!s3Pass) {
 		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))

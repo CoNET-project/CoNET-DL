@@ -4,27 +4,22 @@
 import Express, { Router } from 'express'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
-
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-import { CoNET_SI_Register, regiestFaucet, getLast5Price,
-	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,startListeningCONET_Holesky_EPOCH_v2,
-	addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,
-} from './help-database'
-import {createServer} from 'node:http'
+import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,} from './help-database'
+import {request as HttpsRequest } from 'node:https'
+import {createServer, RequestOptions} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
 
-import { checkSignObj, 
-} from '../util/util'
+import { checkSignObj} from '../util/util'
 
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'http://207.90.195.83:9999'
-
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 
@@ -100,7 +95,45 @@ const storeToChain = async (data: epochRate) => {
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
+const clusterManagerHostname = 'apibeta.conet.network'
 
+const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error|null, data?: any)=> void) => {
+	const option: RequestOptions = {
+		hostname: clusterManagerHostname,
+		path,
+		port: 443,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	
+	const req = await HttpsRequest (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+
+			try {
+				const ret = JSON.parse(data)
+				return callbak (null, ret)
+			} catch (ex: any) {
+				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				return callbak (ex)
+			}
+			
+		})
+	})
+
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (e)
+	})
+
+	req.write(JSON.stringify(data))
+	req.end()
+}
 
 class conet_mining_server {
 
@@ -192,7 +225,12 @@ class conet_mining_server {
             res.flushHeaders() // flush the headers to establish SSE with client
 			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
 			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
-
+			sendMesageToCluster('/minerCheck', {data: 'data'}, (err, data) => {
+				if (err) {
+					return logger(Colors.blue(`send data to /minerCheck got Error [${err?.message}]`))
+				}
+				return logger(Colors.blue(`send data to /minerCheck Success [${inspect(data, false, 3, true)}]`))
+			})
 		})
 
 		router.all ('*', (req, res ) =>{
