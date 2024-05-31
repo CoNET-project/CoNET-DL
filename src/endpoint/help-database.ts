@@ -818,7 +818,7 @@ export const getAllMinerNodes = () => {
 const stratliveness = async (block: number) => {
 	
 	
-	logger(Color.grey(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
+	logger(Color.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
 	EPOCH = block
 	clusterNodes = await getApiNodes()
 	const processPool: any[] = []

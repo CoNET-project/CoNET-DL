@@ -10,7 +10,7 @@ import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import { CoNET_SI_Register, regiestFaucet, getLast5Price,
-	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
+	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,startListeningCONET_Holesky_EPOCH,
 	addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,
 } from './help-database'
 import {createServer} from 'node:http'
@@ -73,13 +73,13 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 	}
 }
 
-const startListeningCONET_Holesky_EPOCH = async () => {
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	provideCONET.on('block', async block => {
-		startTransfer()
-		return checkBlockEvent (block, provideCONET)
-	})
-}
+// const startListeningCONET_Holesky_EPOCH = async () => {
+// 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+// 	provideCONET.on('block', async block => {
+// 		startTransfer()
+// 		return checkBlockEvent (block, provideCONET)
+// 	})
+// }
 
 const storeToChain = async (data: epochRate) => {
 	logger(inspect(data, false, 3, true))
@@ -110,7 +110,7 @@ class conet_mining_server {
 
 	constructor () {
 		this.startServer()
-
+		startListeningCONET_Holesky_EPOCH()
     }
 
 	private startServer = async () => {
