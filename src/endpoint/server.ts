@@ -138,30 +138,31 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use ( Express.static ( staticFolder ))
         app.use ( Express.static ( launcherFolder ))
+		app.use ( Express.json())
 		app.use( '/api', router )
-		app.use (async (req, res, next) => {
+		// app.use (async (req, res, next) => {
 			
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
+		// 	const ipaddress = getIpAddressFromForwardHeader(req)
+		// 	if (!ipaddress) {
+		// 		res.status(404).end()
+		// 		return res.socket?.end().destroy()
+		// 	}
 				
-			if (/^post$/i.test(req.method)) {
+		// 	if (/^post$/i.test(req.method)) {
 				
-				return Express.json ({limit: '25mb'}) (req, res, async err => {
-					if (err) {
-						logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
-						res.sendStatus(400).end()
-						return res.socket?.end().destroy()
-						// return await addAttackToCluster (ipaddress)
-					}
-					return next()
-				})
-			}
+		// 		return Express.json ({limit: '25mb'}) (req, res, async err => {
+		// 			if (err) {
+		// 				logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
+		// 				res.sendStatus(400).end()
+		// 				return res.socket?.end().destroy()
+		// 				// return await addAttackToCluster (ipaddress)
+		// 			}
+		// 			return next()
+		// 		})
+		// 	}
 			
-			return next()
-		})
+		// 	return next()
+		// })
 
 
 		app.once ( 'error', ( err: any ) => {
