@@ -798,7 +798,7 @@ export const regiestMiningNode = async () => {
 		return logger(Color.red(`regiestMiningNode Mining Server only has local IP address Error!`))
 	}
 	
-	const cmd = `UPDATE conet_mining_nodes SET node_ipaddress = '${ipaddress}', wallet = '${nodeWallet}'`
+	const cmd = `INSERT INTO conet_mining_nodes (node_ipaddress, wallet) VALUES ('${ipaddress}', '${nodeWallet}')`
 	const cassClient = new Client (option)
 	try {
 		await cassClient.execute(cmd)
