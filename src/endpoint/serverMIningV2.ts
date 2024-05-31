@@ -98,7 +98,7 @@ const storeToChain = async (data: epochRate) => {
 
 const clusterManagerHostname = 'apibeta.conet.network'
 
-const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error|null, data?: any)=> void) => {
+const sendMesageToCluster = async (path: string, data: any, callbak: (err: number|undefined, data?: any)=> void) => {
 	const option: RequestOptions = {
 		hostname: clusterManagerHostname,
 		path,
@@ -113,21 +113,21 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error
 		let data = ''
 		logger(Colors.blue(`sendMesageToCluster got response res Status ${res.statusCode}`))
 		if (res.statusCode !== 200) {
-			return callbak(new Error('no 200 error'))
+			return callbak(res.statusCode)
 		}
 
 		res.on('data', _data => {
 			data += _data
 		})
-		
+
 		res.once('end', () => {
 
 			try {
 				const ret = JSON.parse(data)
-				return callbak (null, ret)
+				return callbak (undefined, ret)
 			} catch (ex: any) {
 				console.error(`getReferrer JSON.parse(data) Error!`, data)
-				return callbak (ex)
+				return callbak (0)
 			}
 			
 		})
@@ -135,14 +135,14 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error
 
 	req.once('error', (e) => {
 		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (e)
+		return callbak (1)
 	})
 
 	req.write(JSON.stringify(data))
 	req.end()
 }
 
-const checkMiner = (ipaddress: string, wallet: string ) => new Promise(resolve=> {
+const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
 	if (!isPublic(ipaddress)) {
 		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
 		return resolve (false)
@@ -158,11 +158,11 @@ const checkMiner = (ipaddress: string, wallet: string ) => new Promise(resolve=>
 
 	return sendMesageToCluster('/api/minerCheck', sendData, (err, data) => {
 		if (err) {
-			logger(Colors.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err.message}`))
+			logger(Colors.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
-			return resolve (false)
+			return resolve (err)
 		}
-
+		return resolve (data)
 	})
 })
 
@@ -245,9 +245,9 @@ class conet_mining_server {
 
 			// const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
-			if (m !== true) {
+			if (m !== true ) {
 				logger(Colors.grey(`${ipaddress}:${obj.walletAddress} /startMining freeMinerManager false!`))
-				return res.status(m).end()
+				return res.status().end()
 			}
 			res.status(200)
 			res.setHeader('Cache-Control', 'no-cache')

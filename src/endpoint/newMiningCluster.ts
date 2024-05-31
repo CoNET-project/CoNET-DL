@@ -335,7 +335,6 @@ class conet_dl_v3_server {
 					logger (Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
 					return res.status(404).end()
 				}
-				
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 
@@ -349,7 +348,7 @@ class conet_dl_v3_server {
 			ipaddressWallet.set(obj.ipAddress, obj.walletAddress1)
 			WalletIpaddress.set(obj.walletAddress1, obj.ipAddress)
 			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${ipaddressWallet.size}]`))
-			return res.end()
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
