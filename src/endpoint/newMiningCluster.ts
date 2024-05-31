@@ -114,7 +114,7 @@ const initdata = async () => {
 
 class conet_dl_v3_server {
 
-	private PORT = 8010
+	private PORT = 8001
 
 	constructor () {
 		this.startServer()
@@ -280,7 +280,7 @@ class conet_dl_v3_server {
 		router.post('/minerCheck',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`${ipaddress} => /minerCheck`))
-			
+
 		})
 
 		router.all ('*', (req, res ) =>{
