@@ -10,7 +10,7 @@ import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import { CoNET_SI_Register, regiestFaucet, getLast5Price,
-	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,startListeningCONET_Holesky_EPOCH,
+	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,startListeningCONET_Holesky_EPOCH_v2,
 	addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,
 } from './help-database'
 import {createServer} from 'node:http'
@@ -110,7 +110,7 @@ class conet_mining_server {
 
 	constructor () {
 		this.startServer()
-		startListeningCONET_Holesky_EPOCH()
+		startListeningCONET_Holesky_EPOCH_v2()
     }
 
 	private startServer = async () => {
@@ -146,9 +146,9 @@ class conet_mining_server {
 		})
 
 		server.listen(this.PORT, '127.0.0.1', () => {
-			startListeningCONET_Holesky_EPOCH()
+
 			return console.table([
-                { 'CoNET Server V3': ` startup success ${ this.PORT } Work [${workerNumber}]` }
+                { 'serverMIningV2 ': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
 	}

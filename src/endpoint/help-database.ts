@@ -820,7 +820,7 @@ const stratliveness = async (block: number) => {
 	
 	logger(Color.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
 	EPOCH = block
-	clusterNodes = await getApiNodes()
+	// clusterNodes = await getApiNodes()
 	const processPool: any[] = []
 	
 	livenessListeningPool.forEach(async (n, key) => {
@@ -907,6 +907,53 @@ export const startListeningCONET_Holesky_EPOCH = async () => {
 		return stratliveness(block.toString())
 	})
 }
+
+const stratlivenessV2 = async (block: number) => {
+	
+	
+	logger(Color.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
+	EPOCH = block
+	// clusterNodes = await getApiNodes()
+	const processPool: any[] = []
+	
+	livenessListeningPool.forEach(async (n, key) => {
+		const res = n.res
+		const returnData = {
+			rate: minerRate.toFixed(6),
+			online: totalminerOnline,
+			status: 200,
+			epoch: transferEposh
+		}
+		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress))
+
+	})
+
+	await Promise.all(processPool)
+
+	const wallets: string[] = []
+
+	livenessListeningPool.forEach((value: livenessListeningPoolObj, key: string) => {
+		wallets.push (value.wallet)
+	})
+
+	// await updateNodeMiners (block.toString(), livenessListeningPool.size, wallets)
+	// logger(Color.grey(`stratliveness EPOCH ${block} stoped! Pool length = [${livenessListeningPool.size}]`))
+	// await transferMiners()
+}
+export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	EPOCH = await provideCONET.getBlockNumber()
+	// transferEposh = EPOCH + 5
+	// await cleanupNodeMainers()
+	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
+	provideCONET.on('block', async block => {
+		if (block <= EPOCH) {
+			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
+		}
+		return stratliveness(block.toString())
+	})
+}
+
 
 export const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, res: Response) => {
 	const obj: livenessListeningPoolObj = {
