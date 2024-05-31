@@ -165,7 +165,11 @@ class conet_dl_v3_server {
 		
 		router.post ('/wallet',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.blue(`${ipaddress} => /wallet`))
+			if (ipaddress !== '::1') {
+				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
+				res.end()
+				return res?.socket?.destroy()
+			}
 			let wallet: string
 			try {
 				wallet = req.body.wallet
@@ -200,7 +204,13 @@ class conet_dl_v3_server {
 
 		router.post ('/pay',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.blue(`${ipaddress} => /pay`))
+
+			if (ipaddress !== '::1') {
+				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
+				res.end()
+				return res?.socket?.destroy()
+			}
+
 			let walletList: string[]
 			let payList: string[]
 			try {
@@ -223,7 +233,11 @@ class conet_dl_v3_server {
 
 		router.post ('/guardians-data',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.blue(`${ipaddress} => /guardians-data`))
+			if (ipaddress !== '::1') {
+				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
+				res.end()
+				return res?.socket?.destroy()
+			}
 			let epoch: string
 			let totalNodes: string
 			try {
@@ -248,6 +262,12 @@ class conet_dl_v3_server {
 
 		router.post ('/free-data',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
+			if (ipaddress !== '::1') {
+				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
+				res.end()
+				return res?.socket?.destroy()
+			}
+
 			logger(Colors.blue(`${ipaddress} => /guardians-data`))
 			
 			let epoch: string
@@ -280,7 +300,7 @@ class conet_dl_v3_server {
 		router.post('/minerCheck',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`${ipaddress} => /minerCheck`))
-
+			return res.end()
 		})
 
 		router.all ('*', (req, res ) =>{
