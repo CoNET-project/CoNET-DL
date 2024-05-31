@@ -99,12 +99,9 @@ const minerWallet: Map<string, string> = new Map()
 const walletList: Map<string, string> = new Map()
 const miningNodes: Map<string, string> = new Map()				//	nodes
 
-const getAllNodes = () => {
-	
-}
 class conet_dl_v3_server {
 
-	private PORT = 8001
+	private PORT = 8002
 
 	constructor () {
 		this.startServer()
