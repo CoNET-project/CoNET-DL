@@ -351,6 +351,96 @@ class conet_dl_v3_server {
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
+		//deleteMiner
+
+		router.post('/deleteMiner',  async (req, res) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.blue(`${ipaddress} => /deleteMiner`))
+
+			
+
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /deleteMiner message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage||!ipaddress) {
+				logger (Colors.grey(`Router /deleteMiner !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(404).end()
+				
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj||!obj.ipAddress||!obj.walletAddress1) {
+				logger (Colors.grey(`[${ipaddress}] to /deleteMiner !obj Error! ${inspect(obj, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			let _ip = regiestNodes.get (obj.walletAddress)
+
+			if (!_ip) {
+				await initdata()
+				_ip = regiestNodes.get (obj.walletAddress)
+				if (!_ip) {
+					logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+					return res.status(404).end()
+				}
+			}
+			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
+
+			ipaddressWallet.delete(obj.ipAddress)
+			WalletIpaddress.delete(obj.walletAddress1?.toLowerCase())
+			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1?.toLowerCase()}] Total Miner = [${ipaddressWallet.size}]`))
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+		})
+
+		router.post('/getTotalMiners',  async (req, res) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.blue(`${ipaddress} => /getTotalMiners`))
+
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /deleteMiner message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /deleteMiner !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(404).end()
+				
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`[${ipaddress}] to /deleteMiner !obj Error! ${inspect(obj, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			let _ip = regiestNodes.get (obj.walletAddress)
+
+			if (!_ip) {
+				await initdata()
+				_ip = regiestNodes.get (obj.walletAddress)
+				if (!_ip) {
+					logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+					return res.status(404).end()
+				}
+			}
+			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+		})
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))

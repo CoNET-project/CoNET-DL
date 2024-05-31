@@ -6,18 +6,17 @@ import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
-import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,nodeWallet, tokensEachEPOCH, totalminerOnline } from './help-database'
-import {request as HttpsRequest } from 'node:https'
+import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader, checkMiner } from './help-database'
+
 import {createServer, RequestOptions} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
-import { isPublic} from 'ip'
-import { checkSignObj, loadWalletAddress} from '../util/util'
-import {sign} from 'eth-crypto'
+
+import { checkSignObj} from '../util/util'
+
 
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'http://207.90.195.83:9999'
@@ -95,78 +94,6 @@ const storeToChain = async (data: epochRate) => {
 	}
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
-
-const clusterManagerHostname = 'apibeta.conet.network'
-
-const sendMesageToCluster = async (path: string, data: any, callbak: (err: number|undefined, data?: any)=> void) => {
-	const option: RequestOptions = {
-		hostname: clusterManagerHostname,
-		path,
-		port: 443,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	
-	const req = await HttpsRequest (option, res => {
-		let data = ''
-		logger(Colors.blue(`sendMesageToCluster got response res Status ${res.statusCode}`))
-		if (res.statusCode !== 200) {
-			return callbak(res.statusCode)
-		}
-
-		res.on('data', _data => {
-			data += _data
-		})
-
-		res.once('end', () => {
-
-			try {
-				const ret = JSON.parse(data)
-				return callbak (undefined, ret)
-			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
-				return callbak (403)
-			}
-			
-		})
-	})
-
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (503)
-	})
-
-	req.write(JSON.stringify(data))
-	req.end()
-}
-
-
-
-const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
-	if (!isPublic(ipaddress)) {
-		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
-		return resolve (false)
-	}
-	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
-	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
-	const sendData = {
-		message, signMessage
-	}
-
-	logger(inspect(sendData, false, 3, true))
-
-	return sendMesageToCluster('/api/minerCheck', sendData, (err, data) => {
-		if (err) {
-			logger(Colors.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
-			//	let client try again
-			return resolve (err)
-		}
-		return resolve (data)
-	})
-})
 
 class conet_mining_server {
 
