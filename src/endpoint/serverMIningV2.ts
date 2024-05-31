@@ -8,15 +8,16 @@ import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,} from './help-database'
+import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,nodeWallet } from './help-database'
 import {request as HttpsRequest } from 'node:https'
 import {createServer, RequestOptions} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
-
-import { checkSignObj} from '../util/util'
+import { isPublic} from 'ip'
+import { checkSignObj, loadWalletAddress} from '../util/util'
+import {sign} from 'eth-crypto'
 
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'http://207.90.195.83:9999'
@@ -135,6 +136,28 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: Error
 	req.write(JSON.stringify(data))
 	req.end()
 }
+
+const checkMiner = (ipaddress: string, wallet: string ) => new Promise(resolve=> {
+	if (!isPublic(ipaddress)) {
+		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
+		return resolve (false)
+	}
+	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, message)
+	const sendData = {
+		message, signMessage
+	}
+
+	return sendMesageToCluster('/api/minerCheck',sendData, (err, data) => {
+		if (err) {
+			logger(Colors.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err.message}`))
+			//	let client try again
+			return resolve (false)
+		}
+
+	})
+})
 
 class conet_mining_server {
 

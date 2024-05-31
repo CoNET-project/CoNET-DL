@@ -10,7 +10,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
-import {conet_Referral_contractV2, masterSetup} from '../util/util'
+import {conet_Referral_contractV2, masterSetup, checkSignObj} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
@@ -300,6 +300,55 @@ class conet_dl_v3_server {
 		router.post('/minerCheck',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`${ipaddress} => /minerCheck`))
+
+			
+
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /minerCheck message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage||!ipaddress) {
+				logger (Colors.grey(`Router /minerCheck !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(404).end()
+				
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj||!obj.ipAddress||!obj.walletAddress1) {
+				logger (Colors.grey(`[${ipaddress}] to /minerCheck !obj Error! ${inspect(obj, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			let _ip = regiestNodes.get (obj.walletAddress)
+
+			if (!_ip) {
+				await initdata()
+				_ip = regiestNodes.get (obj.walletAddress)
+				if (!_ip) {
+					logger (Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+					return res.status(404).end()
+				}
+				
+			}
+			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
+
+			const _wallet = ipaddressWallet.get(obj.ipAddress)
+			const _wallet_ip = WalletIpaddress.get(obj.walletAddress1 = obj.walletAddress1?.toLowerCase())
+
+			if (_wallet || _wallet_ip) {
+				res.status(400).end()
+				return logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
+			}
+			ipaddressWallet.set(obj.ipAddress, obj.walletAddress1)
+			WalletIpaddress.set(obj.walletAddress1, obj.ipAddress)
+			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${ipaddressWallet.size}]`))
 			return res.end()
 		})
 

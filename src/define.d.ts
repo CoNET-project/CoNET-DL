@@ -200,6 +200,7 @@ interface clusterMessage {
 
 interface minerObj {
 	walletAddress: string
+	walletAddress1:string
 	ipAddress: string
 	weidth: number
 	blockNumber?:string
