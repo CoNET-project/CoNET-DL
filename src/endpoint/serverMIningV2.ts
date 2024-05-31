@@ -226,7 +226,7 @@ class conet_mining_server {
             res.flushHeaders() // flush the headers to establish SSE with client
 			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
 			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
-			sendMesageToCluster('/minerCheck', {data: 'data'}, (err, data) => {
+			sendMesageToCluster('/api/minerCheck', {data: 'data'}, (err, data) => {
 				if (err) {
 					return logger(Colors.blue(`send data to /minerCheck got Error [${err?.message}]`))
 				}
