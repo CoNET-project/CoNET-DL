@@ -103,20 +103,20 @@ class conet_dl_server {
 
 	private initSetupData = async () => {
 		
-		this.initData = await getSetup ( true )
-		if ( !this.initData ) {
-			throw new Error (`getSetup had null ERROR!`)
-		}
+		// this.initData = await getSetup ( true )
+		// if ( !this.initData ) {
+		// 	throw new Error (`getSetup had null ERROR!`)
+		// }
 
-		this.initData.keyObj = await loadWalletAddress (this.initData.keychain )
+		// this.initData.keyObj = await loadWalletAddress (this.initData.keychain )
 
-		await makePgpKeyObj ( this.initData.pgpKeyObj )
+		// await makePgpKeyObj ( this.initData.pgpKeyObj )
 
-		this.appsPath = this.initData.setupPath
+		// this.appsPath = this.initData.setupPath
 
-        logger (Colors.blue(`start local server!`))
-		this.serverIpaddress = getServerIPV4Address(false)[0]
-		logger(Colors.blue(`server IP address = [${ this.serverIpaddress }]`))
+        // logger (Colors.blue(`start local server!`))
+		// this.serverIpaddress = getServerIPV4Address(false)[0]
+		// logger(Colors.blue(`server IP address = [${ this.serverIpaddress }]`))
 		await regiestApiNode1 ()
 		
 		this.startServer()
