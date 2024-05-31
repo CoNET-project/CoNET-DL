@@ -1,5 +1,5 @@
 import { logger } from '../util/logger'
-import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, testInsert, regiestMiningNode} from './help-database'
+import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, regiestMiningNode} from './help-database'
 import {inspect} from 'node:util'
 import {conet_Holesky_rpc, cCNTP_Contract, mergeTransfersv1, checkSignObj} from '../util/util'
 import {ethers} from 'ethers'

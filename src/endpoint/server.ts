@@ -6,8 +6,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import { CoNET_SI_Register, regiestFaucet, getLast5Price,
-	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
+import { getIpAddressFromForwardHeader, freeMinerManager,
 	startListeningCONET_Holesky_EPOCH, addIpaddressToLivenessListeningPool, claimeToekn, regiestApiNode1
 } from './help-database'
 import Colors from 'colors/safe'
@@ -15,10 +14,7 @@ import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import {readFileSync} from 'node:fs'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky,
-	returnGuardianPlanReferral, CONET_guardian_Address, loadWalletAddress, getSetup, return404, 
-	decryptPayload, decryptPgpMessage, makePgpKeyObj, checkSignObj, getNetworkName,
-	checkSign, getCNTPMastersBalance, listedServerIpAddress, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, addAttackToCluster
+import { logger, checkSignObj
 } from '../util/util'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -79,15 +75,6 @@ const sendDisConnecting = (walletAddress: string) => {
 		
 		return process.send (cmd)
 	}
-}
-
-//			getIpAddressFromForwardHeader(req.header(''))
-const getIpAddressFromForwardHeader = (req: Request) => {
-	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
-	if (!ipaddress||typeof ipaddress !== 'string') {
-		return ''
-	}
-	return ipaddress
 }
 
 

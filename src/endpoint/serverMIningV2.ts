@@ -9,13 +9,18 @@ import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-
+import { CoNET_SI_Register, regiestFaucet, getLast5Price,
+	CoNET_SI_health, getIpAttack, getOraclePrice, txManager, freeMinerManager,
+	addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,
+} from './help-database'
 import {createServer} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
 
+import { checkSignObj, 
+} from '../util/util'
 
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'http://207.90.195.83:9999'
@@ -101,7 +106,7 @@ const miningNodes: Map<string, string> = new Map()				//	nodes
 
 class conet_mining_server {
 
-	private PORT = 8002
+	private PORT = masterSetup.PORT|| 8000
 
 	constructor () {
 		this.startServer()
@@ -150,37 +155,46 @@ class conet_mining_server {
 
 	private router ( router: Router ) {
 		
-		router.post ('/minerSearch',  async (req, res) => {
-			let wallet: string
+		router.post ('/startMining', async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
 			try {
-				wallet = req.body.wallet
+				message = req.body.message
+				signMessage = req.body.signMessage
+
 			} catch (ex) {
-				logger (Colors.grey(`request /wallet req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
+				logger (Colors.grey(`${ipaddress} request /livenessListening message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+				
 			}
-			
-			wallet = wallet.toLowerCase()
-			let address = ReferralsMap.get (wallet)
-			if (address) {
-				return res.status(200).json({address}).end()
-			}
-
-			try {
-				const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-				address = await contract.getReferrer(wallet)
-			} catch (ex){
-				logger(Colors.red(`contract.getReferrer Error!`))
-				return res.status(200).json({}).end()
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /livenessListening !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(404).end()
+				
 			}
 
-			if (!address) {
-				address = '0x0000000000000000000000000000000000000000'
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`[${ipaddress}] to /livenessListening !obj Error!`))
+				return res.status(404).end()
 			}
-			address = address.toLowerCase()
-			
-			ReferralsMap.set(wallet, address)
-			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
-			return res.status(200).json({address}).end()
+
+			// const m = await freeMinerManager(ipaddress, obj.walletAddress)
+
+			// if (m !== true) {
+			// 	logger(Colors.grey(`${ipaddress}:${obj.walletAddress} /startMining freeMinerManager false!`))
+			// 	return res.status(m).end()
+			// }
+			res.status(200)
+			res.setHeader('Cache-Control', 'no-cache')
+            res.setHeader('Content-Type', 'text/event-stream')
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Connection', 'keep-alive')
+            res.flushHeaders() // flush the headers to establish SSE with client
+			const returnData = addIpaddressToLivenessListeningPool(ipaddress, obj.walletAddress, res)
+			res.write(JSON.stringify (returnData)+'\r\n\r\n')	
+
 		})
 
 		router.all ('*', (req, res ) =>{
@@ -192,4 +206,4 @@ class conet_mining_server {
 	}
 }
 
-new conet_mining_server()
+export default conet_mining_server
