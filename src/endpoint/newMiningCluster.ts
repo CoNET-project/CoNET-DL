@@ -90,24 +90,31 @@ const storeToChain = async (data: epochRate) => {
 	}
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
+
+const ipaddressWallet: Map<string, string> = new Map()
+const WalletIpaddress: Map<string, string> = new Map()
+const regiestNodes : Map<string, string> = new Map()
+
 interface regiestNodes {
 	wallet: string
 	node_ipaddress: string
 
 }
 
-
-
 const initdata = async () => {
-	const nodes  = await getAllMinerNodes()
+	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
-		return logger(Colors.red(` `))
+		return logger(Colors.red(`initdata return NULL! `))
 	}
+	
+	nodes.forEach(n => {
+		regiestNodes.set(n.wallet, n.wallet)
+	})
 }
 
 class conet_dl_v3_server {
 
-	private PORT = 8001
+	private PORT = 8010
 
 	constructor () {
 		this.startServer()
@@ -146,10 +153,10 @@ class conet_dl_v3_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, '127.0.0.1', () => {
+		server.listen(this.PORT, () => {
 			startListeningCONET_Holesky_EPOCH()
 			return console.table([
-                { 'CoNET Server V3': ` startup success ${ this.PORT } Work [${workerNumber}]` }
+                { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
 	}
@@ -158,7 +165,7 @@ class conet_dl_v3_server {
 		
 		router.post ('/wallet',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.grey(`[${ipaddress}] => /wallet`))
+			logger(Colors.blue(`${ipaddress} => /wallet`))
 			let wallet: string
 			try {
 				wallet = req.body.wallet
@@ -191,9 +198,9 @@ class conet_dl_v3_server {
 			return res.status(200).json({address}).end()
 		})
 
-		router.post ('/pay',  async (req, res) => {
+		router.post ('/pay',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.grey(`[${ipaddress}] => /pay`))
+			logger(Colors.blue(`${ipaddress} => /pay`))
 			let walletList: string[]
 			let payList: string[]
 			try {
@@ -216,7 +223,7 @@ class conet_dl_v3_server {
 
 		router.post ('/guardians-data',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.grey(`[${ipaddress}] => /guardians-data`))
+			logger(Colors.blue(`${ipaddress} => /guardians-data`))
 			let epoch: string
 			let totalNodes: string
 			try {
@@ -241,7 +248,8 @@ class conet_dl_v3_server {
 
 		router.post ('/free-data',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.grey(`[${ipaddress}] => /free-data`))
+			logger(Colors.blue(`${ipaddress} => /guardians-data`))
+			
 			let epoch: string
 			let minerRate
 			let totalMiner
@@ -269,27 +277,15 @@ class conet_dl_v3_server {
 			epochRate.splice(index, 1)[0]
 		})
 
-		router.post('minerCheck',  async (req, res) => {
+		router.post('/minerCheck',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /livenessListening message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(404).end()
-			}
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /livenessListening !message||!signMessage Error! [${ipaddress}]`))
-				return  res.status(404).end()
-			}
-
+			logger(Colors.blue(`${ipaddress} => /minerCheck`))
+			
 		})
 
 		router.all ('*', (req, res ) =>{
-			
-			logger (Colors.grey(`Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()
 			return res.socket?.end().destroy()
 		})

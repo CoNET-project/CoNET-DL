@@ -197,7 +197,7 @@ class conet_dl_server {
 				return res.status(404).end()
 				
 			}
-			if (!message||!signMessage) {
+			if (!message||!signMessage||!ipaddress) {
 				logger (Colors.grey(`Router /livenessListening !message||!signMessage Error! [${ipaddress}]`))
 				return  res.status(404).end()
 				

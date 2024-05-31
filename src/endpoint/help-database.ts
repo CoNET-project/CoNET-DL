@@ -949,13 +949,16 @@ const stratlivenessV2 = async (block: number) => {
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
+	
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
+
 	provideCONET.on('block', async block => {
 		if (block <= EPOCH) {
 			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
 		}
 		return stratlivenessV2(block.toString())
 	})
+
 	await regiestMiningNode()
 }
 
@@ -1155,7 +1158,8 @@ export const storeLeaderboardGuardians_referralsV1 = (epoch: string, guardians_r
 export const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
-		return ''
+		return req.socket.remoteAddress
 	}
+	
 	return ipaddress
 }
