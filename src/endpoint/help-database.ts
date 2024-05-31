@@ -756,7 +756,7 @@ let EPOCH: number
 export let totalminerOnline = 0
 let minerRate = 0
 let transferEposh = 0
-const tokensEachEPOCH = 34.72
+export const tokensEachEPOCH = 34.72
 let clusterNodes = 4
 
 interface livenessListeningPoolObj {
@@ -946,6 +946,7 @@ const stratlivenessV2 = async (block: number) => {
 	// logger(Color.grey(`stratliveness EPOCH ${block} stoped! Pool length = [${livenessListeningPool.size}]`))
 	// await transferMiners()
 }
+
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
@@ -1160,6 +1161,6 @@ export const getIpAddressFromForwardHeader = (req: Request) => {
 	if (!ipaddress||typeof ipaddress !== 'string') {
 		return req.socket.remoteAddress
 	}
-	
+
 	return ipaddress
 }

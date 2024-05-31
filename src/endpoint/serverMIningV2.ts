@@ -8,7 +8,7 @@ import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,nodeWallet } from './help-database'
+import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader,nodeWallet, tokensEachEPOCH, totalminerOnline } from './help-database'
 import {request as HttpsRequest } from 'node:https'
 import {createServer, RequestOptions} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
@@ -127,7 +127,7 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: numbe
 				return callbak (undefined, ret)
 			} catch (ex: any) {
 				console.error(`getReferrer JSON.parse(data) Error!`, data)
-				return callbak (0)
+				return callbak (403)
 			}
 			
 		})
@@ -135,12 +135,14 @@ const sendMesageToCluster = async (path: string, data: any, callbak: (err: numbe
 
 	req.once('error', (e) => {
 		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (1)
+		return callbak (503)
 	})
 
 	req.write(JSON.stringify(data))
 	req.end()
 }
+
+
 
 const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
 	if (!isPublic(ipaddress)) {
@@ -186,6 +188,7 @@ class conet_mining_server {
 		
 		app.use(Express.json({limit: '100mb'}));
 		app.use(Express.urlencoded({limit: '100mb'}));
+
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
@@ -241,14 +244,16 @@ class conet_mining_server {
 				logger (Colors.grey(`[${ipaddress}] to /livenessListening !obj Error!`))
 				return res.status(404).end()
 			}
-			const m = await checkMiner(ipaddress, obj.walletAddress)
+			const m: any = await checkMiner(ipaddress, obj.walletAddress)
 
 			// const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
-			if (m !== true ) {
+			if (typeof m === 'number' ) {
+
 				logger(Colors.grey(`${ipaddress}:${obj.walletAddress} /startMining freeMinerManager false!`))
-				return res.status().end()
+				return res.status(m).end()
 			}
+			
 			res.status(200)
 			res.setHeader('Cache-Control', 'no-cache')
             res.setHeader('Content-Type', 'text/event-stream')
