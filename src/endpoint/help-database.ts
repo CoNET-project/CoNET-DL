@@ -811,8 +811,16 @@ export const regiestMiningNode = async () => {
 	logger(Color.blue(`regiestMiningNode ${cmd} success!`))
 }
 
-export const getAllMinerNodes = () => {
-
+export const getAllMinerNodes = async () => {
+	const cassClient = new Client (option)
+	const cmd = `SELECT * FROM conet_mining_nodes`
+	try {
+		const ret = await cassClient.execute(cmd)
+		await cassClient.shutdown()
+		return ret.rows
+	} catch(ex: any) {
+		return logger(Color.red(`getAllMinerNodes ${cmd} Error ${ex.message}`))
+	}
 }
 
 const stratliveness = async (block: number) => {
@@ -950,7 +958,7 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 		if (block <= EPOCH) {
 			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
 		}
-		return stratliveness(block.toString())
+		return stratlivenessV2(block.toString())
 	})
 }
 
@@ -1007,7 +1015,7 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 export const getApiNodes: () => Promise<number> = async () => new Promise(async resolve=> {
 
 	const cassClient = new Client (option)
-	const cmd = `SELECT ipaddress from conet_api_node`
+	const cmd = `SELECT * from conet_api_node`
 
 	try {
 		const uu = await cassClient.execute (cmd)

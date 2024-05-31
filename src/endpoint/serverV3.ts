@@ -4,13 +4,12 @@
 import Express, { Router } from 'express'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
-
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-
 import {createServer} from 'node:http'
+import {getAllMinerNodes} from './help-database'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
@@ -93,6 +92,10 @@ const storeToChain = async (data: epochRate) => {
 }
 
 
+const initdata = async () => {
+	const nodes = await getAllMinerNodes()
+	logger(inspect(nodes, false, 3, true))
+}
 
 class conet_dl_v3_server {
 
@@ -251,6 +254,10 @@ class conet_dl_v3_server {
 			epochRate.splice(index, 1)[0]
 		})
 
+		router.post('minerCheck',  async (req, res) =>{
+
+		})
+
 		router.all ('*', (req, res ) =>{
 			
 			logger (Colors.grey(`Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
@@ -260,4 +267,6 @@ class conet_dl_v3_server {
 	}
 }
 
-new conet_dl_v3_server()
+// new conet_dl_v3_server()
+
+initdata()
