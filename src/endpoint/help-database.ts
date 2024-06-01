@@ -647,6 +647,7 @@ export const sendMesageToCluster = async (path: string, data: any, callbak: (err
 			return callbak(res.statusCode)
 		}
 
+
 		res.on('data', _data => {
 			data += _data
 		})
@@ -661,6 +662,12 @@ export const sendMesageToCluster = async (path: string, data: any, callbak: (err
 				return callbak (403)
 			}
 			
+		})
+
+		res.once('error', err => {
+			logger(Color.red(`sendMesageToCluster res on error!`))
+			logger(err)
+			return callbak (503)
 		})
 	})
 
@@ -856,14 +863,13 @@ export const getAllMinerNodes = async () => {
 
 const transferMiners = async () => {
 	const tryTransfer = async () => {
-		if (transferEposh >= EPOCH) {
-			return logger(Color.gray(`transferMiners transferEposh [${transferEposh}] === EPOCH [${EPOCH}] STOP Process!`))
-		}
 
 		const data: any = await getMinerCount ()
+
 		if ( data === false) {
-			return logger(Color.red(`transferMiners getMinerCount return Error!`)) 
+			return logger(Color.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`)) 
 		}
+
 		totalminerOnline = data.totalMiner
 		minerRate = tokensEachEPOCH/totalminerOnline
 		
@@ -928,9 +934,7 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 
 	provideCONET.on('block', async block => {
-		if (block <= EPOCH) {
-			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
-		}
+		EPOCH = block
 		return stratlivenessV2(block.toString())
 	})
 
