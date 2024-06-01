@@ -333,15 +333,15 @@ class conet_dl_v3_server {
 				await initdata()
 				_ip = regiestNodes.get (obj.walletAddress)
 
-				if (!_ip) {
-					logger (Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
-					return res.status(403).end()
-				}
+			}
+			if (!_ip) {
+				logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+				return res.status(404).end()
+			}
 
-				const nodeInit = initAllServers.get(obj.walletAddress)
-				if (!nodeInit) {
-					return res.status(401).end()
-				}
+			const nodeInit = initAllServers.get(obj.walletAddress)
+			if (!nodeInit) {
+				return res.status(401).end()
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (obj.ipAddress === '23.16.211.100') {
@@ -392,15 +392,19 @@ class conet_dl_v3_server {
 			if (!_ip) {
 				await initdata()
 				_ip = regiestNodes.get (obj.walletAddress)
-				if (!_ip) {
-					logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
-					return res.status(404).end()
-				}
-				const nodeInit = initAllServers.get(obj.walletAddress)
-				if (!nodeInit) {
-					return res.status(401).end()
-				}
+				
 			}
+
+			if (!_ip) {
+				logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+				return res.status(404).end()
+			}
+
+			const nodeInit = initAllServers.get(obj.walletAddress)
+			if (!nodeInit) {
+				return res.status(401).end()
+			}
+
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (obj.ipAddress === '23.16.211.100') {
 				const ips = WalletIpaddress.get (obj.walletAddress1 = obj.walletAddress1.toLowerCase())
@@ -506,19 +510,20 @@ class conet_dl_v3_server {
 			if (!_ip) {
 				await initdata()
 				_ip = regiestNodes.get (obj.walletAddress)
-				if (!_ip) {
-					logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
-					return res.status(404).end()
-				}
-				const nodeInit = initAllServers.get(obj.walletAddress)
-
-				if (!nodeInit) {
-					logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
-					return res.status(401).end()
-				}
-
-
 			}
+
+			if (!_ip) {
+				logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+				return res.status(404).end()
+			}
+
+			const nodeInit = initAllServers.get(obj.walletAddress)
+
+			if (!nodeInit) {
+				logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
+				return res.status(401).end()
+			}
+
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
