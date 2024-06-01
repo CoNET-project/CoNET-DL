@@ -640,10 +640,25 @@ export const sendMesageToCluster = async (path: string, data: any, callbak: (err
 		}
 	}
 	
-	const req = await HttpsRequest (option, res => {
+	const req = await HttpsRequest (option, async res => {
 		let data = ''
 		logger(Color.blue(`sendMesageToCluster got response res Status ${res.statusCode}`))
+
 		if (res.statusCode !== 200) {
+			if (res.statusCode === 401) {
+				logger(Color.blue(`sendMesageToCluster got initData request!`))
+				//	let client try again
+			
+				if (!sendAlldataProcess) {
+					sendAlldataProcess = true
+					await sendAlldata ()
+					sendAlldataProcess = false
+				}
+				return setTimeout(async () => {
+					return sendMesageToCluster(path, data, callbak)
+				}, 2000)
+				
+			}
 			return callbak(res.statusCode)
 		}
 
@@ -751,18 +766,7 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 	return sendMesageToCluster('/api/minerCheck', sendData, async (err, data) => {
 		if (err) {
 			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
-			//	let client try again
-			if (err === 401) {
-				if (!sendAlldataProcess) {
-					sendAlldataProcess = true
-					await sendAlldata ()
-					sendAlldataProcess = false
-				}
-				setTimeout(async () => {
-					return resolve (await checkMiner (ipaddress, wallet))
-				}, 2000)
-				
-			}
+			
 			return resolve (err)
 		}
 		return resolve (data)
@@ -866,8 +870,8 @@ const transferMiners = async () => {
 
 		const data: any = await getMinerCount ()
 
-		if ( data === false) {
-			return logger(Color.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`)) 
+		if ( data === false || !data?.totalMiner) {
+			return logger(Color.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`), inspect(data, false, 3, true)) 
 		}
 
 		totalminerOnline = data.totalMiner

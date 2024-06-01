@@ -510,6 +510,12 @@ class conet_dl_v3_server {
 					logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
 					return res.status(404).end()
 				}
+				const nodeInit = initAllServers.get(obj.walletAddress)
+				if (!nodeInit) {
+					return res.status(401).end()
+				}
+
+
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
