@@ -821,7 +821,7 @@ let EPOCH: number
 export let totalminerOnline = 0
 let minerRate = 0
 let transferEposh = 0
-export const tokensEachEPOCH = 0.00001 //34.72
+export const tokensEachEPOCH = 34.72
 
 interface livenessListeningPoolObj {
 	res: Response
