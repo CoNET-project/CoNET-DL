@@ -341,7 +341,7 @@ class conet_dl_v3_server {
 			const _wallet = ipaddressWallet.get(obj.ipAddress)
 			const _wallet_ip = WalletIpaddress.get(obj.walletAddress1 = obj.walletAddress1?.toLowerCase())
 
-			if (_wallet || _wallet_ip) {
+			if ( _wallet || (_wallet_ip && _wallet_ip !== '23.16.211.100')) {
 				res.status(400).end()
 				return logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
 			}
