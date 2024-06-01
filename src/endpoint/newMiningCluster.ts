@@ -486,7 +486,7 @@ class conet_dl_v3_server {
 				ipaddressWallet.set(n.address, n.wallet)
 				WalletIpaddress.set(n.wallet, n.address)
 			})
-			regiestNodes.set(obj.walletAddress, "1")
+			initAllServers.set(obj.walletAddress, "1")
 			nodeWallets.set (obj.walletAddress, allWallets)
 			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
@@ -542,6 +542,7 @@ class conet_dl_v3_server {
 					WalletIpaddress.delete(n)
 				})
 			}
+
 			logger(Colors.magenta(`/nodeRestart finished total wallet = [${WalletIpaddress.size}]`))
 			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
