@@ -195,73 +195,6 @@ const guardianMining = async (block: number) => {
 
 let runningTransferEposh = 0
 
-const stratFreeMinerReferrals = async () => {
-
-	if (runningTransferEposh === transferEposh) {
-		return logger(Color.magenta(`stratFreeMinerReferrals already running! STOP!`))
-	}
-	runningTransferEposh = transferEposh
-	logger(Color.magenta(`stratFreeMinerReferrals EPOCH = [${EPOCH}] transferEposh = [${transferEposh}]`))
-	
-	const data = await getMinerCount (transferEposh)
-
-	if (!data) {
-		if (EPOCH - transferEposh < 3 ) {
-			return logger(Color.grey(`transferMiners block [${transferEposh}] didn't ready!`))
-		}
-		return transferEposh++
-	}
-
-	const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(10))
-	const minerWallets: string[] = []
-	data.counts.forEach(n => {
-		const kk: string[] = JSON.parse(n.wallets)
-		kk.forEach(nn => {
-			minerWallets.push(nn)
-		})
-		
-	})
-	const addressList: string[] =[]
-	const payList: string[] = []
-
-	logger(Color.grey(`daemon EPOCH ${transferEposh} starting! minerRate = [${minerRate}] total miner = [${data.count}] MinerWallets length = [${minerWallets.length}]`))
-	const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-	mapLimit(minerWallets, 8, async (n, next) =>
-		await new Promise(resolve => CalculateReferrals(n, minerRate.toString(),[.05, .03, .01], [], ReferralsMap, contract, (err, data1) => {
-			if (err) {
-				return logger (Color.red(`CalculateReferrals Error!`), err)
-			}
-			addressList.push(...data1.addressList)
-			payList.push(...data1.payList)
-			resolve()
-		})
-	), async () => {
-		logger(Color.blue(`stratFreeMinerReferrals [${transferEposh}]finished CalculateReferrals addressList [${addressList.length!}]`))
-		const referrals = mergeTransfersv1(addressList, payList)
-		
-		referrals.payList = referrals.payList.map(n => ethers.formatEther(parseFloat(n).toFixed(0)))
-		
-		logger(Color.blue(`stratFreeMinerReferrals payList ${referrals.payList[0]},${referrals.payList[1]},${referrals.payList[2]}`))
-		// transferCCNTP(masterSetup.GuardianReferralsFree, referrals.walletList, referrals.payList, () => {
-		// 	logger(Color.gray(`stratFreeMinerReferrals block [${block}] success!`))
-		// })
-		//storeLeaderboard((transferEposh+1).toString(), '', '', '', '')
-
-		transferPool.push({
-			privateKey: masterSetup.GuardianReferralsFree,
-			walletList: referrals.walletList,
-			payList: referrals.payList
-		})
-
-		startTransfer()
-
-		transferEposh++
-		if (EPOCH > transferEposh) {
-			return stratFreeMinerReferrals()
-		}
-	})
-	
-}
 
 const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, contract: ethers.Contract, CallBack: (err:Error|null, data?: any) => void) => {
 	let _walletAddress = walletAddress.toLowerCase()
@@ -327,8 +260,6 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 
 const startDaemonProcess = async (block: number) => {
 	console.log('')
-	
-	//stratFreeMinerReferrals()
 	guardianMining(block)
 	guardianReferrals(block)
 	
