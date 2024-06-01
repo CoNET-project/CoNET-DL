@@ -642,7 +642,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 	
 	const req = await HttpsRequest (option, async res => {
 		let data = ''
-		logger(Color.blue(`sendMesageToCluster got response res Status ${res.statusCode}`))
+		//logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
 
 		if (res.statusCode !== 200) {
 			if (res.statusCode === 401) {
@@ -734,11 +734,9 @@ export const sendAlldata = () => new Promise( resolve => {
 		message, signMessage
 	}
 
-	logger(inspect(sendData, false, 3, true))
-
 	return sendMesageToCluster('/api/initNode', sendData, (err, data) => {
 		if (err) {
-			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			logger(Color.grey(`sendAlldata sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
 			
 			return resolve (err)
@@ -765,7 +763,7 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 
 	return sendMesageToCluster('/api/minerCheck', sendData, async (err, data) => {
 		if (err) {
-			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+
 			
 			return resolve (err)
 		}
@@ -785,7 +783,7 @@ export const launshAndDeleteAllWalletInCLuster = () => new Promise( resolve => {
 
 	return sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
 		if (err) {
-			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			logger(Color.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
 			return resolve (false)
 		}
@@ -807,7 +805,7 @@ export const getMinerCount = () => new Promise( resolve => {
 
 	return sendMesageToCluster('/api/getTotalMiners', sendData, (err, data) => {
 		if (err) {
-			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			logger(Color.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
 			return resolve (false)
 		}
@@ -934,7 +932,7 @@ const stratlivenessV2 = async (block: number) => {
 			rate: minerRate.toFixed(6),
 			online: totalminerOnline,
 			status: 200,
-			epoch: transferEposh
+			epoch: EPOCH
 		}
 		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress))
 
