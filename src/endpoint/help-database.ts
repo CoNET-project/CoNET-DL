@@ -629,7 +629,7 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 
 const clusterManagerHostname = 'apibeta.conet.network'
 
-export const sendMesageToCluster = async (path: string, data: any, callbak: (err: number|undefined, data?: any)=> void) => {
+export const sendMesageToCluster = async (path: string, _data: any, callbak: (err: number|undefined, data?: any)=> void) => {
 	const option: RequestOptions = {
 		hostname: clusterManagerHostname,
 		path,
@@ -655,7 +655,7 @@ export const sendMesageToCluster = async (path: string, data: any, callbak: (err
 					sendAlldataProcess = false
 				}
 				return setTimeout(async () => {
-					return sendMesageToCluster(path, data, callbak)
+					return sendMesageToCluster(path, _data, callbak)
 				}, 2000)
 				
 			}
@@ -691,7 +691,7 @@ export const sendMesageToCluster = async (path: string, data: any, callbak: (err
 		return callbak (503)
 	})
 
-	req.write(JSON.stringify(data))
+	req.write(JSON.stringify(_data))
 	req.end()
 }
 
