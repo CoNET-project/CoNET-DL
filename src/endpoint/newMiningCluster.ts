@@ -352,7 +352,7 @@ class conet_dl_v3_server {
 
 		router.post('/minerCheck',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.blue(`${ipaddress} => /minerCheck`))
+			// logger(Colors.blue(`${ipaddress} => /minerCheck`))
 
 			let message, signMessage
 			try {
