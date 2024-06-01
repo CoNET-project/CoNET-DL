@@ -489,7 +489,7 @@ class conet_dl_v3_server {
 			initAllServers.set(obj.walletAddress, "1")
 			nodeWallets.set (obj.walletAddress, allWallets)
 			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
-			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+			return res.status(200).end()
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
