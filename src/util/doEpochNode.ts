@@ -205,7 +205,6 @@ args.forEach ((n, index ) => {
 
 if (epoch) {
 	logger(Color.magenta(`Start doEpoch nodes [${epoch}] `))
-	
 	guardianReferrals(epoch)
 } else {
 	console.error(`wallet ${epoch} Error!`)

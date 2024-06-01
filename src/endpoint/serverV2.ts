@@ -10,7 +10,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
+import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract, getWasabiFile,
 	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 import CGPNsABI from '../util/CGPNs.json'
@@ -19,7 +19,6 @@ import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
 
-import {request as HttpsRequest, get as HttpsGet} from 'node:https'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 let s3Pass: s3pass
@@ -56,61 +55,7 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
-const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
-	//const cloudStorageEndpointPath = `/conet-mvp/storage/FragmentOcean/${fileName}`
-	const cloudStorageEndpointUrl = `https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/${fileName}`
-	HttpsGet(cloudStorageEndpointUrl, res => {
-		// console.log('statusCode:', res.statusCode)
-  		// console.log('headers:', res.headers)
-		if (res.statusCode !== 200) {
-			//logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
-			return resolve('')
-		}
-		res.once('error', err => {
-			logger(Colors.red(`getWasabiFile ${fileName} res Error [${err.message}]`))
-			return resolve('')
-		})
-		let data = ''
-		res.on('data', _data => {
-			data+=_data
-		})
-		res.once ('end', () => {
-			return resolve (data)
-		})
 
-	}).once('error', err => {
-		logger(Colors.red(`getWasabiFile HttpsRequest ${fileName} Error [${err.message}]`), err)
-		return resolve('')
-	})
-	// const req = HttpsRequest({
-	// 	hostname: 's3.us-east-1.wasabisys.com',
-	// 	path: cloudStorageEndpointUrl,
-	// 	host: 's3.us-east-1.wasabisys.com',
-	// 	method: 'GET',
-	// 	port: 443
-	// }, res => {
-	// 	if (res.statusCode !== 200) {
-	// 		logger(Colors.red(`getWasabiFile got response status [${res.statusCode}] Error!`))
-	// 		return resolve('')
-	// 	}
-	// 	res.once('error', err => {
-	// 		logger(Colors.red(`getWasabiFile res Error [${err.message}]`))
-	// 		return resolve('')
-	// 	})
-	// 	let data = ''
-	// 	res.on('data', _data => {
-	// 		data+=_data
-	// 	})
-	// 	res.once ('end', () => {
-	// 		return resolve (data)
-	// 	})
-	// })
-	// req.once ('error', err => {
-	// 	logger(Colors.red(`getWasabiFile HttpsRequest Error [${err.message}]`), err)
-	// 	return resolve('')
-	// })
-	// req.end()
-})
 
 
 export const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {

@@ -123,7 +123,7 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
-		return storageMinerData(block)
+		await storageMinerData(block)
 	})
 
 	EPOCH = await provideCONET.getBlockNumber()

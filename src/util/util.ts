@@ -5,7 +5,7 @@ import { homedir, networkInterfaces } from 'node:os'
 import { join } from 'node:path'
 import { get, request } from 'node:http'
 import {reverse} from 'node:dns'
-import { request as requestHttps, get as httpsGet } from 'node:https'
+import {request as HttpsRequest, get as HttpsGet} from 'node:https'
 import Cluster from 'node:cluster'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
@@ -391,6 +391,7 @@ export const s3fsPasswd: () => Promise<s3pass|null> = () => {
 }
 
 
+
 const wasabiObj = {
 	us_east_1: {
 		endpoint: 'https://s3.wasabisys.com',
@@ -400,6 +401,34 @@ const wasabiObj = {
 	}
 }
 
+export const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
+	//const cloudStorageEndpointPath = `/conet-mvp/storage/FragmentOcean/${fileName}`
+	const cloudStorageEndpointUrl = `https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/${fileName}`
+	HttpsGet(cloudStorageEndpointUrl, res => {
+		// console.log('statusCode:', res.statusCode)
+  		// console.log('headers:', res.headers)
+		if (res.statusCode !== 200) {
+			//logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
+			return resolve('')
+		}
+		res.once('error', err => {
+			logger(colors.red(`getWasabiFile ${fileName} res Error [${err.message}]`))
+			return resolve('')
+		})
+		let data = ''
+		res.on('data', _data => {
+			data+=_data
+		})
+		res.once ('end', () => {
+			return resolve (data)
+		})
+
+	}).once('error', err => {
+		logger(colors.red(`getWasabiFile HttpsRequest ${fileName} Error [${err.message}]`), err)
+		return resolve('')
+	})
+	
+})
 
 export const getIpaddressLocaltion = (Addr: string) => {
 	return new Promise((resolve) => {
@@ -541,7 +570,7 @@ const requestUrl = (option: RequestOptions, postData: string) => {
 
 	return new Promise((resolve: any) => {
 
-		const req = requestHttps ( option, res => {
+		const req = HttpsRequest ( option, res => {
 			clearTimeout (timeout)
 			logger (colors.blue(`Connect to [${ option.hostname }] Server [${option.path}]`))
 
@@ -1754,7 +1783,7 @@ const getGuardianReferralsDetail = async (wallet: string) => {
 
 const getClaimableCNTPTransfer = (wallet: string, from: string) => new Promise(resolve=> {
 	const reqUrl = `https://scan.conet.network/api/v2/addresses/${wallet}/token-transfers?type=ERC-20&filter=from%3A${from}&token=0x27A961F17E7244d8aA75eE19061f6360DeeDF76F`
-	httpsGet(reqUrl, (res) => {
+	HttpsRequest(reqUrl, (res) => {
 		let data = ''
 		res.on ('data', _data => {
 			data += _data
@@ -2637,7 +2666,7 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 }
 
 const test = async () => {
-	 addAttackToCluster('119.188.246.221')
+	const kkk = await getWasabiFile (`free_wallets_${block}`)
 	// const kkk = await burnFrom('cBNBUSDT', '0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF', '1375')
 	// logger(inspect(kkk, false, 3, true))
 }
@@ -2682,4 +2711,7 @@ const test = async () => {
 // transferCCNTPToNodes(walletNodes20240526, '20000', () => {
 // 	logger(`success`)
 // })
+
+
+
 /** */

@@ -2,7 +2,7 @@ import {ethers} from 'ethers'
 
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {masterSetup, s3fsPasswd, storageWalletProfile} from './util'
+import {masterSetup, s3fsPasswd, storageWalletProfile, getWasabiFile} from './util'
 import Color from 'colors/safe'
 import { mapLimit} from 'async'
 import { logger } from './logger'
@@ -51,56 +51,14 @@ const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {refer
 }
 
 
-const getEpochNodeMiners = async (epoch: string) => {
-	const cassClient = new Client (option)
-	const cmd3 = `SELECT * FROM conet_free_mining_cluster WHERE epoch = '${epoch}'`
-	let miners
-	try{
-		miners = await cassClient.execute (cmd3)
-	} catch (ex) {
-		logger (Color.red(`getEpochNodeMiners error`), ex)
-	}
-	await cassClient.shutdown()
-	return miners?.rows
-	
-}
-
-const getApiNodes: () => Promise<number> = async () => new Promise(async resolve=> {
-
-	const cassClient = new Client (option)
-	const cmd = `SELECT ipaddress from conet_api_node`
-
-	try {
-		const uu = await cassClient.execute (cmd)
-		await cassClient.shutdown()
-		return resolve(uu.rows.length)
-	} catch(ex) {
-		await cassClient.shutdown()
-		return resolve (6)
-	}
-})
 
 
-let clusterNodes = 9
 const getMinerCount = async (_epoch: number) => {
 	let count = 0
+	//free_wallets_657551
 	const epoch = (_epoch).toString()
-	
-	const counts = await getEpochNodeMiners(epoch)
-	clusterNodes = await getApiNodes()
-	if (!counts) {
-		logger(Color.red(`getMinerCount got empty array`))
-		return null
-	}
 
-	if (counts.length < clusterNodes) {
-		logger(Color.magenta(`getMinerCount getEpochNodeMiners [${_epoch}] data.length [${counts.length}] < clusterNodes [${clusterNodes}]`))
-		return null
-	}
-	counts.forEach(n => {
-		count += n.miner_count
-	})
-	return {count, counts}
+	
 	
 }
 
@@ -312,27 +270,31 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 }
 let s3Pass: s3pass | null
 const stratFreeMinerReferrals = async (block: string) => {
-	
-	const data = await getMinerCount (parseInt(block))
+	s3Pass = await s3fsPasswd()
+	//	free_wallets_${block}
+	const data = await getWasabiFile (`free_wallets_${block}`)
 	
 	if (!data) {
-		return
+		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
-	s3Pass = await s3fsPasswd()
-	const minerRate =  ethers.parseEther((tokensEachEPOCH/data.count).toFixed(18))
-	const minerWallets: string[] = []
-	data.counts.forEach(n => {
-		const kk: string[] = JSON.parse(n.wallets)
-		kk.forEach(nn => {
-			minerWallets.push(nn)
-		})
-		
-	})
+	let walletArray: string[]
+	try{
+		walletArray = JSON.parse(data)
+	} catch (ex) {
+		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
+	}
+
+	if (!walletArray.length) {
+		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
+	}
+
+	const minerRate =  ethers.parseEther((tokensEachEPOCH/walletArray.length).toFixed(18))
+	
 	const walletTotal : Map<string, walletCount> = new Map()
 
-	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${minerWallets.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
 	let i = 0
-	mapLimit(minerWallets, 2, async (n, next) => {
+	mapLimit(walletArray, 2, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
@@ -365,8 +327,8 @@ const stratFreeMinerReferrals = async (block: string) => {
 			})
 		})
 		
-		await getFreeReferralsData (block, countList, minerWallets.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-		sendPaymentToPool (data.count.toString(), walletList, payList, () => {
+		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
+		sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
 			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		})
 		
