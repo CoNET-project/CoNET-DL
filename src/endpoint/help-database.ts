@@ -707,8 +707,6 @@ export const deleteAMiner = (ipaddress: string, wallet: string ) => new Promise(
 		message, signMessage
 	}
 
-	logger(inspect(sendData, false, 3, true))
-
 	return sendMesageToCluster('/api/deleteMiner', sendData, (err, data) => {
 		if (err) {
 			logger(Color.red(`deleteAMiner sendMesageToCluster /api/deleteMiner gor Error${err}`))
@@ -759,8 +757,6 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 		message, signMessage
 	}
 
-	logger(inspect(sendData, false, 3, true))
-
 	return sendMesageToCluster('/api/minerCheck', sendData, async (err, data) => {
 		if (err) {
 
@@ -778,8 +774,6 @@ export const launshAndDeleteAllWalletInCLuster = () => new Promise( resolve => {
 	const sendData = {
 		message, signMessage
 	}
-
-	logger(inspect(sendData, false, 3, true))
 
 	return sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
 		if (err) {
@@ -800,8 +794,6 @@ export const getMinerCount = () => new Promise( resolve => {
 	const sendData = {
 		message, signMessage
 	}
-
-	logger(inspect(sendData, false, 3, true))
 
 	return sendMesageToCluster('/api/getTotalMiners', sendData, (err, data) => {
 		if (err) {
