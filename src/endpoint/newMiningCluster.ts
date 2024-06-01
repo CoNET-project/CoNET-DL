@@ -511,7 +511,9 @@ class conet_dl_v3_server {
 					return res.status(404).end()
 				}
 				const nodeInit = initAllServers.get(obj.walletAddress)
+
 				if (!nodeInit) {
+					logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
 					return res.status(401).end()
 				}
 
