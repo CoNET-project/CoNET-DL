@@ -443,8 +443,8 @@ class conet_dl_v3_server {
 			ipaddressWallet.delete(obj.ipAddress)
 			WalletIpaddress.delete(obj.walletAddress1)
 
-			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${ipaddressWallet.size}]`))
-			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${WalletIpaddress.size}]`))
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 
@@ -609,7 +609,7 @@ class conet_dl_v3_server {
 			}
 
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
-			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
