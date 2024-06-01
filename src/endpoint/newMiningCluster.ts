@@ -146,6 +146,21 @@ class conet_dl_v3_server {
             logger (Colors.red(`Local server on ERROR`))
         })
 
+		app.use (async (req, res, next) => {
+			if (/^post$/i.test(req.method)) {
+				return Express.json({limit: '25mb'})(req, res, err => {
+					if (err) {
+						res.sendStatus(400).end()
+						res.socket?.end().destroy()
+						return logger(Colors.red(`/^post$/i.test Express.json Error ${req.url} ! ${JSON.stringify(req.body)}`))
+						
+					}
+					return next()
+				})
+			}
+			return next()
+		})
+
 		const server = createServer(app)
 
 		this.router (router)
