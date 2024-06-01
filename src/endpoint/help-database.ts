@@ -11,13 +11,13 @@ import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recov
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
 import type {Response, Request } from 'express'
 import Color from 'colors/safe'
-import {ethers} from 'ethers'
+import {Wallet, ethers} from 'ethers'
 import { Client, auth, types } from 'cassandra-driver'
 import {transferPool, startTransfer} from '../util/transferManager'
 const setup = join( homedir(),'.master.json' )
 import {request as HttpsRequest } from 'node:https'
 import {sign} from 'eth-crypto'
-import { isPublic} from 'ip'
+import { address, isPublic} from 'ip'
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
@@ -627,50 +627,6 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 	
 })
 
-export const freeMinerManager = async (ipaddress: string, wallet: string) => {
-	const cassClient = new Client (option)
-	const cmd = `SELECT ipaddress from conet_free_mining WHERE ipaddress = '${ipaddress}'`
-	const cmd1 = `SELECT wallet from conet_free_mining WHERE wallet = '${wallet.toLowerCase()}'`
-
-	let idata, wdata
-	try {
-		[idata, wdata] = await Promise.all ([
-			cassClient.execute (cmd),
-			cassClient.execute (cmd1)
-		])
-	} catch(ex) {
-		logger(ex)
-		return 404
-	}
-	
-
-	if (idata.rowLength) {
-		if (ipaddress !== '23.16.211.100') {
-			await cassClient.shutdown()
-			return 401
-		}
-		
-	}
-	if (wdata.rowLength) {
-		if (ipaddress !== '23.16.211.100') {
-			await cassClient.shutdown()
-			return 402
-		}
-	}
-
-	// const oo: any = await getIpaddressLocaltion ( ipaddress )
-	// logger(inspect(oo, false, 3, true))
-	const cmd3 = `INSERT INTO conet_free_mining (ipaddress, wallet, region, country, node_wallet) VALUES ('${ipaddress}', '${wallet.toLowerCase()}', '', '', '${nodeWallet.toLowerCase()}')`
-	try {
-		await cassClient.execute (cmd3)
-	} catch (ex) {
-		logger(ex)
-	}
-	await cassClient.shutdown()
-	return true
-	
-}
-
 const clusterManagerHostname = 'apibeta.conet.network'
 
 export const sendMesageToCluster = async (path: string, data: any, callbak: (err: number|undefined, data?: any)=> void) => {
@@ -741,6 +697,36 @@ export const deleteAMiner = (ipaddress: string, wallet: string ) => new Promise(
 	})
 })
 
+
+
+export const sendAlldata = () => new Promise( resolve => {
+	const minerArray: minerArray[]  = []
+	livenessListeningPool.forEach((v, k) => {
+		minerArray.push({address: v.ipaddress, wallet: v.wallet})
+	})
+
+	const message =JSON.stringify({ walletAddress: nodeWallet, data: minerArray})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	logger(inspect(sendData, false, 3, true))
+
+	return sendMesageToCluster('/api/initNode', sendData, (err, data) => {
+		if (err) {
+			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			//	let client try again
+			
+			return resolve (err)
+		}
+		return resolve (data)
+	})
+})
+
+let sendAlldataProcess = false
+
 export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
 	if (!isPublic(ipaddress)) {
 		logger(Color.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
@@ -755,10 +741,21 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 
 	logger(inspect(sendData, false, 3, true))
 
-	return sendMesageToCluster('/api/minerCheck', sendData, (err, data) => {
+	return sendMesageToCluster('/api/minerCheck', sendData, async (err, data) => {
 		if (err) {
 			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
+			if (err === 401) {
+				if (!sendAlldataProcess) {
+					sendAlldataProcess = true
+					await sendAlldata ()
+					sendAlldataProcess = false
+				}
+				setTimeout(async () => {
+					return resolve (await checkMiner (ipaddress, wallet))
+				}, 2000)
+				
+			}
 			return resolve (err)
 		}
 		return resolve (data)
@@ -787,19 +784,6 @@ export const getMinerCount = () => new Promise( resolve => {
 	
 })
 
-const getEpochNodeMiners = async (epoch: string) => {
-	const cassClient = new Client (option)
-	const cmd3 = `SELECT * FROM conet_free_mining_cluster WHERE epoch = '${epoch}'`
-	let miners
-	try{
-		miners = await cassClient.execute (cmd3)
-	} catch (ex) {
-		logger (Color.red(`getEpochNodeMiners error`), ex)
-	}
-	await cassClient.shutdown()
-	return miners?.rows
-	
-}
 
 let EPOCH: number
 export let totalminerOnline = 0

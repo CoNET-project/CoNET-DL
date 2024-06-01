@@ -268,3 +268,7 @@ interface assetsStructure {
 	timestamp: string
 	usd_price: string
 }
+interface minerArray {
+	address: string
+	wallet: string
+}

@@ -94,7 +94,9 @@ const storeToChain = async (data: epochRate) => {
 
 const ipaddressWallet: Map<string, string> = new Map()
 const WalletIpaddress: Map<string, string> = new Map()
-const regiestNodes : Map<string, string> = new Map()
+const regiestNodes: Map<string, string> = new Map()
+
+const initAllServers: Map<string, string> = new Map()
 
 interface regiestNodes {
 	wallet: string
@@ -119,7 +121,6 @@ class conet_dl_v3_server {
 
 	constructor () {
 		this.startServer()
-
     }
 
 	private startServer = async () => {
@@ -302,7 +303,6 @@ class conet_dl_v3_server {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`${ipaddress} => /minerCheck`))
 
-			
 
 			let message, signMessage
 			try {
@@ -332,9 +332,15 @@ class conet_dl_v3_server {
 			if (!_ip) {
 				await initdata()
 				_ip = regiestNodes.get (obj.walletAddress)
+
 				if (!_ip) {
 					logger (Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
-					return res.status(404).end()
+					return res.status(403).end()
+				}
+
+				const nodeInit = initAllServers.get(obj.walletAddress)
+				if (!nodeInit) {
+					return res.status(401).end()
 				}
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
@@ -353,8 +359,6 @@ class conet_dl_v3_server {
 			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
-
-		//deleteMiner
 
 		router.post('/deleteMiner',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -392,6 +396,10 @@ class conet_dl_v3_server {
 					logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
 					return res.status(404).end()
 				}
+				const nodeInit = initAllServers.get(obj.walletAddress)
+				if (!nodeInit) {
+					return res.status(401).end()
+				}
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (obj.ipAddress === '23.16.211.100') {
@@ -409,6 +417,60 @@ class conet_dl_v3_server {
 			ipaddressWallet.delete(obj.ipAddress)
 			WalletIpaddress.delete(obj.walletAddress1)
 			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${ipaddressWallet.size}]`))
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+		})
+
+
+		router.post('/initNode',  async (req, res) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.blue(`${ipaddress} => /initNode`))
+
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /initNode message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage||!ipaddress) {
+				logger (Colors.grey(`Router /initNode !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(404).end()
+				
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj||!obj?.data) {
+				logger (Colors.grey(`[${ipaddress}] to /initNode !obj Error! ${inspect(obj, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			let _ip = regiestNodes.get (obj.walletAddress)
+
+			if (!_ip) {
+				await initdata()
+				_ip = regiestNodes.get (obj.walletAddress)
+				if (!_ip) {
+					logger (Colors.grey(`Router /initNode [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+					return res.status(404).end()
+				}
+			}
+			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
+			
+			const data:minerArray[]  = obj.data
+			data.forEach(n => {
+				if (n.address === '23.16.211.100') {
+					n.address = v4()
+				}
+				
+				ipaddressWallet.set(n.address, n.wallet)
+				WalletIpaddress.set(n.wallet, n.address)
+			})
+			
+			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
