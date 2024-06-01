@@ -10,7 +10,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
-import {conet_Referral_contractV2, masterSetup, checkSignObj} from '../util/util'
+import {conet_Referral_contractV2, masterSetup, checkSignObj, storageWalletProfile, s3fsPasswd} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import {v4} from 'uuid'
@@ -68,13 +68,6 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 	}
 }
 
-const startListeningCONET_Holesky_EPOCH = async () => {
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	provideCONET.on('block', async block => {
-		startTransfer()
-		return checkBlockEvent (block, provideCONET)
-	})
-}
 
 const storeToChain = async (data: epochRate) => {
 	logger(inspect(data, false, 3, true))
@@ -101,10 +94,50 @@ interface regiestNodes {
 	node_ipaddress: string
 
 }
+
+let EPOCH=0
+let s3Pass: s3pass|null = null
+
+const storageMinerData = async (block: number) => {
+	//	obj: {hash?: string, data?: string}
+	const walletsArray: string[] = []
+	if (!s3Pass) {
+		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
+	}
+	WalletIpaddress.forEach((n, key) => {
+		walletsArray.push(key)
+	})
+	const obj = {
+		hash: `free_wallets_${block}`,
+		data: JSON.stringify(walletsArray)
+	}
+
+	await storageWalletProfile(obj, s3Pass)
+	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
+}
+
+
+export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	
+
+	provideCONET.on('block', async block => {
+		EPOCH = block
+		return storageMinerData(block)
+	})
+
+	EPOCH = await provideCONET.getBlockNumber()
+	await initdata()
+	s3Pass = await s3fsPasswd()
+	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
+}
+
 const ipaddressWallet: Map<string, string> = new Map()
 const WalletIpaddress: Map<string, string> = new Map()
 const regiestNodes: Map<string, string> = new Map()
 const nodeWallets: Map<string, string[]> = new Map()
+
+
 const initdata = async () => {
 	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
@@ -122,9 +155,11 @@ class conet_dl_v3_server {
 
 	constructor () {
 		this.startServer()
+		
     }
 
 	private startServer = async () => {
+		
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
@@ -172,7 +207,7 @@ class conet_dl_v3_server {
 		})
 
 		server.listen(this.PORT, () => {
-			startListeningCONET_Holesky_EPOCH()
+			startListeningCONET_Holesky_EPOCH_v2()
 			return console.table([
                 { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
@@ -622,5 +657,3 @@ class conet_dl_v3_server {
 }
 
 new conet_dl_v3_server()
-
-initdata()

@@ -22,7 +22,7 @@ import {request} from 'node:http'
 import {request as HttpsRequest, get as HttpsGet} from 'node:https'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-
+let s3Pass: s3pass
 //	for production
 	import {createServer} from 'node:http'
 
@@ -156,6 +156,7 @@ export const startListeningCONET_Holesky_EPOCH = async () => {
 	})
 
 	await selectLeaderboard(block)
+
 }
 
 
