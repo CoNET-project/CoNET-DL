@@ -13,6 +13,7 @@ import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
 import {conet_Referral_contractV2, masterSetup, checkSignObj} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
+import {v4} from 'uuid'
 import epochRateABI from '../util/epochRate.json'
 
 
@@ -321,7 +322,7 @@ class conet_dl_v3_server {
 
 			const obj = checkSignObj (message, signMessage)
 
-			if (!obj||!obj.ipAddress||!obj.walletAddress1) {
+			if (!obj||!obj?.ipAddress||!obj?.walletAddress1) {
 				logger (Colors.grey(`[${ipaddress}] to /minerCheck !obj Error! ${inspect(obj, false, 3, true)}`))
 				return res.status(404).end()
 			}
@@ -337,11 +338,13 @@ class conet_dl_v3_server {
 				}
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
-
+			if (obj.ipAddress === '23.16.211.100') {
+				obj.ipAddress = v4()
+			}
 			const _wallet = ipaddressWallet.get(obj.ipAddress)
-			const _wallet_ip = WalletIpaddress.get(obj.walletAddress1 = obj.walletAddress1?.toLowerCase())
-
-			if ( _wallet || (_wallet_ip && _wallet_ip !== '23.16.211.100')) {
+			const _wallet_ip = WalletIpaddress.get(obj.walletAddress1 = obj.walletAddress1.toLowerCase())
+			
+			if ( _wallet || _wallet_ip ) {
 				res.status(400).end()
 				return logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
 			}
@@ -356,8 +359,6 @@ class conet_dl_v3_server {
 		router.post('/deleteMiner',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`${ipaddress} => /deleteMiner`))
-
-			
 
 			let message, signMessage
 			try {
@@ -393,10 +394,21 @@ class conet_dl_v3_server {
 				}
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
+			if (obj.ipAddress === '23.16.211.100') {
+				const ips = WalletIpaddress.get (obj.walletAddress1 = obj.walletAddress1.toLowerCase())
+				if (!ips) {
+					logger(Colors.red(`/deleteMiner 23.16.211.100 cant get WalletIpaddress.get(${obj.walletAddress1.toLowerCase()})`))
+				} else {
+					obj.ipAddress = ips
+				}
+			}
+			const ipAdd = WalletIpaddress.get (obj.walletAddress1.toLowerCase())
+			if (!ipAdd) {
 
+			}
 			ipaddressWallet.delete(obj.ipAddress)
-			WalletIpaddress.delete(obj.walletAddress1?.toLowerCase())
-			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1?.toLowerCase()}] Total Miner = [${ipaddressWallet.size}]`))
+			WalletIpaddress.delete(obj.walletAddress1)
+			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
