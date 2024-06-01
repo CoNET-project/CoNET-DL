@@ -2666,9 +2666,9 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 }
 
 const test = async () => {
-	const kkk = await getWasabiFile (`free_wallets_${block}`)
+	const kkk = await getWasabiFile (`free_wallets_${657651}`)
 	// const kkk = await burnFrom('cBNBUSDT', '0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF', '1375')
-	// logger(inspect(kkk, false, 3, true))
+	logger(inspect(kkk, false, 3, true))
 }
 
 // const wallet = new ethers.Wallet(masterSetup.claimableAdmin)

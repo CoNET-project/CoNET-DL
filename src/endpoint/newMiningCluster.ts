@@ -402,7 +402,7 @@ class conet_dl_v3_server {
 			
 			if ( _wallet || _wallet_ip ) {
 				res.status(400).end()
-				return logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
+				return //logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
 			}
 
 			ipaddressWallet.set(obj.ipAddress, obj.walletAddress1)
