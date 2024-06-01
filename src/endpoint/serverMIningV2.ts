@@ -7,7 +7,7 @@ import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader, checkMiner } from './help-database'
+import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader, checkMiner, launshAndDeleteAllWalletInCLuster } from './help-database'
 
 import {createServer, RequestOptions} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
@@ -102,6 +102,7 @@ class conet_mining_server {
 	constructor () {
 		this.startServer()
 		startListeningCONET_Holesky_EPOCH_v2()
+		launshAndDeleteAllWalletInCLuster()
     }
 
 	private startServer = async () => {

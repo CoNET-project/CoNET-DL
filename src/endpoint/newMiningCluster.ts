@@ -92,9 +92,7 @@ const storeToChain = async (data: epochRate) => {
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
-const ipaddressWallet: Map<string, string> = new Map()
-const WalletIpaddress: Map<string, string> = new Map()
-const regiestNodes: Map<string, string> = new Map()
+
 
 const initAllServers: Map<string, string> = new Map()
 
@@ -103,7 +101,10 @@ interface regiestNodes {
 	node_ipaddress: string
 
 }
-
+const ipaddressWallet: Map<string, string> = new Map()
+const WalletIpaddress: Map<string, string> = new Map()
+const regiestNodes: Map<string, string> = new Map()
+const nodeWallets: Map<string, string[]> = new Map()
 const initdata = async () => {
 	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
@@ -303,7 +304,6 @@ class conet_dl_v3_server {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`${ipaddress} => /minerCheck`))
 
-
 			let message, signMessage
 			try {
 				message = req.body.message
@@ -354,8 +354,15 @@ class conet_dl_v3_server {
 				res.status(400).end()
 				return logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
 			}
+
 			ipaddressWallet.set(obj.ipAddress, obj.walletAddress1)
 			WalletIpaddress.set(obj.walletAddress1, obj.ipAddress)
+
+			const Array = nodeWallets.get(obj.walletAddress)||[]
+
+			Array.push(obj.walletAddress1)
+			nodeWallets.set(obj.walletAddress, Array)
+
 			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
@@ -414,12 +421,13 @@ class conet_dl_v3_server {
 					obj.ipAddress = ips
 				}
 			}
-			const ipAdd = WalletIpaddress.get (obj.walletAddress1.toLowerCase())
-			if (!ipAdd) {
+			// const ipAdd = WalletIpaddress.get (obj.walletAddress1.toLowerCase())
+			// if (!ipAdd) {
 
-			}
+			// }
 			ipaddressWallet.delete(obj.ipAddress)
 			WalletIpaddress.delete(obj.walletAddress1)
+
 			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
@@ -464,18 +472,78 @@ class conet_dl_v3_server {
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			
-			const data:minerArray[]  = obj.data
+			const data: minerArray[]  = obj.data
+			const allWallets: string[] = []
 			data.forEach(n => {
-				if (n.address === '23.16.211.100') {
+				let _ip = WalletIpaddress.get(n.wallet)
+				if (_ip && n.address === '23.16.211.100'){
+					n.address = _ip
+				}
+				if (n.address ==='23.16.211.100') {
 					n.address = v4()
 				}
-				
+				allWallets.push(n.wallet)
 				ipaddressWallet.set(n.address, n.wallet)
 				WalletIpaddress.set(n.wallet, n.address)
 			})
-			
+			regiestNodes.set(obj.walletAddress, "1")
+			nodeWallets.set (obj.walletAddress, allWallets)
 			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+		})
+
+		router.post('/nodeRestart',  async (req, res) =>{
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.blue(`${ipaddress} => /initNode`))
+
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /nodeRestart message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage||!ipaddress) {
+				logger (Colors.grey(`Router /nodeRestart !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(404).end()
+				
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`[${ipaddress}] to /nodeRestart !obj Error! ${inspect(obj, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			let _ip = regiestNodes.get (obj.walletAddress)
+
+			if (!_ip) {
+				await initdata()
+				_ip = regiestNodes.get (obj.walletAddress)
+				if (!_ip) {
+					logger (Colors.red(`Router /nodeRestart [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+					return res.status(404).end()
+				}
+			}
+			logger(Colors.magenta(`/nodeRestart start delete node [${obj.walletAddress}] start! total wallet = [${WalletIpaddress.size}]`))
+			const allwallets = nodeWallets.get(obj.walletAddress)
+			if (allwallets?.length) {
+				allwallets.forEach(n => {
+					const ipaddress = WalletIpaddress.get(n)
+					if (!ipaddress) {
+						logger(Colors.red(`/nodeRestart [${n}] can't got IP address!`))
+					} else {
+						ipaddressWallet.delete(ipaddress)
+					}
+					WalletIpaddress.delete(n)
+				})
+			}
+			logger(Colors.magenta(`/nodeRestart finished total wallet = [${WalletIpaddress.size}]`))
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{

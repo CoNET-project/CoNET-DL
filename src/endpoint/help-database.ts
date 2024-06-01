@@ -773,6 +773,27 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 	})
 })
 
+export const launshAndDeleteAllWalletInCLuster = () => new Promise( resolve => {
+	const message =JSON.stringify({walletAddress: nodeWallet})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	logger(inspect(sendData, false, 3, true))
+
+	return sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
+		if (err) {
+			logger(Color.red(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			//	let client try again
+			return resolve (false)
+		}
+		return resolve (data)
+	})
+	
+})
+
 
 export const getMinerCount = () => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
