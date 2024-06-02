@@ -92,6 +92,7 @@ const initAllServers: Map<string, string> = new Map()
 interface regiestNodes {
 	wallet: string
 	node_ipaddress: string
+
 }
 
 let EPOCH=0
@@ -99,50 +100,22 @@ let s3Pass: s3pass|null = null
 
 const storageMinerData = async (block: number) => {
 	//	obj: {hash?: string, data?: string}
+	const walletsArray: string[] = []
 	if (!s3Pass) {
 		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
 	}
-	
+	WalletIpaddress.forEach((n, key) => {
+		walletsArray.push(key)
+	})
 	const obj = {
 		hash: `free_wallets_${block}`,
-		data: JSON.stringify(totalWalletcalculations)
+		data: JSON.stringify(walletsArray)
 	}
 
 	await storageWalletProfile(obj, s3Pass)
-	return logger(Colors.magenta(`storage [free_wallets_${block}] Miner wallets [${ totalWalletcalculations.length }]to Wasabi success! `))
+	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
 
-
-
-let totalWalletcalculations: string[] = []
-
-const calculationsTotal = () => {
-	let all = true
-	regiestNodes.forEach((n, key) => {
-		const uu = nodeWallets.get (key)
-		if (!uu) {
-			all = false
-			logger(Colors.red(`node name [${key}] has no data in nodeWallets `))
-		}
-	})
-
-	let ws:string[] = []
-	if (all) {
-		regiestNodes.forEach((n, v) => {
-			const _nodeWallets = nodeWallets.get(v)
-			if (_nodeWallets) {
-				ws = [...ws, ..._nodeWallets]
-				logger(Colors.magenta(`calculationsTotal added node [${v}] wallets = [${_nodeWallets.length}] to array ws [${ws.length}]`))
-			}
-			
-		})
-		totalWalletcalculations = ws
-	}
-	
-	
-	logger(Colors.red(`calculationsTotal calculationsTotal regiestNodes size = [${regiestNodes.size}] nodeWallets size = [${nodeWallets.size}] all = [${all}] WalletIpaddress size = [${WalletIpaddress.size}] totalWalletcalculations [${totalWalletcalculations.length}] `))
-
-}
 
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -150,7 +123,6 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
-
 		await storageMinerData(block)
 	})
 
@@ -164,23 +136,17 @@ const ipaddressWallet: Map<string, string> = new Map()
 const WalletIpaddress: Map<string, string> = new Map()
 const regiestNodes: Map<string, string> = new Map()
 const nodeWallets: Map<string, string[]> = new Map()
-const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
+
 
 const initdata = async () => {
 	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
 		return logger(Colors.red(`initdata return NULL! `))
 	}
-	logger(inspect(nodes, false, 3, true))
+	
 	nodes.forEach(n => {
-		const w = n.wallet.toLowerCase()
-		if (w !== testNodeWallet) {
-			regiestNodes.set(n.wallet, "1")
-		}
-		
+		regiestNodes.set(n.wallet, n.wallet)
 	})
-
-	logger(Colors.blue(`initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
 }
 
 class conet_dl_v3_server {
@@ -424,9 +390,7 @@ class conet_dl_v3_server {
 			}
 
 			const nodeInit = initAllServers.get(obj.walletAddress)
-
 			if (!nodeInit) {
-				//				send reest
 				return res.status(401).end()
 			}
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
@@ -444,10 +408,13 @@ class conet_dl_v3_server {
 			ipaddressWallet.set(obj.ipAddress, obj.walletAddress1)
 			WalletIpaddress.set(obj.walletAddress1, obj.ipAddress)
 
-			
-			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${WalletIpaddress.size}]`))
-			res.status(200).json({totalMiner: WalletIpaddress.size}).end()
+			const Array = nodeWallets.get(obj.walletAddress)||[]
 
+			Array.push(obj.walletAddress1)
+			nodeWallets.set(obj.walletAddress, Array)
+
+			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${ipaddressWallet.size}]`))
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -482,6 +449,7 @@ class conet_dl_v3_server {
 			if (!_ip) {
 				await initdata()
 				_ip = regiestNodes.get (obj.walletAddress)
+				
 			}
 
 			if (!_ip) {
@@ -509,9 +477,9 @@ class conet_dl_v3_server {
 			// }
 			ipaddressWallet.delete(obj.ipAddress)
 			WalletIpaddress.delete(obj.walletAddress1)
-			
+
 			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${WalletIpaddress.size}]`))
-			res.status(200).json({totalMiner: WalletIpaddress.size}).end()
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 
@@ -542,7 +510,7 @@ class conet_dl_v3_server {
 				return res.status(404).end()
 			}
 
-			let _ip = regiestNodes.get (obj.walletAddress = obj.walletAddress.toLowerCase())
+			let _ip = regiestNodes.get (obj.walletAddress)
 
 			if (!_ip) {
 				await initdata()
@@ -556,40 +524,22 @@ class conet_dl_v3_server {
 			
 			const data: minerArray[]  = obj.data
 			const allWallets: string[] = []
-
 			data.forEach(n => {
-				const minerip = WalletIpaddress.get(n.wallet)
-				if (minerip && n.address === '23.16.211.100'){
-					n.address = minerip
+				let _ip = WalletIpaddress.get(n.wallet)
+				if (_ip && n.address === '23.16.211.100'){
+					n.address = _ip
 				}
 				if (n.address ==='23.16.211.100') {
 					n.address = v4()
 				}
-
 				allWallets.push(n.wallet)
 				ipaddressWallet.set(n.address, n.wallet)
 				WalletIpaddress.set(n.wallet, n.address)
 			})
-
-			nodeWallets.set(obj.walletAddress, allWallets)
-			calculationsTotal()
-
-			// setTimeout (() => {
-			// 	initAllServers.delete(obj.walletAddress)
-			// 	const Wallets = nodeWallets.get (obj.walletAddress)
-			// 	Wallets?.forEach(n => {
-			// 		const ip = WalletIpaddress.get (n)
-			// 		if (ip) {
-			// 			ipaddressWallet.delete(ip)
-			// 		}
-			// 		WalletIpaddress.delete(n)
-			// 	})
-			// }, 1000 * 60 * (10 + 5 *Math.random ()))
-			
-			logger(Colors.blue(`/initNode node name = [${obj.walletAddress}] added new miners [${data.length}] Total Miner in WalletIpaddress = [${WalletIpaddress.size}] totalWalletcalculations length =[${totalWalletcalculations.length}]`))
-			
-			res.status(200).end()
-			
+			initAllServers.set(obj.walletAddress, "1")
+			nodeWallets.set (obj.walletAddress, allWallets)
+			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
+			return res.status(200).end()
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
@@ -642,10 +592,9 @@ class conet_dl_v3_server {
 					WalletIpaddress.delete(n)
 				})
 			}
-			
+
 			logger(Colors.magenta(`/nodeRestart finished total wallet = [${WalletIpaddress.size}]`))
-			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
-			
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
@@ -683,17 +632,17 @@ class conet_dl_v3_server {
 			}
 
 			if (!_ip) {
-				logger (Colors.red(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+				logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
 				return res.status(404).end()
 			}
 
-			// const nodeInit = initAllServers.get(obj.walletAddress)
+			const nodeInit = initAllServers.get(obj.walletAddress)
 
-			// if (!nodeInit) {
-			// 	logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
-			// 	return res.status(401).end()
-			// }
-			
+			if (!nodeInit) {
+				logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
+				return res.status(401).end()
+			}
+
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
