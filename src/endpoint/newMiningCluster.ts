@@ -118,18 +118,21 @@ let totalWalletcalculations: string[] = []
 
 const calculationsTotal = () => {
 	let all = true
-	regiestNodes.forEach(n => {
-		const uu = nodeWallets.get (n)
+	regiestNodes.forEach((n, key) => {
+		const uu = nodeWallets.get (key)
 		if (!uu) {
-			
 			all = false
 			logger(Colors.red(`calculationsTotal regiestNodes size = [${regiestNodes.size}] nodeWallets size = [${nodeWallets.size}] node [${n}] has no data in nodeWallets `))
 		}
 	})
 
-	const ws:string[] = []
-	WalletIpaddress.forEach((n, v) => {
-		ws.push(v)
+	let ws:string[] = []
+	regiestNodes.forEach((n, v) => {
+		const _nodeWallets = nodeWallets.get(v)
+		if (_nodeWallets) {
+			ws = [...ws, ..._nodeWallets]
+		}
+		
 	})
 	totalWalletcalculations = ws
 	logger(Colors.red(`calculationsTotal WalletIpaddress size = [${WalletIpaddress.size}] totalWalletcalculations [${totalWalletcalculations.length}] all = [${all}]`))
@@ -554,7 +557,7 @@ class conet_dl_v3_server {
 				WalletIpaddress.set(n.wallet, n.address)
 			})
 
-			initAllServers.set(obj.walletAddress, "1")
+			nodeWallets.set(obj.walletAddress, "1")
 			
 			setTimeout (() => {
 				initAllServers.delete(obj.walletAddress)
