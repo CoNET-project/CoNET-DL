@@ -123,6 +123,7 @@ const calculationsTotal = () => {
 		if (!uu) {
 			
 			all = false
+			logger(Colors.red(`calculationsTotal regiestNodes size = [${regiestNodes.size}] nodeWallets size = [${nodeWallets.size}] node [${n}] has no data in nodeWallets `))
 		}
 	})
 
