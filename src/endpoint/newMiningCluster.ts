@@ -124,14 +124,15 @@ const calculationsTotal = () => {
 			all = false
 		}
 	})
-	if (all) {
+
 		
-		const ws:string[] = []
-		WalletIpaddress.forEach((n, v) => {
-			ws.push(v)
-		})
-		totalWalletcalculations = ws
-	}
+	const ws:string[] = []
+	WalletIpaddress.forEach((n, v) => {
+		ws.push(v)
+	})
+	totalWalletcalculations = ws
+	logger(Colors.red(`calculationsTotal [${WalletIpaddress.size}] all = [${all}]`))
+
 }
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
