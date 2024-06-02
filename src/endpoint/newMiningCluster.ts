@@ -92,7 +92,6 @@ const initAllServers: Map<string, string> = new Map()
 interface regiestNodes {
 	wallet: string
 	node_ipaddress: string
-
 }
 
 let EPOCH=0
@@ -104,19 +103,19 @@ const storageMinerData = async (block: number) => {
 	if (!s3Pass) {
 		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
 	}
-	WalletIpaddress.forEach((n, key) => {
-		walletsArray.push(key)
-	})
+	
 	const obj = {
 		hash: `free_wallets_${block}`,
-		data: JSON.stringify(walletsArray)
+		data: JSON.stringify(totalWalletcalculations)
 	}
 
 	await storageWalletProfile(obj, s3Pass)
-	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
+	return logger(Colors.magenta(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
-let totalWallet = 0
 
+
+let totalWallet = 0
+let totalWalletcalculations: string[] = []
 const calculationsTotal = () => {
 	let all = true
 	regiestNodes.forEach(n => {
@@ -127,6 +126,11 @@ const calculationsTotal = () => {
 	})
 	if (all) {
 		totalWallet = WalletIpaddress.size
+		const ws:string[] = []
+		WalletIpaddress.forEach(n => {
+			ws.push(n)
+		})
+		totalWalletcalculations = ws
 	}
 }
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
