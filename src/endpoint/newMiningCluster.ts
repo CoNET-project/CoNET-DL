@@ -169,14 +169,14 @@ const initdata = async () => {
 	if (!nodes) {
 		return logger(Colors.red(`initdata return NULL! `))
 	}
-	
+	logger(inspect(nodes, false, 3, true))
 	nodes.forEach(n => {
 
 		regiestNodes.set(n.wallet, "1")
 
 	})
 
-	logger(Colors.blue(`initdata regiestNodes = ${regiestNodes.entries()}`))
+	logger(Colors.blue(`initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
 }
 
 class conet_dl_v3_server {
