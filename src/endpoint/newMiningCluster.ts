@@ -571,17 +571,17 @@ class conet_dl_v3_server {
 			nodeWallets.set(obj.walletAddress, allWallets)
 			calculationsTotal()
 
-			setTimeout (() => {
-				initAllServers.delete(obj.walletAddress)
-				const Wallets = nodeWallets.get (obj.walletAddress)
-				Wallets?.forEach(n => {
-					const ip = WalletIpaddress.get (n)
-					if (ip) {
-						ipaddressWallet.delete(ip)
-					}
-					WalletIpaddress.delete(n)
-				})
-			}, 1000 * 60 * (10 + 5 *Math.random ()))
+			// setTimeout (() => {
+			// 	initAllServers.delete(obj.walletAddress)
+			// 	const Wallets = nodeWallets.get (obj.walletAddress)
+			// 	Wallets?.forEach(n => {
+			// 		const ip = WalletIpaddress.get (n)
+			// 		if (ip) {
+			// 			ipaddressWallet.delete(ip)
+			// 		}
+			// 		WalletIpaddress.delete(n)
+			// 	})
+			// }, 1000 * 60 * (10 + 5 *Math.random ()))
 			
 			logger(Colors.blue(`/initNode node name = [${obj.walletAddress}] added new miners [${data.length}] Total Miner in WalletIpaddress = [${WalletIpaddress.size}] totalWalletcalculations length =[${totalWalletcalculations.length}]`))
 			
