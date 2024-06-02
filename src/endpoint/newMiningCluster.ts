@@ -115,14 +115,27 @@ const storageMinerData = async (block: number) => {
 	await storageWalletProfile(obj, s3Pass)
 	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
+let totalWallet = 0
 
-
+const calculationsTotal = () => {
+	let all = true
+	regiestNodes.forEach(n => {
+		const uu = initAllServers.get (n)
+		if (!uu) {
+			all = false
+		}
+	})
+	if (all) {
+		totalWallet = WalletIpaddress.size
+	}
+}
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
+
 		await storageMinerData(block)
 	})
 
@@ -539,6 +552,7 @@ class conet_dl_v3_server {
 
 			initAllServers.set(obj.walletAddress, "1")
 			nodeWallets.set (obj.walletAddress, allWallets)
+			calculationsTotal()
 			setTimeout (() => {
 				initAllServers.delete(obj.walletAddress)
 				const Wallets = nodeWallets.get (obj.walletAddress)
@@ -656,7 +670,7 @@ class conet_dl_v3_server {
 			}
 
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
-			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
+			return res.status(200).json({totalMiner: totalWallet}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
