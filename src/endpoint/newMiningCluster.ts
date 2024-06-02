@@ -122,7 +122,7 @@ const calculationsTotal = () => {
 		const uu = nodeWallets.get (key)
 		if (!uu) {
 			all = false
-			logger(Colors.red(`node [${n}] has no data in nodeWallets `))
+			logger(Colors.red(`node name [${n}] has no data in nodeWallets `))
 		}
 	})
 
