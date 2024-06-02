@@ -523,6 +523,7 @@ class conet_dl_v3_server {
 			
 			const data: minerArray[]  = obj.data
 			const allWallets: string[] = []
+
 			data.forEach(n => {
 				let _ip = WalletIpaddress.get(n.wallet)
 				if (_ip && n.address === '23.16.211.100'){
@@ -535,10 +536,19 @@ class conet_dl_v3_server {
 				ipaddressWallet.set(n.address, n.wallet)
 				WalletIpaddress.set(n.wallet, n.address)
 			})
+
 			initAllServers.set(obj.walletAddress, "1")
 			nodeWallets.set (obj.walletAddress, allWallets)
 			setTimeout (() => {
 				initAllServers.delete(obj.walletAddress)
+				const Wallets = nodeWallets.get (obj.walletAddress)
+				Wallets?.forEach(n => {
+					const ip = WalletIpaddress.get (n)
+					if (ip) {
+						ipaddressWallet.delete(ip)
+					}
+					WalletIpaddress.delete(n)
+				})
 			}, 1000 * 60 * (2 + 5 *Math.random ()))
 			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).end()
