@@ -132,6 +132,7 @@ const calculationsTotal = () => {
 			const _nodeWallets = nodeWallets.get(v)
 			if (_nodeWallets) {
 				ws = [...ws, ..._nodeWallets]
+				logger(Colors.magenta(`calculationsTotal added node [${v}] wallets = [${_nodeWallets.length}] to array ws [${ws.length}]`))
 			}
 			
 		})
@@ -443,7 +444,7 @@ class conet_dl_v3_server {
 			
 			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${WalletIpaddress.size}]`))
 			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
-			calculationsTotal()
+
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -508,7 +509,6 @@ class conet_dl_v3_server {
 			
 			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${WalletIpaddress.size}]`))
 			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
-			calculationsTotal()
 		})
 
 
