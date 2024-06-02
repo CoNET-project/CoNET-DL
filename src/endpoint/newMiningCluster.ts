@@ -581,7 +581,7 @@ class conet_dl_v3_server {
 				})
 			}, 1000 * 60 * (2 + 5 *Math.random ()))
 			
-			logger(Colors.blue(`/initNode node name = [${}] added new miners [${data.length}] Total Miner in WalletIpaddress = [${WalletIpaddress.size}] totalWalletcalculations length =[${totalWalletcalculations.length}]`))
+			logger(Colors.blue(`/initNode node name = [${obj.walletAddress}] added new miners [${data.length}] Total Miner in WalletIpaddress = [${WalletIpaddress.size}] totalWalletcalculations length =[${totalWalletcalculations.length}]`))
 			
 			res.status(200).end()
 			
