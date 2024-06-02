@@ -449,7 +449,6 @@ class conet_dl_v3_server {
 			if (!_ip) {
 				await initdata()
 				_ip = regiestNodes.get (obj.walletAddress)
-				
 			}
 
 			if (!_ip) {
@@ -538,6 +537,9 @@ class conet_dl_v3_server {
 			})
 			initAllServers.set(obj.walletAddress, "1")
 			nodeWallets.set (obj.walletAddress, allWallets)
+			setTimeout (() => {
+				initAllServers.delete(obj.walletAddress)
+			}, 1000 * 60 * (2 + 5 *Math.random ()))
 			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
 			return res.status(200).end()
 		})
