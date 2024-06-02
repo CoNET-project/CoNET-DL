@@ -113,8 +113,9 @@ const storageMinerData = async (block: number) => {
 }
 
 
-let totalWallet = 0
+
 let totalWalletcalculations: string[] = []
+
 const calculationsTotal = () => {
 	let all = true
 	regiestNodes.forEach(n => {
@@ -124,7 +125,7 @@ const calculationsTotal = () => {
 		}
 	})
 	if (all) {
-		totalWallet = WalletIpaddress.size
+		
 		const ws:string[] = []
 		WalletIpaddress.forEach((n, v) => {
 			ws.push(v)
@@ -428,9 +429,9 @@ class conet_dl_v3_server {
 
 			Array.push(obj.walletAddress1)
 			nodeWallets.set(obj.walletAddress, Array)
-
-			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${ipaddressWallet.size}]`))
-			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+			calculationsTotal()
+			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${totalWalletcalculations.length}]`))
+			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -492,9 +493,9 @@ class conet_dl_v3_server {
 			// }
 			ipaddressWallet.delete(obj.ipAddress)
 			WalletIpaddress.delete(obj.walletAddress1)
-
-			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${WalletIpaddress.size}]`))
-			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
+			calculationsTotal()
+			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${totalWalletcalculations.length}]`))
+			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
 		})
 
 
@@ -555,7 +556,7 @@ class conet_dl_v3_server {
 
 			initAllServers.set(obj.walletAddress, "1")
 			nodeWallets.set (obj.walletAddress, allWallets)
-			calculationsTotal()
+			
 			setTimeout (() => {
 				initAllServers.delete(obj.walletAddress)
 				const Wallets = nodeWallets.get (obj.walletAddress)
@@ -568,7 +569,8 @@ class conet_dl_v3_server {
 				})
 			}, 1000 * 60 * (2 + 5 *Math.random ()))
 			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
-			return res.status(200).end()
+			res.status(200).end()
+			return calculationsTotal()
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
@@ -621,9 +623,10 @@ class conet_dl_v3_server {
 					WalletIpaddress.delete(n)
 				})
 			}
-
+			
 			logger(Colors.magenta(`/nodeRestart finished total wallet = [${WalletIpaddress.size}]`))
-			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
+			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
+			return calculationsTotal()
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
@@ -671,9 +674,9 @@ class conet_dl_v3_server {
 				logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
 				return res.status(401).end()
 			}
-
+			calculationsTotal()
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
-			return res.status(200).json({totalMiner: totalWallet}).end()
+			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
