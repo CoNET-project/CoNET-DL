@@ -99,7 +99,6 @@ let s3Pass: s3pass|null = null
 
 const storageMinerData = async (block: number) => {
 	//	obj: {hash?: string, data?: string}
-	const walletsArray: string[] = []
 	if (!s3Pass) {
 		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
 	}
@@ -110,7 +109,7 @@ const storageMinerData = async (block: number) => {
 	}
 
 	await storageWalletProfile(obj, s3Pass)
-	return logger(Colors.magenta(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
+	return logger(Colors.magenta(`storage [free_wallets_${block}] Miner wallets [${ totalWalletcalculations.length }]to Wasabi success! `))
 }
 
 
