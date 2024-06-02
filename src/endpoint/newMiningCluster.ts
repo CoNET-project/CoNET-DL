@@ -430,7 +430,7 @@ class conet_dl_v3_server {
 			Array.push(obj.walletAddress1)
 			nodeWallets.set(obj.walletAddress, Array)
 			calculationsTotal()
-			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${totalWalletcalculations.length}]`))
+			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${WalletIpaddress.size}]`))
 			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
 		})
 
@@ -568,9 +568,11 @@ class conet_dl_v3_server {
 					WalletIpaddress.delete(n)
 				})
 			}, 1000 * 60 * (2 + 5 *Math.random ()))
-			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${ipaddressWallet.size}]`))
+			calculationsTotal()
+			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${totalWalletcalculations.length}]`))
+			
 			res.status(200).end()
-			return calculationsTotal()
+			
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
