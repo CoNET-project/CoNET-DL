@@ -119,19 +119,19 @@ let totalWalletcalculations: string[] = []
 const calculationsTotal = () => {
 	let all = true
 	regiestNodes.forEach(n => {
-		const uu = initAllServers.get (n)
+		const uu = nodeWallets.get (n)
 		if (!uu) {
+			
 			all = false
 		}
 	})
 
-		
 	const ws:string[] = []
 	WalletIpaddress.forEach((n, v) => {
 		ws.push(v)
 	})
 	totalWalletcalculations = ws
-	logger(Colors.red(`calculationsTotal [${WalletIpaddress.size}] all = [${all}]`))
+	logger(Colors.red(`calculationsTotal WalletIpaddress size = [${WalletIpaddress.size}] totalWalletcalculations [${totalWalletcalculations.length}] all = [${all}]`))
 
 }
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
@@ -163,7 +163,7 @@ const initdata = async () => {
 	}
 	
 	nodes.forEach(n => {
-		regiestNodes.set(n.wallet, n.wallet)
+		regiestNodes.set(n.wallet, "1")
 	})
 }
 
@@ -426,13 +426,10 @@ class conet_dl_v3_server {
 			ipaddressWallet.set(obj.ipAddress, obj.walletAddress1)
 			WalletIpaddress.set(obj.walletAddress1, obj.ipAddress)
 
-			const Array = nodeWallets.get(obj.walletAddress)||[]
-
-			Array.push(obj.walletAddress1)
-			nodeWallets.set(obj.walletAddress, Array)
-			calculationsTotal()
+			
 			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${WalletIpaddress.size}]`))
-			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
+			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
+			calculationsTotal()
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -494,9 +491,10 @@ class conet_dl_v3_server {
 			// }
 			ipaddressWallet.delete(obj.ipAddress)
 			WalletIpaddress.delete(obj.walletAddress1)
+			
+			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${WalletIpaddress.size}]`))
+			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
 			calculationsTotal()
-			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${totalWalletcalculations.length}]`))
-			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
 		})
 
 
@@ -556,7 +554,6 @@ class conet_dl_v3_server {
 			})
 
 			initAllServers.set(obj.walletAddress, "1")
-			nodeWallets.set (obj.walletAddress, allWallets)
 			
 			setTimeout (() => {
 				initAllServers.delete(obj.walletAddress)
