@@ -422,10 +422,12 @@ class conet_dl_v3_server {
 				return res.status(404).end()
 			}
 
-			const nodeInit = initAllServers.get(obj.walletAddress)
-			if (!nodeInit) {
-				return res.status(401).end()
-			}
+			// const nodeInit = initAllServers.get(obj.walletAddress)
+
+			// if (!nodeInit) {
+			// 	//				send reest
+			// 	return res.status(401).end()
+			// }
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (obj.ipAddress === '23.16.211.100') {
 				obj.ipAddress = v4()
@@ -486,10 +488,10 @@ class conet_dl_v3_server {
 				return res.status(404).end()
 			}
 
-			const nodeInit = initAllServers.get(obj.walletAddress)
-			if (!nodeInit) {
-				return res.status(401).end()
-			}
+			// const nodeInit = initAllServers.get(obj.walletAddress)
+			// if (!nodeInit) {
+			// 	return res.status(401).end()
+			// }
 
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (obj.ipAddress === '23.16.211.100') {
