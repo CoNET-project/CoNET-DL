@@ -176,7 +176,7 @@ const initdata = async () => {
 
 	})
 
-	logger(Colors.blue(`initdata regiestNodes.entries() = ${regiestNodes.entries()}`))
+	logger(Colors.blue(`initdata regiestNodes = ${regiestNodes.entries()}`))
 }
 
 class conet_dl_v3_server {
@@ -537,7 +537,7 @@ class conet_dl_v3_server {
 				return res.status(404).end()
 			}
 
-			let _ip = regiestNodes.get (obj.walletAddress)
+			let _ip = regiestNodes.get (obj.walletAddress = obj.walletAddress.toLowerCase())
 
 			if (!_ip) {
 				await initdata()
@@ -553,13 +553,14 @@ class conet_dl_v3_server {
 			const allWallets: string[] = []
 
 			data.forEach(n => {
-				let _ip = WalletIpaddress.get(n.wallet)
-				if (_ip && n.address === '23.16.211.100'){
-					n.address = _ip
+				const minerip = WalletIpaddress.get(n.wallet)
+				if (minerip && n.address === '23.16.211.100'){
+					n.address = minerip
 				}
 				if (n.address ==='23.16.211.100') {
 					n.address = v4()
 				}
+
 				allWallets.push(n.wallet)
 				ipaddressWallet.set(n.address, n.wallet)
 				WalletIpaddress.set(n.wallet, n.address)
@@ -567,6 +568,7 @@ class conet_dl_v3_server {
 
 			nodeWallets.set(obj.walletAddress, allWallets)
 			calculationsTotal()
+
 			setTimeout (() => {
 				initAllServers.delete(obj.walletAddress)
 				const Wallets = nodeWallets.get (obj.walletAddress)
@@ -579,7 +581,7 @@ class conet_dl_v3_server {
 				})
 			}, 1000 * 60 * (2 + 5 *Math.random ()))
 			
-			logger(Colors.gray(`/initNode added new miners [${data.length}] Total Miner = [${totalWalletcalculations.length}]`))
+			logger(Colors.blue(`/initNode node name = [${}] added new miners [${data.length}] Total Miner in WalletIpaddress = [${WalletIpaddress.size}] totalWalletcalculations length =[${totalWalletcalculations.length}]`))
 			
 			res.status(200).end()
 			
