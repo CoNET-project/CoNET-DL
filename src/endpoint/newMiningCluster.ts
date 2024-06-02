@@ -127,8 +127,8 @@ const calculationsTotal = () => {
 	if (all) {
 		totalWallet = WalletIpaddress.size
 		const ws:string[] = []
-		WalletIpaddress.forEach(n => {
-			ws.push(n)
+		WalletIpaddress.forEach((n, v) => {
+			ws.push(v)
 		})
 		totalWalletcalculations = ws
 	}
