@@ -171,8 +171,12 @@ const initdata = async () => {
 	}
 	
 	nodes.forEach(n => {
+
 		regiestNodes.set(n.wallet, "1")
+
 	})
+
+	logger(Colors.blue(`initdata regiestNodes.entries() = ${regiestNodes.entries()}`))
 }
 
 class conet_dl_v3_server {
