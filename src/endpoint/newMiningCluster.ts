@@ -122,7 +122,7 @@ const calculationsTotal = () => {
 		const uu = nodeWallets.get (key)
 		if (!uu) {
 			all = false
-			logger(Colors.red(`node name [${n}] has no data in nodeWallets `))
+			logger(Colors.red(`node name [${key}] has no data in nodeWallets `))
 		}
 	})
 
@@ -162,7 +162,7 @@ const ipaddressWallet: Map<string, string> = new Map()
 const WalletIpaddress: Map<string, string> = new Map()
 const regiestNodes: Map<string, string> = new Map()
 const nodeWallets: Map<string, string[]> = new Map()
-
+const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 
 const initdata = async () => {
 	const nodes: any[]|void  = await getAllMinerNodes()
@@ -171,9 +171,11 @@ const initdata = async () => {
 	}
 	logger(inspect(nodes, false, 3, true))
 	nodes.forEach(n => {
-
-		regiestNodes.set(n.wallet, "1")
-
+		const w = n.wallet.toLowerCase()
+		if (w !== testNodeWallet) {
+			regiestNodes.set(n.wallet, "1")
+		}
+		
 	})
 
 	logger(Colors.blue(`initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
