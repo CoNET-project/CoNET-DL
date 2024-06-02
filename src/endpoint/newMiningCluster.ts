@@ -143,6 +143,7 @@ const calculationsTotal = () => {
 	logger(Colors.red(`calculationsTotal calculationsTotal regiestNodes size = [${regiestNodes.size}] nodeWallets size = [${nodeWallets.size}] all = [${all}] WalletIpaddress size = [${WalletIpaddress.size}] totalWalletcalculations [${totalWalletcalculations.length}] `))
 
 }
+
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	
@@ -445,7 +446,7 @@ class conet_dl_v3_server {
 
 			
 			logger(Colors.gray(`${obj.ipAddress}:${obj.walletAddress1} added to Miner Pool [${WalletIpaddress.size}]`))
-			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
+			res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 
 		})
 
@@ -510,7 +511,7 @@ class conet_dl_v3_server {
 			WalletIpaddress.delete(obj.walletAddress1)
 			
 			logger(Colors.gray(`/deleteMiner [${obj.ipAddress}:${obj.walletAddress1}] Total Miner = [${WalletIpaddress.size}]`))
-			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
+			res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 
@@ -644,7 +645,7 @@ class conet_dl_v3_server {
 			
 			logger(Colors.magenta(`/nodeRestart finished total wallet = [${WalletIpaddress.size}]`))
 			res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
-			return calculationsTotal()
+			
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
@@ -682,7 +683,7 @@ class conet_dl_v3_server {
 			}
 
 			if (!_ip) {
-				logger (Colors.grey(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
+				logger (Colors.red(`Router /deleteMiner [${ipaddress}:${obj.walletAddress}] wallet didn't in nodes wallet `))
 				return res.status(404).end()
 			}
 
@@ -692,9 +693,9 @@ class conet_dl_v3_server {
 			// 	logger(Colors.red(`Node [${obj.walletAddress}] need nodeInit!`))
 			// 	return res.status(401).end()
 			// }
-			calculationsTotal()
+			
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
-			return res.status(200).json({totalMiner: totalWalletcalculations.length}).end()
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
