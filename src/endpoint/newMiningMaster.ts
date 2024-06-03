@@ -95,42 +95,6 @@ interface regiestNodes {
 
 }
 
-let EPOCH=0
-let s3Pass: s3pass|null = null
-
-const storageMinerData = async (block: number) => {
-	//	obj: {hash?: string, data?: string}
-	const walletsArray: string[] = []
-	if (!s3Pass) {
-		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
-	}
-	WalletIpaddress.forEach((n, key) => {
-		walletsArray.push(key)
-	})
-	const obj = {
-		hash: `free_wallets_${block}`,
-		data: JSON.stringify(walletsArray)
-	}
-
-	await storageWalletProfile(obj, s3Pass)
-	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
-}
-
-
-export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	
-
-	provideCONET.on('block', async block => {
-		EPOCH = block
-		await storageMinerData(block)
-	})
-
-	EPOCH = await provideCONET.getBlockNumber()
-	await initdata()
-	s3Pass = await s3fsPasswd()
-	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
-}
 
 const postLocalhost = async (path: string, data: any, _res: Response)=> {
 	
@@ -157,8 +121,6 @@ const postLocalhost = async (path: string, data: any, _res: Response)=> {
 	req.end()
 }
 
-const ipaddressWallet: Map<string, string> = new Map()
-const WalletIpaddress: Map<string, string> = new Map()
 const regiestNodes: Map<string, string> = new Map()
 
 const initdata = async () => {
@@ -168,10 +130,16 @@ const initdata = async () => {
 	}
 	
 	nodes.forEach(n => {
-		regiestNodes.set(n.wallet, n.ipAddress)
+		const w = n.wallet.toLowerCase()
+		// if (w === testNodeWallet) {
+		// 	return
+		// }
+		
+		regiestNodes.set(n.wallet, "1")
+		
 	})
 
-	logger(inspect(regiestNodes.entries(), false, 3, true))
+	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
 }
 
 const checkNode = async (req: Request) => {

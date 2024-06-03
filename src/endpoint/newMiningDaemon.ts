@@ -153,9 +153,12 @@ const initdata = async () => {
 	
 	nodes.forEach(n => {
 		const w = n.wallet.toLowerCase()
-		if (w !== testNodeWallet) {
-			regiestNodes.set(n.wallet, "1")
-		}
+		// if (w === testNodeWallet) {
+		// 	return
+		// }
+		
+		regiestNodes.set(n.wallet, "1")
+		
 	})
 
 	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
