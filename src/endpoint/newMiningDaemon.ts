@@ -108,6 +108,10 @@ const storageMinerData = async (block: number) => {
 	WalletIpaddress.forEach((n, key) => {
 		walletsArray.push(key)
 	})
+	if (walletsArray.length===0) {
+		return logger(Colors.red(`storageMinerData WalletIpaddress has empty Error!`))
+	}
+
 	const obj = {
 		hash: `free_wallets_${block}`,
 		data: JSON.stringify(walletsArray)
@@ -123,7 +127,8 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
-		await storageMinerData(block)
+		logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
+		//await storageMinerData(block)
 	})
 
 	EPOCH = await provideCONET.getBlockNumber()
@@ -522,7 +527,7 @@ class v3_master {
 				logger (Colors.red(`Daemon /getTotalMiners req.body nodeAddress ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
-			
+
 			if (! await checkNodeWallet(nodeAddress, true)) {
 				return res.status(401).end()
 			}
