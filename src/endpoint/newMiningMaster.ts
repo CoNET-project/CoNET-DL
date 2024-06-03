@@ -15,13 +15,13 @@ import {conet_Referral_contractV2, masterSetup, checkSignObj, storageWalletProfi
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import {v4} from 'uuid'
-import { cpus } from 'node:os'
+
 import epochRateABI from '../util/epochRate.json'
 import type { RequestOptions,ServerResponse } from 'node:http'
 import {request} from 'node:http'
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'http://207.90.195.83:9999'
-import v3Daemon from './newMiningDaemon'
+
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 
@@ -476,32 +476,4 @@ class conet_dl_v3_server {
 	}
 }
 
-
-if (Cluster.isPrimary) {
-
-	const _forkWorker = () => {
-		const fork = Cluster.fork ()
-		fork.once ('exit', (code: number, signal: string) => {
-			logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
-			
-			return setTimeout (() => {
-				return _forkWorker ()
-			}, 1000 * 10 )
-		})
-		return (fork)
-	}
-
-	const forkWorker = () => {
-		
-		let numCPUs = cpus().length
-
-		for (let i = 0; i < numCPUs; i ++){
-			_forkWorker()
-		}
-	}
-	forkWorker()
-	new v3Daemon ()
-	
-} else {
-	new conet_dl_v3_server()
-}
+export default conet_dl_v3_server
