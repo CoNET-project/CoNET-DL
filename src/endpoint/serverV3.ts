@@ -90,13 +90,13 @@ const storeToChain = async (data: epochRate) => {
 	}
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
+
+
 interface regiestNodes {
 	wallet: string
 	node_ipaddress: string
 
 }
-
-
 
 const initdata = async () => {
 	const nodes  = await getAllMinerNodes()

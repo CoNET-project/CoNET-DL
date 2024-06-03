@@ -97,7 +97,7 @@ const storeToChain = async (data: epochRate) => {
 
 class conet_mining_server {
 
-	private PORT =80
+	private PORT = 8001
 
 	constructor () {
 		this.startServer()
