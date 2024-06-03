@@ -51,8 +51,6 @@ const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {refer
 }
 
 
-
-
 const getMinerCount = async (_epoch: number) => {
 	let count = 0
 	//free_wallets_657551
@@ -107,6 +105,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	req.write(JSON.stringify(postData))
 	req.end()
 }
+
 const postReferrals = async (epoch: string, totalMiner: string, minerRate: string, callbak: (err: Error|null, data?: any) => void )=> {
 
 	const option: RequestOptions = {
@@ -252,7 +251,6 @@ const sendPaymentToPool = async (totalMiner: string, walletList: string[], payLi
 	req.end()
 }
 	
-
 const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], totalMiner: string, minerRate: string) => {
 
 	const tableCNTP = tableNodes.map(n => n)
@@ -293,8 +291,8 @@ const stratFreeMinerReferrals = async (block: string) => {
 	const walletTotal : Map<string, walletCount> = new Map()
 
 	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
-	let i = 0
-	mapLimit(walletArray, 2, async (n, next) => {
+
+	mapLimit( walletArray, 2, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList

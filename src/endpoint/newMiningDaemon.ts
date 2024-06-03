@@ -1,8 +1,7 @@
 /**
  * 			
  * */
-import Express, { Router, Response, Request } from 'express'
-
+import Express, { Router } from 'express'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
@@ -17,11 +16,11 @@ import {logger} from '../util/logger'
 import {v4} from 'uuid'
 import { cpus } from 'node:os'
 import epochRateABI from '../util/epochRate.json'
-import type { RequestOptions,ServerResponse } from 'node:http'
-import {request} from 'node:http'
+
+
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'http://207.90.195.83:9999'
-import v3Daemon from './newMiningDaemon'
+
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 
@@ -87,6 +86,8 @@ const storeToChain = async (data: epochRate) => {
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
+
+
 const initAllServers: Map<string, string> = new Map()
 
 interface regiestNodes {
@@ -119,7 +120,6 @@ const storageMinerData = async (block: number) => {
 
 export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
@@ -132,34 +132,13 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
 
-const postLocalhost = async (path: string, data: any, _res: Response)=> {
-	
-	const option: RequestOptions = {
-		hostname: 'localhost',
-		path,
-		port: 8002,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-
-	const req = await request (option, res => {
-		res.pipe(_res)
-	})
-
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		_res.status(502).end()
-	})
-
-	req.write(JSON.stringify(data))
-	req.end()
-}
-
 const ipaddressWallet: Map<string, string> = new Map()
 const WalletIpaddress: Map<string, string> = new Map()
 const regiestNodes: Map<string, string> = new Map()
+
+const nodeIpaddressWallets: Map<string, Map<string, string>> = new Map()
+
+const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 
 const initdata = async () => {
 	const nodes: any[]|void  = await getAllMinerNodes()
@@ -168,63 +147,58 @@ const initdata = async () => {
 	}
 	
 	nodes.forEach(n => {
-		regiestNodes.set(n.wallet, n.ipAddress)
+		const w = n.wallet.toLowerCase()
+		if (w !== testNodeWallet) {
+			regiestNodes.set(n.wallet, "1")
+		}
 	})
+
+	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
 }
 
-const checkNode = async (req: Request) => {
-	const ipaddress = getIpAddressFromForwardHeader(req)
-	const request = req.path
-	let message, signMessage
-	try {
-		message = req.body.message
-		signMessage = req.body.signMessage
-
-	} catch (ex) {
-		logger (Colors.grey(`${ipaddress} request ${request} message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
-		return false
-	}
-
-	if (!message||!signMessage||!ipaddress) {
-		logger (Colors.grey(`${ipaddress} request ${request} !message||!signMessage Error! [${ipaddress}]`))
-		return false
-	}
-
-	const obj = checkSignObj (message, signMessage)
-
-	// if (!obj || !obj?.data && (!obj?.ipAddress || !obj?.walletAddress1)) {
-	// 	logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
-	// 	return false
-	// }
-
-	if (!obj) {
-		logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
-		return false
-	}
-
-	let _ip = regiestNodes.get (obj.walletAddress)
-
-	if (!_ip) {
+const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boolean> = async (nodeWallet, checkInit) => {
+	let wallet = regiestNodes.get(nodeWallet)
+	if (!wallet) {
 		await initdata()
-		_ip = regiestNodes.get (obj.walletAddress)
-
+		wallet = regiestNodes.get(nodeWallet)
 	}
-	if (!_ip || _ip !== ipaddress) {
-		logger (Colors.grey(`request ${request} [${ipaddress}:${obj.walletAddress}] wallet or IP address didn't match nodes regiested IP address _ip [${_ip}]`))
+	if (!wallet) {
+		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't in nodelist ERROR! `), inspect(regiestNodes.entries(), false, 3, true))
 		return false
 	}
-	
-	return obj
+
+	if (!checkInit) {
+		return true
+	}
+
+	const nodeInited = nodeIpaddressWallets.has (nodeWallet)
+	if (!nodeInited) {
+		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited`))
+		return false
+	}
+
+	return true
+}
+
+const cleanupNode = (nodeWallet: string) => {
+	const nodeIPWallets = nodeIpaddressWallets.get(nodeWallet)
+	if (!nodeIPWallets) {
+		return logger(Colors.red(`cleanupNode [${nodeWallet}] nodeWalletsIP [${nodeIPWallets}] null error!`))
+	}
+	nodeIPWallets.forEach((n, key) => {
+		ipaddressWallet.delete(key)
+		WalletIpaddress.delete(n)
+	})
+	nodeIpaddressWallets.delete(nodeWallet)
 }
 
 
-class conet_dl_v3_server {
+class v3_master {
 
-	private PORT = 8001
+	private PORT = 8002
 
 	constructor () {
 		this.startServer()
-		
     }
 
 	private startServer = async () => {
@@ -250,21 +224,6 @@ class conet_dl_v3_server {
             logger (Colors.red(`Local server on ERROR`))
         })
 
-		app.use (async (req, res, next) => {
-			if (/^post$/i.test(req.method)) {
-				return Express.json({limit: '25mb'})(req, res, err => {
-					if (err) {
-						res.sendStatus(400).end()
-						res.socket?.end().destroy()
-						return logger(Colors.red(`/^post$/i.test Express.json Error ${req.url} ! ${JSON.stringify(req.body)}`))
-						
-					}
-					return next()
-				})
-			}
-			return next()
-		})
-
 		const server = createServer(app)
 
 		this.router (router)
@@ -275,7 +234,8 @@ class conet_dl_v3_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, () => {
+		server.listen(this.PORT, '127.0.0.1',() => {
+			startListeningCONET_Holesky_EPOCH_v2()
 			return console.table([
                 { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
@@ -285,12 +245,7 @@ class conet_dl_v3_server {
 	private router ( router: Router ) {
 		
 		router.post ('/wallet',  async (req, res) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress ||! /\:\:1|\:\:ffff\:127\.0\.0\.1/.test(ipaddress)) {
-				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
-				res.end()
-				return res?.socket?.destroy()
-			}
+			
 			let wallet: string
 			try {
 				wallet = req.body.wallet
@@ -418,51 +373,160 @@ class conet_dl_v3_server {
 			epochRate.splice(index, 1)[0]
 		})
 
-		router.post('/minerCheck',  async (req, res) => {
-			const obj = await checkNode(req)
+		router.post('/minerCheck',  async (req, res) =>{
 
-			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
-				logger(Colors.red(`/minerCheck obj format Error`), inspect(obj, false, 3, true))
+			let walletAddress, ipAddress, nodeAddress
+			try {
+				walletAddress = req.body.walletAddress
+				ipAddress = req.body.ipAddress
+				nodeAddress = req.body.nodeAddress
+
+			} catch (ex) {
+				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
-			return postLocalhost('/minerCheck', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress }, res)
+
+
+			if (!walletAddress || !ipAddress || !nodeAddress) {
+				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! !walletAddress || !ipAddress || !nodeAddress = ${!walletAddress} || ${!ipAddress} || ${!nodeAddress}`))
+				return res.status(404).end()
+			}
+
+			if (! await checkNodeWallet(nodeAddress, true)) {
+				return res.status(401).end()
+			}
+
+			if (ipAddress === '23.16.211.100') {
+				ipAddress = v4()
+			}
+
+			const _wallet = ipaddressWallet.get(ipAddress)
+			const _wallet_ip = WalletIpaddress.get(walletAddress = walletAddress.toLowerCase())
+			
+			if ( _wallet || _wallet_ip ) {
+				res.status(400).end()
+				return //logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
+			}
+
+			ipaddressWallet.set(ipAddress, walletAddress)
+			WalletIpaddress.set(walletAddress, ipAddress)
+			const nodeIPWallets = nodeIpaddressWallets.get(nodeAddress)
+
+			if (!nodeIPWallets) {
+				logger(Colors.red(`Daemon /minerCheck node [${nodeAddress}] hasn't nodeIPWallets Error!`))
+			} else {
+				nodeIPWallets.set(ipAddress, walletAddress)
+			}
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
-			const obj = await checkNode(req)
-			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
-				logger(Colors.red(`/deleteMiner obj format Error`), inspect(obj, false, 3, true))
+
+			let walletAddress, ipAddress, nodeAddress
+			try {
+				walletAddress = req.body.walletAddress
+				ipAddress = req.body.ipAddress
+				nodeAddress = req.body.nodeAddress
+
+			} catch (ex) {
+				logger (Colors.red(`Daemon /deleteMiner req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
-			return postLocalhost('/deleteMiner', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress}, res)
-		})
 
-
-		router.post('/initNode',  async (req, res) =>{
-			const obj = await checkNode(req)
-			if (!obj || !obj?.data ) {
-				logger(Colors.red(`/initNode obj format Error`), inspect(obj, false, 3, true))
-				return res.status(404).end()
-			}
-			return postLocalhost('/deleteMiner', {data: obj.data, nodeAddress: obj.walletAddress}, res)
-		})
-
-		router.post('/nodeRestart',  async (req, res) =>{
-			const obj = await checkNode(req)
-			if (!obj || !obj.data) {
+			if (!walletAddress || !ipAddress || !nodeAddress) {
+				logger (Colors.red(`Daemon /deleteMiner req.body walletAddress1 ERROR! !walletAddress || !ipAddress || !nodeAddress = ${!walletAddress} || ${!ipAddress} || ${!nodeAddress}`))
 				return res.status(404).end()
 			}
 			
-			return postLocalhost('/nodeRestart', {data: obj.data, nodeAddress: obj.walletAddress}, res)
+			if (! await checkNodeWallet(nodeAddress, true)) {
+				return res.status(401).end()
+			}
+			
+			walletAddress=walletAddress.toLowerCase()
+			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
+			if (ipAddress === '23.16.211.100') {
+				const ips = WalletIpaddress.get (walletAddress)
+				if (!ips) {
+					logger(Colors.red(`/deleteMiner 23.16.211.100 cant get WalletIpaddress.get(${walletAddress})`))
+				} else {
+					ipAddress = ips
+				}
+			}
+			
+			ipaddressWallet.delete(ipAddress)
+			WalletIpaddress.delete(walletAddress)
+
+			const nodeIPWallets = nodeIpaddressWallets.get(nodeAddress)
+
+			if (!nodeIPWallets) {
+				logger(Colors.red(`Daemon /deleteMiner node [${nodeAddress}] hasn't nodeIPWallets Error!`))
+			} else {
+				nodeIPWallets.delete(ipAddress)
+			}
+			
+			logger(Colors.gray(`Daemon /deleteMiner [${ipAddress}:${walletAddress}] Total Miner = [${WalletIpaddress.size}]`))
+			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
-		router.post('/getTotalMiners',  async (req, res) =>{
-			const obj = await checkNode(req)
-			if (!obj) {
-				logger(Colors.red(`/getTotalMiners obj format Error`), inspect(obj, false, 3, true))
+		router.post('/initNode',  async (req, res) =>{
+			let _data, nodeAddress
+			try {
+				_data = req.body._data
+				nodeAddress = req.body.nodeAddress
+
+			} catch (ex) {
+				logger (Colors.red(`Daemon /initNode req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
-			return postLocalhost('/getTotalMiners', {nodeAddress: obj.walletAddress}, res)
+
+			if ( !_data || !nodeAddress) {
+				logger (Colors.red(`Daemon /initNode req.body ERROR! !_data || ${!_data} || nodeAddress ${!nodeAddress}`))
+				return res.status(404).end()
+			}
+			if (! await checkNodeWallet(nodeAddress, false)) {
+				return res.status(404).end()
+			}
+			cleanupNode(nodeAddress)
+			const data: minerArray[]  = _data
+
+			data.forEach( n => {
+				let _ip = WalletIpaddress.get(n.wallet)
+				if (_ip && n.address === '23.16.211.100'){
+					n.address = _ip
+				}
+				if (n.address ==='23.16.211.100') {
+					n.address = v4()
+				}
+				const nodeIPWallets = new Map()
+				ipaddressWallet.set(n.address, n.wallet)
+				WalletIpaddress.set(n.wallet, n.address)
+				
+				nodeIPWallets.set(n.address, n.wallet)
+				nodeIpaddressWallets.set(nodeAddress, nodeIPWallets)
+			})
+			
+			logger(Colors.gray(`Daemon /initNode [${nodeAddress}] added new miners [${data.length}] Total Miner = [${WalletIpaddress.size}]`))
+			return res.status(200).end()
+		})
+
+		router.post('/getTotalMiners',  async (req, res) => {
+			let nodeAddress
+			try {
+				nodeAddress = req.body.nodeAddress
+			} catch (ex) {
+				logger (Colors.red(`Daemon /getTotalMiners req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+
+			if (!nodeAddress) {
+				logger (Colors.red(`Daemon /getTotalMiners req.body nodeAddress ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+			
+			if (! await checkNodeWallet(nodeAddress, true)) {
+				return res.status(401).end()
+			}
+			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
 		router.all ('*', (req, res ) =>{
@@ -474,32 +538,4 @@ class conet_dl_v3_server {
 	}
 }
 
-
-if (Cluster.isPrimary) {
-
-	const _forkWorker = () => {
-		const fork = Cluster.fork ()
-		fork.once ('exit', (code: number, signal: string) => {
-			logger (Colors.red(`Worker [${ fork.id }] Exit with code[${ code }] signal[${ signal }]!\n Restart after 30 seconds!`))
-			
-			return setTimeout (() => {
-				return _forkWorker ()
-			}, 1000 * 10 )
-		})
-		return (fork)
-	}
-
-	const forkWorker = () => {
-		
-		let numCPUs = cpus().length
-
-		for (let i = 0; i < numCPUs; i ++){
-			_forkWorker()
-		}
-	}
-	forkWorker()
-	new v3Daemon ()
-	
-} else {
-	new conet_dl_v3_server()
-}
+export default v3_master
