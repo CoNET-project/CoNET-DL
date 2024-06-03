@@ -908,7 +908,7 @@ export const checkSignObj = (message: string, signMess: string) => {
 		digest = ethers.id(message)
 		recoverPublicKey = ethers.recoverAddress(digest, signMess)
 	} catch (ex) {
-		logger (colors.red(`checkSignObj recoverPublicKey ERROR digest = ${digest} signMess = ${signMess}`))
+		// logger (colors.red(`checkSignObj recoverPublicKey ERROR digest = ${digest} signMess = ${signMess}`))
 		return null
 	}
 	

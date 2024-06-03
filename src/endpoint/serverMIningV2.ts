@@ -169,8 +169,9 @@ class conet_mining_server {
 			const obj = checkSignObj (message, signMessage)
 
 			if (!obj) {
-				logger (Colors.grey(`[${ipaddress}] to /livenessListening !obj Error!`))
-				return res.status(404).end()
+				logger (Colors.grey(`[${ipaddress}] to /startMining !obj Error!`))
+				res.status(404).end()
+				return res.socket?.end().destroy()
 			}
 			const m: any = await checkMiner(ipaddress, obj.walletAddress)
 
