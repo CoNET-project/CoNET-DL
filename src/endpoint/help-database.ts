@@ -25,7 +25,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://rpc1.openpgp.online`
 const USDCNET = `https://rpc1.openpgp.online/usdc`
-const clusterManagerHostname = 'apibeta.conet.network'
+const clusterManagerHostname = 'apitest.conet.network'
 
 const wei = 1000000000000000000
 const si_last_Update_time_timeout = 1000 * 60 *5
