@@ -25,6 +25,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const FaucetTTL = 60 * 60 * 24
 const fujiCONET = `https://rpc1.openpgp.online`
 const USDCNET = `https://rpc1.openpgp.online/usdc`
+const clusterManagerHostname = 'apibeta.conet.network'
 
 const wei = 1000000000000000000
 const si_last_Update_time_timeout = 1000 * 60 *5
@@ -627,7 +628,7 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 	
 })
 
-const clusterManagerHostname = 'apibeta.conet.network'
+
 
 export const sendMesageToCluster = async (path: string, _data: any, callbak: (err: number|undefined, data?: any)=> void) => {
 	const option: RequestOptions = {

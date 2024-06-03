@@ -197,7 +197,7 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 
 class conet_dl_server {
 
-	private PORT = 8000
+	private PORT = 80
 	private appsPath = ''
 	private debug = false
 	private serverID = ''
