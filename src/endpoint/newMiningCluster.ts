@@ -170,6 +170,8 @@ const initdata = async () => {
 	nodes.forEach(n => {
 		regiestNodes.set(n.wallet, n.ipAddress)
 	})
+
+	logger(inspect(regiestNodes.entries(), false, 3, true))
 }
 
 const checkNode = async (req: Request) => {
