@@ -196,7 +196,7 @@ class conet_mining_server {
 
 		router.all ('*', (req, res ) =>{
 			
-			logger (Colors.grey(`Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			//logger (Colors.grey(`Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()
 			return res.socket?.end().destroy()
 		})
