@@ -208,6 +208,7 @@ interface minerObj {
 	fork: any
 	hash?: string
 	data?: any
+	allWallets?: string[]
 }
 
 interface nodeType {

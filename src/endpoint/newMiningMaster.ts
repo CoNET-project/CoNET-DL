@@ -96,6 +96,7 @@ interface regiestNodes {
 }
 
 
+const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 const postLocalhost = async (path: string, data: any, _res: Response)=> {
 	
 	const option: RequestOptions = {

@@ -18,7 +18,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
-
+import {cntpAdminWallet} from './util'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 let s3Pass: s3pass
@@ -221,7 +221,7 @@ class conet_dl_server {
 
 	constructor () {
 		this.initSetupData ()
-		startListeningCONET_Holesky_EPOCH()
+		//startListeningCONET_Holesky_EPOCH()
     }
 
 	private startServer = async () => {
@@ -289,7 +289,7 @@ class conet_dl_server {
 
 		server.listen(this.PORT, '0.0.0.0', () => {
 			return console.table([
-                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}]` }
+                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
 		})
 		
@@ -596,7 +596,7 @@ class conet_dl_server {
 			return res.status(200).json(ret).end()
 		})
 
-		router.post ('/unlockCONET',  async (req, res) =>{
+		router.post ('/unlockCONET',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -613,11 +613,41 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
-			const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
-			if (index < 0) {
-				unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
-				return res.status(200).json({ublock: true}).end()
+			// const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
+			// if (index < 0) {
+			// 	unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
+			// 	return res.status(200).json({ublock: true}).end()
+			// }
+
+			return res.status(403).json({unlock: true}).end()
+		})
+
+		router.post ('/checkAccount',  async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /checkAccount req.body ERROR!`), inspect(req.body))
+				return res.status(403).end()
 			}
+			
+
+			const obj = checkSignObj (message, signMessage)
+			if (!obj) {
+				logger (Colors.grey(`Router /checkAccount !obj or this.saPass Error! ${ipaddress}`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const address = obj?.walletAddress1||[]
+			if (!obj.walletAddress || !address ) {
+				logger (Colors.grey(`Router /checkAccount !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+
 
 			return res.status(403).json({ublock: true}).end()
 		})
