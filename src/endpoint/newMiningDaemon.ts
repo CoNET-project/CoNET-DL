@@ -477,7 +477,7 @@ class v3_master {
 		})
 
 		router.post('/initNode',  async (req, res) =>{
-			let _data, nodeAddress
+			let _data: minerArray[]|undefined, nodeAddress: string
 			try {
 				_data = req.body._data
 				nodeAddress = req.body.nodeAddress
@@ -495,7 +495,7 @@ class v3_master {
 				return res.status(404).end()
 			}
 			cleanupNode(nodeAddress)
-			const data: minerArray[]  = _data
+			const data: minerArray[] = _data
 
 			data.forEach( n => {
 				let _ip = WalletIpaddress.get(n.wallet)
