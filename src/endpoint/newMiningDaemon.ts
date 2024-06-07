@@ -99,30 +99,8 @@ interface regiestNodes {
 let EPOCH=0
 let s3Pass: s3pass|null = null
 
-const storageMinerData = async (block: number) => {
-	//	obj: {hash?: string, data?: string}
-	const walletsArray: string[] = []
-	if (!s3Pass) {
-		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
-	}
-	WalletIpaddress.forEach((n, key) => {
-		walletsArray.push(key)
-	})
-	if (walletsArray.length===0) {
-		return logger(Colors.red(`storageMinerData WalletIpaddress has empty Error!`))
-	}
 
-	const obj = {
-		hash: `free_wallets_${block}`,
-		data: JSON.stringify(walletsArray)
-	}
-
-	await storageWalletProfile(obj, s3Pass)
-	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
-}
-
-
-export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+export const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 	provideCONET.on('block', async block => {
@@ -132,20 +110,18 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	})
 
 	EPOCH = await provideCONET.getBlockNumber()
-	await initdata()
+	await initdata(v3)
 	s3Pass = await s3fsPasswd()
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
 
-const ipaddressWallet: Map<string, string> = new Map()
-const WalletIpaddress: Map<string, string> = new Map()
-const regiestNodes: Map<string, string> = new Map()
 
-const nodeIpaddressWallets: Map<string, Map<string, string>> = new Map()
+
+
 
 const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 
-const initdata = async () => {
+const initdata = async (v3: v3_master) => {
 	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
 		return logger(Colors.red(`initdata return NULL! `))
@@ -157,56 +133,59 @@ const initdata = async () => {
 		// 	return
 		// }
 		
-		regiestNodes.set(n.wallet, n.node_ipaddress)
+		v3.regiestNodes.set(n.wallet, n.node_ipaddress)
 		
 	})
 
-	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
+	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(v3.regiestNodes.entries(), false, 3, true)}`))
 }
 
-const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boolean> = async (nodeWallet, checkInit) => {
-	let wallet = regiestNodes.get(nodeWallet)
+const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) => Promise<boolean> = async (nodeWallet, checkInit, v3) => {
+	let wallet = v3.regiestNodes.get(nodeWallet)
 	if (!wallet) {
-		await initdata()
-		wallet = regiestNodes.get(nodeWallet)
+		await initdata(v3)
+		wallet = v3.regiestNodes.get(nodeWallet)
 	}
 	if (!wallet) {
-		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't in nodelist ERROR! `), inspect(regiestNodes.entries(), false, 3, true))
+		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't in nodelist ERROR! `), inspect(v3.regiestNodes.entries(), false, 3, true))
 		return false
 	}
 
 	if (!checkInit) {
-		nodeIpaddressWallets.set(nodeWallet, new Map())
-		logger(Colors.red(`checkNodeWallet [${nodeWallet}] nodeIpaddressWallets set new Empty Map() nodeIpaddressWallets.get(nodeWallet) = [${nodeIpaddressWallets.get(nodeWallet)}]!checkInit return true`))
+		v3.nodeIpaddressWallets.set(nodeWallet, new Map())
+		logger(Colors.red(`checkNodeWallet [${nodeWallet}] nodeIpaddressWallets set new Empty Map() nodeIpaddressWallets.get(nodeWallet) = [${v3.nodeIpaddressWallets.get(nodeWallet)}]!checkInit return true`))
 		return true
 	}
 
-	const nodeInited = nodeIpaddressWallets.has (nodeWallet)
+	const nodeInited = v3.nodeIpaddressWallets.has (nodeWallet)
 	if (!nodeInited) {
-		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited nodeIpaddressWallets size = ${nodeIpaddressWallets.size}`), inspect(nodeIpaddressWallets.entries(), false, 3, true))
+		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited nodeIpaddressWallets size = ${v3.nodeIpaddressWallets.size}`), inspect(v3.nodeIpaddressWallets.entries(), false, 3, true))
 		return false
 	}
 	logger(Colors.red(`checkNodeWallet return true`))
 	return true
 }
 
-const cleanupNode = (nodeWallet: string) => {
-	const nodeIPWallets = nodeIpaddressWallets.get(nodeWallet)
+const cleanupNode = (nodeWallet: string, v3: v3_master) => {
+	const nodeIPWallets = v3.nodeIpaddressWallets.get(nodeWallet)
 	if (!nodeIPWallets) {
 		return logger(Colors.red(`cleanupNode [${nodeWallet}] nodeWalletsIP empty!`))
 	}
 	nodeIPWallets.forEach((n, key) => {
-		ipaddressWallet.delete(key)
-		WalletIpaddress.delete(n)
+		v3.ipaddressWallet.delete(key)
+		v3.WalletIpaddress.delete(n)
 	})
-	nodeIpaddressWallets.delete(nodeWallet)
+	v3.nodeIpaddressWallets.delete(nodeWallet)
 }
 
 
 class v3_master {
 
 	private PORT = 8002
-
+	public ipaddressWallet: Map<string, string> = new Map()
+	public WalletIpaddress: Map<string, string> = new Map()
+	public regiestNodes: Map<string, string> = new Map()
+	public nodeIpaddressWallets: Map<string, Map<string, string>> = new Map()
 	constructor () {
 		this.startServer()
     }
@@ -245,7 +224,7 @@ class v3_master {
 		})
 
 		server.listen(this.PORT, '127.0.0.1',() => {
-			startListeningCONET_Holesky_EPOCH_v2()
+			startListeningCONET_Holesky_EPOCH_v2(this)
 			return console.table([
                 { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
@@ -403,7 +382,7 @@ class v3_master {
 				return res.status(404).end()
 			}
 
-			if (! await checkNodeWallet(nodeAddress, true)) {
+			if (! await checkNodeWallet(nodeAddress, true, this)) {
 				return res.status(401).end()
 			}
 
@@ -411,24 +390,24 @@ class v3_master {
 				ipAddress = v4()
 			}
 
-			const _wallet = ipaddressWallet.get(ipAddress)
-			const _wallet_ip = WalletIpaddress.get(walletAddress = walletAddress.toLowerCase())
+			const _wallet = this.ipaddressWallet.get(ipAddress)
+			const _wallet_ip = this.WalletIpaddress.get(walletAddress = walletAddress.toLowerCase())
 			
 			if ( _wallet || _wallet_ip ) {
 				res.status(400).end()
 				return //logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
 			}
 
-			ipaddressWallet.set(ipAddress, walletAddress)
-			WalletIpaddress.set(walletAddress, ipAddress)
-			const nodeIPWallets = nodeIpaddressWallets.get(nodeAddress)
+			this.ipaddressWallet.set(ipAddress, walletAddress)
+			this.WalletIpaddress.set(walletAddress, ipAddress)
+			const nodeIPWallets = this.nodeIpaddressWallets.get(nodeAddress)
 
 			if (!nodeIPWallets) {
 				logger(Colors.red(`Daemon /minerCheck node [${nodeAddress}] hasn't nodeIPWallets Error!`))
 			} else {
 				nodeIPWallets.set(ipAddress, walletAddress)
 			}
-			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+			return res.status(200).json({totalMiner: this.ipaddressWallet.size}).end()
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -449,14 +428,14 @@ class v3_master {
 				return res.status(404).end()
 			}
 			
-			if (! await checkNodeWallet(nodeAddress, true)) {
+			if (! await checkNodeWallet(nodeAddress, true, this)) {
 				return res.status(401).end()
 			}
 			
 			walletAddress=walletAddress.toLowerCase()
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (ipAddress === '23.16.211.100') {
-				const ips = WalletIpaddress.get (walletAddress)
+				const ips = this.WalletIpaddress.get (walletAddress)
 				if (!ips) {
 					logger(Colors.red(`/deleteMiner 23.16.211.100 cant get WalletIpaddress.get(${walletAddress})`))
 				} else {
@@ -464,10 +443,10 @@ class v3_master {
 				}
 			}
 			
-			ipaddressWallet.delete(ipAddress)
-			WalletIpaddress.delete(walletAddress)
+			this.ipaddressWallet.delete(ipAddress)
+			this.WalletIpaddress.delete(walletAddress)
 
-			const nodeIPWallets = nodeIpaddressWallets.get(nodeAddress)
+			const nodeIPWallets = this.nodeIpaddressWallets.get(nodeAddress)
 
 			if (!nodeIPWallets) {
 				logger(Colors.red(`Daemon /deleteMiner node [${nodeAddress}] hasn't nodeIPWallets Error!`))
@@ -475,8 +454,8 @@ class v3_master {
 				nodeIPWallets.delete(ipAddress)
 			}
 			
-			logger(Colors.gray(`Daemon /deleteMiner [${ipAddress}:${walletAddress}] Total Miner = [${WalletIpaddress.size}]`))
-			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
+			logger(Colors.gray(`Daemon /deleteMiner [${ipAddress}:${walletAddress}] Total Miner = [${this.WalletIpaddress.size}]`))
+			return res.status(200).json({totalMiner: this.WalletIpaddress.size}).end()
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
@@ -486,15 +465,15 @@ class v3_master {
 				return res.status(402).end()
 			}
 
-			if (! await checkNodeWallet(obj.walletAddress, false)) {
+			if (! await checkNodeWallet(obj.walletAddress, false, this)) {
 				return res.status(403).end()
 			}
 
-			cleanupNode(obj.walletAddress)
+			cleanupNode(obj.walletAddress, this)
 			const data: minerArray[] = obj?.data
 			if (data) {
 				data.forEach( n => {
-					let _ip = WalletIpaddress.get(n.wallet)
+					let _ip = this.WalletIpaddress.get(n.wallet)
 					if (_ip && n.address === '23.16.211.100'){
 						n.address = _ip
 					}
@@ -502,11 +481,11 @@ class v3_master {
 						n.address = v4()
 					}
 					const nodeIPWallets = new Map()
-					ipaddressWallet.set(n.address, n.wallet)
-					WalletIpaddress.set(n.wallet, n.address)
+					this.ipaddressWallet.set(n.address, n.wallet)
+					this.WalletIpaddress.set(n.wallet, n.address)
 					
 					nodeIPWallets.set(n.address, n.wallet)
-					nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
+					this.nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
 				})
 			}
 
@@ -531,12 +510,12 @@ class v3_master {
 				return res.status(404).end()
 			}
 
-			if (! await checkNodeWallet(walletAddress, true)) {
+			if (! await checkNodeWallet(walletAddress, true, this)) {
 				return res.status(401).end()
 			}
 
-			logger(Colors.blue(`send json ${{totalMiner: ipaddressWallet.size}}`))
-			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
+			logger(Colors.blue(`send json ${{totalMiner: this.ipaddressWallet.size}}`))
+			return res.status(200).json({totalMiner: this.ipaddressWallet.size}).end()
 		})
 
 		router.all ('*', (req, res ) => {
