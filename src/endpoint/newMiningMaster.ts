@@ -429,18 +429,13 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
-			logger(Colors.blue(`forward /nodeRestart to cluster daemon`))
-			return postLocalhost('/nodeRestart', req.body, res)
+			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon`))
+			return postLocalhost('/api/nodeRestart', req.body, res)
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
-			logger (Colors.blue(`/getTotalMiners`))
-			const obj = await checkNode(req)
-			if (!obj) {
-				logger(Colors.red(`/getTotalMiners obj format Error`), inspect(obj, false, 3, true))
-				return res.status(404).end()
-			}
-			return postLocalhost('/getTotalMiners', {nodeAddress: obj.walletAddress}, res)
+			logger (Colors.blue(`/api/getTotalMiners`))
+			return postLocalhost('/api/getTotalMiners', req.body, res)
 		})
 
 		router.all ('*', (req, res ) =>{
