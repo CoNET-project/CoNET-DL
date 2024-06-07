@@ -519,6 +519,7 @@ class v3_master {
 		})
 
 		router.post('/getTotalMiners',  async (req, res) => {
+			logger(Colors.blue(`/getTotalMiners`))
 			let nodeAddress
 			try {
 				nodeAddress = req.body.nodeAddress
