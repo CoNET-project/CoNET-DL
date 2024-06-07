@@ -412,11 +412,13 @@ class conet_dl_v3_server {
 
 
 		router.post('/initNode',  async (req, res) =>{
+			logger(Colors.gray(`/initNode`))
 			const obj = await checkNode(req)
 			if (!obj || !obj?.data ) {
 				logger(Colors.red(`/initNode obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
+			logger(Colors.gray(`/initNode success!`))
 			return postLocalhost('/deleteMiner', {data: obj.data, nodeAddress: obj.walletAddress}, res)
 		})
 
