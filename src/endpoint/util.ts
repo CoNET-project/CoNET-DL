@@ -2,12 +2,12 @@ import {ethers} from 'ethers'
 import { join } from 'node:path'
 import { homedir, platform } from 'node:os'
 import cCNTPAbi from '../util/cCNTP.json'
-import { logger } from '../util/util'
+import { logger, conet_Holesky_rpc } from '../util/util'
 
 import Colors from 'colors/safe'
 const setup = join( homedir(),'.master.json' )
 
-const CONET_Holesky_RPC = new ethers.JsonRpcProvider('https://rpc.conet.network')
+const CONET_Holesky_RPC = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
