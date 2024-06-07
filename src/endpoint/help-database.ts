@@ -23,7 +23,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 
 const FaucetTTL = 60 * 60 * 24
-const clusterManager = '74.208.127.107'
+const clusterManager = '74.208.127.109'
 
 
 const wei = 1000000000000000000
@@ -642,7 +642,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 	
 	const req = HttpRequest (option, async res => {
 		let data = ''
-		//logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
+		logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
 
 		if (res.statusCode !== 200) {
 			
