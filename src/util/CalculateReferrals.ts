@@ -28,7 +28,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 				const ret = JSON.parse(data)
 				return callbak (null, ret)
 			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				console.error(`getReferrer [${/api/wallet}] getReferrer JSON.parse(data) Error!`, data)
 				return callbak (ex)
 			}
 			

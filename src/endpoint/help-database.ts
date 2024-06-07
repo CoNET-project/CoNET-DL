@@ -642,7 +642,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		}
 	}
 	logger(inspect(option, false, 3, true))
-	const req = HttpRequest (option, async res => {
+	const req = await HttpRequest (option, async res => {
 		let data = ''
 		logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
 
@@ -677,7 +677,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 				const ret = JSON.parse(data)
 				return callbak (undefined, ret)
 			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				console.error(`sendMesageToCluster [${path}] getReferrer JSON.parse Error!`, data)
 				return callbak (403)
 			}
 			
