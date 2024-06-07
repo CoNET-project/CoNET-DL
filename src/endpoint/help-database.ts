@@ -23,7 +23,8 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 
 const FaucetTTL = 60 * 60 * 24
-const clusterManagerHostname = 'apitest.conet.network'
+const clusterManager = '74.208.127.107'
+
 
 const wei = 1000000000000000000
 const si_last_Update_time_timeout = 1000 * 60 *5
@@ -630,7 +631,7 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 
 export const sendMesageToCluster = async (path: string, _data: any, callbak: (err: number|undefined, data?: any)=> void) => {
 	const option: RequestOptions = {
-		hostname: clusterManagerHostname,
+		host: clusterManager,
 		path,
 		port: 8001,
 		method: 'POST',
