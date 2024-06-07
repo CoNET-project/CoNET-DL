@@ -21,12 +21,12 @@ const iptablesIp = (ipaddress: string) => new Promise(resolve => {
 })
 	
 
-const kPool: Map<string, number> = new Map()
+
 interface dataK {
 	ipaddress: string
 	times: number
 }
-const kkPool: dataK[] = []
+
 
 const limit = 20
 const startFilter = () => {
@@ -40,7 +40,7 @@ const startFilter = () => {
 			const kk = data.toString()
 			const ll = kk.split('\n')
 			
-			
+			const kPool: Map<string, number> = new Map()
 			ll.forEach(n => {
 				const _ipaddress = n.split(' by zone "one", client: ')[1]
 				if (_ipaddress) {
@@ -60,7 +60,7 @@ const startFilter = () => {
 			kPool.forEach((n, key) => {
 				kkPool.push({ipaddress: key, times: n})
 			})
-			
+			const kkPool: dataK[] = []
 			kkPool.sort((a,b) => b.times - a.times)
 			const finalPool = kkPool.filter(n => n.times > limit)
 			logger(Colors.blue(`lengs = ${ll.length} kPool length = [${kPool.size}] finalPool time > [${limit}]  length ${finalPool.length}`))
