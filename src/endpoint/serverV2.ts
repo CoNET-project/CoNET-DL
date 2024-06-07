@@ -201,21 +201,20 @@ interface conetData {
 }
 
 const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-const sentData = async (data: conetData, callback: () => void) => {
+const sentData = async (data: conetData, callback: (err?: null) => void) => {
 
-	const tx = {
-		to: data.address,
-		// Convert currency unit from ether to wei
-		value: data.balance.toString()
-	}
+	
 	try{
+		const addr = ethers.getAddress(data.address)
+		const tx = {
+			to: addr,
+			// Convert currency unit from ether to wei
+			value: data.balance.toString()
+		}
 		await etherNew_Init_Admin.sendTransaction(tx)
 	} catch (ex) {
-		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error! try again`))
-		setTimeout(() => {
-			return sentData (data, callback)
-		}, 500)
-		return
+		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error!`))
+		return callback(null)
 	}
 	console.log(Colors.grey(`${data.balance} CONET => [${data.address}]`))
 	return callback ()
@@ -378,8 +377,8 @@ class conet_dl_server {
 					res.status(400).end()
 					return res.socket?.end().destroy()
 				}
-				transCONET(wallet_add, ethers.parseEther(faucetRate))
-				const tx = await sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
+				// transCONET(wallet_add, ethers.parseEther(faucetRate))
+				const tx = sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
 				if (!tx) {
 					res.status(403).end()
 					return res.socket?.end().destroy()
