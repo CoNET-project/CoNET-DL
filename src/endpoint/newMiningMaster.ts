@@ -104,6 +104,7 @@ const postLocalhost = async (path: string, data: any, _res: Response)=> {
 		path,
 		port: 8002,
 		method: 'POST',
+		protocol: 'http:',
 		headers: {
 			'Content-Type': 'application/json'
 		}
@@ -167,7 +168,7 @@ const checkNode = async (req: Request) => {
 	// 	logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
 	// 	return false
 	// }
-	logger(Colors.red(`checkNode checkSignObj!`))
+	logger(Colors.red(`[${request}] checkNode checkSignObj!`))
 	if (!obj) {
 		logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
 		return false
@@ -176,7 +177,7 @@ const checkNode = async (req: Request) => {
 	let _ip = regiestNodes.get (obj.walletAddress)
 
 	if (!_ip) {
-		logger(Colors.red(`checkNode _ip is empty`))
+		logger(Colors.red(`[${request}] checkNode _ip is empty`))
 		await initdata()
 		_ip = regiestNodes.get (obj.walletAddress)
 
