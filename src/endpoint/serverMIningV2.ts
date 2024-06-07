@@ -102,7 +102,7 @@ export const sendAlldata = () => new Promise( resolve => {
 		message, signMessage
 	}
 
-	return sendMesageToCluster('/api/initNode', sendData, (err, data) => {
+	return sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
 		if (err) {
 			logger(Colors.grey(`sendAlldata sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
