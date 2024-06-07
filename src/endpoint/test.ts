@@ -32,4 +32,4 @@ const testDatabase = async () => {
 	await regiestMiningNode()
 }
 
-testDatabase()
+// testDatabase()
