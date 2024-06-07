@@ -636,7 +636,8 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		port: 8001,
 		method: 'POST',
 		headers: {
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/json',
+			'Content-Length': Buffer.byteLength(_data),
 		}
 	}
 	
