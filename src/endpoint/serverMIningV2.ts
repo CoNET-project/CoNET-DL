@@ -83,7 +83,7 @@ class conet_mining_server {
 	constructor () {
 		this.startServer()
 		startListeningCONET_Holesky_EPOCH_v2()
-		launshAndDeleteAllWalletInCLuster()
+		
     }
 
 	private startServer = async () => {

@@ -630,7 +630,7 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 
 
 export const sendMesageToCluster = async (path: string, _data: any, callbak: (err: number|undefined, data?: any)=> void) => {
-	const data = JSON.stringify(_data)
+	const postData = JSON.stringify(_data)
 	const option: RequestOptions = {
 		hostname: clusterManager,
 		path,
@@ -638,10 +638,10 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(data),
+			'Content-Length': Buffer.byteLength(postData),
 		}
 	}
-	
+	logger(inspect(option, false, 3, true))
 	const req = HttpRequest (option, async res => {
 		let data = ''
 		logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
@@ -695,7 +695,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		return callbak (503)
 	})
 
-	req.write(data)
+	req.write(postData)
 	req.end()
 }
 
@@ -779,7 +779,7 @@ export const launshAndDeleteAllWalletInCLuster = () => new Promise( resolve => {
 		message, signMessage
 	}
 
-	return sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
+	sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
 		if (err) {
 			logger(Color.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
@@ -958,6 +958,7 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	})
 
 	await regiestMiningNode()
+	await launshAndDeleteAllWalletInCLuster()
 }
 
 
