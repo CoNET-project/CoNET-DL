@@ -23,7 +23,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 
 const FaucetTTL = 60 * 60 * 24
-const clusterManager = 'http://apitest.conet.network'
+const clusterManager = 'http://apitest.conet.network:8001'
 
 
 const wei = 1000000000000000000
@@ -653,7 +653,7 @@ export const sendMesageToCluster = async (path: string, pData: any, callbak: (er
 		return callbak(res.statusCode)
 	}
 	return callbak (undefined, res.body)
-	
+
 	// const postData = JSON.stringify(pData)
 	// const option: RequestOptions = {
 	// 	host: clusterManager,
