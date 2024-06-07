@@ -390,12 +390,14 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/minerCheck',  async (req, res) => {
+			logger(Colors.green(`worker got /minerCheck!`))
 			const obj = await checkNode(req)
 
 			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
 				logger(Colors.red(`/minerCheck obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
+			
 			return postLocalhost('/minerCheck', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress }, res)
 		})
 

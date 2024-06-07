@@ -382,7 +382,7 @@ class v3_master {
 		})
 
 		router.post('/minerCheck',  async (req, res) =>{
-			
+			logger(Colors.magenta(`/minerCheck`))
 			let walletAddress, ipAddress, nodeAddress
 			try {
 				walletAddress = req.body.walletAddress
