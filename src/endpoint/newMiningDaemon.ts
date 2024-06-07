@@ -479,26 +479,19 @@ class v3_master {
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
-			let _data: minerArray[]|undefined, nodeAddress: string
-			try {
-				_data = req.body._data
-				nodeAddress = req.body.nodeAddress
 
-			} catch (ex) {
-				logger (Colors.red(`Daemon /initNode req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(401).end()
-			}
-
-			if ( !_data || !nodeAddress) {
-				logger (Colors.red(`Daemon /initNode req.body ERROR! !_data || ${!_data} || nodeAddress ${!nodeAddress}`))
+			let obj:minerObj = req.body
+			if ( !obj) {
+				
 				return res.status(402).end()
 			}
 
-			if (! await checkNodeWallet(nodeAddress, false)) {
+			if (! await checkNodeWallet(obj.walletAddress, false)) {
 				return res.status(403).end()
 			}
-			cleanupNode(nodeAddress)
-			const data: minerArray[] = _data
+
+			cleanupNode(obj.walletAddress)
+			const data: minerArray[] = obj.data
 
 			data.forEach( n => {
 				let _ip = WalletIpaddress.get(n.wallet)
@@ -513,10 +506,8 @@ class v3_master {
 				WalletIpaddress.set(n.wallet, n.address)
 				
 				nodeIPWallets.set(n.address, n.wallet)
-				nodeIpaddressWallets.set(nodeAddress, nodeIPWallets)
+				nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
 			})
-			
-			logger(Colors.gray(`Daemon /initNode [${nodeAddress}] added new miners [${data.length}] Total Miner = [${WalletIpaddress.size}]`))
 			return res.status(200).end()
 		})
 

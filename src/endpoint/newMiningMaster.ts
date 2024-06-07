@@ -97,7 +97,7 @@ interface regiestNodes {
 
 
 const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
-const postLocalhost = async (path: string, data: any, _res: Response)=> {
+const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	
 	const option: RequestOptions = {
 		hostname: 'localhost',
@@ -177,6 +177,7 @@ const checkNode = async (req: Request) => {
 	// 	logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
 	// 	return false
 	// }
+
 	logger(Colors.red(`[${request}] checkNode checkSignObj!`))
 	if (!obj) {
 		logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
@@ -422,15 +423,15 @@ class conet_dl_v3_server {
 			return postLocalhost('/deleteMiner', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress}, res)
 		})
 
-
-		router.post('/initNode',  async (req, res) =>{
-			
-			return postLocalhost('/deleteMiner', req.body, res)
-		})
-
 		router.post('/nodeRestart',  async (req, res) =>{
+			const obj = await checkNode(req)
+			if (!obj) {
+				res.status(404).end()
+				return logger(Colors.blue(`/nodeRestart checkNode error!`))
+			}
+
 			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon`))
-			return postLocalhost('/api/nodeRestart', req.body, res)
+			return postLocalhost('/api/nodeRestart', obj, res)
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
