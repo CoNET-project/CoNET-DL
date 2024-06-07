@@ -17,7 +17,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 const setup = join( homedir(),'.master.json' )
 import {request as HttpRequest } from 'node:http'
 import {sign} from 'eth-crypto'
-import { address, isPublic} from 'ip'
+import { address, isPublic, isV4Format, isV6Format} from 'ip'
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
@@ -1139,8 +1139,19 @@ export const storeLeaderboardGuardians_referralsV1 = (epoch: string, guardians_r
 //			getIpAddressFromForwardHeader(req.header(''))
 export const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
-	if (!ipaddress||typeof ipaddress !== 'string') {
-		return req.socket.remoteAddress
+	if (!ipaddress || typeof ipaddress !== 'string') {
+		let kk = req.socket?.remoteAddress
+		if (!kk) {
+			return null
+		}
+
+		if (isV6Format(kk)) {
+			const kk1 = kk.split(':')
+			const ip4 = kk1[kk1.length - 1]
+			return isV4Format(ip4) ? ip4 : null
+		}
+		return kk
+		
 	}
 
 	return ipaddress
