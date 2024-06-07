@@ -32,6 +32,7 @@ const limit = 20
 const startFilter = () => {
 	logger(Colors.blue(`start filter!`))
 	exec('sudo tail -n 10000 /var/log/nginx/error.log > kk', () => {
+		logger(Colors.blue(`sudo tail -n 10000 /var/log/nginx/error.log success`))
 		return readFile('kk', (err, data) => {
 			if (err) {
 				return logger(`startFilter error!`)
