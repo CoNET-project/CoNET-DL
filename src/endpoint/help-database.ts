@@ -630,6 +630,7 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 
 
 export const sendMesageToCluster = async (path: string, _data: any, callbak: (err: number|undefined, data?: any)=> void) => {
+	const data = JSON.stringify(_data)
 	const option: RequestOptions = {
 		host: clusterManager,
 		path,
@@ -637,7 +638,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(_data),
+			'Content-Length': Buffer.byteLength(data),
 		}
 	}
 	
@@ -694,7 +695,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		return callbak (503)
 	})
 
-	req.write(JSON.stringify(_data))
+	req.write(data)
 	req.end()
 }
 
