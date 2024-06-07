@@ -436,8 +436,14 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
-			logger (Colors.blue(`/api/getTotalMiners`))
-			return postLocalhost('/api/getTotalMiners', req.body, res)
+			const obj = await checkNode(req)
+			if (!obj) {
+				res.status(404).end()
+				return logger(Colors.blue(`/nodeRestart checkNode error!`))
+			}
+
+			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon`))
+			return postLocalhost('/api/getTotalMiners', obj, res)
 		})
 
 		router.all ('*', (req, res ) =>{
