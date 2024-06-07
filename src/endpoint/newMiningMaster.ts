@@ -112,7 +112,15 @@ const postLocalhost = async (path: string, data: any, _res: Response)=> {
 
 	const req = await request (option, res => {
 		logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`))
-		res.pipe(_res)
+		let chunk = ''
+		res.on('data', data => {
+			chunk += data
+		})
+		res.once ('end', () => {
+			_res.status(res.statusCode||404).write(chunk)
+			_res.end()
+		})
+		
 	})
 
 	req.once('error', (e) => {
