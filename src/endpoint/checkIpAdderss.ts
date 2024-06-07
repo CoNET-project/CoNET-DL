@@ -67,15 +67,15 @@ const startFilter = () => {
 			kkPool.sort((a,b) => b.times - a.times)
 			const finalPool = kkPool.filter(n => n.times > limit)
 			logger(Colors.blue(`lengs = ${ll.length} kkPool length = [${kkPool.length}] finalPool time > [${limit}]  length ${finalPool.length}`))
-			// mapLimit(finalPool, 1, async (n: dataK, next: any) => {
-			// 	await iptablesIp(n.ipaddress)
-			// }, err => {
-			// 	setTimeout(() => {
+			mapLimit(finalPool, 1, async (n: dataK, next: any) => {
+				await iptablesIp(n.ipaddress)
+			}, err => {
+				setTimeout(() => {
 
-			// 		startFilter ()
+					startFilter ()
 	
-			// 	}, 2000)
-			// })
+				}, 2000)
+			})
 			
 
 		})
