@@ -176,6 +176,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boole
 	}
 
 	if (!checkInit) {
+		logger(Colors.red(`checkNodeWallet !checkInit return true`))
 		return true
 	}
 
@@ -184,7 +185,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boole
 		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited`))
 		return false
 	}
-
+	logger(Colors.red(`checkNodeWallet return true`))
 	return true
 }
 
@@ -541,7 +542,7 @@ class v3_master {
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()
