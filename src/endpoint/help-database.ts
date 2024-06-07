@@ -647,7 +647,7 @@ export const sendMesageToCluster = async (path: string, pData: any, callbak: (er
 		logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
 
 		if (res.statusCode !== 200) {
-			
+			console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
 			if (res.statusCode === 401) {
 				logger(Color.blue(`sendMesageToCluster got initData request!`))
 				//	let client try again
