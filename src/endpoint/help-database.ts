@@ -629,8 +629,8 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 
 
 
-export const sendMesageToCluster = async (path: string, _data: any, callbak: (err: number|undefined, data?: any)=> void) => {
-	const postData = JSON.stringify(_data)
+export const sendMesageToCluster = async (path: string, pData: any, callbak: (err: number|undefined, data?: any)=> void) => {
+	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
 		host: clusterManager,
 		path,
@@ -659,7 +659,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 				}
 
 				return setTimeout(async () => {
-					return sendMesageToCluster(path, _data, callbak)
+					return sendMesageToCluster(path, pData, callbak)
 				}, 2000)
 				
 			}
