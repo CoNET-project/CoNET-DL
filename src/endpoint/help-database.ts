@@ -632,7 +632,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 	const option: RequestOptions = {
 		hostname: clusterManagerHostname,
 		path,
-		port: 443,
+		port: 8001,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -749,6 +749,7 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 		logger(Color.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
 		return resolve (false)
 	}
+
 	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
 	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
@@ -758,7 +759,6 @@ export const checkMiner = (ipaddress: string, wallet: string ) => new Promise( r
 
 	return sendMesageToCluster('/api/minerCheck', sendData, async (err, data) => {
 		if (err) {
-
 			
 			return resolve (err)
 		}

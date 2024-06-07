@@ -76,25 +76,6 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 // 	})
 // }
 
-const storeToChain = async (data: epochRate) => {
-	logger(inspect(data, false, 3, true))
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
-	const cCNTPContract = new ethers.Contract(epochRateAddr, epochRateABI, wallet)
-	let tx
-	try {
-		tx = await cCNTPContract.updateEpoch(data.totalMiner, data.totalNodes, data.epoch)
-	} catch (ex: any) {
-		logger(Colors.red(`storeToChain Error! try Again!`), ex.message)
-		setTimeout(async () => {
-			await storeToChain (data)
-		}, 1000)
-		
-		return
-	}
-	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
-}
-
 class conet_mining_server {
 
 	private PORT = masterSetup.PORT||8001
