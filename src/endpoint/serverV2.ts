@@ -383,7 +383,7 @@ class conet_dl_server {
 					res.status(403).end()
 					return res.socket?.end().destroy()
 				}
-				return res.json ({tx}).end ()
+				return res.status(200).json ({tx}).end ()
 			})
 
 		})
