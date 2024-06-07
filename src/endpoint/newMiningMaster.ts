@@ -433,6 +433,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
+			logger (Colors.blue(`/getTotalMiners`))
 			const obj = await checkNode(req)
 			if (!obj) {
 				logger(Colors.red(`/getTotalMiners obj format Error`), inspect(obj, false, 3, true))

@@ -154,7 +154,6 @@ const sendMesageToCluster = async (path: string, pData: any, callbak: (err: numb
 	const req = await HttpRequest (option, async res => {
 		let data = ''
 		logger(Colors.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
-		logger(inspect(res, false, 3, true))
 		if (res.statusCode !== 200) {
 			console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
 			if (res.statusCode === 401) {
