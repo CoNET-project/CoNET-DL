@@ -416,7 +416,7 @@ class conet_dl_v3_server {
 
 		router.post('/initNode',  async (req, res) =>{
 			
-			return postLocalhost('/deleteMiner', {data: obj.data, nodeAddress: obj.walletAddress}, res)
+			return postLocalhost('/deleteMiner', req.body, res)
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
