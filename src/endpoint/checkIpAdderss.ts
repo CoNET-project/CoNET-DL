@@ -42,7 +42,7 @@ const startFilter = () => {
 			
 			
 			ll.forEach(n => {
-				const _ipaddress = n.split(', client: ')[1]
+				const _ipaddress = n.split(' by zone "one", client: ')[1]
 				if (_ipaddress) {
 					const ipaddress = _ipaddress.split(', server: ')[0]
 					logger(Colors.grey(`ip address:${ipaddress}`))
@@ -67,15 +67,15 @@ const startFilter = () => {
 			kkPool.sort((a,b) => b.times - a.times)
 			const finalPool = kkPool.filter(n => n.times > limit)
 			logger(Colors.blue(`lengs = ${ll.length} kkPool length = [${kkPool.length}] finalPool time > [${limit}]  length ${finalPool.length}`))
-			mapLimit(finalPool, 1, async (n: dataK, next: any) => {
-				await iptablesIp(n.ipaddress)
-			}, err => {
-				setTimeout(() => {
+			// mapLimit(finalPool, 1, async (n: dataK, next: any) => {
+			// 	await iptablesIp(n.ipaddress)
+			// }, err => {
+			// 	setTimeout(() => {
 
-					startFilter ()
+			// 		startFilter ()
 	
-				}, 2000)
-			})
+			// 	}, 2000)
+			// })
 			
 
 		})
