@@ -167,7 +167,7 @@ const checkNode = async (req: Request) => {
 	// 	logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
 	// 	return false
 	// }
-
+	logger(Colors.red(`checkNode checkSignObj!`))
 	if (!obj) {
 		logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
 		return false
@@ -176,6 +176,7 @@ const checkNode = async (req: Request) => {
 	let _ip = regiestNodes.get (obj.walletAddress)
 
 	if (!_ip) {
+		logger(Colors.red(`checkNode _ip is empty`))
 		await initdata()
 		_ip = regiestNodes.get (obj.walletAddress)
 
@@ -184,7 +185,7 @@ const checkNode = async (req: Request) => {
 		logger (Colors.grey(`request ${request} [${ipaddress}:${obj.walletAddress}] wallet or IP address didn't match nodes regiested IP address _ip [${_ip}]`))
 		return false
 	}
-	
+	logger(Colors.red(`checkNode return obj!`), inspect(obj, false, 3, true))
 	return obj
 }
 
