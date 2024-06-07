@@ -153,7 +153,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) =
 
 	if (!checkInit) {
 		v3.nodeIpaddressWallets.set(nodeWallet, new Map())
-		logger(Colors.red(`checkNodeWallet [${nodeWallet}] nodeIpaddressWallets set new Empty Map() nodeIpaddressWallets.get(nodeWallet) = [${v3.nodeIpaddressWallets.get(nodeWallet)}]!checkInit return true`))
+		logger(Colors.red(`checkNodeWallet [${nodeWallet}] nodeIpaddressWallets set new Empty Map() nodeIpaddressWallets.get(nodeWallet) = [${inspect(v3.nodeIpaddressWallets.get(nodeWallet), false, 3, true)}]! checkInit return true`))
 		return true
 	}
 
@@ -489,7 +489,7 @@ class v3_master {
 				})
 			}
 
-			
+			logger(Colors.green(`/nodeRestart return 200 [${inspect(this.nodeIpaddressWallets.get(obj.walletAddress), false, 3, true)}]! `))
 			return res.status(200).end()
 		})
 
