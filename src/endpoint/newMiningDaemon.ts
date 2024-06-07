@@ -536,6 +536,8 @@ class v3_master {
 			if (! await checkNodeWallet(nodeAddress, true)) {
 				return res.status(401).end()
 			}
+
+			logger(Colors.blue(`send json ${{totalMiner: ipaddressWallet.size}}`))
 			return res.status(200).json({totalMiner: ipaddressWallet.size}).end()
 		})
 
