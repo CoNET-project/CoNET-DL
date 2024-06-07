@@ -192,7 +192,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boole
 const cleanupNode = (nodeWallet: string) => {
 	const nodeIPWallets = nodeIpaddressWallets.get(nodeWallet)
 	if (!nodeIPWallets) {
-		return logger(Colors.red(`cleanupNode [${nodeWallet}] nodeWalletsIP [${nodeIPWallets}] null error!`))
+		return logger(Colors.red(`cleanupNode [${nodeWallet}] nodeWalletsIP empty!`))
 	}
 	nodeIPWallets.forEach((n, key) => {
 		ipaddressWallet.delete(key)
@@ -491,23 +491,26 @@ class v3_master {
 			}
 
 			cleanupNode(obj.walletAddress)
-			const data: minerArray[] = obj.data
+			const data: minerArray[] = obj?.data
+			if (data) {
+				data.forEach( n => {
+					let _ip = WalletIpaddress.get(n.wallet)
+					if (_ip && n.address === '23.16.211.100'){
+						n.address = _ip
+					}
+					if (n.address ==='23.16.211.100') {
+						n.address = v4()
+					}
+					const nodeIPWallets = new Map()
+					ipaddressWallet.set(n.address, n.wallet)
+					WalletIpaddress.set(n.wallet, n.address)
+					
+					nodeIPWallets.set(n.address, n.wallet)
+					nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
+				})
+			}
 
-			data.forEach( n => {
-				let _ip = WalletIpaddress.get(n.wallet)
-				if (_ip && n.address === '23.16.211.100'){
-					n.address = _ip
-				}
-				if (n.address ==='23.16.211.100') {
-					n.address = v4()
-				}
-				const nodeIPWallets = new Map()
-				ipaddressWallet.set(n.address, n.wallet)
-				WalletIpaddress.set(n.wallet, n.address)
-				
-				nodeIPWallets.set(n.address, n.wallet)
-				nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
-			})
+			
 			return res.status(200).end()
 		})
 
