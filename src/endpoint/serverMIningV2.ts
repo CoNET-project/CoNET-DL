@@ -9,7 +9,7 @@ import {ethers} from 'ethers'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import { getIpAddressFromForwardHeader,regiestMiningNode } from './help-database'
 import {sign} from 'eth-crypto'
-import {createServer, RequestOptions} from 'node:http'
+import {createServer, RequestOptions, request as HttpRequest} from 'node:https'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
@@ -86,7 +86,7 @@ let minerRate = 0
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
 
-const clusterManager = 'https://apitests.conet.network'
+const clusterManager = 'apitests.conet.network'
 let sendAlldataProcess = false
 
 export const sendAlldata = () => new Promise( resolve => {
@@ -116,49 +116,50 @@ export const sendAlldata = () => new Promise( resolve => {
 const sendMesageToCluster = async (path: string, pData: any, callbak: (err: number|undefined, data?: any)=> void) => {
 
 
-	const res = await p({
-		'url': `${clusterManager}${path}`,
-		method: 'POST',
-		data: pData
-	})
-
-	if (res.statusCode !== 200 ) {
-		if (res.statusCode === 401) {
-			if (!sendAlldataProcess) {
-				sendAlldataProcess = true
-				await sendAlldata ()
-				sendAlldataProcess = false
-			}
-			setTimeout(async () => {
-				return sendMesageToCluster(path, pData, callbak)
-			}, 2000)
-			return
-		}
-		return callbak(res.statusCode)
-	}
-	return callbak (undefined, res.body)
-
-	// const postData = JSON.stringify(pData)
-	// const option: RequestOptions = {
-	// 	host: clusterManager,
-	// 	path,
-	// 	port: 8001,
+	// const res = await p({
+	// 	'url': `${clusterManager}${path}`,
 	// 	method: 'POST',
-	// 	headers: {
-	// 		'Content-Type': 'application/json',
-	// 		'Content-Length': Buffer.byteLength(postData),
-	// 	}
-	// }
-	// logger(inspect(option, false, 3, true))
-	// const req = await HttpRequest (option, async res => {
-	// 	let data = ''
-	// 	logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
+	// 	data: pData
+	// })
 
-	// 	if (res.statusCode !== 200) {
-	// 		console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
-	// 		if (res.statusCode === 401) {
-	// 			logger(Color.blue(`sendMesageToCluster got initData request!`))
-	// 			//	let client try again
+	// if (res.statusCode !== 200 ) {
+	// 	if (res.statusCode === 401) {
+	// 		if (!sendAlldataProcess) {
+	// 			sendAlldataProcess = true
+	// 			await sendAlldata ()
+	// 			sendAlldataProcess = false
+	// 		}
+	// 		setTimeout(async () => {
+	// 			return sendMesageToCluster(path, pData, callbak)
+	// 		}, 2000)
+	// 		return
+	// 	}
+	// 	return callbak(res.statusCode)
+	// }
+	// return callbak (undefined, res.body)
+
+	const postData = JSON.stringify(pData)
+	const option: RequestOptions = {
+		hostname: clusterManager,
+		protocol: 'https:',
+		path,
+		port: 443,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Content-Length': Buffer.byteLength(postData),
+		}
+	}
+	logger(inspect(option, false, 3, true))
+	const req = await HttpRequest (option, async res => {
+		let data = ''
+		logger(Colors.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
+		logger(inspect(res, false, 3, true))
+		if (res.statusCode !== 200) {
+			console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+			if (res.statusCode === 401) {
+				logger(Colors.blue(`sendMesageToCluster got initData request!`))
+				//	let client try again
 			
 				if (!sendAlldataProcess) {
 					sendAlldataProcess = true
@@ -166,45 +167,45 @@ const sendMesageToCluster = async (path: string, pData: any, callbak: (err: numb
 					sendAlldataProcess = false
 				}
 
-	// 			return setTimeout(async () => {
-	// 				return sendMesageToCluster(path, pData, callbak)
-	// 			}, 2000)
+				return setTimeout(async () => {
+					return sendMesageToCluster(path, pData, callbak)
+				}, 2000)
 				
-	// 		}
-	// 		return callbak(res.statusCode)
-	// 	}
+			}
+			return callbak(res.statusCode)
+		}
 
 
-	// 	res.on('data', _data => {
-	// 		data += _data
-	// 	})
+		res.on('data', _data => {
+			data += _data
+		})
 
-	// 	res.once('end', () => {
+		res.once('end', () => {
 
-	// 		try {
-	// 			const ret = JSON.parse(data)
-	// 			return callbak (undefined, ret)
-	// 		} catch (ex: any) {
-	// 			console.error(`sendMesageToCluster [${path}] getReferrer JSON.parse Error!`, data)
-	// 			return callbak (403)
-	// 		}
+			try {
+				const ret = JSON.parse(data)
+				return callbak (undefined, ret)
+			} catch (ex: any) {
+				console.error(`sendMesageToCluster [${path}] getReferrer JSON.parse Error!`, data)
+				return callbak (403)
+			}
 			
-	// 	})
+		})
 
-	// 	res.once('error', err => {
-	// 		logger(Color.red(`sendMesageToCluster res on error!`))
-	// 		logger(err)
-	// 		return callbak (503)
-	// 	})
-	// })
+		res.once('error', err => {
+			logger(Colors.red(`sendMesageToCluster res on error!`))
+			logger(err)
+			return callbak (503)
+		})
+	})
 
-	// req.once('error', (e) => {
-	// 	console.error(`getReferrer req on Error! ${e.message}`)
-	// 	return callbak (503)
-	// })
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (503)
+	})
 
-	// req.write(postData)
-	// req.end()
+	req.write(postData)
+	req.end()
 }
 
 export const getMinerCount = () => new Promise( resolve => {
