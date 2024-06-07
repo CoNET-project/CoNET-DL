@@ -56,7 +56,7 @@ let minerRate = ''
 let totalMiner = ''
 
 
-
+const faucetRate = '0.01'
 
 export const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
 	const [_node, _free] = await Promise.all([
@@ -195,6 +195,57 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 }
 
 
+interface conetData {
+	address: string
+	balance: BigInt
+}
+
+const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+const sentData = async (data: conetData, callback: () => void) => {
+
+	const tx = {
+		to: data.address,
+		// Convert currency unit from ether to wei
+		value: data.balance.toString()
+	}
+	try{
+		await etherNew_Init_Admin.sendTransaction(tx)
+	} catch (ex) {
+		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error! try again`))
+		setTimeout(() => {
+			return sentData (data, callback)
+		}, 500)
+		return
+	}
+	console.log(Colors.grey(`${data.balance} CONET => [${data.address}]`))
+	return callback ()
+}
+
+const transCONETArray: conetData[] = []
+let transCONETLock = false
+const transCONET = (address: string, balance: BigInt) => {
+	transCONETArray.push ({
+		address, balance
+	})
+	
+	const trySent = async () => {
+		const data = transCONETArray.shift()
+		if (!data) {
+			transCONETLock = false
+			return
+		}
+		transCONETLock = true
+		return sentData(data, () => {
+			trySent ()
+		})
+	}
+
+	if (!transCONETLock) {
+		trySent()
+	}
+	
+}
+
 class conet_dl_server {
 
 	private PORT = 80
@@ -327,7 +378,7 @@ class conet_dl_server {
 					res.status(400).end()
 					return res.socket?.end().destroy()
 				}
-				
+				transCONET(wallet_add, ethers.parseEther(faucetRate))
 				const tx = await sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
 				if (!tx) {
 					res.status(403).end()
