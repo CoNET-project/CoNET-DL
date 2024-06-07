@@ -111,12 +111,13 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	}
 
 	const req = await request (option, res => {
-		logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(data, false,3, true))
+		
 		let chunk = ''
 		res.on('data', data => {
 			chunk += data
 		})
 		res.once ('end', () => {
+			logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(chunk, false,3, true))
 			_res.status(res.statusCode||404).write(chunk)
 			_res.end()
 		})
@@ -128,7 +129,7 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 		_res.status(502).end()
 	})
 
-	req.write(JSON.stringify(data))
+	req.write(JSON.stringify(obj))
 	req.end()
 }
 
@@ -411,7 +412,7 @@ class conet_dl_v3_server {
 				return res.status(404).end()
 			}
 
-			return postLocalhost('/minerCheck', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress }, res)
+			return postLocalhost('/minerCheck', obj, res)
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -420,7 +421,7 @@ class conet_dl_v3_server {
 				logger(Colors.red(`/deleteMiner obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
-			return postLocalhost('/deleteMiner', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress}, res)
+			return postLocalhost('/deleteMiner', obj, res)
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
