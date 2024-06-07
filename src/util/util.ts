@@ -801,35 +801,23 @@ export const sendCONET: (privateKey: string, amountInEther: string, receiverAddr
 	const wallet = new ethers.Wallet(privateKey, provide_write)
 	
 	return new Promise (resolve => {
-		const trySend = () => {
-			let address
+		
+			let dtx
 			try {
-				address = ethers.getAddress(receiverAddress.toLowerCase())
+				const address = ethers.getAddress(receiverAddress.toLowerCase())
+				const tx = {
+					to: address,
+					// Convert currency unit from ether to wei
+					value: ethers.parseEther(amountInEther)
+				}
+				dtx = wallet.sendTransaction(tx)
 			} catch (ex) {
 				logger (colors.red(`sendCONET ethers.getAddress(${receiverAddress}) ERROR!`))
 				return resolve (null)
 			}
-			const tx = {
-				to: address,
-				// Convert currency unit from ether to wei
-				value: ethers.parseEther(amountInEther)
-			}
-
-			wallet.sendTransaction(tx)
-			.then(async (txObj) => {
-				await txObj.wait()
-				return resolve(txObj)
-			})
-			.catch (ex => {
-				logger (colors.red(`sendCONET Catch Error try again! ${ex.message}`))
-				setTimeout(() => {
-					trySend()
-				}, 1000)
-				
-			})
-		}
-		trySend()
-
+			return resolve(dtx)
+		
+		
 	})
 	
 }
