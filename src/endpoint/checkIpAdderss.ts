@@ -56,11 +56,11 @@ const startFilter = () => {
 				
 				
 			})
-
+			const kkPool: dataK[] = []
 			kPool.forEach((n, key) => {
 				kkPool.push({ipaddress: key, times: n})
 			})
-			const kkPool: dataK[] = []
+			
 			kkPool.sort((a,b) => b.times - a.times)
 			const finalPool = kkPool.filter(n => n.times > limit)
 			logger(Colors.blue(`lengs = ${ll.length} kPool length = [${kPool.size}] finalPool time > [${limit}]  length ${finalPool.length}`))
