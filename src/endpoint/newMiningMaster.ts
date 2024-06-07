@@ -111,6 +111,7 @@ const postLocalhost = async (path: string, data: any, _res: Response)=> {
 	}
 
 	const req = await request (option, res => {
+		logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`))
 		res.pipe(_res)
 	})
 
@@ -420,7 +421,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
-
+			logger(Colors.blue(`forward /nodeRestart to cluster daemon`))
 			return postLocalhost('/nodeRestart', req.body, res)
 		})
 
