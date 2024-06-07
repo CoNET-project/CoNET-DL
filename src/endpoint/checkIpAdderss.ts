@@ -28,7 +28,9 @@ interface dataK {
 }
 
 
-const limit = 20
+const limit = 25
+
+const addressMap : Map<string, number> = new Map()
 const startFilter = () => {
 	logger(Colors.blue(`start filter!`))
 	exec('sudo tail -n 10000 /var/log/nginx/error.log > kk', () => {
@@ -66,7 +68,12 @@ const startFilter = () => {
 			logger(Colors.blue(`lengs = ${ll.length} kPool length = [${kPool.size}] finalPool time > [${limit}]  length ${finalPool.length}`))
 			logger(inspect(finalPool.map(n => n.ipaddress), false, 3, true))
 			mapLimit(finalPool, 1, async (n: dataK, next: any) => {
-				await iptablesIp(n.ipaddress)
+				const kk = addressMap.get(n.ipaddress)
+				if (kk === undefined) {
+					await iptablesIp(n.ipaddress)
+					addressMap.set(n.ipaddress, n.times)
+				}
+				
 			}, err => {
 				setTimeout(() => {
 
