@@ -486,15 +486,16 @@ class v3_master {
 
 			} catch (ex) {
 				logger (Colors.red(`Daemon /initNode req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(404).end()
+				return res.status(401).end()
 			}
 
 			if ( !_data || !nodeAddress) {
 				logger (Colors.red(`Daemon /initNode req.body ERROR! !_data || ${!_data} || nodeAddress ${!nodeAddress}`))
-				return res.status(404).end()
+				return res.status(402).end()
 			}
+
 			if (! await checkNodeWallet(nodeAddress, false)) {
-				return res.status(404).end()
+				return res.status(403).end()
 			}
 			cleanupNode(nodeAddress)
 			const data: minerArray[] = _data
