@@ -157,7 +157,7 @@ const initdata = async () => {
 		// 	return
 		// }
 		
-		regiestNodes.set(n.wallet, "1")
+		regiestNodes.set(w, n.address)
 		
 	})
 
