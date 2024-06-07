@@ -209,7 +209,7 @@ class conet_dl_v3_server {
 		app.use( '/api', router )
 		
 		app.use(Express.json({limit: '100mb'}));
-		app.use(Express.urlencoded({limit: '100mb'}));
+		// app.use(Express.urlencoded({limit: '100mb'}));
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
@@ -397,7 +397,7 @@ class conet_dl_v3_server {
 				logger(Colors.red(`/minerCheck obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
-			
+
 			return postLocalhost('/minerCheck', {walletAddress: obj.walletAddress1, ipAddress: obj.ipAddress, nodeAddress: obj.walletAddress }, res)
 		})
 
