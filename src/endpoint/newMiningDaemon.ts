@@ -516,20 +516,20 @@ class v3_master {
 
 		router.post('/getTotalMiners',  async (req, res) => {
 			logger(Colors.blue(`/getTotalMiners`))
-			let nodeAddress
+			let walletAddress
 			try {
-				nodeAddress = req.body.nodeAddress
+				walletAddress = req.body.walletAddress
 			} catch (ex) {
 				logger (Colors.red(`Daemon /getTotalMiners req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
 
-			if (!nodeAddress) {
+			if (!walletAddress) {
 				logger (Colors.red(`Daemon /getTotalMiners req.body nodeAddress ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
 
-			if (! await checkNodeWallet(nodeAddress, true)) {
+			if (! await checkNodeWallet(walletAddress, true)) {
 				return res.status(401).end()
 			}
 
