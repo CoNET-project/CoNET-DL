@@ -96,7 +96,7 @@ class conet_mining_server {
 		app.use( '/api', router )
 		
 		app.use(Express.json({limit: '100mb'}));
-		app.use(Express.urlencoded({limit: '100mb'}));
+		//app.use(Express.urlencoded({limit: '100mb'}));
 
 		app.once ( 'error', ( err: any ) => {
 			/**
