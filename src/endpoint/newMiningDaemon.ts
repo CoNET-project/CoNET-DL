@@ -183,7 +183,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boole
 
 	const nodeInited = nodeIpaddressWallets.has (nodeWallet)
 	if (!nodeInited) {
-		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited`))
+		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited nodeIpaddressWallets size = ${nodeIpaddressWallets.size}`), inspect(nodeIpaddressWallets.entries(), false, 3, true)
 		return false
 	}
 	logger(Colors.red(`checkNodeWallet return true`))
