@@ -152,7 +152,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) =
 	}
 
 	if (!checkInit) {
-		v3.nodeIpaddressWallets.set(nodeWallet, new Map())
+		
 		logger(Colors.red(`checkNodeWallet [${nodeWallet}] nodeIpaddressWallets set new Empty Map() nodeIpaddressWallets.get(nodeWallet) = [${inspect(v3.nodeIpaddressWallets.get(nodeWallet), false, 3, true)}]! checkInit return true`))
 		return true
 	}
@@ -468,8 +468,10 @@ class v3_master {
 			if (! await checkNodeWallet(obj.walletAddress, false, this)) {
 				return res.status(403).end()
 			}
-
+			
 			cleanupNode(obj.walletAddress, this)
+			const nodeIPWallets = new Map()
+			this.nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
 			const data: minerArray[] = obj?.data
 			if (data) {
 				data.forEach( n => {
@@ -480,7 +482,7 @@ class v3_master {
 					if (n.address ==='23.16.211.100') {
 						n.address = v4()
 					}
-					const nodeIPWallets = new Map()
+					
 					this.ipaddressWallet.set(n.address, n.wallet)
 					this.WalletIpaddress.set(n.wallet, n.address)
 					
