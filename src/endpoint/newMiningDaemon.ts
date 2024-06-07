@@ -177,7 +177,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boole
 
 	if (!checkInit) {
 		nodeIpaddressWallets.set(nodeWallet, new Map())
-		logger(Colors.red(`checkNodeWallet !checkInit return true`))
+		logger(Colors.red(`checkNodeWallet [${nodeWallet}] nodeIpaddressWallets set new Empty Map() nodeIpaddressWallets.get(nodeWallet) = [${nodeIpaddressWallets.get(nodeWallet)}]!checkInit return true`))
 		return true
 	}
 
