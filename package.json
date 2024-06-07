@@ -60,7 +60,8 @@
 		"jsbi": "^4.3.0",
 		"openpgp": "^5.11.1",
 		"uuid": "^9.0.1",
-		"web3": "^4.9.0"
+		"web3": "^4.9.0",
+		"phin": "^3.7.1"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.1",

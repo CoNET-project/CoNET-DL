@@ -18,12 +18,12 @@ const setup = join( homedir(),'.master.json' )
 import {request as HttpRequest } from 'node:http'
 import {sign} from 'eth-crypto'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
-
+import p from "phin"
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 
 const FaucetTTL = 60 * 60 * 24
-const clusterManager = '74.208.127.109'
+const clusterManager = 'http://apitest.conet.network'
 
 
 const wei = 1000000000000000000
@@ -630,27 +630,51 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 
 
 export const sendMesageToCluster = async (path: string, pData: any, callbak: (err: number|undefined, data?: any)=> void) => {
-	const postData = JSON.stringify(pData)
-	const option: RequestOptions = {
-		host: clusterManager,
-		path,
-		port: 8001,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(postData),
-		}
-	}
-	logger(inspect(option, false, 3, true))
-	const req = await HttpRequest (option, async res => {
-		let data = ''
-		logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
 
-		if (res.statusCode !== 200) {
-			console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
-			if (res.statusCode === 401) {
-				logger(Color.blue(`sendMesageToCluster got initData request!`))
-				//	let client try again
+
+	const res = await p({
+		'url': `${clusterManager}${path}`,
+		method: 'POST',
+		data: pData
+	})
+
+	if (res.statusCode !== 200 ) {
+		if (res.statusCode === 401) {
+			if (!sendAlldataProcess) {
+				sendAlldataProcess = true
+				await sendAlldata ()
+				sendAlldataProcess = false
+			}
+			setTimeout(async () => {
+				return sendMesageToCluster(path, pData, callbak)
+			}, 2000)
+			return
+		}
+		return callbak(res.statusCode)
+	}
+	return callbak (undefined, res.body)
+	
+	// const postData = JSON.stringify(pData)
+	// const option: RequestOptions = {
+	// 	host: clusterManager,
+	// 	path,
+	// 	port: 8001,
+	// 	method: 'POST',
+	// 	headers: {
+	// 		'Content-Type': 'application/json',
+	// 		'Content-Length': Buffer.byteLength(postData),
+	// 	}
+	// }
+	// logger(inspect(option, false, 3, true))
+	// const req = await HttpRequest (option, async res => {
+	// 	let data = ''
+	// 	logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
+
+	// 	if (res.statusCode !== 200) {
+	// 		console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+	// 		if (res.statusCode === 401) {
+	// 			logger(Color.blue(`sendMesageToCluster got initData request!`))
+	// 			//	let client try again
 			
 				if (!sendAlldataProcess) {
 					sendAlldataProcess = true
@@ -658,45 +682,45 @@ export const sendMesageToCluster = async (path: string, pData: any, callbak: (er
 					sendAlldataProcess = false
 				}
 
-				return setTimeout(async () => {
-					return sendMesageToCluster(path, pData, callbak)
-				}, 2000)
+	// 			return setTimeout(async () => {
+	// 				return sendMesageToCluster(path, pData, callbak)
+	// 			}, 2000)
 				
-			}
-			return callbak(res.statusCode)
-		}
+	// 		}
+	// 		return callbak(res.statusCode)
+	// 	}
 
 
-		res.on('data', _data => {
-			data += _data
-		})
+	// 	res.on('data', _data => {
+	// 		data += _data
+	// 	})
 
-		res.once('end', () => {
+	// 	res.once('end', () => {
 
-			try {
-				const ret = JSON.parse(data)
-				return callbak (undefined, ret)
-			} catch (ex: any) {
-				console.error(`sendMesageToCluster [${path}] getReferrer JSON.parse Error!`, data)
-				return callbak (403)
-			}
+	// 		try {
+	// 			const ret = JSON.parse(data)
+	// 			return callbak (undefined, ret)
+	// 		} catch (ex: any) {
+	// 			console.error(`sendMesageToCluster [${path}] getReferrer JSON.parse Error!`, data)
+	// 			return callbak (403)
+	// 		}
 			
-		})
+	// 	})
 
-		res.once('error', err => {
-			logger(Color.red(`sendMesageToCluster res on error!`))
-			logger(err)
-			return callbak (503)
-		})
-	})
+	// 	res.once('error', err => {
+	// 		logger(Color.red(`sendMesageToCluster res on error!`))
+	// 		logger(err)
+	// 		return callbak (503)
+	// 	})
+	// })
 
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (503)
-	})
+	// req.once('error', (e) => {
+	// 	console.error(`getReferrer req on Error! ${e.message}`)
+	// 	return callbak (503)
+	// })
 
-	req.write(postData)
-	req.end()
+	// req.write(postData)
+	// req.end()
 }
 
 export const deleteAMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
