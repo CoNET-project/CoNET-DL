@@ -176,6 +176,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean) => Promise<boole
 	}
 
 	if (!checkInit) {
+		nodeIpaddressWallets.set(nodeWallet, new Map())
 		logger(Colors.red(`checkNodeWallet !checkInit return true`))
 		return true
 	}
@@ -482,7 +483,6 @@ class v3_master {
 
 			let obj:minerObj = req.body
 			if ( !obj) {
-				
 				return res.status(402).end()
 			}
 
@@ -513,6 +513,8 @@ class v3_master {
 			
 			return res.status(200).end()
 		})
+
+
 
 		router.post('/getTotalMiners',  async (req, res) => {
 			logger(Colors.blue(`/getTotalMiners`))
