@@ -7,16 +7,18 @@ import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-import {startListeningCONET_Holesky_EPOCH_v2, addIpaddressToLivenessListeningPool, getIpAddressFromForwardHeader, checkMiner, launshAndDeleteAllWalletInCLuster } from './help-database'
-
+import { getIpAddressFromForwardHeader,regiestMiningNode } from './help-database'
+import {sign} from 'eth-crypto'
 import {createServer, RequestOptions} from 'node:http'
 import {conet_Referral_contractV2, masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
-
+import p from "phin"
 import { checkSignObj} from '../util/util'
-
+import {transferPool, startTransfer} from '../util/transferManager'
+import type {Response, Request } from 'express'
+import { address, isPublic, isV4Format, isV6Format} from 'ip'
 
 const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -75,6 +77,333 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 // 		return checkBlockEvent (block, provideCONET)
 // 	})
 // }
+const livenessListeningPool: Map <string, livenessListeningPoolObj> = new Map()
+
+const tokensEachEPOCH = 34.72
+let totalminerOnline = 0
+let minerRate = 0
+
+const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
+
+const clusterManager = 'http://74.208.127.109:8001'
+let sendAlldataProcess = false
+
+export const sendAlldata = () => new Promise( resolve => {
+	const minerArray: minerArray[]  = []
+	livenessListeningPool.forEach((v, k) => {
+		minerArray.push({address: v.ipaddress, wallet: v.wallet})
+	})
+
+	const message =JSON.stringify({ walletAddress: nodeWallet, data: minerArray})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	return sendMesageToCluster('/api/initNode', sendData, (err, data) => {
+		if (err) {
+			logger(Colors.grey(`sendAlldata sendMesageToCluster /api/minerCheck gor Error${err}`))
+			//	let client try again
+			
+			return resolve (err)
+		}
+		return resolve (data)
+	})
+})
+
+const sendMesageToCluster = async (path: string, pData: any, callbak: (err: number|undefined, data?: any)=> void) => {
+
+
+	const res = await p({
+		'url': `${clusterManager}${path}`,
+		method: 'POST',
+		data: pData
+	})
+
+	if (res.statusCode !== 200 ) {
+		if (res.statusCode === 401) {
+			if (!sendAlldataProcess) {
+				sendAlldataProcess = true
+				await sendAlldata ()
+				sendAlldataProcess = false
+			}
+			setTimeout(async () => {
+				return sendMesageToCluster(path, pData, callbak)
+			}, 2000)
+			return
+		}
+		return callbak(res.statusCode)
+	}
+	return callbak (undefined, res.body)
+
+	// const postData = JSON.stringify(pData)
+	// const option: RequestOptions = {
+	// 	host: clusterManager,
+	// 	path,
+	// 	port: 8001,
+	// 	method: 'POST',
+	// 	headers: {
+	// 		'Content-Type': 'application/json',
+	// 		'Content-Length': Buffer.byteLength(postData),
+	// 	}
+	// }
+	// logger(inspect(option, false, 3, true))
+	// const req = await HttpRequest (option, async res => {
+	// 	let data = ''
+	// 	logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
+
+	// 	if (res.statusCode !== 200) {
+	// 		console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+	// 		if (res.statusCode === 401) {
+	// 			logger(Color.blue(`sendMesageToCluster got initData request!`))
+	// 			//	let client try again
+			
+				if (!sendAlldataProcess) {
+					sendAlldataProcess = true
+					await sendAlldata ()
+					sendAlldataProcess = false
+				}
+
+	// 			return setTimeout(async () => {
+	// 				return sendMesageToCluster(path, pData, callbak)
+	// 			}, 2000)
+				
+	// 		}
+	// 		return callbak(res.statusCode)
+	// 	}
+
+
+	// 	res.on('data', _data => {
+	// 		data += _data
+	// 	})
+
+	// 	res.once('end', () => {
+
+	// 		try {
+	// 			const ret = JSON.parse(data)
+	// 			return callbak (undefined, ret)
+	// 		} catch (ex: any) {
+	// 			console.error(`sendMesageToCluster [${path}] getReferrer JSON.parse Error!`, data)
+	// 			return callbak (403)
+	// 		}
+			
+	// 	})
+
+	// 	res.once('error', err => {
+	// 		logger(Color.red(`sendMesageToCluster res on error!`))
+	// 		logger(err)
+	// 		return callbak (503)
+	// 	})
+	// })
+
+	// req.once('error', (e) => {
+	// 	console.error(`getReferrer req on Error! ${e.message}`)
+	// 	return callbak (503)
+	// })
+
+	// req.write(postData)
+	// req.end()
+}
+
+export const getMinerCount = () => new Promise( resolve => {
+	const message =JSON.stringify({walletAddress: nodeWallet})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	return sendMesageToCluster('/api/getTotalMiners', sendData, (err, data) => {
+		if (err) {
+			logger(Colors.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			//	let client try again
+			return resolve (false)
+		}
+		return resolve (data)
+	})
+	
+})
+const transferMiners = async (EPOCH: number) => {
+	const tryTransfer = async () => {
+
+		const data: any = await getMinerCount ()
+
+		if ( data === false || !data?.totalMiner) {
+			return logger(Colors.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`), inspect(data, false, 3, true)) 
+		}
+
+		totalminerOnline = data.totalMiner
+		minerRate = tokensEachEPOCH/totalminerOnline
+		
+		const paymentWallet: string[] = []
+		livenessListeningPool.forEach (n => {
+			paymentWallet.push(n.wallet)
+		})
+		
+		if (paymentWallet.length > 0) {
+
+			transferPool.push({
+				privateKey: masterSetup.conetFaucetAdmin,
+				walletList: paymentWallet,
+				payList: paymentWallet.map(n => minerRate.toFixed(10))
+			})
+			await startTransfer()
+		}
+		
+	}
+	
+	await tryTransfer()
+	
+}
+
+export const deleteAMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
+	if (!isPublic(ipaddress)) {
+		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
+		return resolve (false)
+	}
+	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	return sendMesageToCluster('/api/deleteMiner', sendData, (err, data) => {
+		if (err) {
+			logger(Colors.red(`deleteAMiner sendMesageToCluster /api/deleteMiner gor Error${err}`))
+			//	let client try again
+			return resolve (false)
+		}
+		return resolve (true)
+	})
+})
+
+const launshAndDeleteAllWalletInCLuster = () => new Promise( resolve => {
+	const message =JSON.stringify({walletAddress: nodeWallet})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
+		if (err) {
+			logger(Colors.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			//	let client try again
+			return resolve (false)
+		}
+		return resolve (data)
+	})
+	
+})
+
+const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string) => new Promise (resolve=> {
+	returnData['wallet'] = wallet
+	if (res.writable && !res.closed) {
+		return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
+			if (err) {
+				deleteAMiner(ipaddress, wallet)
+				logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
+				livenessListeningPool.delete(wallet)
+			}
+			return resolve (true)
+		})
+		
+	}
+	deleteAMiner(ipaddress, wallet)
+	livenessListeningPool.delete(wallet)
+	logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
+	return resolve (true)
+})
+
+const stratlivenessV2 = async (block: number) => {
+	
+	
+	logger(Colors.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
+
+	// clusterNodes = await getApiNodes()
+	const processPool: any[] = []
+	
+	livenessListeningPool.forEach(async (n, key) => {
+		const res = n.res
+		const returnData = {
+			rate: minerRate.toFixed(6),
+			online: totalminerOnline,
+			status: 200,
+			epoch: block
+		}
+		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress))
+
+	})
+
+	await Promise.all(processPool)
+
+	const wallets: string[] = []
+
+	livenessListeningPool.forEach((value: livenessListeningPoolObj, key: string) => {
+		wallets.push (value.wallet)
+	})
+
+	logger(Colors.grey(`stratliveness EPOCH ${block} stoped! Pool length = [${livenessListeningPool.size}]`))
+	await transferMiners(block)
+}
+
+export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	EPOCH = await provideCONET.getBlockNumber()
+	
+	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
+
+	provideCONET.on('block', async block => {
+		EPOCH = block
+		return stratlivenessV2(block.toString())
+	})
+
+	await regiestMiningNode()
+	await launshAndDeleteAllWalletInCLuster()
+}
+
+
+
+const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve => {
+	if (!isPublic(ipaddress)) {
+		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
+		return resolve (false)
+	}
+
+	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	return sendMesageToCluster('/api/minerCheck', sendData, async (err, data) => {
+		if (err) {
+			
+			return resolve (err)
+		}
+		return resolve (data)
+	})
+})
+let EPOCH = 0
+export const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, res: Response) => {
+	const obj: livenessListeningPoolObj = {
+		ipaddress, wallet, res
+	}
+	livenessListeningPool.set (wallet, obj)
+	const returnData = {
+		rate: minerRate,
+		online: totalminerOnline,
+		ipaddress,
+		status: 200,
+		epoch: EPOCH
+	}
+	logger (Colors.cyan(` [${ipaddress}:${wallet}] Added to livenessListeningPool [${livenessListeningPool.size}]!`))
+	return returnData
+}
 
 class conet_mining_server {
 

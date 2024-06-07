@@ -273,3 +273,10 @@ interface minerArray {
 	address: string
 	wallet: string
 }
+
+
+interface livenessListeningPoolObj {
+	res: any
+	ipaddress: string
+	wallet: string
+}
