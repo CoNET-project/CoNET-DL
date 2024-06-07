@@ -86,7 +86,7 @@ let minerRate = 0
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
 
-const clusterManager = 'http://74.208.127.109:8001'
+const clusterManager = 'https://apitests.conet.network'
 let sendAlldataProcess = false
 
 export const sendAlldata = () => new Promise( resolve => {

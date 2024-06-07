@@ -247,7 +247,7 @@ class conet_dl_v3_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, () => {
+		server.listen(this.PORT, '127.0.0.1',() => {
 			return console.table([
                 { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])

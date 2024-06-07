@@ -150,14 +150,14 @@ const initdata = async () => {
 	if (!nodes) {
 		return logger(Colors.red(`initdata return NULL! `))
 	}
-
+	
 	nodes.forEach(n => {
 		const w = n.wallet.toLowerCase()
 		// if (w === testNodeWallet) {
 		// 	return
 		// }
 		
-		regiestNodes.set(w, n.node_ipaddress)
+		regiestNodes.set(n.wallet, n.node_ipaddress)
 		
 	})
 
