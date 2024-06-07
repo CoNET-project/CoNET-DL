@@ -213,7 +213,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 			return resolve (false)
 		}
 
-		wallet_addr = wallet_addr.toUpperCase()
+		wallet_addr = wallet_addr.toLowerCase()
 
 		cmd = `SELECT * from conet_faucet_wallet_addr WHERE wallet_addr = '${ wallet_addr }'`
 		result = await cassClient.execute (cmd)
