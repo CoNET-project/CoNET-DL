@@ -478,7 +478,7 @@ class v3_master {
 			return res.status(200).json({totalMiner: WalletIpaddress.size}).end()
 		})
 
-		router.post('/initNode',  async (req, res) =>{
+		router.post('/nodeRestart',  async (req, res) =>{
 			let _data: minerArray[]|undefined, nodeAddress: string
 			try {
 				_data = req.body._data
