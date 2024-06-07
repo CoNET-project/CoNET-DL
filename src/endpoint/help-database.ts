@@ -5,7 +5,7 @@ import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
 import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations, conet_Holesky_rpc, transferCCNTP, checkSignObj, checkClaimeToeknbalance, getServerIPV4Address} from '../util/util'
 import { createHash } from 'node:crypto'
-import type {RequestOptions} from 'node:http'
+import type {RequestOptions, } from 'node:http'
 import {v4} from 'uuid'
 import {encryptWithPublicKey, createIdentity, hash, decryptWithPrivateKey, recover } from 'eth-crypto'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
@@ -15,7 +15,7 @@ import {Wallet, ethers} from 'ethers'
 import { Client, auth, types } from 'cassandra-driver'
 import {transferPool, startTransfer} from '../util/transferManager'
 const setup = join( homedir(),'.master.json' )
-import {request as HttpsRequest } from 'node:https'
+import {request as HttpRequest } from 'node:http'
 import {sign} from 'eth-crypto'
 import { address, isPublic} from 'ip'
 
@@ -639,11 +639,12 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 		}
 	}
 	
-	const req = await HttpsRequest (option, async res => {
+	const req = HttpRequest (option, async res => {
 		let data = ''
 		//logger(Color.grey(`sendMesageToCluster got response res Status ${res.statusCode}`))
 
 		if (res.statusCode !== 200) {
+			
 			if (res.statusCode === 401) {
 				logger(Color.blue(`sendMesageToCluster got initData request!`))
 				//	let client try again
@@ -653,6 +654,7 @@ export const sendMesageToCluster = async (path: string, _data: any, callbak: (er
 					await sendAlldata ()
 					sendAlldataProcess = false
 				}
+
 				return setTimeout(async () => {
 					return sendMesageToCluster(path, _data, callbak)
 				}, 2000)

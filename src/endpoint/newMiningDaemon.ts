@@ -127,14 +127,14 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
-		logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
+		logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
 		//await storageMinerData(block)
 	})
 
 	EPOCH = await provideCONET.getBlockNumber()
 	await initdata()
 	s3Pass = await s3fsPasswd()
-	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
+	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
 
 const ipaddressWallet: Map<string, string> = new Map()
