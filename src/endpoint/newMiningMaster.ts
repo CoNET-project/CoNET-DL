@@ -111,7 +111,7 @@ const postLocalhost = async (path: string, data: any, _res: Response)=> {
 	}
 
 	const req = await request (option, res => {
-		logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`))
+		logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(data, false,3, true))
 		let chunk = ''
 		res.on('data', data => {
 			chunk += data

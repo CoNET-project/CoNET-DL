@@ -239,7 +239,7 @@ class v3_master {
 
 		app.all ('*', (req, res) => {
 			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
-			res.status(404).end ()
+			res.status(406).end ()
 			return res.socket?.end().destroy()
 		})
 
@@ -546,7 +546,7 @@ class v3_master {
 		router.all ('*', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
-			res.status(404).end()
+			res.status(405).end()
 			return res.socket?.end().destroy()
 		})
 	}
