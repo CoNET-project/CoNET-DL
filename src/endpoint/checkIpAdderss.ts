@@ -15,7 +15,7 @@ const iptablesIp = (ipaddress: string) => new Promise(resolve => {
 			logger(Colors.red(`iptablesIp Error ${err.message}`))
 			resolve(await iptablesIp(ipaddress))
 		}
-		logger(Colors.red(`iptablesIp added ${ipaddress}`),'\n')
+		logger(Colors.red(`iptablesIp added ${ipaddress}`))
 		resolve (true)
 	})
 })
@@ -45,9 +45,6 @@ const startFilter = () => {
 				const _ipaddress = n.split(' by zone "one", client: ')[1]
 				if (_ipaddress) {
 					const ipaddress = _ipaddress.split(', server: ')[0]
-					logger(Colors.grey(`ip address:${ipaddress}`))
-
-
 					const passed: number = kPool.get(ipaddress)||0
 					kPool.set(ipaddress, passed+1)
 				}
@@ -66,7 +63,8 @@ const startFilter = () => {
 			
 			kkPool.sort((a,b) => b.times - a.times)
 			const finalPool = kkPool.filter(n => n.times > limit)
-			logger(Colors.blue(`lengs = ${ll.length} kkPool length = [${kkPool.length}] finalPool time > [${limit}]  length ${finalPool.length}`))
+			logger(Colors.blue(`lengs = ${ll.length} kPool length = [${kPool.size}] finalPool time > [${limit}]  length ${finalPool.length}`))
+			logger(inspect(finalPool.map(n => n.ipaddress), false, 3, true))
 			mapLimit(finalPool, 1, async (n: dataK, next: any) => {
 				await iptablesIp(n.ipaddress)
 			}, err => {
