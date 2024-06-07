@@ -9,7 +9,7 @@ import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {getMinerCount, storeLeaderboardFree_referrals} from '../endpoint/help-database'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
-const conet_Holesky_rpc = 'http://127.0.0.1:8801'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
 

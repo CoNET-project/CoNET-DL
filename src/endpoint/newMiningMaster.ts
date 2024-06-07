@@ -20,7 +20,7 @@ import epochRateABI from '../util/epochRate.json'
 import type { RequestOptions,ServerResponse } from 'node:http'
 import {request} from 'node:http'
 const ReferralsMap: Map<string, string> = new Map()
-const conet_Holesky_rpc = 'http://207.90.195.83:9999'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
