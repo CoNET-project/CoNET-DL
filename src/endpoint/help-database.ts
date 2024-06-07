@@ -23,7 +23,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 
 const FaucetTTL = 60 * 60 * 24
-const clusterManager = 'http://apitest.conet.network:8001'
+const clusterManager = 'http://74.208.127.109:8001'
 
 
 const wei = 1000000000000000000
