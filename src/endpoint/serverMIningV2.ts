@@ -361,8 +361,8 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 		return stratlivenessV2(block.toString())
 	})
 
-	await regiestMiningNode()
-	await launshAndDeleteAllWalletInCLuster()
+	regiestMiningNode()
+	launshAndDeleteAllWalletInCLuster()
 }
 
 
