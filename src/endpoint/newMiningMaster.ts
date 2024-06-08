@@ -412,7 +412,7 @@ class conet_dl_v3_server {
 				return res.status(404).end()
 			}
 
-			return postLocalhost('/minerCheck', obj, res)
+			return postLocalhost('/api/minerCheck', obj, res)
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
@@ -421,7 +421,7 @@ class conet_dl_v3_server {
 				logger(Colors.red(`/deleteMiner obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
-			return postLocalhost('/deleteMiner', obj, res)
+			return postLocalhost('/api/deleteMiner', obj, res)
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
