@@ -17,15 +17,12 @@ import {transferPool, startTransfer} from '../util/transferManager'
 import CGPNsABI from '../util/CGPNs.json'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
-import type { RequestOptions, get } from 'node:http'
+import type { RequestOptions, get } from 'node:https'
 import {request} from 'node:http'
 import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {request as HttpsRequest} from 'node:https'
 import {sign} from 'eth-crypto'
-
-
-
 
 
 const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise (resolve=> {
@@ -165,7 +162,7 @@ const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string,
 }
 
 
-const clusterManager = '192.168.1.63'
+const clusterManager = 'apitests.conet.network'
 const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
 	
 	
@@ -310,7 +307,7 @@ const sendMesageToCluster = async (path: string, pData: any, livenessListeningPo
 	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
 		hostname: clusterManager,
-		protocol: 'http:',
+		protocol: 'https:',
 		path,
 		port: 8001,
 		method: 'POST',
@@ -561,7 +558,7 @@ const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, 
 
 class conet_dl_server {
 
-	private PORT = 8080
+	private PORT = 8001
 	private appsPath = ''
 	private debug = false
 	private serverID = ''
@@ -571,10 +568,7 @@ class conet_dl_server {
 	public livenessListeningPool: Map <string, livenessListeningPoolObj> = new Map()
 
 	private initSetupData = async () => {
-		
 		this.startServer()
-		
-
 	}
 
 	constructor () {
@@ -583,15 +577,12 @@ class conet_dl_server {
     }
 
 	private startServer = async () => {
-		const staticFolder = join ( this.appsPath, 'static' )
-		const launcherFolder = join ( this.appsPath, 'launcher' )
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
-		app.use ( Express.static ( staticFolder ))
-        app.use ( Express.static ( launcherFolder ))
+
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -640,12 +631,12 @@ class conet_dl_server {
 
 		app.all ('*', (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, '0.0.0.0', () => {
+		server.listen(this.PORT, () => {
 			return console.table([
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
@@ -655,7 +646,15 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
-		
+		router.get ('/health', async (req,res) => {
+
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger (Colors.grey(` Router /health form [${ ipaddress}]`))
+
+			res.json ({ health: true }).end()
+			return res.socket?.end().destroy()
+
+		})
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
