@@ -558,7 +558,7 @@ const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, 
 
 class conet_dl_server {
 
-	private PORT = 8001
+	private PORT = 80
 	private appsPath = ''
 	private debug = false
 	private serverID = ''
