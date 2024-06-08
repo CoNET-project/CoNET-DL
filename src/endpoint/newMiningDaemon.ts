@@ -383,7 +383,7 @@ class v3_master {
 			}
 
 			if (! await checkNodeWallet(nodeAddress, true, this)) {
-				logger ()
+				
 				return res.status(401).end()
 			}
 
@@ -415,23 +415,25 @@ class v3_master {
 
 			let walletAddress, ipAddress, nodeAddress
 			try {
-				walletAddress = req.body.walletAddress
+				walletAddress = req.body.walletAddress1
 				ipAddress = req.body.ipAddress
-				nodeAddress = req.body.nodeAddress
+				nodeAddress = req.body.walletAddress
 
 			} catch (ex) {
-				logger (Colors.red(`Daemon /deleteMiner req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
+				logger (Colors.red(`Daemon /deleteMiner req.body walletAddress1 ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
-
+			
 			if (!walletAddress || !ipAddress || !nodeAddress) {
 				logger (Colors.red(`Daemon /deleteMiner req.body walletAddress1 ERROR! !walletAddress || !ipAddress || !nodeAddress = ${!walletAddress} || ${!ipAddress} || ${!nodeAddress}`))
 				return res.status(404).end()
 			}
 			
 			if (! await checkNodeWallet(nodeAddress, true, this)) {
+				
 				return res.status(401).end()
 			}
+
 			
 			walletAddress=walletAddress.toLowerCase()
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
