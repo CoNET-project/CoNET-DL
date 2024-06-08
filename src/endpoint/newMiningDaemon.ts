@@ -133,7 +133,7 @@ const initdata = async (v3: v3_master) => {
 		// 	return
 		// }
 		
-		v3.regiestNodes.set(n.wallet, n.node_ipaddress)
+		v3.regiestNodes.set(w, n.node_ipaddress)
 		
 	})
 
