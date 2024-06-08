@@ -587,29 +587,7 @@ class conet_dl_server {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`app.use ${ipaddress} => req = ${req.url}`))
-			if (!ipaddress) {
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
-
-			
-				
-			if (/^post$/i.test(req.method)) {
-				
-				return Express.json({limit: '25mb'})(req, res, err => {
-					if (err) {
-						res.sendStatus(400).end()
-						res.socket?.end().destroy()
-						logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
-						logger(inspect(req.body, false, 3, true))
-						return addAttackToCluster (ipaddress)
-						
-					}
-					return next()
-				})
-			}
-				
-			return next()
+			next()
 			
 		})
 
