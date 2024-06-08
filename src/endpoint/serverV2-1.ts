@@ -581,7 +581,7 @@ class conet_dl_server {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
-
+		app.use(Express.json())
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
