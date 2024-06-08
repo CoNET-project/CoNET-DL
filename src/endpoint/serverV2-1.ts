@@ -585,6 +585,7 @@ class conet_dl_server {
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(inspect(req.headers, false, 3, true))
 			logger(Colors.blue(`app.use ${ipaddress} => req = ${req.url}`))
 			next()
 			
