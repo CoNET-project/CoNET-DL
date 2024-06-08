@@ -383,6 +383,7 @@ class v3_master {
 			}
 
 			if (! await checkNodeWallet(nodeAddress, true, this)) {
+				logger ()
 				return res.status(401).end()
 			}
 

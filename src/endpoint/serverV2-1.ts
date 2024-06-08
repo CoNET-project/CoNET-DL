@@ -690,6 +690,6 @@ class conet_dl_server {
 	}
 }
 
-export default conet_dl_server
+new conet_dl_server ()
 
 
