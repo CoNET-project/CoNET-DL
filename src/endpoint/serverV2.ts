@@ -363,7 +363,7 @@ class conet_dl_server {
 		router.post ('/conet-faucet', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
-			const wallet_add = req.body?.walletAddr
+			let wallet_add = req.body?.walletAddr
 
 			if (!wallet_add ||!ipaddress) {
 				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
@@ -372,6 +372,14 @@ class conet_dl_server {
 			}
 			// res.status(502).end()
 			// return res.socket?.end().destroy()
+			try {
+				wallet_add = ethers.getAddress(wallet_add)
+			} catch (ex) {
+				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
+				res.status(400).end()
+				return res.socket?.end().destroy()
+			}
+			
 			return regiestFaucet(wallet_add, ipaddress).then (async n => {
 				if (!n) {
 					res.status(400).end()
