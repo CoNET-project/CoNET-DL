@@ -366,9 +366,9 @@ class v3_master {
 			logger(Colors.magenta(`/minerCheck`))
 			let walletAddress, ipAddress, nodeAddress
 			try {
-				walletAddress = req.body.walletAddress
+				walletAddress = req.body.walletAddress1
 				ipAddress = req.body.ipAddress
-				nodeAddress = req.body.walletAddress1
+				nodeAddress = req.body.walletAddress
 
 			} catch (ex) {
 				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! ${inspect(req.body, false, 3, true)}`))
@@ -396,7 +396,7 @@ class v3_master {
 			
 			if ( _wallet || _wallet_ip ) {
 				res.status(400).end()
-				return //logger(Colors.grey(`Router /minerCheck [${ipaddress}:${obj.walletAddress}] Miner [${obj.ipAddress}:${obj.walletAddress1}] already in Pool`))
+				return logger(Colors.grey(`Router /minerCheck Miner [${ipAddress}:${walletAddress}] already in Pool`))
 			}
 
 			this.ipaddressWallet.set(ipAddress, walletAddress)
