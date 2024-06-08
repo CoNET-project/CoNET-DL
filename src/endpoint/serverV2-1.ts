@@ -132,13 +132,15 @@ const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string,
 	const tryTransfer = async () => {
 
 		const data: any = await getMinerCount (livenessListeningPool)
-
+		
 		if ( data === false || !data?.totalMiner) {
 			return logger(Colors.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`), inspect(data, false, 3, true)) 
 		}
 
-		totalminerOnline = data.totalMiner
+		totalminerOnline = parseInt(data.totalMiner)
 		minerRate = tokensEachEPOCH/totalminerOnline
+		logger(Colors.blue (`getMinerCount reutrn data minerRate = tokensEachEPOCH/totalminerOnline tokensEachEPOCH [${tokensEachEPOCH}] / totalminerOnline ${totalminerOnline} = [${minerRate}]`), inspect(data, false, 3, true))
+		
 		
 		const paymentWallet: string[] = []
 		livenessListeningPool.forEach (n => {
@@ -248,8 +250,8 @@ const startListeningCONET_Holesky_EPOCH = async (livenessListeningPool: Map <str
 		return stratlivenessV2(block.toString(), livenessListeningPool)
 	})
 
-	regiestMiningNode()
-	launshAndDeleteAllWalletInCLuster(livenessListeningPool)
+	await regiestMiningNode()
+	await launshAndDeleteAllWalletInCLuster(livenessListeningPool)
 }
 
 
