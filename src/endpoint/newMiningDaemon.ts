@@ -368,7 +368,7 @@ class v3_master {
 			try {
 				walletAddress = req.body.walletAddress
 				ipAddress = req.body.ipAddress
-				nodeAddress = req.body.nodeAddress
+				nodeAddress = req.body.walletAddress1
 
 			} catch (ex) {
 				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! ${inspect(req.body, false, 3, true)}`))
