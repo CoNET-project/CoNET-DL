@@ -1,3 +1,3 @@
-import server from './serverMIningV2'
+import server from './serverV2-1'
 
 new server()
