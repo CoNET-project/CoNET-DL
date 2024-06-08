@@ -402,7 +402,8 @@ const checkMiner = (ipaddress: string, wallet: string, livenessListeningPool: Ma
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
-	
+	if (typeof ipaddress === 'object') 
+		return ipaddress[0]
 	return ipaddress
 }
 
