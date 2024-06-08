@@ -659,7 +659,7 @@ export const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provi
 
 export const regiestMiningNode = async () => {
 	
-	const ipaddress = getServerIPV4Address(false)[0]
+	const ipaddress = getServerIPV4Address(true)[0]
 	if (!ipaddress) {
 		return logger(Color.red(`regiestMiningNode Mining Server only has local IP address Error!`))
 	}

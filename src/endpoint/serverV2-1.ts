@@ -21,7 +21,7 @@ import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
-import {request as HttpRequest} from 'node:https'
+import {request as HttpsRequest} from 'node:https'
 import {sign} from 'eth-crypto'
 
 
@@ -165,7 +165,7 @@ const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string,
 }
 
 
-const clusterManager = 'apitests.conet.network'
+const clusterManager = '192.168.1.63'
 const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
 	
 	
@@ -310,9 +310,9 @@ const sendMesageToCluster = async (path: string, pData: any, livenessListeningPo
 	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
 		hostname: clusterManager,
-		protocol: 'https:',
+		protocol: 'http:',
 		path,
-		port: 443,
+		port: 8001,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -320,7 +320,7 @@ const sendMesageToCluster = async (path: string, pData: any, livenessListeningPo
 		}
 	}
 
-	const req = await HttpRequest (option, async res => {
+	const req = await request (option, async res => {
 		let data = ''
 		logger(Colors.grey(`sendMesageToCluster [${path}] got response res Status ${res.statusCode}`))
 		if (res.statusCode !== 200) {
@@ -561,7 +561,7 @@ const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, 
 
 class conet_dl_server {
 
-	private PORT = 80
+	private PORT = 8080
 	private appsPath = ''
 	private debug = false
 	private serverID = ''

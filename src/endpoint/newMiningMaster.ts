@@ -133,9 +133,9 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	req.end()
 }
 
-const regiestNodes: Map<string, string> = new Map()
 
-const initdata = async () => {
+
+const initdata = async (regiestNodes: Map<string, string>) => {
 	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
 		return logger(Colors.red(`initdata return NULL! `))
@@ -154,7 +154,7 @@ const initdata = async () => {
 	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
 }
 
-const checkNode = async (req: Request) => {
+const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
 	const ipaddress = getIpAddressFromForwardHeader(req)
 	const request = req.path
 	let message, signMessage
@@ -189,7 +189,7 @@ const checkNode = async (req: Request) => {
 
 	if (!_ip) {
 		logger(Colors.red(`[${request}] walletAddress [${obj.walletAddress}] checkNode _ip is empty`))
-		await initdata()
+		await initdata(regiestNodes)
 		_ip = regiestNodes.get (obj.walletAddress)
 
 	}
@@ -205,7 +205,7 @@ const checkNode = async (req: Request) => {
 class conet_dl_v3_server {
 
 	private PORT = 8001
-
+	public regiestNodes: Map<string, string> = new Map()
 	constructor () {
 		this.startServer()
 		
@@ -260,7 +260,7 @@ class conet_dl_v3_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, '127.0.0.1',() => {
+		server.listen(this.PORT, '0.0.0.0',() => {
 			return console.table([
                 { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
@@ -405,7 +405,7 @@ class conet_dl_v3_server {
 
 		router.post('/minerCheck',  async (req, res) => {
 			logger(Colors.green(`worker got /minerCheck!`))
-			const obj = await checkNode(req)
+			const obj = await checkNode(req, this.regiestNodes)
 
 			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
 				logger(Colors.red(`/minerCheck obj format Error`), inspect(obj, false, 3, true))
@@ -416,7 +416,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
-			const obj = await checkNode(req)
+			const obj = await checkNode(req, this.regiestNodes)
 			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
 				logger(Colors.red(`/deleteMiner obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
@@ -425,7 +425,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/nodeRestart',  async (req, res) =>{
-			const obj = await checkNode(req)
+			const obj = await checkNode(req, this.regiestNodes)
 			if (!obj) {
 				res.status(404).end()
 				return logger(Colors.blue(`/nodeRestart checkNode error!`))
@@ -436,7 +436,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/getTotalMiners',  async (req, res) =>{
-			const obj = await checkNode(req)
+			const obj = await checkNode(req, this.regiestNodes)
 			if (!obj) {
 				res.status(404).end()
 				return logger(Colors.blue(`/nodeRestart checkNode error!`))
