@@ -29,5 +29,3 @@ const getWalletsAsset = async (wallet: string) => {
 const test = async (wallet: string) => {
 	await getWalletsAsset (wallet)
 }
-
-test('0xee81CB4Ddf9350b0DEbA244A977Ed7dfc2b6A6F6')
