@@ -460,6 +460,7 @@ class conet_mining_server {
 		
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
 			let message, signMessage
 			try {
 				message = req.body.message
@@ -475,7 +476,7 @@ class conet_mining_server {
 				return  res.status(404).end()
 				
 			}
-
+			logger(Colors.blue(`ipaddress [${ipaddress}] CHECK OBJ => /startMining`))
 			const obj = checkSignObj (message, signMessage)
 
 			if (!obj) {
