@@ -407,7 +407,7 @@ export const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: s
 
 class conet_mining_server {
 
-	private PORT = masterSetup.PORT||8001
+	private PORT = 80
 
 	constructor () {
 		this.startServer()
