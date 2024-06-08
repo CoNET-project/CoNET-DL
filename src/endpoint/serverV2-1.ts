@@ -307,7 +307,7 @@ const sendMesageToCluster = async (path: string, pData: any, livenessListeningPo
 	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
 		hostname: clusterManager,
-		protocol: 'https:',
+		protocol: 'http:',
 		path,
 		port: 8001,
 		method: 'POST',
