@@ -426,7 +426,34 @@ class conet_mining_server {
 		
 		app.use(Express.json({limit: '100mb'}));
 		//app.use(Express.urlencoded({limit: '100mb'}));
+		app.use (async (req, res, next) => {
 
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			if (!ipaddress) {
+				res.status(404).end()
+				return res.socket?.end().destroy()
+			}
+
+			
+				
+			if (/^post$/i.test(req.method)) {
+				
+				return Express.json({limit: '25mb'})(req, res, err => {
+					if (err) {
+						res.sendStatus(400).end()
+						res.socket?.end().destroy()
+						logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
+						logger(inspect(req.body, false, 3, true))
+						return
+						
+					}
+					return next()
+				})
+			}
+				
+			return next()
+			
+		})
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
