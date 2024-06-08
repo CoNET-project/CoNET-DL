@@ -449,7 +449,7 @@ class conet_mining_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, () => {
+		server.listen(this.PORT, '0.0.0.0',() => {
 			
 			return console.table([
                 { 'serverMIningV2 ': ` startup success ${ this.PORT } Work [${workerNumber}]` }
