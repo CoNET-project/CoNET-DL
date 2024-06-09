@@ -383,7 +383,7 @@ const checkMiner = (ipaddress: string, wallet: string, livenessListeningPool: Ma
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
-	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]||req.headers['x-forwarded-for'.toLowerCase()]
+	const ipaddress = req.headers['X-Real-IP'] || req.headers['x-forwarded-for'] ||''
 	if (typeof ipaddress === 'object') 
 		return ipaddress[0]
 	return ipaddress
@@ -537,6 +537,7 @@ const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, 
 	return returnData
 }
 
+
 class conet_dl_server {
 
 	private PORT = 80
@@ -547,16 +548,18 @@ class conet_dl_server {
 	private masterBalance: CNTPMasterBalance|null = null
 	private s3Pass: s3pass|null = null
 	public livenessListeningPool: Map <string, livenessListeningPoolObj> = new Map()
-	public clusterIpaddress: string[] = []
+	public clusterIpaddress =''
+	public cluserIpAddrReg = new RegExp('')
 	private initSetupData = () => {
 		resolve(mainMiningDomain, (err, address) => {
 			if ( err ) {
 				return logger(Colors.red(`conet_dl_server resolve mainMiningDomain got error, STOP `), err.message )
 			}
-			if (!address ) {
+			if (!address.length ) {
 				return logger(Colors.red(`conet_dl_server resolve mainMiningDomain null address [${address}]`))
 			}
-			this.clusterIpaddress = address
+			this.clusterIpaddress = address[0]
+			this.cluserIpAddrReg = new RegExp(this.clusterIpaddress + '$')
 			this.startServer()
 		})
 		
@@ -577,9 +580,30 @@ class conet_dl_server {
 		app.use (async (req, res, next) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(inspect(req.headers, false, 3, true))
-			logger(Colors.magenta(`app.use req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} cluster IP adderss = [${inspect(this.clusterIpaddress, false, 3, true)}] getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
-			next()
+			const readIp = req?.socket?.remoteAddress
+
+			if (!readIp || !this.cluserIpAddrReg.test(readIp) || !ipaddress) {
+				logger(Colors.magenta(`app.use req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} cluster IP adderss = [${inspect(this.clusterIpaddress, false, 3, true)}] getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
+				res.end()
+				res.socket?.end().destroy()
+				return
+			}
+
+			if (/^post$/i.test(req.method)) {
+				
+				return Express.json ({limit: '25mb'}) (req, res, async err => {
+					if (err) {
+						logger(Colors.red(`[${ipaddress}] ${req.method} => ${req.url} Express.json Error! ATTACK stop request`))
+						res.sendStatus(410).end()
+						return res.socket?.end().destroy()
+					}
+					return next()
+				})
+			}
 			
+			logger(Colors.magenta(`app.use all other request STOP it! req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
+			res.sendStatus(410).end()
+			return res.socket?.end().destroy()
 		})
 
 		app.use( '/api', router )
@@ -629,15 +653,6 @@ class conet_dl_server {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
 			
-			const hostName = req.header('host')
-			
-			if (!hostName || hostName.toLowerCase() !== mainMiningDomain )  {
-				logger (Colors.grey(`Router /startMining hostName has not match Error! [${ipaddress}] hostName [${hostName}] mainMiningDomain [${mainMiningDomain}] hostName.toLowerCase() !== mainMiningDomain [${hostName ? hostName.toLowerCase() !== mainMiningDomain: ''}]`))
-				return  res.status(410).end()
-			}
-
-			
-
 			let message, signMessage
 
 			try {
