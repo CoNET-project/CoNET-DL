@@ -383,7 +383,7 @@ const checkMiner = (ipaddress: string, wallet: string, livenessListeningPool: Ma
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
-	const ipaddress = req.headers['X-Real-IP'] || req.headers['x-forwarded-for'] ||''
+	const ipaddress = req.headers['X-Real-IP'.toLowerCase()] || req.headers['x-forwarded-for'.toLowerCase()] ||''
 	if (typeof ipaddress === 'object') 
 		return ipaddress[0]
 	return ipaddress
@@ -600,7 +600,7 @@ class conet_dl_server {
 					return next()
 				})
 			}
-			
+
 			logger(Colors.magenta(`app.use all other request STOP it! req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
 			res.sendStatus(410).end()
 			return res.socket?.end().destroy()
