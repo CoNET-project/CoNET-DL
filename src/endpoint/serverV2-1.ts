@@ -23,6 +23,7 @@ import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {sign} from 'eth-crypto'
 
+const mainMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLocaleUpperCase()
 
 const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
 	new Promise (async resolve => {
@@ -600,7 +601,6 @@ class conet_dl_server {
             ])
 		})
 		
-		
 	}
 
 	private router ( router: Router ) {
@@ -613,23 +613,33 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 
 		})
+
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
-			logger(inspect(req.headers, false, 3, true))
+			
+			const hostName = req.header('host')
+			logger(inspect(hostName, false, 3, true))
+
+			if (!hostName || hostName.toLowerCase() !== mainMiningDomain) {
+				logger (Colors.grey(`Router /startMining hostName has not match Error! [${ipaddress}]`))
+				return  res.status(410).end()
+			}
+
 			let message, signMessage
+
 			try {
 				message = req.body.message
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /livenessListening message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(404).end()
+				logger (Colors.grey(`${ipaddress} request /startMining message = req.body.message ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(411).end()
 				
 			}
 			if (!message||!signMessage||!ipaddress) {
-				logger (Colors.grey(`Router /livenessListening !message||!signMessage Error! [${ipaddress}]`))
-				return  res.status(404).end()
+				logger (Colors.grey(`Router /startMining !message||!signMessage Error! [${ipaddress}]`))
+				return  res.status(412).end()
 				
 			}
 			logger(Colors.blue(`ipaddress [${ipaddress}] CHECK OBJ => /startMining`))
@@ -637,9 +647,11 @@ class conet_dl_server {
 
 			if (!obj) {
 				logger (Colors.grey(`[${ipaddress}] to /startMining !obj Error!`))
-				res.status(404).end()
+				res.status(413).end()
 				return res.socket?.end().destroy()
 			}
+
+
 			const m: any = await checkMiner(ipaddress, obj.walletAddress, this.livenessListeningPool )
 
 			// const m = await freeMinerManager(ipaddress, obj.walletAddress)
