@@ -639,6 +639,7 @@ class conet_dl_server {
 		router.post ('/startMining', async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
+			logger(inspect(req.headers, false, 3, true))
 			let message, signMessage
 			try {
 				message = req.body.message
