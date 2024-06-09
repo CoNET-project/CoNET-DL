@@ -208,7 +208,6 @@ class conet_dl_v3_server {
 	public regiestNodes: Map<string, string> = new Map()
 	constructor () {
 		this.startServer()
-		
     }
 
 	private startServer = async () => {

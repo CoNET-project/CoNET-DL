@@ -21,30 +21,32 @@ import type { RequestOptions, get } from 'node:https'
 import {request} from 'node:http'
 import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
-import {request as HttpsRequest} from 'node:https'
 import {sign} from 'eth-crypto'
 
 
-const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise (resolve=> {
-	returnData['wallet'] = wallet
-	if (res.writable && !res.closed) {
-		return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
-			if (err) {
-				deleteAMiner(ipaddress, wallet, livenessListeningPool)
-				logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
-				livenessListeningPool.delete(wallet)
-			}
-			return resolve (true)
-		})
-		
-	}
-	deleteAMiner(ipaddress, wallet, livenessListeningPool)
-	livenessListeningPool.delete(wallet)
-	logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
-	return resolve (true)
-})
+const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
+	new Promise (async resolve => {
+		returnData['wallet'] = wallet
+		if (res.writable && !res.closed) {
+			return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
+				if (err) {
+					await deleteAMiner(ipaddress, wallet, livenessListeningPool)
+					logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
+					livenessListeningPool.delete(wallet)
+				}
+				return resolve (true)
+			})
+			
+		}
+		await deleteAMiner(ipaddress, wallet, livenessListeningPool)
+		livenessListeningPool.delete(wallet)
+		logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
+		return resolve (true)
+	})
+
+
+	
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-let s3Pass: s3pass
 //	for production
 	import {createServer} from 'node:http'
 
@@ -56,7 +58,6 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
-const FaucetCount = '0.01'
 
 let leaderboardData = {
 	epoch: '',
@@ -166,7 +167,6 @@ const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string,
 
 const clusterManager = 'apitests.conet.network'
 const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
-	
 	
 	logger(Colors.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
 
@@ -281,30 +281,7 @@ const sendAlldata = (livenessListeningPool: Map <string, livenessListeningPoolOb
 	})
 })
 
-const sendMesageToCluster = async (path: string, pData: any, livenessListeningPool: Map <string, livenessListeningPoolObj>, callbak: (err: number|undefined, data?: any)=> void) => {
-
-
-	// const res = await p({
-	// 	'url': `${clusterManager}${path}`,
-	// 	method: 'POST',
-	// 	data: pData
-	// })
-
-	// if (res.statusCode !== 200 ) {
-	// 	if (res.statusCode === 401) {
-	// 		if (!sendAlldataProcess) {
-	// 			sendAlldataProcess = true
-	// 			await sendAlldata ()
-	// 			sendAlldataProcess = false
-	// 		}
-	// 		setTimeout(async () => {
-	// 			return sendMesageToCluster(path, pData, callbak)
-	// 		}, 2000)
-	// 		return
-	// 	}
-	// 	return callbak(res.statusCode)
-	// }
-	// return callbak (undefined, res.body)
+const sendMesageToCluster = (path: string, pData: any, livenessListeningPool: Map <string, livenessListeningPoolObj>, callbak: (err: number|undefined, data?: any)=> void) => {
 
 	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
@@ -319,7 +296,7 @@ const sendMesageToCluster = async (path: string, pData: any, livenessListeningPo
 		}
 	}
 
-	const req = await request (option, async res => {
+	const req = request (option, async res => {
 		let data = ''
 		logger(Colors.grey(`sendMesageToCluster [${path}] got response res Status ${res.statusCode}`))
 		if (res.statusCode !== 200) {
@@ -684,7 +661,7 @@ class conet_dl_server {
 			
 		})
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()
