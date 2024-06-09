@@ -619,10 +619,10 @@ class conet_dl_server {
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
 			
 			const hostName = req.header('host')
-			logger(inspect(hostName, false, 3, true))
+			
 
-			if (!hostName || hostName.toLowerCase() !== mainMiningDomain) {
-				logger (Colors.grey(`Router /startMining hostName has not match Error! [${ipaddress}]`))
+			if (!hostName || hostName.toLowerCase() !== mainMiningDomain )  {
+				logger (Colors.grey(`Router /startMining hostName has not match Error! [${ipaddress}] hostName [${hostName}] mainMiningDomain [${mainMiningDomain}] hostName.toLowerCase() !== mainMiningDomain [${hostName ? hostName.toLowerCase() !== mainMiningDomain: ''}]`))
 				return  res.status(410).end()
 			}
 
