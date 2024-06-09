@@ -133,15 +133,6 @@ const tokensEachEPOCH = 34.72
 const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
 	const tryTransfer = async () => {
 
-		const data: any = await getMinerCount (livenessListeningPool)
-		
-		if ( data === false || !data?.totalMiner) {
-			return logger(Colors.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`), inspect(data, false, 3, true)) 
-		}
-
-		totalminerOnline = parseInt(data.totalMiner)
-		minerRate = tokensEachEPOCH/totalminerOnline
-		logger(Colors.blue (`getMinerCount reutrn data minerRate = tokensEachEPOCH/totalminerOnline tokensEachEPOCH [${tokensEachEPOCH}] / totalminerOnline ${totalminerOnline} = [${minerRate}]`), inspect(data, false, 3, true))
 		
 		
 		const paymentWallet: string[] = []
@@ -168,8 +159,18 @@ const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string,
 
 const clusterManager = 'apitests.conet.network'
 const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
-	
-	logger(Colors.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Pool length = [${livenessListeningPool.size}]`))
+	const data: any = await getMinerCount (livenessListeningPool)
+		
+	if ( data === false || !data?.totalMiner) {
+		return logger(Colors.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`), inspect(data, false, 3, true)) 
+	}
+
+	totalminerOnline = parseInt(data.totalMiner)
+	minerRate = tokensEachEPOCH/totalminerOnline
+
+	logger(Colors.blue (`getMinerCount reutrn data minerRate = tokensEachEPOCH/totalminerOnline tokensEachEPOCH [${tokensEachEPOCH}] / totalminerOnline ${totalminerOnline} = [${minerRate}]`), inspect(data, false, 3, true))
+		
+	logger(Colors.blue(`stratliveness EPOCH ${block} starting! ${nodeWallet} Local Pool length = [${livenessListeningPool.size}]`))
 
 	// clusterNodes = await getApiNodes()
 	const processPool: any[] = []
@@ -565,7 +566,7 @@ class conet_dl_server {
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(inspect(req.headers, false, 3, true))
+			logger(inspect(req.socket.remoteAddress, false, 3, true))
 			logger(Colors.blue(`app.use ${ipaddress} => req = ${req.url}`))
 			next()
 			
@@ -620,11 +621,12 @@ class conet_dl_server {
 			
 			const hostName = req.header('host')
 			
-
 			if (!hostName || hostName.toLowerCase() !== mainMiningDomain )  {
 				logger (Colors.grey(`Router /startMining hostName has not match Error! [${ipaddress}] hostName [${hostName}] mainMiningDomain [${mainMiningDomain}] hostName.toLowerCase() !== mainMiningDomain [${hostName ? hostName.toLowerCase() !== mainMiningDomain: ''}]`))
 				return  res.status(410).end()
 			}
+
+			
 
 			let message, signMessage
 
