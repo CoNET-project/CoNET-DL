@@ -194,7 +194,7 @@ const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string
 	})
 
 	logger(Colors.grey(`stratliveness EPOCH ${block} stoped! Pool length = [${livenessListeningPool.size}]`))
-	await transferMiners(block, livenessListeningPool)
+	// await transferMiners(block, livenessListeningPool)
 }
 
 const deleteAMiner = (ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
