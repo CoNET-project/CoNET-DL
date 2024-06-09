@@ -564,10 +564,8 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use(Express.json())
 		app.use (async (req, res, next) => {
-
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(inspect(req.socket.remoteAddress, false, 3, true))
-			logger(Colors.blue(`app.use ${ipaddress} => req = ${req.url}`))
+			logger(Colors.magenta(`app.use req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
 			next()
 			
 		})
