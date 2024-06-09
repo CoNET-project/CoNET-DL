@@ -23,7 +23,7 @@ import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {sign} from 'eth-crypto'
 
-const mainMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLocaleUpperCase()
+const mainMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLowerCase()
 
 const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
 	new Promise (async resolve => {
