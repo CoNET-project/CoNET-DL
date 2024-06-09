@@ -5,6 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
+import {resolve} from 'node:dns'
 import {regiestMiningNode} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
@@ -546,9 +547,19 @@ class conet_dl_server {
 	private masterBalance: CNTPMasterBalance|null = null
 	private s3Pass: s3pass|null = null
 	public livenessListeningPool: Map <string, livenessListeningPoolObj> = new Map()
-
-	private initSetupData = async () => {
-		this.startServer()
+	public clusterIpaddress: string[] = []
+	private initSetupData = () => {
+		resolve(mainMiningDomain, (err, address) => {
+			if ( err ) {
+				return logger(Colors.red(`conet_dl_server resolve mainMiningDomain got error, STOP `), err.message )
+			}
+			if (!address ) {
+				return logger(Colors.red(`conet_dl_server resolve mainMiningDomain null address [${address}]`))
+			}
+			this.clusterIpaddress = address
+			this.startServer()
+		})
+		
 	}
 
 	constructor () {
@@ -566,7 +577,7 @@ class conet_dl_server {
 		app.use (async (req, res, next) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(inspect(req.headers, false, 3, true))
-			logger(Colors.magenta(`app.use req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
+			logger(Colors.magenta(`app.use req.socket.remote = ${inspect(req.socket.remoteAddress, false, 3, true)} cluster IP adderss = [${inspect(this.clusterIpaddress, false, 3, true)}] getIpAddressFromForwardHeader ipaddress = [${ipaddress}] => req = ${req.url}`))
 			next()
 			
 		})
