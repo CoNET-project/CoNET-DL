@@ -546,7 +546,7 @@ class v3_master {
 			if (! await checkNodeWallet(walletAddress, true, this)) {
 				return res.status(412).end()
 			}
-			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate/BigInt(12))}
+			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate)}
 			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
 			return res.status(200).json(responseData).end()
 		})
