@@ -90,7 +90,9 @@ const CNTPReferralWallet = '0x63377154F972f6FC1319e382535EC9691754bd18'
 export const GuardianNodes_ContractV2 = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
 
 const conet_point_contract_blast = `0x0E75599668A157B00419b58Ff3711913d2a716e0`
-export const cCNTP_Contract = '0x27A961F17E7244d8aA75eE19061f6360DeeDF76F'
+
+
+export const cCNTP_Contract = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
 
