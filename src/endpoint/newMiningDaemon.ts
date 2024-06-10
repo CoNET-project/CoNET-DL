@@ -186,7 +186,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) =
 		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited nodeIpaddressWallets size = ${v3.nodeIpaddressWallets.size}`), inspect(v3.nodeIpaddressWallets.entries(), false, 3, true))
 		return false
 	}
-	logger(Colors.red(`checkNodeWallet return true`))
+	
 	return true
 }
 

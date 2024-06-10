@@ -401,7 +401,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/minerCheck',  async (req, res) => {
-			logger(Colors.green(`worker got /minerCheck!`))
+			
 			const obj = await checkNode(req, this.regiestNodes)
 
 			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
@@ -436,10 +436,10 @@ class conet_dl_v3_server {
 			const obj = await checkNode(req, this.regiestNodes)
 			if (!obj) {
 				res.status(404).end()
-				return logger(Colors.blue(`/nodeRestart checkNode error!`))
+				return logger(Colors.red(`/getTotalMiners checkNode error!`))
 			}
 
-			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon`))
+			logger(Colors.green(`forward /api/getTotalMiners to cluster daemon`))
 			return postLocalhost('/api/getTotalMiners', obj, res)
 		})
 
