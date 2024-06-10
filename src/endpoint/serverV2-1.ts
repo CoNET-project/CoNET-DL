@@ -175,17 +175,17 @@ const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string
 
 	// clusterNodes = await getApiNodes()
 	const processPool: any[] = []
-	
+
+	const returnData = {
+		rate: minerRate,
+		online: totalminerOnline,
+		status: 200,
+		epoch: block
+	}
+	logger(inspect(returnData, false, 3, true	))
 	livenessListeningPool.forEach(async (n, key) => {
 		const res = n.res
-		const returnData = {
-			rate: minerRate,
-			online: totalminerOnline,
-			status: 200,
-			epoch: block
-		}
 		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress, livenessListeningPool))
-
 	})
 
 	await Promise.all(processPool)
