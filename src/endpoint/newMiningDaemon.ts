@@ -91,7 +91,7 @@ const storeToChain = async (data: epochRate) => {
 let EPOCH=0
 let s3Pass: s3pass|null = null
 const tokensEachEPOCH = 0.003472 			//		34.72
-let minerRate = 0
+let minerRate = BigInt(0)
 
 
 const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
@@ -105,8 +105,8 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 		return console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate is zero [${ethers.formatEther(rate)}] or totalFreeMiner [${totalFreeMiner}] is zero STOP transferMiners`))
 	}
 
-	const _minerRate = rate / totalFreeMiner
-	minerRate = parseFloat(ethers.formatEther(_minerRate))
+	const _minerRate = rate / (totalFreeMiner * BigInt(12))
+	minerRate = _minerRate
 
 	console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] totalFreeMiner [${totalFreeMiner}] minerRate = ${minerRate}`))
 
@@ -124,7 +124,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin,
 				walletList: paymentWallet,
-				payList: paymentWallet.map(n => ethers.formatEther(minerRate))
+				payList: paymentWallet.map(n => ethers.formatEther(_minerRate))
 			})
 			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${paymentWallet.length}] minerRate [${minerRate}]! `))
 			
@@ -546,7 +546,7 @@ class v3_master {
 			if (! await checkNodeWallet(walletAddress, true, this)) {
 				return res.status(412).end()
 			}
-			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate}
+			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate.toString()}
 			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
 			return res.status(200).json(responseData).end()
 		})
