@@ -421,7 +421,8 @@ class conet_dl_v3_server {
 			return postLocalhost('/api/deleteMiner', obj, res)
 		})
 
-		router.post('/nodeRestart',  async (req, res) =>{
+		router.post('/nodeRestart',  async (req, res) => {
+			
 			const obj = await checkNode(req, this.regiestNodes)
 			if (!obj) {
 				res.status(404).end()
@@ -432,8 +433,10 @@ class conet_dl_v3_server {
 			return postLocalhost('/api/nodeRestart', obj, res)
 		})
 
-		router.post('/getTotalMiners',  async (req, res) =>{
+		router.post('/getTotalMiners',  async (req, res) => {
+
 			const obj = await checkNode(req, this.regiestNodes)
+
 			if (!obj) {
 				res.status(404).end()
 				return logger(Colors.red(`/getTotalMiners checkNode error!`))
