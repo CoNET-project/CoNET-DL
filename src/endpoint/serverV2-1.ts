@@ -24,7 +24,8 @@ import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {sign} from 'eth-crypto'
 
-const mainMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLowerCase()
+const testMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLowerCase()
+const mainMiningDomain = 'api.openpgp.online'.toLowerCase()
 
 const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
 	new Promise (async resolve => {
@@ -497,7 +498,8 @@ class conet_dl_server {
 		
 	}
 
-	constructor () {
+	constructor (private domain: string) {
+		this.cluserIpAddrReg = new RegExp(domain)
 		this.initSetupData ()
 		startListeningCONET_Holesky_EPOCH(this.livenessListeningPool)
     }
@@ -564,7 +566,7 @@ class conet_dl_server {
 
 		server.listen(this.PORT, () => {
 			return console.table([
-                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
+                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}] domain [${this.domain}]` }
             ])
 		})
 		
@@ -641,6 +643,11 @@ class conet_dl_server {
 	}
 }
 
-new conet_dl_server ()
+
+const [,,...args] = process.argv
+args.forEach ((n, index ) => {
+	new conet_dl_server (n)
+})
+
 
 

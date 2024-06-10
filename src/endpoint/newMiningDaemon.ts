@@ -87,13 +87,11 @@ const storeToChain = async (data: epochRate) => {
 }
 
 
-
 const initAllServers: Map<string, string> = new Map()
 
 interface regiestNodes {
 	wallet: string
 	node_ipaddress: string
-
 }
 
 let EPOCH=0
@@ -146,8 +144,6 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	s3Pass = await s3fsPasswd()
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
-
-const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 
 const initdata = async (v3: v3_master) => {
 	const nodes: any[]|void  = await getAllMinerNodes()

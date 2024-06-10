@@ -96,7 +96,6 @@ interface regiestNodes {
 }
 
 
-const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	
 	const option: RequestOptions = {
@@ -132,7 +131,6 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	req.write(JSON.stringify(obj))
 	req.end()
 }
-
 
 
 const initdata = async (regiestNodes: Map<string, string>) => {
