@@ -387,7 +387,7 @@ class v3_master {
 		})
 
 		router.post('/minerCheck',  async (req, res) =>{
-			logger(Colors.magenta(`/minerCheck`))
+					
 			let walletAddress, ipAddress, nodeAddress
 			try {
 				walletAddress = req.body.walletAddress1
@@ -540,9 +540,9 @@ class v3_master {
 			if (! await checkNodeWallet(walletAddress, true, this)) {
 				return res.status(412).end()
 			}
-
-			logger(Colors.blue(`send json ${{totalMiner: this.ipaddressWallet.size}}`))
-			return res.status(200).json({totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate}).end()
+			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate}
+			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
+			return res.status(200).json().end()
 		})
 
 		router.all ('*', (req, res ) => {
