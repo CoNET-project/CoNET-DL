@@ -23,7 +23,7 @@ import {getOraclePrice,txManager} from '../endpoint/help-database'
 
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
-import {abi as CONET_multiTransfer_ABI} from './CONET_multiTransfer.json'
+
 import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
 import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
 import {abi as claimableToken } from './claimableToken.json'
@@ -1134,64 +1134,7 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 	return {walletList, payList, countList}
 }
 
-export const multiTransfer = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
-	if (nonceLock.cnptReferralAdmin) {
-		return setTimeout(() => {multiTransfer(privateKey, nodes, _payList, nonceLock)}, 1000)
-	}
-	nonceLock.cnptReferralAdmin = true
 
-
-	const payList = _payList.map(n => n.split('.')[0])
-	let total = 0
-	payList.forEach(n => total += parseFloat(n)/10**18)
-	let tx
-	
-		const wallet = new ethers.Wallet(privateKey, provide_write)
-		const contract = new ethers.Contract(CNTP_HoleskyMultiTransfer, CONET_multiTransfer_ABI, wallet)
-		try{
-			tx = await contract.multiTransfer (conet_point_contract, nodes, payList)
-		} catch(ex) {
-			nonceLock.cnptReferralAdmin = false
-			setTimeout(() => {
-				provide_write.destroy()
-				multiTransfer(privateKey, nodes, _payList, nonceLock)
-			}, 1000)
-			return //logger (colors.grey(`Send to Referrals [${ nodes.length }] ERROR, Try make new provide RPC`))
-		}
-		logger (colors.magenta (`Send to Referrals success! total wallets ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`))
-	
-	return  nonceLock.cnptReferralAdmin = false
-	
-}
-
-export const multiTransfer_blast = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
-	if (nonceLock.blastcnptReferralAdmin) {
-		return setTimeout(() => {multiTransfer_blast(privateKey, nodes, _payList, nonceLock)}, 1000)
-	}
-	nonceLock.blastcnptReferralAdmin = true
-
-
-	const payList = _payList.map(n => n.split('.')[0])
-	let total = 0
-	payList.forEach(n => total += parseFloat(n)/10**18)
-	let tx
-		const provide_writeBlast = new ethers.JsonRpcProvider('https://rpc.ankr.com/blast_testnet_sepolia')
-		const wallet = new ethers.Wallet(privateKey, provide_writeBlast)
-		const contract = new ethers.Contract(conet_ERC20_MultiTransfer_contract_blast, CONET_multiTransfer_ABI, wallet)
-		try{
-			tx = await contract.multiTransfer (conet_point_contract_blast, nodes, payList)
-		} catch(ex) {
-			nonceLock.blastcnptReferralAdmin = false
-			setTimeout(() => {
-				multiTransfer_blast(privateKey, nodes, _payList, nonceLock)
-			}, 1000)
-			return logger (colors.red(`Send to Referrals [${ nodes.length }] ERROR, Try make new provide RPC`))
-		}
-		logger (colors.blue (`Send to Referrals Blast success! total wallets ${ nodes.length }] Total CNTP = [${total}] Tx = [${tx.hash}]`))
-	
-	return  nonceLock.blastcnptReferralAdmin = false
-	
-}
 
 export const multiTransfer_original_Blast = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
 	if (nonceLock.blastConetPointAdmin) {
