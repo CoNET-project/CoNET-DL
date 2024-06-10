@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { homedir, platform } from 'node:os'
 import cCNTPAbi from '../util/cCNTP.json'
 import { logger, conet_Holesky_rpc } from '../util/util'
-
+import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 const setup = join( homedir(),'.master.json' )
 
@@ -17,6 +17,7 @@ export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin)
 const sendCNTP_v2_New_ChainContract = new ethers.Contract(cntpV1_new_chain, cCNTPAbi, CONET_Holesky_RPC)
 
 logger(Colors.blue(`Node Key = ${cntpAdminWallet.address}`))
+
 const getWalletsAsset = async (wallet: string) => {
 	
 	const [conet_balance, cntp_balance] = await Promise.all([
@@ -26,6 +27,55 @@ const getWalletsAsset = async (wallet: string) => {
 	logger(Colors.gray(`wallet [${wallet}] CONET = ${conet_balance} , CNTP ${cntp_balance}`))
 }
 
-const test = async (wallet: string) => {
-	await getWalletsAsset (wallet)
+
+const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
+const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
+
+
+const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
+	const transObj = await provideCONET.getTransaction(tx)
+	const toAddr = transObj?.to?.toLowerCase()
+	if (!toAddr || toAddr !== rateAddr) {
+		return
+	}
+	
+	const rate = await rateSC.rate()
+	logger(Colors.grey(`rateAddr fired! [${tx}] rate = [${ethers.formatEther(rate)}]`))
+	return rateBack (rate)
+
 }
+
+const listenRateChange = async (block: number, rateBack: (rate: number) => void) => {
+	const blockInfo = await provideCONET.getBlock(block)
+	const transferArray = blockInfo?.transactions
+	if (! transferArray) {
+		return
+	}
+	const execArray: any[] = []
+	transferArray.forEach(n => {
+		execArray.push (checkTransfer(n, rateBack))
+	})
+	await Promise.all([
+		...execArray
+	])
+}
+
+export const listeningRate = async (rateBack: (rate: number) => void) => {
+	
+	provideCONET.on('block', async block => {
+		listenRateChange(block, rateBack)
+	})
+	const rate = await rateSC.rate()
+	const currentBlock = await provideCONET.getBlockNumber()
+	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${currentBlock}] rate = [${ethers.formatEther(rate)}]!`))
+}
+
+const testRate = async () => {
+	const rate = await rateSC.rate()
+	const totalMiner = BigInt(1500)
+	const epochrate = rate/totalMiner
+	logger(Colors.magenta(`epochrate = ${ethers.formatEther(epochrate)}`))
+}
+
+testRate()

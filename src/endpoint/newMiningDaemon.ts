@@ -16,13 +16,15 @@ import {logger} from '../util/logger'
 import {v4} from 'uuid'
 import { cpus } from 'node:os'
 import epochRateABI from '../util/epochRate.json'
-
+import rateABI from './conet-rate.json'
 
 const ReferralsMap: Map<string, string> = new Map()
-const conet_Holesky_rpc = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'https://rpc.conet.network'
+const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
+const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
 
 const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) => {
 	const blockDetail = await provider.getBlock(block)
@@ -53,7 +55,7 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
 		let address
 		try {
-			const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+			const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, provider)
 			address = await contract.getReferrer(wallet)
 		} catch (ex){
 			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
@@ -72,7 +74,6 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 
 const storeToChain = async (data: epochRate) => {
 	logger(inspect(data, false, 3, true))
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
 	const cCNTPContract = new ethers.Contract(epochRateAddr, epochRateABI, wallet)
 	let tx
@@ -87,22 +88,26 @@ const storeToChain = async (data: epochRate) => {
 }
 
 
-const initAllServers: Map<string, string> = new Map()
-
-interface regiestNodes {
-	wallet: string
-	node_ipaddress: string
-}
-
 let EPOCH=0
 let s3Pass: s3pass|null = null
 const tokensEachEPOCH = 0.003472 			//		34.72
 let minerRate = 0
 
 
+const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
+
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
-	const totalFreeMiner = WalletIpaddress.size
-	minerRate = tokensEachEPOCH / totalFreeMiner
+	
+	const totalFreeMiner = BigInt(WalletIpaddress.size)
+	const rate = await rateSC.rate()
+	
+	if (!rate) {
+		return console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] === 0 STOP transferMiners`))
+	}
+
+	const minerRate = rate / totalFreeMiner
+	console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] totalFreeMiner [${totalFreeMiner}] minerRate = ${minerRate}`))
+
 
 	const tryTransfer = async () => {
 
@@ -117,7 +122,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin,
 				walletList: paymentWallet,
-				payList: paymentWallet.map(n => minerRate.toFixed(10))
+				payList: paymentWallet.map(n => ethers.formatEther(minerRate))
 			})
 			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${paymentWallet.length}] minerRate [${minerRate}]! `))
 			
@@ -131,15 +136,14 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 }
 
 
-export const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	provideCONET.on('block', async block => {
+const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
+	provider.on('block', async block => {
 		EPOCH = block
 		logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
 		await transferMiners(block, v3.WalletIpaddress)
 	})
 
-	EPOCH = await provideCONET.getBlockNumber()
+	EPOCH = await provider.getBlockNumber()
 	await initdata(v3)
 	s3Pass = await s3fsPasswd()
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
@@ -274,7 +278,7 @@ class v3_master {
 			}
 
 			try {
-				const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+				const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, provider)
 				address = await contract.getReferrer(wallet)
 			} catch (ex){
 				logger(Colors.red(`contract.getReferrer Error!`))
