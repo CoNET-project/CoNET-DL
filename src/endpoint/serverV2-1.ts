@@ -494,6 +494,7 @@ class conet_dl_server {
 			this.clusterIpaddress = address[0]
 			this.cluserIpAddrReg = new RegExp(this.clusterIpaddress + '$')
 			this.startServer()
+			startListeningCONET_Holesky_EPOCH(this.clusterIpaddress, this.livenessListeningPool)
 		})
 		
 	}
@@ -501,7 +502,7 @@ class conet_dl_server {
 	constructor (private domain: string) {
 		this.cluserIpAddrReg = new RegExp(domain)
 		this.initSetupData ()
-		startListeningCONET_Holesky_EPOCH(this.clusterIpaddress, this.livenessListeningPool)
+		
     }
 
 	private startServer = async () => {
