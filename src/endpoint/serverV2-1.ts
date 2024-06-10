@@ -123,7 +123,7 @@ const getMinerCount = ( server: string, livenessListeningPool: Map <string, live
 
 	return sendMesageToCluster(server, '/api/getTotalMiners', sendData, livenessListeningPool, (err, data) => {
 		if (err) {
-			logger(Colors.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
+			logger(Colors.grey(`checkMiner sendMesageToCluster /api/getTotalMiners gor Error ${err}`))
 			//	let client try again
 			return resolve (false)
 		}
@@ -302,9 +302,9 @@ const sendMesageToCluster = (server: string, path: string, pData: any, livenessL
 
 	const req = request (option, async res => {
 		let data = ''
-		logger(Colors.grey(`sendMesageToCluster [${path}] got response res Status ${res.statusCode}`))
+		
 		if (res.statusCode !== 200) {
-			console.log(`HEADERS: ${JSON.stringify(res.headers)}`)
+			logger(Colors.grey(`sendMesageToCluster [${path}] got response res Status ${res.statusCode}`))
 			if (res.statusCode === 401) {
 				logger(Colors.blue(`sendMesageToCluster got initData request!`))
 				//	let client try again
