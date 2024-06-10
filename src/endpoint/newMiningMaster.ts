@@ -195,7 +195,7 @@ const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
 		logger (Colors.grey(`request ${request} [${ipaddress}:${obj.walletAddress}] wallet or IP address didn't match nodes regiested IP address _ip [${_ip}]`))
 		return false
 	}
-	logger(Colors.grey(`[${ req.path }]checkNode return obj!`), inspect(obj, false, 3, true))
+	//logger(Colors.grey(`[${ req.path }]checkNode return obj!`), inspect(obj, false, 3, true))
 	return obj
 }
 
