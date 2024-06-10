@@ -167,7 +167,7 @@ const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string
 	}
 
 	totalminerOnline = parseInt(data.totalMiner)
-	minerRate = parseInt(data.minerRate)/12
+	minerRate = data.minerRate/12
 
 	logger(Colors.blue (`getMinerCount reutrn data minerRate = tokensEachEPOCH/totalminerOnline tokensEachEPOCH [${data.tokensEachEPOCH}] / totalminerOnline ${data.totalMiner} = [${data.minerRate}]`), inspect(data, false, 3, true))
 		
