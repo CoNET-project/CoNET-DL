@@ -104,7 +104,7 @@ let minerRate = 0
 
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
 	const totalFreeMiner = WalletIpaddress.size
-	const minerRate = tokensEachEPOCH / totalFreeMiner
+	minerRate = tokensEachEPOCH / totalFreeMiner
 
 	const tryTransfer = async () => {
 

@@ -109,7 +109,9 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 			// 	return send()
 			// }, 1000)
 		}
+		
 		logger (Color.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] success!`))
+		logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
 	}
 	send()
