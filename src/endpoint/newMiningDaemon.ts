@@ -105,7 +105,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 		return console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate is zero [${ethers.formatEther(rate)}] or totalFreeMiner [${totalFreeMiner}] is zero STOP transferMiners`))
 	}
 
-	const _minerRate = rate / (totalFreeMiner * BigInt(12))
+	const _minerRate = rate / (totalFreeMiner)
 	minerRate = _minerRate
 
 	console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] totalFreeMiner [${totalFreeMiner}] minerRate = ${minerRate}`))
@@ -546,7 +546,7 @@ class v3_master {
 			if (! await checkNodeWallet(walletAddress, true, this)) {
 				return res.status(412).end()
 			}
-			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: minerRate.toString()}
+			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate/BigInt(12))}
 			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
 			return res.status(200).json(responseData).end()
 		})
