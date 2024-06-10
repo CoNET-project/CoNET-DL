@@ -101,8 +101,8 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 	const totalFreeMiner = BigInt(WalletIpaddress.size)
 	const rate = await rateSC.rate()
 	
-	if (!rate) {
-		return console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] === 0 STOP transferMiners`))
+	if (!rate || !totalFreeMiner) {
+		return console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate is zero [${ethers.formatEther(rate)}] or totalFreeMiner [${totalFreeMiner}] is zero STOP transferMiners`))
 	}
 
 	const minerRate = rate / totalFreeMiner
