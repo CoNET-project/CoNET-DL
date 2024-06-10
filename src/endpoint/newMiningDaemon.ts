@@ -98,11 +98,40 @@ interface regiestNodes {
 
 let EPOCH=0
 let s3Pass: s3pass|null = null
+const tokensEachEPOCH = 0.03472 			//		34.72
+let minerRate = 0
+
+
+const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
+	const totalFreeMiner = WalletIpaddress.size
+	const minerRate = tokensEachEPOCH / totalFreeMiner
+	const tryTransfer = async () => {
+
+		const paymentWallet: string[] = []
+
+		WalletIpaddress.forEach (n => {
+			paymentWallet.push(n)
+		})
+		
+		if (paymentWallet.length > 0) {
+
+			transferPool.push({
+				privateKey: masterSetup.conetFaucetAdmin,
+				walletList: paymentWallet,
+				payList: paymentWallet.map(n => minerRate.toFixed(10))
+			})
+			await startTransfer()
+		}
+		
+	}
+	
+	await tryTransfer()
+	
+}
 
 
 export const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-
 	provideCONET.on('block', async block => {
 		EPOCH = block
 		logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
@@ -114,10 +143,6 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	s3Pass = await s3fsPasswd()
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
-
-
-
-
 
 const testNodeWallet = '0x22c2e3b73af3aceb57c266464538fa43dfd265de'.toLowerCase()
 
@@ -498,8 +523,6 @@ class v3_master {
 			return res.status(200).end()
 		})
 
-
-
 		router.post('/getTotalMiners',  async (req, res) => {
 			logger(Colors.blue(`/getTotalMiners`))
 			let walletAddress
@@ -507,16 +530,16 @@ class v3_master {
 				walletAddress = req.body.walletAddress
 			} catch (ex) {
 				logger (Colors.red(`Daemon /getTotalMiners req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(404).end()
+				return res.status(410).end()
 			}
 
 			if (!walletAddress) {
 				logger (Colors.red(`Daemon /getTotalMiners req.body nodeAddress ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(404).end()
+				return res.status(411).end()
 			}
 
 			if (! await checkNodeWallet(walletAddress, true, this)) {
-				return res.status(401).end()
+				return res.status(412).end()
 			}
 
 			logger(Colors.blue(`send json ${{totalMiner: this.ipaddressWallet.size}}`))
@@ -526,7 +549,7 @@ class v3_master {
 		router.all ('*', (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
-			res.status(405).end()
+			res.status(410).end()
 			return res.socket?.end().destroy()
 		})
 	}
