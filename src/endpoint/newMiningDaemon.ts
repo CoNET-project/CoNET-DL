@@ -110,8 +110,8 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 
 		const paymentWallet: string[] = []
 
-		WalletIpaddress.forEach (n => {
-			paymentWallet.push(n)
+		WalletIpaddress.forEach ((n, key) => {
+			paymentWallet.push(key)
 		})
 		
 		if (paymentWallet.length > 0) {
