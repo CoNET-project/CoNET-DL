@@ -5,7 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {resolve} from 'node:dns'
+import Dns from 'node:dns'
 import {regiestMiningNode} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
@@ -24,16 +24,16 @@ import {cntpAdminWallet} from './util'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {sign} from 'eth-crypto'
 
-const testMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLowerCase()
-const mainMiningDomain = 'api.openpgp.online'.toLowerCase()
+//	const testMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLowerCase()
 
-const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
+
+const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
 	new Promise (async resolve => {
 		returnData['wallet'] = wallet
 		if (res.writable && !res.closed) {
 			return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
 				if (err) {
-					await deleteAMiner(ipaddress, wallet, livenessListeningPool)
+					await deleteAMiner(server, ipaddress, wallet, livenessListeningPool)
 					logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
 					livenessListeningPool.delete(wallet)
 				}
@@ -41,7 +41,7 @@ const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipa
 			})
 			
 		}
-		await deleteAMiner(ipaddress, wallet, livenessListeningPool)
+		await deleteAMiner(server, ipaddress, wallet, livenessListeningPool)
 		livenessListeningPool.delete(wallet)
 		logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
 		return resolve (true)
@@ -113,7 +113,7 @@ export const selectLeaderboard: (block: number) => Promise<boolean> = (block) =>
 	return (true)
 })
 
-const getMinerCount = (livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
+const getMinerCount = ( server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
 	const messageHash = ethers.id(message)
 	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
@@ -121,7 +121,7 @@ const getMinerCount = (livenessListeningPool: Map <string, livenessListeningPool
 		message, signMessage
 	}
 
-	return sendMesageToCluster('/api/getTotalMiners', sendData, livenessListeningPool, (err, data) => {
+	return sendMesageToCluster(server, '/api/getTotalMiners', sendData, livenessListeningPool, (err, data) => {
 		if (err) {
 			logger(Colors.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
@@ -131,7 +131,7 @@ const getMinerCount = (livenessListeningPool: Map <string, livenessListeningPool
 	})
 	
 })
-const tokensEachEPOCH = 34.72
+
 const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
 	const tryTransfer = async () => {
 
@@ -159,9 +159,9 @@ const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string,
 }
 
 
-const clusterManager = 'apitests.conet.network'
-const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
-	const data: any = await getMinerCount (livenessListeningPool)
+
+const stratlivenessV2 = async (server: string, block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
+	const data: any = await getMinerCount (server, livenessListeningPool)
 		
 	if ( data === false || !data?.totalMiner) {
 		return logger(Colors.red(`transferMiners EPOCH [${EPOCH}] getMinerCount return Error!`), inspect(data, false, 3, true)) 
@@ -186,7 +186,7 @@ const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string
 	logger(inspect(returnData, false, 3, true	))
 	livenessListeningPool.forEach(async (n, key) => {
 		const res = n.res
-		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress, livenessListeningPool))
+		processPool.push(testMinerCOnnecting(res, returnData, key, n.ipaddress, server, livenessListeningPool))
 	})
 
 	await Promise.all(processPool)
@@ -201,7 +201,7 @@ const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string
 	// await transferMiners(block, livenessListeningPool)
 }
 
-const deleteAMiner = (ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
+const deleteAMiner = (server: string, ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
 	if (!isPublic(ipaddress)) {
 		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
 		return resolve (false)
@@ -213,7 +213,7 @@ const deleteAMiner = (ipaddress: string, wallet: string, livenessListeningPool: 
 		message, signMessage
 	}
 
-	return sendMesageToCluster('/api/deleteMiner', sendData,livenessListeningPool,  (err, data) => {
+	return sendMesageToCluster(server, '/api/deleteMiner', sendData,livenessListeningPool,  (err, data) => {
 		if (err) {
 			logger(Colors.red(`deleteAMiner sendMesageToCluster /api/deleteMiner gor Error${err}`))
 			//	let client try again
@@ -223,7 +223,7 @@ const deleteAMiner = (ipaddress: string, wallet: string, livenessListeningPool: 
 	})
 })
 
-const launshAndDeleteAllWalletInCLuster = ( livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
+const launshAndDeleteAllWalletInCLuster = ( server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
 	const messageHash = ethers.id(message)
 	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
@@ -231,7 +231,7 @@ const launshAndDeleteAllWalletInCLuster = ( livenessListeningPool: Map <string, 
 		message, signMessage
 	}
 
-	sendMesageToCluster('/api/nodeRestart', sendData, livenessListeningPool, (err, data) => {
+	sendMesageToCluster(server, '/api/nodeRestart', sendData, livenessListeningPool, (err, data) => {
 		if (err) {
 			logger(Colors.grey(`checkMiner sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
@@ -242,7 +242,7 @@ const launshAndDeleteAllWalletInCLuster = ( livenessListeningPool: Map <string, 
 	
 })
 
-const startListeningCONET_Holesky_EPOCH = async (livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
+const startListeningCONET_Holesky_EPOCH = async (server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
 	
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
@@ -251,17 +251,17 @@ const startListeningCONET_Holesky_EPOCH = async (livenessListeningPool: Map <str
 
 	provideCONET.on('block', async block => {
 		EPOCH = block
-		return stratlivenessV2(block.toString(), livenessListeningPool)
+		return stratlivenessV2(server, block.toString(), livenessListeningPool)
 	})
 
 	await regiestMiningNode()
-	await launshAndDeleteAllWalletInCLuster(livenessListeningPool)
+	await launshAndDeleteAllWalletInCLuster(server, livenessListeningPool)
 }
 
 
 let sendAlldataProcess = false
 
-const sendAlldata = (livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
+const sendAlldata = (server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
 	const minerArray: minerArray[]  = []
 	livenessListeningPool.forEach((v, k) => {
 		minerArray.push({address: v.ipaddress, wallet: v.wallet})
@@ -274,7 +274,7 @@ const sendAlldata = (livenessListeningPool: Map <string, livenessListeningPoolOb
 		message, signMessage
 	}
 
-	return sendMesageToCluster('/api/nodeRestart', sendData, livenessListeningPool, (err, data) => {
+	return sendMesageToCluster(server, '/api/nodeRestart', sendData, livenessListeningPool, (err, data) => {
 		if (err) {
 			logger(Colors.grey(`sendAlldata sendMesageToCluster /api/minerCheck gor Error${err}`))
 			//	let client try again
@@ -285,11 +285,11 @@ const sendAlldata = (livenessListeningPool: Map <string, livenessListeningPoolOb
 	})
 })
 
-const sendMesageToCluster = (path: string, pData: any, livenessListeningPool: Map <string, livenessListeningPoolObj>, callbak: (err: number|undefined, data?: any)=> void) => {
+const sendMesageToCluster = (server: string, path: string, pData: any, livenessListeningPool: Map <string, livenessListeningPoolObj>, callbak: (err: number|undefined, data?: any)=> void) => {
 
 	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
-		hostname: clusterManager,
+		hostname: server,
 		protocol: 'http:',
 		path,
 		port: 8001,
@@ -311,12 +311,12 @@ const sendMesageToCluster = (path: string, pData: any, livenessListeningPool: Ma
 			
 				if (!sendAlldataProcess) {
 					sendAlldataProcess = true
-					await sendAlldata (livenessListeningPool)
+					await sendAlldata (server, livenessListeningPool)
 					sendAlldataProcess = false
 				}
 
 				return setTimeout(async () => {
-					return sendMesageToCluster(path, pData, livenessListeningPool, callbak)
+					return sendMesageToCluster(server, path, pData, livenessListeningPool, callbak)
 				}, 2000)
 				
 			}
@@ -359,7 +359,7 @@ const sendMesageToCluster = (path: string, pData: any, livenessListeningPool: Ma
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
 
-const checkMiner = (ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
+const checkMiner = (server: string, ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
 	if (!isPublic(ipaddress)) {
 		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
 		return resolve (false)
@@ -372,7 +372,7 @@ const checkMiner = (ipaddress: string, wallet: string, livenessListeningPool: Ma
 		message, signMessage
 	}
 
-	return sendMesageToCluster('/api/minerCheck', sendData, livenessListeningPool, async (err, data) => {
+	return sendMesageToCluster(server, '/api/minerCheck', sendData, livenessListeningPool, async (err, data) => {
 		if (err) {
 			
 			return resolve (err)
@@ -484,7 +484,7 @@ class conet_dl_server {
 	public clusterIpaddress =''
 	public cluserIpAddrReg = new RegExp('')
 	private initSetupData = () => {
-		resolve(mainMiningDomain, (err, address) => {
+		Dns.resolve(this.domain, (err, address) => {
 			if ( err ) {
 				return logger(Colors.red(`conet_dl_server resolve mainMiningDomain got error, STOP `), err.message )
 			}
@@ -501,7 +501,7 @@ class conet_dl_server {
 	constructor (private domain: string) {
 		this.cluserIpAddrReg = new RegExp(domain)
 		this.initSetupData ()
-		startListeningCONET_Holesky_EPOCH(this.livenessListeningPool)
+		startListeningCONET_Holesky_EPOCH(this.clusterIpaddress, this.livenessListeningPool)
     }
 
 	private startServer = async () => {
@@ -513,7 +513,6 @@ class conet_dl_server {
 		app.use(Express.json())
 		app.use (async (req, res, next) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(inspect(req.headers, false, 3, true))
 			const readIp = req?.socket?.remoteAddress
 
 			if (!readIp || !this.cluserIpAddrReg.test(readIp) || !ipaddress) {
@@ -613,7 +612,7 @@ class conet_dl_server {
 			}
 
 
-			const m: any = await checkMiner(ipaddress, obj.walletAddress, this.livenessListeningPool )
+			const m: any = await checkMiner(this.clusterIpaddress, ipaddress, obj.walletAddress, this.livenessListeningPool )
 
 			// const m = await freeMinerManager(ipaddress, obj.walletAddress)
 
