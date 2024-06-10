@@ -105,6 +105,7 @@ let minerRate = 0
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
 	const totalFreeMiner = WalletIpaddress.size
 	const minerRate = tokensEachEPOCH / totalFreeMiner
+
 	const tryTransfer = async () => {
 
 		const paymentWallet: string[] = []
@@ -120,6 +121,8 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 				walletList: paymentWallet,
 				payList: paymentWallet.map(n => minerRate.toFixed(10))
 			})
+			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${paymentWallet.length}] minerRate [${minerRate}]! `))
+			
 			await startTransfer()
 		}
 		
@@ -135,7 +138,7 @@ export const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	provideCONET.on('block', async block => {
 		EPOCH = block
 		logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
-		//await storageMinerData(block)
+		await transferMiners(block, v3.WalletIpaddress)
 	})
 
 	EPOCH = await provideCONET.getBlockNumber()
@@ -543,7 +546,7 @@ class v3_master {
 			}
 
 			logger(Colors.blue(`send json ${{totalMiner: this.ipaddressWallet.size}}`))
-			return res.status(200).json({totalMiner: this.ipaddressWallet.size}).end()
+			return res.status(200).json({totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate}).end()
 		})
 
 		router.all ('*', (req, res ) => {

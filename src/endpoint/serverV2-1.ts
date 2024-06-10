@@ -167,7 +167,7 @@ const stratlivenessV2 = async (block: number, livenessListeningPool: Map <string
 	}
 
 	totalminerOnline = parseInt(data.totalMiner)
-	minerRate = tokensEachEPOCH/totalminerOnline
+	minerRate = parseInt(data.minerRate)/12
 
 	logger(Colors.blue (`getMinerCount reutrn data minerRate = tokensEachEPOCH/totalminerOnline tokensEachEPOCH [${tokensEachEPOCH}] / totalminerOnline ${totalminerOnline} = [${minerRate}]`), inspect(data, false, 3, true))
 		
@@ -423,51 +423,6 @@ const addAttackToCluster = async (ipaddress: string) => {
 const CGPNsAddr = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
 
 const guardianNodesList: string[] = []
- 
-const unlockCNTP = async (wallet: string, privateKey: string) => {
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const walletObj = new ethers.Wallet(privateKey, provider)
-	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CNTPAbi, walletObj)
-	let tx
-	try {
-		tx = await cCNTPContract.changeAddressInWhitelist(wallet, true)
-	} catch (ex: any) {
-		logger(Colors.red(`unlockCNTP error! Try again`), ex.message)
-		return setTimeout(() => {
-			unlockCNTP(wallet, privateKey)
-		}, Math.round( 10 * Math.random()) * 1000)
-	}
-	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
-}
-
-const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvider) => {
-	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI,provideCONET)
-	let nodes
-	try {
-		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
-	} catch (ex: any) {
-		return logger(Colors.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
-	}
-	const _nodesAddress: string[] = nodes[0].map((n: string) => n.toLowerCase())
-
-	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
-
-	let NFTAssets: number[]
-
-	try {
-		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
-	} catch (ex: any) {
-		return logger(Colors.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
-	}
-
-
-	NFTAssets.forEach((n, index) => {
-		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index]) {
-			guardianNodesList.push(_nodesAddress[index])
-		}
-	})
-	logger(Colors.blue(`guardianNodesList length = [${guardianNodesList.length}]`))
-}
 
 
 interface conetData {
@@ -495,32 +450,9 @@ const sentData = async (data: conetData, callback: (err?: null) => void) => {
 	return callback ()
 }
 let totalminerOnline = 0
-const transCONETArray: conetData[] = []
-let transCONETLock = false
-const transCONET = (address: string, balance: BigInt) => {
-	transCONETArray.push ({
-		address, balance
-	})
-	
-	const trySent = async () => {
-		const data = transCONETArray.shift()
-		if (!data) {
-			transCONETLock = false
-			return
-		}
-		transCONETLock = true
-		return sentData(data, () => {
-			trySent ()
-		})
-	}
-
-	if (!transCONETLock) {
-		trySent()
-	}
-	
-}
-
 let EPOCH = 0
+
+
 const addIpaddressToLivenessListeningPool = (ipaddress: string, wallet: string, res: Response, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => {
 	const obj: livenessListeningPoolObj = {
 		ipaddress, wallet, res

@@ -66,6 +66,7 @@ export const startTransfer = async () => {
 	const feeData = await provideCONET.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
 	marginPool()
+	
 	if (gasPrice > checkGasPrice || !gasPrice) {
 		startTransfering = false
 		return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
