@@ -299,7 +299,7 @@ const sendMesageToCluster = (server: string, path: string, pData: any, livenessL
 			'Content-Length': Buffer.byteLength(postData),
 		}
 	}
-
+	logger(inspect(option, false, 3, true))
 	const req = request (option, async res => {
 		let data = ''
 		
