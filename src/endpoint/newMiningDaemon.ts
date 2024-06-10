@@ -399,7 +399,7 @@ class v3_master {
 				return res.status(404).end()
 			}
 			
-			logger(Colors.blue(`Daemon /minerCheck `), inspect(req.body, false, 3, true))
+			//logger(Colors.blue(`Daemon /minerCheck `), inspect(req.body, false, 3, true))
 
 			if (!walletAddress || !ipAddress || !nodeAddress) {
 				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! !walletAddress || !ipAddress || !nodeAddress = ${!walletAddress} || ${!ipAddress} || ${!nodeAddress}`))

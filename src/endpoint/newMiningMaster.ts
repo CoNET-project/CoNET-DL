@@ -177,7 +177,7 @@ const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
 	// 	return false
 	// }
 
-	logger(Colors.red(`[${request}] checkNode checkSignObj!`))
+	//logger(Colors.red(`[${request}] checkNode checkSignObj!`))
 	if (!obj) {
 		logger (Colors.grey(`${ipaddress} request ${request} !obj Error! ${inspect(obj, false, 3, true)}`))
 		return false
