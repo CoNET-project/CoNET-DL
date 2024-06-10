@@ -4,7 +4,7 @@ import Color from 'colors/safe'
 import {conet_Holesky_rpc, cCNTP_Contract, mergeTransfersv1} from './util'
 import {ethers} from 'ethers'
 import {abi as CONET_Point_ABI} from './conet-point.json'
-
+import { inspect } from 'node:util'
 interface transferObj {
 	privateKey: string
 	walletList: string[]
@@ -66,7 +66,7 @@ export const startTransfer = async () => {
 	const feeData = await provideCONET.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
 	marginPool()
-	
+
 	if (gasPrice > checkGasPrice || !gasPrice) {
 		startTransfering = false
 		return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
@@ -101,10 +101,12 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 		try {
 			tx = await cCNTPContract.multiTransferToken(walletList, payList)
 		} catch (ex) {
-			logger(Color.red(`transferCCNTP Error! = [${walletList.length}] Wallet = [${wallet.address}]`))
-			return setTimeout(() => {
-				return send()
-			}, 1000)
+			logger(Color.red(`transferCCNTP Error! = [${walletList.length}] Wallet = [${wallet.address}]`), ex, inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
+
+			return 
+			// return setTimeout(() => {
+			// 	return send()
+			// }, 1000)
 		}
 		logger (Color.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] success!`))
 		callback()
