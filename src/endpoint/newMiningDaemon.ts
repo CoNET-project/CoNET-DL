@@ -98,7 +98,7 @@ interface regiestNodes {
 
 let EPOCH=0
 let s3Pass: s3pass|null = null
-const tokensEachEPOCH = 0.03472 			//		34.72
+const tokensEachEPOCH = 0.003472 			//		34.72
 let minerRate = 0
 
 
