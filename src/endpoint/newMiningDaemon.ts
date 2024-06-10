@@ -542,7 +542,7 @@ class v3_master {
 			}
 			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate}
 			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
-			return res.status(200).json().end()
+			return res.status(200).json(JSON.stringify(responseData)).end()
 		})
 
 		router.all ('*', (req, res ) => {
