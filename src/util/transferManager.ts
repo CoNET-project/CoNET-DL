@@ -116,7 +116,3 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 	}
 	send()
 }
-
-const test = () => {
-	const wallet = []
-}
