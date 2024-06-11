@@ -132,7 +132,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin,
 				walletList: jj,
-				payList: paymentWallet.map(n => ethers.formatEther(_minerRate))
+				payList: jj.map(n => ethers.formatEther(_minerRate))
 			})
 			
 		}
