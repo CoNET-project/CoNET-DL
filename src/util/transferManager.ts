@@ -59,7 +59,6 @@ const checkGasPrice = 1000010007
 
 export const startTransfer = async () => {
 	if (startTransfering) {
-		logger(Color.magenta(`startTransfer startTransfering == true STOP!`))
 		return
 	}
 	startTransfering = true
@@ -89,7 +88,6 @@ export const startTransfer = async () => {
 
 const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
 	if (walletList.length < 1) {
-		logger(Color.magenta(`transferCCNTP walletList.length < 1 stop! `))
 		return callback()
 	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -104,9 +102,9 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 		try {
 			tx = await cCNTPContract.multiTransferToken(walletList, payList)
 		} catch (ex) {
-			logger(Color.red(`transferCCNTP Error! = [${walletList.length}] Wallet = [${wallet.address}]`), ex, inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
+			logger(Color.red(`transferCCNTP Error! [${walletList.length}] Wallet = [${wallet.address}]`), ex, inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 
-			return 
+			return callback()
 			// return setTimeout(() => {
 			// 	return send()
 			// }, 1000)
