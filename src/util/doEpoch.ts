@@ -332,11 +332,11 @@ const stratFreeMinerReferrals = async (block: string) => {
 				referrals: n.count.toString()
 			})
 		})
-		logger(inspect(payList, false, 3, true))
-		// await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-		// sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
-		// 	logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
-		// })
+
+		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
+		sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
+			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
+		})
 		
 		
 	})
