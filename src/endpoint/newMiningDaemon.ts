@@ -299,7 +299,7 @@ class v3_master {
 			}
 
 			try {
-				const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, provider)
+				const contract = new ethers.Contract(conet_Referral_contractV3, CONET_Referral_ABI, provider)
 				address = await contract.getReferrer(wallet)
 			} catch (ex){
 				logger(Colors.red(`contract.getReferrer Error!`))
