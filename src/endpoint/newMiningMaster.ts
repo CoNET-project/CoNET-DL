@@ -414,10 +414,12 @@ class conet_dl_v3_server {
 
 		router.post('/deleteMiner',  async (req, res) =>{
 			const obj = await checkNode(req, this.regiestNodes)
+
 			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
 				logger(Colors.red(`/deleteMiner obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
+
 			return postLocalhost('/api/deleteMiner', obj, res)
 		})
 
@@ -429,6 +431,13 @@ class conet_dl_v3_server {
 				return logger(Colors.blue(`/nodeRestart checkNode error!`))
 			}
 
+			let data:minerArray[] = obj?.data
+
+			if (!data) {
+				res.status(404).end()
+				return logger(Colors.red(`/nodeRestart hasn't include data error!`))
+			}
+			
 			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon`))
 			return postLocalhost('/api/nodeRestart', obj, res)
 		})

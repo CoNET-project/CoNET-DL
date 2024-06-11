@@ -416,12 +416,6 @@ class v3_master {
 				return res.status(404).end()
 			}
 			
-			//logger(Colors.blue(`Daemon /minerCheck `), inspect(req.body, false, 3, true))
-
-			if (!walletAddress || !ipAddress || !nodeAddress) {
-				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! !walletAddress || !ipAddress || !nodeAddress = ${!walletAddress} || ${!ipAddress} || ${!nodeAddress}`))
-				return res.status(404).end()
-			}
 
 			if (! await checkNodeWallet(nodeAddress, true, this)) {
 				
@@ -465,10 +459,6 @@ class v3_master {
 				return res.status(404).end()
 			}
 			
-			if (!walletAddress || !ipAddress || !nodeAddress) {
-				logger (Colors.red(`Daemon /deleteMiner req.body walletAddress1 ERROR! !walletAddress || !ipAddress || !nodeAddress = ${!walletAddress} || ${!ipAddress} || ${!nodeAddress}`))
-				return res.status(404).end()
-			}
 			
 			if (! await checkNodeWallet(nodeAddress, true, this)) {
 				
@@ -480,6 +470,7 @@ class v3_master {
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (ipAddress === '23.16.211.100') {
 				const ips = this.WalletIpaddress.get (walletAddress)
+				
 				if (!ips) {
 					logger(Colors.red(`/deleteMiner 23.16.211.100 cant get WalletIpaddress.get(${walletAddress})`))
 				} else {
@@ -535,28 +526,26 @@ class v3_master {
 				})
 			}
 
-			logger(Colors.green(`/nodeRestart return 200 [${inspect(this.nodeIpaddressWallets.get(obj.walletAddress), false, 3, true)}]! `))
+			logger(Colors.green(`/nodeRestart added node [${obj.walletAddress}] wallets [${this.nodeIpaddressWallets.get(obj.walletAddress)?.size}]! `))
 			return res.status(200).end()
 		})
 
 		router.post('/getTotalMiners',  async (req, res) => {
 			logger(Colors.blue(`/getTotalMiners`))
-			let walletAddress
+			let ipAddress, nodeAddress
 			try {
-				walletAddress = req.body.walletAddress
+				ipAddress = req.body.ipAddress
+				nodeAddress = req.body.walletAddress
+
 			} catch (ex) {
-				logger (Colors.red(`Daemon /getTotalMiners req.body JSON FORMAT ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(410).end()
+				logger (Colors.red(`Daemon /deleteMiner req.body walletAddress1 ERROR! ${inspect(req.body, false, 3, true)}`))
+				return res.status(404).end()
+			}
+			
+			if (! await checkNodeWallet(nodeAddress, true, this)) {
+				return res.status(401).end()
 			}
 
-			if (!walletAddress) {
-				logger (Colors.red(`Daemon /getTotalMiners req.body nodeAddress ERROR! ${inspect(req.body, false, 3, true)}`))
-				return res.status(411).end()
-			}
-
-			if (! await checkNodeWallet(walletAddress, true, this)) {
-				return res.status(412).end()
-			}
 			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate)}
 			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
 			return res.status(200).json(responseData).end()
