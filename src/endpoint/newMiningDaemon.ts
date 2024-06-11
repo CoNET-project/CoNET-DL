@@ -95,7 +95,7 @@ let minerRate = BigInt(0)
 
 
 const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-
+const splitLength = 1000
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
 	
 	const totalFreeMiner = BigInt(WalletIpaddress.size)
@@ -113,21 +113,32 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 
 	const tryTransfer = async () => {
 
-		const paymentWallet: string[] = []
-
+		const paymentWallet: string[][] = []
+		let i = 0, j = 0
 		WalletIpaddress.forEach ((n, key) => {
-			paymentWallet.push(key)
+			
+			if (!(i % splitLength)) {
+				
+				if (i > 4) j ++
+				paymentWallet[j] = []
+			}
+			
+			paymentWallet[j].push(n)
+			i++
+			paymentWallet[j].push(key)
 		})
 		
-		if (paymentWallet.length > 0) {
-
+		for (let jj of paymentWallet) {
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin,
-				walletList: paymentWallet,
+				walletList: jj,
 				payList: paymentWallet.map(n => ethers.formatEther(_minerRate))
 			})
-			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${paymentWallet.length}] minerRate [${minerRate}]! `))
 			
+		}
+
+		if (paymentWallet.length > 0) {
+			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${paymentWallet.length}] minerRate [${minerRate}]! `))
 			await startTransfer()
 		}
 		
