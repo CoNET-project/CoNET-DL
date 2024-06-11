@@ -329,7 +329,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 			payList.push(n.cntp.toFixed(10))
 			countList.push({
 				wallet: key,
-				cntpRate: ethers.formatEther((n.cntp/12).toFixed(10)),
+				cntpRate:(n.cntp/12).toFixed(10),
 				referrals: n.count.toString()
 			})
 		})
