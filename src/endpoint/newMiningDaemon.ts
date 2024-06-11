@@ -10,7 +10,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
-import {conet_Referral_contractV2, masterSetup, checkSignObj, storageWalletProfile, s3fsPasswd} from '../util/util'
+import { masterSetup, storageWalletProfile, s3fsPasswd} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import {v4} from 'uuid'
@@ -25,7 +25,7 @@ const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
-
+const conet_Referral_contractV3 = '0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 
 
 interface epochRate {
@@ -45,7 +45,7 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
 		let address
 		try {
-			const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, provider)
+			const contract = new ethers.Contract(conet_Referral_contractV3, CONET_Referral_ABI, provider)
 			address = await contract.getReferrer(wallet)
 		} catch (ex){
 			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
