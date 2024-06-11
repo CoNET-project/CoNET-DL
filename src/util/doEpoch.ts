@@ -158,7 +158,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		}
 		
 		if (data?.address !== '0x0000000000000000000000000000000000000000') {
-			return callback ({ wallet: data.address, pay: (totalToken * reword).toFixed(0)})
+			return callback ({ wallet: data.address, pay: (totalToken * reword).toFixed(10)})
 		}
 		return callback (null)
 	})
