@@ -138,7 +138,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 		}
 
 		if (paymentWallet.length > 0) {
-			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${paymentWallet.length}] minerRate [${minerRate}]! `))
+			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${WalletIpaddress.size}] minerRate [${minerRate}]! `))
 			await startTransfer()
 		}
 		

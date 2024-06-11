@@ -59,6 +59,7 @@ const checkGasPrice = 1000010007
 
 export const startTransfer = async () => {
 	if (startTransfering) {
+		logger(Color.magenta(`startTransfer startTransfering == true STOP!`))
 		return
 	}
 	startTransfering = true
@@ -88,6 +89,7 @@ export const startTransfer = async () => {
 
 const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
 	if (walletList.length < 1) {
+		logger(Color.magenta(`transferCCNTP walletList.length < 1 stop! `))
 		return callback()
 	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
