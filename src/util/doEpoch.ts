@@ -301,7 +301,8 @@ const stratFreeMinerReferrals = async (block: string) => {
 	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ ethers.formatEther(minerRate) }] MinerWallets length = [${walletArray.length}]`))
 
 	mapLimit( walletArray, 2, async (n, next) => {
-		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
+		//	@ts-ignore
+		const data1: any = await CalculateReferrals(n, parseFloat(parseFloat(ethers.formatEther(rate))))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
 		if (addressList) {
