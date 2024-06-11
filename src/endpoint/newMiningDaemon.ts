@@ -337,7 +337,7 @@ class v3_master {
 			res.status(200).end()
 			
 			transferPool.push({
-				privateKey: masterSetup.GuardianReferralsFree,
+				privateKey: masterSetup.conetFaucetAdmin,
 				walletList: walletList,
 				payList: payList
 			})
