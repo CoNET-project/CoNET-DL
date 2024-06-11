@@ -5,7 +5,7 @@ import {exec} from 'node:child_process'
 import { inspect } from 'node:util'
 
 
-const conet_Holesky_rpc = 'http://207.90.195.83:9999'
+const conet_Holesky_rpc = 'http://209.209.8.230:8000'
 
 
 const startListeningCONET_Holesky_EPOCH = async () => {
