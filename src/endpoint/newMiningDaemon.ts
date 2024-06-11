@@ -319,7 +319,7 @@ class v3_master {
 		router.post ('/pay',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 
-			if (!ipaddress ||! /\:\:1|\:\:ffff\:127\.0\.0\.1/.test(ipaddress)) {
+			if (!ipaddress ||! /127\.0\.0\.1$/.test(ipaddress)) {
 				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
 				res.end()
 				return res?.socket?.destroy()
@@ -347,7 +347,7 @@ class v3_master {
 
 		router.post ('/guardians-data',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress ||! /\:\:1|\:\:ffff\:127\.0\.0\.1/.test(ipaddress)) {
+			if (!ipaddress ||! /127\.0\.0\.1$/.test(ipaddress)) {
 				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
 				res.end()
 				return res?.socket?.destroy()
@@ -376,7 +376,7 @@ class v3_master {
 
 		router.post ('/free-data',  async (req, res) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress ||! /\:\:1|\:\:ffff\:127\.0\.0\.1/.test(ipaddress)) {
+			if (!ipaddress ||! /127\.0\.0\.1$/.test(ipaddress)) {
 				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
 				res.end()
 				return res?.socket?.destroy()
