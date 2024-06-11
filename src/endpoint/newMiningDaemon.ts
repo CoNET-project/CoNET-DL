@@ -128,6 +128,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 		})
 		
 		for (let jj of paymentWallet) {
+			logger(Colors.red(`for (let jj of paymentWallet) jj length = [${jj.length}]`))
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin,
 				walletList: jj,
@@ -136,7 +137,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 			
 		}
 
-		if (paymentWallet.length > 0) {
+		if (transferPool.length > 0) {
 			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${WalletIpaddress.size}] minerRate [${minerRate}]! `))
 			await startTransfer()
 		}
