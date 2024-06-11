@@ -72,7 +72,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/wallet`,
-		port: 8001,
+		port: 8002,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -114,7 +114,7 @@ const postReferrals = async (epoch: string, totalMiner: string, minerRate: strin
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/free-data`,
-		port: 8001,
+		port: 8002,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -217,7 +217,7 @@ const sendPaymentToPool = async (totalMiner: string, walletList: string[], payLi
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/pay`,
-		port: 8001,
+		port: 8002,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
