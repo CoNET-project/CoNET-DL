@@ -325,7 +325,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 		const countList: leaderboard[] = []
 		walletTotal.forEach((n, key) => {
 			walletList.push(key)
-			payList.push(ethers.formatEther(n.cntp.toFixed(0)))
+			payList.push(n.cntp.toFixed(0))
 			countList.push({
 				wallet: key,
 				cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
