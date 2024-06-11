@@ -26,17 +26,7 @@ const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
 
-const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) => {
-	const blockDetail = await provider.getBlock(block)
-	if (!blockDetail?.transactions) {
-		return logger(Colors.gray(`Block ${block} hasn't transactions SKIP!`))
-	}
 
-	for (let u of blockDetail.transactions) {
-		await detailTransfer(u, provider)
-	}
-
-}
 
 interface epochRate {
 	totalNodes:string
@@ -145,7 +135,7 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 	}
 	
 	await tryTransfer()
-	
+	await storageMinerData (EPOCH, WalletIpaddress)
 }
 
 
@@ -217,6 +207,24 @@ const cleanupNode = (nodeWallet: string, v3: v3_master) => {
 		v3.WalletIpaddress.delete(n)
 	})
 	v3.nodeIpaddressWallets.delete(nodeWallet)
+}
+
+const storageMinerData = async (block: number, WalletIpaddress: Map<string, string>) => {
+	//	obj: {hash?: string, data?: string}
+	const walletsArray: string[] = []
+	if (!s3Pass) {
+		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
+	}
+	WalletIpaddress.forEach((n, key) => {
+		walletsArray.push(key)
+	})
+	const obj = {
+		hash: `free_wallets_${block}`,
+		data: JSON.stringify(walletsArray)
+	}
+
+	await storageWalletProfile(obj, s3Pass)
+	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
 
 
