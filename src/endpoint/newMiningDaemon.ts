@@ -95,7 +95,7 @@ let minerRate = BigInt(0)
 
 
 const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-const splitLength = 1000
+const splitLength = 500
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
 	
 	const totalFreeMiner = BigInt(WalletIpaddress.size)
@@ -470,7 +470,7 @@ class v3_master {
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
 			if (ipAddress === '23.16.211.100') {
 				const ips = this.WalletIpaddress.get (walletAddress)
-				
+
 				if (!ips) {
 					logger(Colors.red(`/deleteMiner 23.16.211.100 cant get WalletIpaddress.get(${walletAddress})`))
 				} else {
