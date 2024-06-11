@@ -6,10 +6,10 @@ import { inspect } from 'node:util'
 
 
 const conet_Holesky_rpc = 'http://209.209.8.230:8000'
-
+const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 const startListeningCONET_Holesky_EPOCH = async () => {
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	
 
 	provideCONET.on('block', async block => {
 		return startDaemonProcess(parseInt(block.toString()))

@@ -8,6 +8,8 @@ import { mapLimit} from 'async'
 import { logger } from './logger'
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
+import {inspect} from 'node:util'
+import rateABI from '../endpoint/conet-rate.json'
 
 interface leaderboard {
 	wallet: string
@@ -20,8 +22,9 @@ interface walletCount {
 	count: number
 }
 
-const tokensEachEPOCH = 34.72
-
+const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
+const conet_Holesky_rpc = 'http://209.209.8.230:8000'
+const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const sslOptions: TLSSocketOptions = {
 	key : masterSetup.Cassandra.certificate.key,
 	cert : masterSetup.Cassandra.certificate.cert,
@@ -267,6 +270,9 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	
 }
 let s3Pass: s3pass | null
+
+const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
+
 const stratFreeMinerReferrals = async (block: string) => {
 	s3Pass = await s3fsPasswd()
 	//	free_wallets_${block}
@@ -286,11 +292,13 @@ const stratFreeMinerReferrals = async (block: string) => {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 
-	const minerRate =  ethers.parseEther((tokensEachEPOCH/walletArray.length).toFixed(18))
+	const rate: BigInt = await rateSC.rate()/BigInt(walletArray.length)
+	//@ts-ignore
+	const minerRate = ethers.formatEther(rate)
 	
 	const walletTotal : Map<string, walletCount> = new Map()
 
-	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}]`))
 
 	mapLimit( walletArray, 2, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
@@ -338,6 +346,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 let epoch = ''
 
 const [,,...args] = process.argv
+
 args.forEach ((n, index ) => {
 	if (/^epoch\=/i.test(n)) {
 		epoch = n.split('=')[1]
