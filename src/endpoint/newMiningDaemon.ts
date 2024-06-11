@@ -95,7 +95,7 @@ let minerRate = BigInt(0)
 
 
 const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-const splitLength = 500
+const splitLength = 1000
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
 	
 	const totalFreeMiner = BigInt(WalletIpaddress.size)
@@ -118,14 +118,13 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 		WalletIpaddress.forEach ((n, key) => {
 			
 			if (!(i % splitLength)) {
-				
-				if (i > 4) j ++
+				if (i > 0){
+					j ++
+				}
 				paymentWallet[j] = []
 			}
-			
-			paymentWallet[j].push(n)
-			i++
 			paymentWallet[j].push(key)
+			i++
 		})
 		
 		for (let jj of paymentWallet) {
