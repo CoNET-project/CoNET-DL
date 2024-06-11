@@ -83,7 +83,7 @@ let minerRate = 0
 let totalMiner = ''
 
 
-export const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
+const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
 	const [_node, _free] = await Promise.all([
 		getWasabiFile(`${block}_node`),
 		getWasabiFile(`${block}_free`)

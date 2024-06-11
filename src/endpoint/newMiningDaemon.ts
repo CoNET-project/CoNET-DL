@@ -398,7 +398,7 @@ class v3_master {
 			}
 			res.status(200).end()
 			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
-			// await storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
+			//storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
 			
 			const index = epochRate.findIndex(n => n.epoch=== epoch)
 			if (index < 0) {

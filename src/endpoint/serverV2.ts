@@ -58,7 +58,7 @@ let totalMiner = ''
 
 const faucetRate = '0.01'
 
-export const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
+const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
 	const [_node, _free] = await Promise.all([
 		getWasabiFile(`${block}_node`),
 		getWasabiFile(`${block}_free`)
@@ -89,7 +89,7 @@ export const selectLeaderboard: (block: number) => Promise<boolean> = (block) =>
 })
 
 
-export const startListeningCONET_Holesky_EPOCH = async () => {
+const startListeningCONET_Holesky_EPOCH = async () => {
 	
 	
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -271,7 +271,7 @@ class conet_dl_server {
 
 	constructor () {
 		this.initSetupData ()
-		//startListeningCONET_Holesky_EPOCH()
+		startListeningCONET_Holesky_EPOCH()
     }
 
 	private startServer = async () => {
