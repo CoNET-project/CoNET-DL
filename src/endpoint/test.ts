@@ -3,7 +3,7 @@ import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, regiestMi
 import {inspect} from 'node:util'
 
 import {ethers} from 'ethers'
-import {selectLeaderboard} from './serverV2'
+// import {selectLeaderboard} from './serverV2'
 import Colors from 'colors/safe'
 const message =  {
 	message: '{"walletAddress":"0x73940FCb2211c1c09eCeB6f42846E30Af6b459BC"}',
