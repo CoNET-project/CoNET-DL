@@ -1,7 +1,7 @@
 import {ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
-import {GuardianNodes_ContractV2, masterSetup} from './util'
+import {masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
@@ -9,20 +9,14 @@ import {transferPool, startTransfer} from './transferManager'
 
 let EPOCH = 0
 let transferEposh = 0
-const tokensEachEPOCH = 34.72
+const GuardianNodes_ContractV3 = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
-const ReferralsMap: Map<string, string> = new Map()
-
-interface leaderboard {
-	wallet: string
-	referrals: string
-	cntpRate: string
-}
+const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, CONETProvider)
 
 const guardianReferrals = async (block: number) => {
-	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
+
 	let nodes
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
@@ -108,8 +102,6 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 
 
 const guardianMining = async (block: number) => {
-	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
 	let nodes
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
@@ -186,8 +178,6 @@ const guardianMining = async (block: number) => {
 	startTransfer()
 	
 }
-
-let runningTransferEposh = 0
 
 
 const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, contract: ethers.Contract, CallBack: (err:Error|null, data?: any) => void) => {

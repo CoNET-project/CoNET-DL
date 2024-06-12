@@ -8,8 +8,6 @@ import { mapLimit} from 'async'
 import { logger } from './logger'
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
-import {inspect} from 'node:util'
-import rateABI from '../endpoint/conet-rate.json'
 
 interface leaderboard {
 	wallet: string
@@ -22,9 +20,8 @@ interface walletCount {
 	count: number
 }
 
-const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
-const conet_Holesky_rpc = 'http://209.209.8.230:8000'
-const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const tokensEachEPOCH = 34.72
+
 const sslOptions: TLSSocketOptions = {
 	key : masterSetup.Cassandra.certificate.key,
 	cert : masterSetup.Cassandra.certificate.cert,
@@ -72,7 +69,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/wallet`,
-		port: 8002,
+		port: 8001,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -114,7 +111,7 @@ const postReferrals = async (epoch: string, totalMiner: string, minerRate: strin
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/free-data`,
-		port: 8002,
+		port: 8001,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -158,7 +155,7 @@ const countReword = (reword: number, wallet: string, totalToken: number, callbac
 		}
 		
 		if (data?.address !== '0x0000000000000000000000000000000000000000') {
-			return callback ({ wallet: data.address, pay: (totalToken * reword).toFixed(10)})
+			return callback ({ wallet: data.address, pay: (totalToken * reword).toFixed(0)})
 		}
 		return callback (null)
 	})
@@ -217,7 +214,7 @@ const sendPaymentToPool = async (totalMiner: string, walletList: string[], payLi
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/pay`,
-		port: 8002,
+		port: 8001,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -270,9 +267,6 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	
 }
 let s3Pass: s3pass | null
-
-const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
-
 const stratFreeMinerReferrals = async (block: string) => {
 	s3Pass = await s3fsPasswd()
 	//	free_wallets_${block}
@@ -292,17 +286,14 @@ const stratFreeMinerReferrals = async (block: string) => {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 
-	const rate: BigInt = await rateSC.rate()/BigInt(walletArray.length)
-
-	const minerRate = rate
+	const minerRate =  ethers.parseEther((tokensEachEPOCH/walletArray.length).toFixed(18))
 	
 	const walletTotal : Map<string, walletCount> = new Map()
-	//@ts-ignore
-	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ ethers.formatEther(minerRate) }] MinerWallets length = [${walletArray.length}]`))
+
+	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
 
 	mapLimit( walletArray, 2, async (n, next) => {
-		//	@ts-ignore
-		const data1: any = await CalculateReferrals(n, parseFloat(parseFloat(ethers.formatEther(rate))))
+		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
 		if (addressList) {
@@ -326,18 +317,19 @@ const stratFreeMinerReferrals = async (block: string) => {
 		const countList: leaderboard[] = []
 		walletTotal.forEach((n, key) => {
 			walletList.push(key)
-			payList.push(n.cntp.toFixed(10))
+			payList.push(ethers.formatEther(n.cntp.toFixed(0)))
 			countList.push({
 				wallet: key,
-				cntpRate:(n.cntp/12).toFixed(10),
+				cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
 				referrals: n.count.toString()
 			})
 		})
-
+		
 		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
 		sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
 			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		})
+		
 		
 	})
 	
@@ -346,7 +338,6 @@ const stratFreeMinerReferrals = async (block: string) => {
 let epoch = ''
 
 const [,,...args] = process.argv
-
 args.forEach ((n, index ) => {
 	if (/^epoch\=/i.test(n)) {
 		epoch = n.split('=')[1]

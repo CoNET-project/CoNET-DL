@@ -280,3 +280,9 @@ interface livenessListeningPoolObj {
 	ipaddress: string
 	wallet: string
 }
+
+interface leaderboard {
+	wallet: string
+	referrals: string
+	cntpRate: string
+}

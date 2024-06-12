@@ -61,6 +61,17 @@ const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProv
 	}
 }
 
+const store_Leaderboard_Free_referrals_toS3 = async (data: {epoch: string, referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
+	if (!s3Pass) {
+		return logger(Colors.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
+	}
+	const obj = {
+		data: JSON.stringify(data),
+		hash: `${data.epoch}_free`
+	}
+	await storageWalletProfile(obj, s3Pass)
+}
+
 
 const storeToChain = async (data: epochRate) => {
 	logger(inspect(data, false, 3, true))
@@ -317,13 +328,7 @@ class v3_master {
 		})
 
 		router.post ('/pay',  async (req, res) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
 
-			if (!ipaddress ||! /127\.0\.0\.1$/.test(ipaddress)) {
-				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
-				res.end()
-				return res?.socket?.destroy()
-			}
 
 			let walletList: string[]
 			let payList: string[]
@@ -346,12 +351,7 @@ class v3_master {
 		})
 
 		router.post ('/guardians-data',  async (req, res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress ||! /127\.0\.0\.1$/.test(ipaddress)) {
-				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
-				res.end()
-				return res?.socket?.destroy()
-			}
+
 			let epoch: string
 			let totalNodes: string
 			try {
@@ -375,40 +375,19 @@ class v3_master {
 		})
 
 		router.post ('/free-data',  async (req, res) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress ||! /127\.0\.0\.1$/.test(ipaddress)) {
-				logger(Colors.red(`[${ipaddress}] access Local only area Error! `))
-				res.end()
-				return res?.socket?.destroy()
-			}
-
-			logger(Colors.blue(`${ipaddress} => /guardians-data`))
 			
-			let epoch: string
-			let minerRate
-			let totalMiner
+			let data
 			try {
-				epoch = req.body.epoch
-				minerRate = req.body.minerRate
-				totalMiner = req.body.totalMiner
-
+				data = req.body.data
 			} catch (ex) {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
 			res.status(200).end()
-			logger(Colors.blue(`minerRate = ${minerRate} totalMiner = ${totalMiner}`))
-			//storeLeaderboardFree_referrals(epoch, referrals, cntp, referrals_rate_list, totalMiner.toString(), minerRate.toString())
 			
-			const index = epochRate.findIndex(n => n.epoch=== epoch)
-			if (index < 0) {
-				return epochRate.push({
-					epoch, totalNodes:'', totalMiner
-				})
-			}
-			epochRate[index].totalMiner = totalMiner
-			await storeToChain(epochRate[index])
-			epochRate.splice(index, 1)[0]
+			logger(Colors.blue(`/free-data`), inspect(data, false, 3, true))
+			
+			
 		})
 
 		router.post('/minerCheck',  async (req, res) =>{
