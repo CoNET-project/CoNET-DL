@@ -298,7 +298,7 @@ class v3_master {
 				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
-			res.status(200).end()
+			res.status(200).json({}).end()
 			
 			transferPool.push({
 				privateKey: masterSetup.conetFaucetAdmin[0],
