@@ -109,8 +109,6 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 	const _minerRate = rate / (totalFreeMiner)
 	minerRate = _minerRate
 
-	console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] totalFreeMiner [${totalFreeMiner}] minerRate = ${minerRate}`))
-
 	await storageMinerData (EPOCH, WalletIpaddress)
 }
 
