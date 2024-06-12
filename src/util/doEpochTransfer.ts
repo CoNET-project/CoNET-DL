@@ -27,6 +27,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
 	let walletArray: string[]
+	
 	try{
 		walletArray = JSON.parse(data)
 	} catch (ex) {
@@ -46,7 +47,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] MinerWallets length = [${walletArray.length}]`))
 
 	const kkk = walletArray.length
-	const splitTimes = 1 + Math.round(kkk/splitLength)
+	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
 	const splitBase =  Math.round(kkk/splitTimes)
 	const dArray: string[][] = []
 
