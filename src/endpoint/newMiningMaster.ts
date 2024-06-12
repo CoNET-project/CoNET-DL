@@ -116,7 +116,7 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 			chunk += data
 		})
 		res.once ('end', () => {
-			logger(Colors.blue(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(chunk, false,3, true))
+			logger(Colors.grey(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(chunk, false,3, true))
 			_res.status(res.statusCode||404).write(chunk)
 			_res.end()
 		})
@@ -309,7 +309,7 @@ class conet_dl_v3_server {
 		})
 
 		router.post('/getTotalMiners',  async (req, res) => {
-			logger(Colors.magenta(`Worker get getTotalMiners`))
+
 			const obj = await checkNode(req, this.regiestNodes)
 
 			if (!obj) {

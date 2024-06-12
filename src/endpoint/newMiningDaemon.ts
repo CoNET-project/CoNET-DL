@@ -493,7 +493,6 @@ class v3_master {
 			}
 
 			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate)}
-			logger(Colors.blue(`/getTotalMiners send json ${inspect(responseData, false, 3, true)}`))
 			return res.status(200).json(responseData).end()
 		})
 
