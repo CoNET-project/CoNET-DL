@@ -14,7 +14,6 @@ import { masterSetup, storageWalletProfile, s3fsPasswd} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import {v4} from 'uuid'
-import { cpus } from 'node:os'
 import epochRateABI from '../util/epochRate.json'
 import rateABI from './conet-rate.json'
 
@@ -35,42 +34,6 @@ interface epochRate {
 }
 
 const epochRate: epochRate[]= []
-
-const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
-	const transObj = await provider.getTransactionReceipt(transferHash)
-	const toAddr = transObj?.to
-	if ( toAddr && toAddr.toLowerCase() === ReferralsV2Addr) {
-		
-		const wallet = transObj.from.toLowerCase()
-		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
-		let address
-		try {
-			const contract = new ethers.Contract(conet_Referral_contractV3, CONET_Referral_ABI, provider)
-			address = await contract.getReferrer(wallet)
-		} catch (ex){
-			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
-			return
-		}
-
-		if (!address || address === '0x0000000000000000000000000000000000000000') {
-			return logger(Colors.red(`detailTransfer contract.getReferrer get null address`))
-		}
-		address = address.toLowerCase()
-		ReferralsMap.set(wallet, address)
-		logger(Colors.blue(`detailTransfer add Referrer [${wallet} => ${address}] to ReferralsMap success! ReferralsMap length = [${ReferralsMap.size}]`))
-	}
-}
-
-const store_Leaderboard_Free_referrals_toS3 = async (data: {epoch: string, referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
-	if (!s3Pass) {
-		return logger(Colors.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
-	}
-	const obj = {
-		data: JSON.stringify(data),
-		hash: `${data.epoch}_free`
-	}
-	await storageWalletProfile(obj, s3Pass)
-}
 
 
 const storeToChain = async (data: epochRate) => {
@@ -96,10 +59,10 @@ let minerRate = BigInt(0)
 
 
 const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-const splitLength = 1000
-const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
+
+const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>, ipaddressWallet: Map<string, string>) => {
 	
-	const totalFreeMiner = BigInt(WalletIpaddress.size)
+	const totalFreeMiner = BigInt (WalletIpaddress.size)
 	const rate = await rateSC.rate()
 	
 	if (!rate || !totalFreeMiner) {
@@ -110,6 +73,8 @@ const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string
 	minerRate = _minerRate
 
 	await storageMinerData (EPOCH, WalletIpaddress)
+
+	logger(Colors.blue(`Epoch ${EPOCH} total wallet ${WalletIpaddress.size} Total IPAddress ${ipaddressWallet.size} rate ${rate} success!`))
 }
 
 
@@ -117,7 +82,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	provider.on('block', async block => {
 		EPOCH = block
 		logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
-		await transferMiners(block, v3.WalletIpaddress)
+		await transferMiners(block, v3.WalletIpaddress, v3.ipaddressWallet)
 	})
 
 	EPOCH = await provider.getBlockNumber()
@@ -477,7 +442,7 @@ class v3_master {
 		})
 
 		router.post('/getTotalMiners',  async (req, res) => {
-			logger(Colors.blue(`/getTotalMiners`))
+
 			let ipAddress, nodeAddress
 			try {
 				ipAddress = req.body.ipAddress
