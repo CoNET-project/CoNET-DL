@@ -385,7 +385,6 @@ export const s3fsPasswd: () => Promise<s3pass|null> = () => {
 				ACCESS_KEY: pass[0],
 				SECRET_KEY: pass[1]
 			}
-			logger (inspect(ret, false, 3, true))
 			return resolve (ret)
 		})
 		

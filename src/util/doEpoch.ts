@@ -266,6 +266,7 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
 }
+
 let s3Pass: s3pass | null
 
 
@@ -277,6 +278,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 	if (!data) {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
+	
 	let walletArray: string[]
 	try{
 		walletArray = JSON.parse(data)
