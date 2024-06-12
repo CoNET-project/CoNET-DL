@@ -9,11 +9,8 @@ const conet_Holesky_rpc = 'http://209.209.8.230:8000'
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 const startListeningCONET_Holesky_EPOCH = async () => {
-	
-
 	provideCONET.on('block', async block => {
 		return startDaemonProcess(parseInt(block.toString()))
-
 	})
 }
 
@@ -35,12 +32,12 @@ const doWorkerCom: (command: string) => Promise<boolean> = (command: string) => 
 const doWorker = async (epoch: string) => {
 	const command = `node dist/util/doEpochNode epoch=${epoch}`
 	const command1 = `node dist/util/doEpoch epoch=${epoch}`
-	logger(Color.red(`Start doWorker Epoch ${epoch}`))
+	logger(Color.blue(`Start doWorker Epoch ${epoch}`))
 	await Promise.all ([
 		// doWorkerCom(command),
 		doWorkerCom(command1)
 	])
-	logger(Color.red(`doWorker Epoch ${epoch} Finished`))
+	logger(Color.blue(`doWorker Epoch ${epoch} Finished`),'\n\n')
 }
 
 startListeningCONET_Holesky_EPOCH()
