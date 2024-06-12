@@ -188,9 +188,13 @@ const stratFreeMinerTransfer = async (block: number) => {
 		dArray[j] = a
 	}
 
-	dArray.forEach( n => {
+	if (masterSetup.conetFaucetAdmin.length < dArray.length ) {
+		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`))
+	}
+
+	dArray.forEach( (n, index) => {
 		transferPool.push({
-			privateKey: masterSetup.conetFaucetAdmin,
+			privateKey: masterSetup.conetFaucetAdmin[index],
 			walletList: n,
 			payList: n.map(n => ethers.formatEther(minerRate))
 		})

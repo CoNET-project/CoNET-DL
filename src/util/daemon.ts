@@ -62,7 +62,7 @@ const guardianReferrals = async (block: number) => {
 
 
 	transferPool.push({
-		privateKey: masterSetup.conetFaucetAdmin,
+		privateKey: masterSetup.conetFaucetAdmin[0],
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
 	})
@@ -171,10 +171,11 @@ const guardianMining = async (block: number) => {
 	//logger(Color.blue(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
 	//storeLeaderboard(block.toString(), '', '', '', '')
 	transferPool.push({
-		privateKey: masterSetup.conetFaucetAdmin,
+		privateKey: masterSetup.conetFaucetAdmin[0],
 		walletList: nodesAddress,
 		payList: payNodes
 	})
+	
 	startTransfer()
 	
 }

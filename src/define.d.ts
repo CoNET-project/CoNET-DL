@@ -55,7 +55,7 @@ interface ICoNET_DL_masterSetup {
 	GuardianReferralsFree: string
 	cnptReferralAdmin: string
 	conetStorageAdmin: string
-	conetFaucetAdmin: string
+	conetFaucetAdmin: string[]
 	claimableAdmin: string
 	claimableAdminForNode: string
 	GuardianAdmin: string

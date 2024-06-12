@@ -57,17 +57,19 @@ const marginPool = () => {
 
 const checkGasPrice = 1000010007
 
+
 export const startTransfer = async () => {
 	if (startTransfering) {
 		return
 	}
+
 	startTransfering = true
 
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const feeData = await provideCONET.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
-	// marginPool()
-
+	marginPool()
+	
 	if (gasPrice > checkGasPrice || !gasPrice) {
 		startTransfering = false
 		return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
@@ -80,6 +82,7 @@ export const startTransfer = async () => {
 		return logger(Color.grey(`startTransfer Pool Empty, STOP startTransfer  GAS fee is [${gasPrice}]`))
 	}
 	logger(Color.magenta(`startTransfer transferPool length = ${transferPool.length} wallet length = ${obj.walletList.length} `))
+
 	return transferCCNTP(obj.privateKey, obj.walletList, obj.payList, () => {
 		startTransfering = false
 		startTransfer ()
