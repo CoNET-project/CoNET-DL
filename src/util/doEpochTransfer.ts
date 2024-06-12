@@ -181,7 +181,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	const splitBase =  Math.round(kkk/splitTimes)
 	const dArray: string[][] = []
 
-	logger(Color.red(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(minerRate)}`))
+	logger(Color.grey(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(minerRate)}`))
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
 		const a  = walletArray.slice(i, i+ splitBase)
@@ -189,7 +189,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	}
 
 	if (masterSetup.conetFaucetAdmin.length < dArray.length ) {
-		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`))
+		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`),'\n')
 	}
 
 	dArray.forEach( (n, index) => {

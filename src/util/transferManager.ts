@@ -81,7 +81,7 @@ export const startTransfer = async () => {
 		startTransfering = false
 		return logger(Color.grey(`startTransfer Pool Empty, STOP startTransfer  GAS fee is [${gasPrice}]`))
 	}
-	logger(Color.magenta(`startTransfer transferPool length = ${transferPool.length} wallet length = ${obj.walletList.length} `))
+	logger(Color.grey(`startTransfer transferPool length = ${transferPool.length} waiting list length = ${obj.walletList.length} `))
 
 	return transferCCNTP(obj.privateKey, obj.walletList, obj.payList, () => {
 		startTransfering = false
