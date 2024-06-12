@@ -22,9 +22,8 @@ const ReferralsMap: Map<string, string> = new Map()
 const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
-const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
-const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
+
 const conet_Referral_contractV3 = '0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 
 
@@ -35,42 +34,6 @@ interface epochRate {
 }
 
 const epochRate: epochRate[]= []
-
-const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
-	const transObj = await provider.getTransactionReceipt(transferHash)
-	const toAddr = transObj?.to
-	if ( toAddr && toAddr.toLowerCase() === ReferralsV2Addr) {
-		
-		const wallet = transObj.from.toLowerCase()
-		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
-		let address
-		try {
-			const contract = new ethers.Contract(conet_Referral_contractV3, CONET_Referral_ABI, provider)
-			address = await contract.getReferrer(wallet)
-		} catch (ex){
-			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
-			return
-		}
-
-		if (!address || address === '0x0000000000000000000000000000000000000000') {
-			return logger(Colors.red(`detailTransfer contract.getReferrer get null address`))
-		}
-		address = address.toLowerCase()
-		ReferralsMap.set(wallet, address)
-		logger(Colors.blue(`detailTransfer add Referrer [${wallet} => ${address}] to ReferralsMap success! ReferralsMap length = [${ReferralsMap.size}]`))
-	}
-}
-
-const store_Leaderboard_Free_referrals_toS3 = async (data: {epoch: string, referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
-	if (!s3Pass) {
-		return logger(Colors.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
-	}
-	const obj = {
-		data: JSON.stringify(data),
-		hash: `${data.epoch}_free`
-	}
-	await storageWalletProfile(obj, s3Pass)
-}
 
 
 const storeToChain = async (data: epochRate) => {
@@ -88,67 +51,15 @@ const storeToChain = async (data: epochRate) => {
 	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
 }
 
-
 let EPOCH=0
 let s3Pass: s3pass|null = null
 const tokensEachEPOCH = 0.003472 			//		34.72
 let minerRate = BigInt(0)
 
 
-const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-const splitLength = 1000
 const transferMiners = async (EPOCH: number, WalletIpaddress: Map<string, string>) => {
-	
-	const totalFreeMiner = BigInt(WalletIpaddress.size)
-	const rate = await rateSC.rate()
-	
-	if (!rate || !totalFreeMiner) {
-		return console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate is zero [${ethers.formatEther(rate)}] or totalFreeMiner [${totalFreeMiner}] is zero STOP transferMiners`))
-	}
-
-	const _minerRate = rate / (totalFreeMiner)
-	minerRate = _minerRate
-
-	console.log(Colors.magenta(`transferMiners EPOCH [${EPOCH}] rate [${ethers.formatEther(rate)}] totalFreeMiner [${totalFreeMiner}] minerRate = ${minerRate}`))
-
-
-	const tryTransfer = async () => {
-
-		const paymentWallet: string[][] = []
-		let i = 0, j = 0
-		WalletIpaddress.forEach ((n, key) => {
-			
-			if (!(i % splitLength)) {
-				if (i > 0){
-					j ++
-				}
-				paymentWallet[j] = []
-			}
-			paymentWallet[j].push(key)
-			i++
-		})
-		
-		for (let jj of paymentWallet) {
-			logger(Colors.red(`for (let jj of paymentWallet) jj length = [${jj.length}]`))
-			transferPool.push({
-				privateKey: masterSetup.conetFaucetAdmin,
-				walletList: jj,
-				payList: jj.map(n => ethers.formatEther(_minerRate))
-			})
-			
-		}
-
-		if (transferPool.length > 0) {
-			logger(Colors.magenta(`transferMiners EPOCH [${EPOCH}] Total Miner [${WalletIpaddress.size}] minerRate [${minerRate}]! `))
-			await startTransfer()
-		}
-		
-	}
-	
-	await tryTransfer()
 	await storageMinerData (EPOCH, WalletIpaddress)
 }
-
 
 const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	provider.on('block', async block => {
@@ -171,10 +82,6 @@ const initdata = async (v3: v3_master) => {
 	
 	nodes.forEach(n => {
 		const w = n.wallet.toLowerCase()
-		// if (w === testNodeWallet) {
-		// 	return
-		// }
-		
 		v3.regiestNodes.set(w, n.node_ipaddress)
 		
 	})

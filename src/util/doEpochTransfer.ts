@@ -4,10 +4,17 @@ import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {masterSetup, s3fsPasswd, storageWalletProfile, getWasabiFile} from './util'
 import Color from 'colors/safe'
-import { mapLimit} from 'async'
 import { logger } from './logger'
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
+import {transferPool, startTransfer} from '../util/transferManager'
+import {inspect} from 'node:util'
+import { mapLimit} from 'async'
+
+import rateABI from '../endpoint/conet-rate.json'
+const conet_Holesky_RPC = 'https://rpc.conet.network'
+const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
+
 
 interface leaderboard {
 	wallet: string
@@ -175,103 +182,13 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 	
 }
 
+const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
 
-const CalculateReferrals = (walletAddress: string, totalToken: number) => new Promise(resolve=> {
-	let _walletAddress = walletAddress.toLowerCase()
-	
-	const addressList: string[] = []
-	const payList: string[] = []
-
-	return countReword(.05, _walletAddress, totalToken, data1 => {
-		if (!data1) {
-			return constCalculateReferralsCallback(addressList, payList, resolve)
-		}
-		//console.error(`countReword(0.5) return data [${inspect(data1, false, 3, true)}]`)
-		addressList.push(data1.wallet)
-		payList.push(data1.pay)
-
-		return countReword(.03, data1.wallet, totalToken, data2 => {
-			if (!data2) {
-				return constCalculateReferralsCallback(addressList, payList, resolve)
-			}
-			addressList.push(data2.wallet)
-			payList.push(data2.pay)
-			//console.error(`countReword(0.3) return data [${inspect(data2, false, 3, true)}]`)
-			return countReword(.01, data2.wallet, totalToken, data3 => {
-				if (!data3) {
-					return constCalculateReferralsCallback(addressList, payList, resolve)
-				}
-				addressList.push(data3.wallet)
-				payList.push(data3.pay)
-				//console.error(`countReword(0.1) return data [${inspect(data3, false, 3, true)}]`)
-				return constCalculateReferralsCallback(addressList, payList, resolve)
-			})
-		})
-	})
-})
-
-const sendPaymentToPool = async (totalMiner: string, walletList: string[], payList: string[], callbak: (err?: Error)=> void) => {
-	const option: RequestOptions = {
-		hostname: 'localhost',
-		path: `/api/pay`,
-		port: 8001,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	const postData = {
-		walletList, payList, totalMiner
-	}
-	
-	const req = await request (option, res => {
-		let data = ''
-		res.on('data', _data => {
-			data += _data
-		})
-		res.once('end', () => {
-
-			try {
-				const ret = JSON.parse(data)
-				return callbak ()
-			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
-				return callbak (ex)
-			}
-			
-		})
-	})
-
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (e)
-	})
-
-	req.write(JSON.stringify(postData))
-	req.end()
-}
-	
-const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], totalMiner: string, minerRate: string) => {
-
-	const tableCNTP = tableNodes.map(n => n)
-	const tableReferrals = tableNodes.map(n => n)
-	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
-	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-	const finalCNTP = tableCNTP.slice(0, 10)
-	const finalReferrals = tableReferrals.slice(0, 10)
-	postReferrals(block, totalMiner, minerRate, async err => {
-		await store_Leaderboard_Free_referrals_toS3 ( block, {referrals:finalReferrals, cntp: finalCNTP, referrals_rate_list: tableNodes, totalMiner, minerRate } )
-	})
-	
-	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
-	
-}
 let s3Pass: s3pass | null
+const splitLength = 1000
 
-
-const stratFreeMinerReferrals = async (block: string) => {
+const stratFreeMinerTransfer = async (block: number) => {
 	s3Pass = await s3fsPasswd()
-	//	free_wallets_${block}
 	const data = await getWasabiFile (`free_wallets_${block}`)
 	
 	if (!data) {
@@ -283,74 +200,46 @@ const stratFreeMinerReferrals = async (block: string) => {
 	} catch (ex) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
-
+	
 	if (!walletArray.length) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
+	const rate = (await rateSC.rate())
 
 	const minerRate =  ethers.parseEther((tokensEachEPOCH/walletArray.length).toFixed(18))
-	
-	const walletTotal : Map<string, walletCount> = new Map()
+
+	const _minerRate = rate / BigInt(walletArray.length)
 
 	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
+	const kkk = walletArray.length
+	const splitTimes = 1 + Math.round(kkk/splitLength)
+	const splitBase =  Math.round(kkk/splitTimes)
+	const dArray: string[][] = []
 
-	mapLimit( walletArray, 2, async (n, next) => {
-		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
-		const addressList: any[] = data1?.addressList
-		const payList: any[] = data1?.payList
-		if (addressList) {
-			addressList.forEach((n, index) => {
-				const kk = walletTotal.get (n)||{
-					cntp: 0,
-					count: 0
-				}
-				kk.cntp = parseFloat(payList[index])+ kk.cntp
-				++ kk.count
-				walletTotal.set(n, kk)
-			})
+	logger(Color.red(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(_minerRate)}`))
 
-		}
-		
-	}, async () => {
-		
-		console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}]!`))
-		const walletList: string[] = []
-		const payList: string[] = []
-		const countList: leaderboard[] = []
-		walletTotal.forEach((n, key) => {
-			walletList.push(key)
-			payList.push(ethers.formatEther(n.cntp.toFixed(0)))
-			countList.push({
-				wallet: key,
-				cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
-				referrals: n.count.toString()
-			})
-		})
-		
-		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-		sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
-			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
-		})
-		
-		
-	})
-	
-}
-
-
-
-let epoch = ''
-
-const [,,...args] = process.argv
-args.forEach ((n, index ) => {
-	if (/^epoch\=/i.test(n)) {
-		epoch = n.split('=')[1]
+	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
+		const a  = walletArray.slice(i, i+ splitBase)
+		dArray[j] = a
 	}
-})
 
-if (epoch) {
-	logger(Color.magenta(`stratFreeMinerReferrals doEpoch [${epoch}] `))
-	stratFreeMinerReferrals(epoch)
-} else {
-	console.error(`wallet ${epoch} Error!`)
+	dArray.forEach( n => {
+		transferPool.push({
+			privateKey: masterSetup.conetFaucetAdmin,
+			walletList: n,
+			payList: n.map(n => ethers.formatEther(_minerRate))
+		})
+	})
+	logger(Color.blue(`transferPool.length = ${transferPool.length}`))
+	await startTransfer()
 }
+
+
+const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+	provider.on('block', async block => {
+		stratFreeMinerTransfer(block-2)
+	})
+}
+
+startListeningCONET_Holesky_EPOCH_v2()
