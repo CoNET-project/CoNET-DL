@@ -27,45 +27,8 @@ interface walletCount {
 	count: number
 }
 
-const tokensEachEPOCH = 34.72
-
-const sslOptions: TLSSocketOptions = {
-	key : masterSetup.Cassandra.certificate.key,
-	cert : masterSetup.Cassandra.certificate.cert,
-	ca : masterSetup.Cassandra.certificate.ca,
-	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
-}
-
-const option = {
-	contactPoints : masterSetup.Cassandra.databaseEndPoints,
-	localDataCenter: 'dc1',
-	authProvider: new auth.PlainTextAuthProvider ( masterSetup.Cassandra.auth.username, masterSetup.Cassandra.auth.password ),
-	sslOptions: sslOptions,
-	keyspace: masterSetup.Cassandra.keyspace,
-	protocolOptions: { maxVersion: types.protocolVersion.v4 }
-}
 
 
-const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
-	if (!s3Pass) {
-		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
-	}
-	const obj = {
-		data: JSON.stringify(data),
-		hash: `${epoch}_free`
-	}
-	await storageWalletProfile(obj, s3Pass)
-}
-
-
-const getMinerCount = async (_epoch: number) => {
-	let count = 0
-	//free_wallets_657551
-	const epoch = (_epoch).toString()
-
-	
-	
-}
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	if (!address) {
@@ -184,11 +147,11 @@ const constCalculateReferralsCallback = (addressList: string[], payList: string[
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
 
-let s3Pass: s3pass | null
+
 const splitLength = 1000
 
 const stratFreeMinerTransfer = async (block: number) => {
-	s3Pass = await s3fsPasswd()
+
 	const data = await getWasabiFile (`free_wallets_${block}`)
 	
 	if (!data) {
@@ -204,10 +167,11 @@ const stratFreeMinerTransfer = async (block: number) => {
 	if (!walletArray.length) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-	const rate = (await rateSC.rate())
 
-	const minerRate =  ethers.parseEther((tokensEachEPOCH/walletArray.length).toFixed(18))
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
+	
+	const rate = await rateSC.rate()
+	const minerRate =  ethers.parseEther((rate/walletArray.length).toFixed(18))
 
 	const _minerRate = rate / BigInt(walletArray.length)
 

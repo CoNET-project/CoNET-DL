@@ -317,7 +317,6 @@ class conet_dl_v3_server {
 				return logger(Colors.red(`/getTotalMiners checkNode error!`))
 			}
 
-			logger(Colors.magenta(`forward /api/getTotalMiners to cluster daemon`))
 			return postLocalhost('/api/getTotalMiners', obj, res)
 		})
 
