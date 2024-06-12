@@ -169,19 +169,19 @@ const stratFreeMinerTransfer = async (block: number) => {
 	}
 
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-	
+
 	const rate = await rateSC.rate()
-	const minerRate =  ethers.parseEther((rate/walletArray.length).toFixed(18))
+	const minerRate =rate/BigInt(walletArray.length)
 
-	const _minerRate = rate / BigInt(walletArray.length)
 
-	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] MinerWallets length = [${walletArray.length}]`))
+
 	const kkk = walletArray.length
 	const splitTimes = 1 + Math.round(kkk/splitLength)
 	const splitBase =  Math.round(kkk/splitTimes)
 	const dArray: string[][] = []
 
-	logger(Color.red(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(_minerRate)}`))
+	logger(Color.red(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(minerRate)}`))
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
 		const a  = walletArray.slice(i, i+ splitBase)
@@ -192,7 +192,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 		transferPool.push({
 			privateKey: masterSetup.conetFaucetAdmin,
 			walletList: n,
-			payList: n.map(n => ethers.formatEther(_minerRate))
+			payList: n.map(n => ethers.formatEther(minerRate))
 		})
 	})
 	logger(Color.blue(`transferPool.length = ${transferPool.length}`))
