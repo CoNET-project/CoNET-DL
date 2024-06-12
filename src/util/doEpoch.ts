@@ -90,7 +90,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 				const ret = JSON.parse(data)
 				return callbak (null, ret)
 			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				console.error(`doEpoch/getReferrer JSON.parse(data) Error!`, data)
 				return callbak (ex)
 			}
 			
@@ -131,7 +131,7 @@ const postReferrals = async (epoch: string, totalMiner: string, minerRate: strin
 			try {
 				return callbak (null)
 			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				console.error(`doEpoch/postReferrals got response JSON.parse(data) Error!`, data)
 				return callbak (ex)
 			}
 			
@@ -235,7 +235,7 @@ const sendPaymentToPool = async (totalMiner: string, walletList: string[], payLi
 				const ret = JSON.parse(data)
 				return callbak ()
 			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				console.error(`POST /api/pay got response JSON.parse(data) Error!`, data)
 				return callbak (ex)
 			}
 			

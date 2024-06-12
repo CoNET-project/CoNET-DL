@@ -115,7 +115,7 @@ const postReferrals = async (totalNodes: string, epoch: string, callbak: (err: E
 				
 				return callbak (null)
 			} catch (ex: any) {
-				console.error(`getReferrer JSON.parse(data) Error!`, data)
+				console.error(`POST /api/guardians-data got response JSON.parse(data) Error!`, data)
 				return callbak (ex)
 			}
 			
