@@ -82,9 +82,9 @@ const livenessListeningPool: Map <string, livenessListeningPoolObj> = new Map()
 const tokensEachEPOCH = 34.72
 let totalminerOnline = 0
 let minerRate = 0
-
+const privateKey = masterSetup.conetFaucetAdmin[0]
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
+const nodeWallet = new ethers.Wallet(privateKey, _provider).address.toLowerCase()
 
 const clusterManager = 'apitests.conet.network'
 let sendAlldataProcess = false
@@ -97,7 +97,7 @@ export const sendAlldata = () => new Promise( resolve => {
 
 	const message =JSON.stringify({ walletAddress: nodeWallet, data: minerArray})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(privateKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -210,7 +210,7 @@ const sendMesageToCluster = async (path: string, pData: any, callbak: (err: numb
 export const getMinerCount = () => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(privateKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -245,7 +245,7 @@ const transferMiners = async (EPOCH: number) => {
 		if (paymentWallet.length > 0) {
 
 			transferPool.push({
-				privateKey: masterSetup.conetFaucetAdmin,
+				privateKey: privateKey,
 				walletList: paymentWallet,
 				payList: paymentWallet.map(n => minerRate.toFixed(10))
 			})
@@ -265,7 +265,7 @@ export const deleteAMiner = (ipaddress: string, wallet: string ) => new Promise(
 	}
 	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(privateKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -283,7 +283,7 @@ export const deleteAMiner = (ipaddress: string, wallet: string ) => new Promise(
 const launshAndDeleteAllWalletInCLuster = () => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(privateKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -375,7 +375,7 @@ const checkMiner = (ipaddress: string, wallet: string ) => new Promise( resolve 
 
 	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(privateKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}

@@ -13,7 +13,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 const Claimable_CONET_Point_addr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const cntpV1_new_chain = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'.toLowerCase()
-export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin)
+export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 const sendCNTP_v2_New_ChainContract = new ethers.Contract(cntpV1_new_chain, cCNTPAbi, CONET_Holesky_RPC)
 
 logger(Colors.blue(`Node Key = ${cntpAdminWallet.address}`))

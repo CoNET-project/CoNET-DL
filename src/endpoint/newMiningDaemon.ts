@@ -301,7 +301,7 @@ class v3_master {
 			res.status(200).end()
 			
 			transferPool.push({
-				privateKey: masterSetup.conetFaucetAdmin,
+				privateKey: masterSetup.conetFaucetAdmin[0],
 				walletList: walletList,
 				payList: payList
 			})

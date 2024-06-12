@@ -200,7 +200,7 @@ interface conetData {
 	balance: BigInt
 }
 
-const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[0], new ethers.JsonRpcProvider(conet_Holesky_rpc))
 const sentData = async (data: conetData, callback: (err?: null) => void) => {
 
 	
@@ -386,7 +386,7 @@ class conet_dl_server {
 					return res.socket?.end().destroy()
 				}
 				// transCONET(wallet_add, ethers.parseEther(faucetRate))
-				const tx = sendCONET(masterSetup.conetFaucetAdmin, FaucetCount, wallet_add)
+				const tx = sendCONET(masterSetup.conetFaucetAdmin[0], FaucetCount, wallet_add)
 				if (!tx) {
 					res.status(403).end()
 					return res.socket?.end().destroy()

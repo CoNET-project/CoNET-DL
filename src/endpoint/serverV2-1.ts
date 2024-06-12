@@ -27,6 +27,8 @@ import {sign} from 'eth-crypto'
 //	const testMiningDomain = '099b18b0166f6d0a.openpgp.online'.toLowerCase()
 
 
+
+
 const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipaddress: string, server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => 
 	new Promise (async resolve => {
 		returnData['wallet'] = wallet
@@ -57,7 +59,8 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 	// import {createServer as createServerForDebug} from 'node:http'
 
 const setup = join( homedir(),'.master.json' )
-const masterSetup: ICoNET_DL_masterSetup = require ( setup )
+const masterSetup1: ICoNET_DL_masterSetup = require ( setup )
+const mainKey = masterSetup1.conetFaucetAdmin[0]
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
@@ -75,6 +78,7 @@ interface rate_list {
 	cntpRate: string
 	referrals: string
 }
+
 let free_referrals_rate_lists: rate_list[] = []
 
 let guardians_referrals_rate_lists: rate_list[] = []
@@ -116,7 +120,7 @@ const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Pr
 const getMinerCount = ( server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(mainKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -131,33 +135,6 @@ const getMinerCount = ( server: string, livenessListeningPool: Map <string, live
 	})
 	
 })
-
-const transferMiners = async (EPOCH: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
-	const tryTransfer = async () => {
-
-		
-		
-		const paymentWallet: string[] = []
-		livenessListeningPool.forEach (n => {
-			paymentWallet.push(n.wallet)
-		})
-		
-		if (paymentWallet.length > 0) {
-
-			transferPool.push({
-				privateKey: masterSetup.conetFaucetAdmin,
-				walletList: paymentWallet,
-				payList: paymentWallet.map(n => minerRate.toFixed(10))
-			})
-			await startTransfer()
-		}
-		
-	}
-	
-	await tryTransfer()
-	
-}
-
 
 
 const stratlivenessV2 = async (server: string, block: number, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
@@ -208,7 +185,7 @@ const deleteAMiner = (server: string, ipaddress: string, wallet: string, livenes
 	}
 	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(mainKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -226,7 +203,7 @@ const deleteAMiner = (server: string, ipaddress: string, wallet: string, livenes
 const launshAndDeleteAllWalletInCLuster = ( server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(mainKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -269,7 +246,7 @@ const sendAlldata = (server: string, livenessListeningPool: Map <string, livenes
 
 	const message =JSON.stringify({ walletAddress: nodeWallet, data: minerArray})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(mainKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -357,7 +334,7 @@ const sendMesageToCluster = (server: string, path: string, pData: any, livenessL
 }
 
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
+const nodeWallet = new ethers.Wallet(mainKey, _provider).address.toLowerCase()
 
 const checkMiner = (server: string, ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
 	if (!isPublic(ipaddress)) {
@@ -367,7 +344,7 @@ const checkMiner = (server: string, ipaddress: string, wallet: string, livenessL
 
 	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
-	const signMessage = sign(masterSetup.conetFaucetAdmin, messageHash)
+	const signMessage = sign(mainKey, messageHash)
 	const sendData = {
 		message, signMessage
 	}
@@ -390,66 +367,16 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	return ipaddress
 }
 
-const addAttackToCluster = async (ipaddress: string) => {
-	const option: RequestOptions = {
-		hostname: 'apiv2.conet.network',
-		path: `/api/ipaddress`,
-		port: 4100,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	const postData = {
-		ipaddress: ipaddress
-	}
-
-	const req = await request (option, res => {
-		let data = ''
-		res.on('data', _data => {
-			data += _data
-		})
-		res.once('end', () => {
-			logger(Colors.blue(`addAttackToCluster [${ipaddress}] success! data = [${data}]`))
-		})
-	})
-
-	req.once('error', (e) => {
-		logger(Colors.red(`addAttackToCluster r[${ipaddress}] equest on Error! ${e.message}`))
-	})
-
-	req.write(JSON.stringify(postData))
-	req.end()
-}
-const CGPNsAddr = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
-
-const guardianNodesList: string[] = []
-
 
 interface conetData {
 	address: string
 	balance: BigInt
 }
 
-const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-const sentData = async (data: conetData, callback: (err?: null) => void) => {
 
-	
-	try{
-		const addr = ethers.getAddress(data.address)
-		const tx = {
-			to: addr,
-			// Convert currency unit from ether to wei
-			value: data.balance.toString()
-		}
-		await etherNew_Init_Admin.sendTransaction(tx)
-	} catch (ex) {
-		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error!`))
-		return callback(null)
-	}
-	console.log(Colors.grey(`${data.balance} CONET => [${data.address}]`))
-	return callback ()
-}
+
+const etherNew_Init_Admin = new ethers.Wallet (mainKey, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+
 let totalminerOnline = 0
 let EPOCH = 0
 
@@ -648,6 +575,4 @@ const [,,...args] = process.argv
 args.forEach ((n, index ) => {
 	new conet_dl_server (n)
 })
-
-
 

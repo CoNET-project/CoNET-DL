@@ -652,10 +652,8 @@ let transferEposh = 0
 
 
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-export const nodeWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin, _provider).address.toLowerCase()
-
-
-
+const privateKey = masterSetup.conetFaucetAdmin[0]
+export const nodeWallet = new ethers.Wallet(privateKey, _provider).address.toLowerCase()
 
 export const regiestMiningNode = async () => {
 	
@@ -742,7 +740,7 @@ export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(a
 
 	const cassClient = new Client (option)
 	const ipaddress = getServerIPV4Address(false)
-	const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin)
+	const wallet = new ethers.Wallet(privateKey)
 
 	const cmd1 = `INSERT INTO conet_api_node (wallet, ipaddress) VALUES ('${wallet.address}', '${ipaddress[0]}')`
 	try {
