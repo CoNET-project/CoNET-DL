@@ -247,9 +247,8 @@ const transCONET = (address: string, balance: BigInt) => {
 
 class conet_dl_server {
 
-	private PORT = 80
+	private PORT = 8000
 	private appsPath = ''
-	private debug = false
 	private serverID = ''
 
 	private si_pool: nodeType[] = []
@@ -336,7 +335,7 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, '0.0.0.0', () => {
+		server.listen(this.PORT, '127.0.0.1', () => {
 			return console.table([
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
