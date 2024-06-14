@@ -28,7 +28,7 @@ interface dataK {
 }
 
 
-const limit = 25
+const limit = 15
 
 const addressMap : Map<string, number> = new Map()
 const startFilter = () => {
