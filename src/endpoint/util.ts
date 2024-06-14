@@ -16,16 +16,6 @@ const cntpV1_new_chain = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'.toLowerCas
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 const sendCNTP_v2_New_ChainContract = new ethers.Contract(cntpV1_new_chain, cCNTPAbi, CONET_Holesky_RPC)
 
-logger(Colors.blue(`Node Key = ${cntpAdminWallet.address}`))
-
-const getWalletsAsset = async (wallet: string) => {
-	
-	const [conet_balance, cntp_balance] = await Promise.all([
-		CONET_Holesky_RPC.getBalance(wallet),
-		sendCNTP_v2_New_ChainContract.balanceOf(wallet)
-	])
-	logger(Colors.gray(`wallet [${wallet}] CONET = ${conet_balance} , CNTP ${cntp_balance}`))
-}
 
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()

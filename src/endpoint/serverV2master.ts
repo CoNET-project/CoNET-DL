@@ -145,11 +145,11 @@ const addAttackToCluster = async (ipaddress: string) => {
 	req.write(JSON.stringify(postData))
 	req.end()
 }
-const CGPNsAddr = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
+const CGPNsAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 
 const guardianNodesList: string[] = []
  
-const unlockCNTP = async (wallet: string, privateKey: string) => {
+const _unlockCNTP = async (wallet: string, privateKey: string, CallBack: (err?: any, data?: ethers.TransactionResponse) => void) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const walletObj = new ethers.Wallet(privateKey, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CNTPAbi, walletObj)
@@ -157,12 +157,12 @@ const unlockCNTP = async (wallet: string, privateKey: string) => {
 	try {
 		tx = await cCNTPContract.changeAddressInWhitelist(wallet, true)
 	} catch (ex: any) {
-		logger(Colors.red(`unlockCNTP error! Try again`), ex.message)
-		return setTimeout(() => {
-			unlockCNTP(wallet, privateKey)
-		}, Math.round( 10 * Math.random()) * 1000)
+		logger(Colors.red(`unlockCNTP error! ${ex.message}`))
+		return CallBack (ex.message)
 	}
+
 	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
+	return CallBack (null, tx)
 }
 
 const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvider) => {
@@ -187,7 +187,7 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 
 
 	NFTAssets.forEach((n, index) => {
-		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index]) {
+		if (n ) {
 			guardianNodesList.push(_nodesAddress[index])
 		}
 	})
@@ -197,7 +197,7 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 
 interface conetData {
 	address: string
-	balance: BigInt
+	balance?: BigInt
 	req: any
 }
 
@@ -210,7 +210,7 @@ const sentData = async (data: conetData, callback: (err?: any, data?: ethers.Tra
 		const ts = {
 			to: addr,
 			// Convert currency unit from ether to wei
-			value: data.balance.toString()
+			value: data.balance?.toString()
 		}
 		tx = await etherNew_Init_Admin.sendTransaction(ts)
 	} catch (ex) {
@@ -222,8 +222,40 @@ const sentData = async (data: conetData, callback: (err?: any, data?: ethers.Tra
 
 const transCONETArray: conetData[] = []
 let transCONETLock = false
+let unlockCONETLock = false
+const unlockArray: conetData[] = []
 
+const unlockCNTP = (address: string, req: Response) => {
+	unlockArray.push ({
+		address, req
+	})
+	
+	const unlock: any = async () => {
+		if (unlockCONETLock) {
+			return
+		}
+		const data = unlockArray.shift()
+		if (!data) {
+			unlockCONETLock = false
+			return
+		}
+		unlockCONETLock = true
+		return _unlockCNTP(data.address, masterSetup.claimableAdmin, (err, tx) => {
+			unlockCONETLock = false
+			if (err) {
+				unlockArray.unshift(data)
+				return unlock ()
+			}
+			req.status(200).json({tx}).end()
+			return unlock ()
+		})
+	}
 
+	if (unlockArray.length) {
+		unlock()
+	}
+	
+}
 
 const transCONET = (address: string, balance: BigInt, req: Response) => {
 	transCONETArray.push ({
@@ -231,12 +263,18 @@ const transCONET = (address: string, balance: BigInt, req: Response) => {
 	})
 	
 	const trySent: any = async () => {
+		if (transCONETLock) {
+			return
+		}
+		transCONETLock = true
 		const data = transCONETArray.shift()
+
 		if (!data) {
 			transCONETLock = false
 			return
 		}
-		transCONETLock = true
+		
+
 		return sentData(data, (err, tx) => {
 			transCONETLock = false
 			if (err) {
@@ -498,26 +536,15 @@ class conet_dl_server {
 
 
 		router.post ('/unlockCONET',  async (req, res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
+			const wallet = req.body.walletAddress
 
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+			if (!wallet) {
+				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
-			const obj = checkSignObj (message, signMessage)
-			if (!obj) {
-				logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
+			const index = guardianNodesList.findIndex(n => n === wallet )
 			if (index < 0) {
-				await unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
-				return res.status(200).json({ublock: true}).end()
+				return unlockCNTP(wallet, res)
 			}
 
 			return res.status(403).json({unlock: true}).end()

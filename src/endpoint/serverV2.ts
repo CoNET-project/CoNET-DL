@@ -11,9 +11,9 @@ import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract, getWasabiFile,
-	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
+	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
 } from '../util/util'
-import CGPNsABI from '../util/CGPNs.json'
+
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
@@ -87,22 +87,6 @@ const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Pr
 })
 
 
-const startListeningCONET_Holesky_EPOCH = async () => {
-	
-	
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const block = await provideCONET.getBlockNumber()
-	getAllOwnershipOfGuardianNodes(provideCONET)
-
-	provideCONET.on('block', async block => {
-		await selectLeaderboard(block)
-	})
-
-	await selectLeaderboard(block)
-
-}
-
-
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -161,35 +145,6 @@ const unlockCNTP = async (wallet: string, privateKey: string) => {
 		}, Math.round( 10 * Math.random()) * 1000)
 	}
 	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
-}
-
-const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvider) => {
-	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI,provideCONET)
-	let nodes
-	try {
-		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
-	} catch (ex: any) {
-		return logger(Colors.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
-	}
-	const _nodesAddress: string[] = nodes[0].map((n: string) => n.toLowerCase())
-
-	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
-
-	let NFTAssets: number[]
-
-	try {
-		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
-	} catch (ex: any) {
-		return logger(Colors.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
-	}
-
-
-	NFTAssets.forEach((n, index) => {
-		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index]) {
-			guardianNodesList.push(_nodesAddress[index])
-		}
-	})
-	logger(Colors.blue(`guardianNodesList length = [${guardianNodesList.length}]`))
 }
 
 
@@ -254,7 +209,6 @@ class conet_dl_server {
 
 	constructor () {
 		this.initSetupData ()
-		startListeningCONET_Holesky_EPOCH()
     }
 
 	private startServer = async () => {
@@ -583,19 +537,15 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(403).end()
 			}
+
 			const obj = checkSignObj (message, signMessage)
 			if (!obj) {
 				logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
 				return res.status(403).end()
 			}
 
-			const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
-			if (index < 0) {
-				await unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
-				return res.status(200).json({ublock: true}).end()
-			}
+			postLocalhost('/unlockCONET', { walletAddress: obj.walletAddress }, res)
 
-			return res.status(403).json({unlock: true}).end()
 		})
 
 		router.post ('/checkAccount',  async (req, res) => {
