@@ -56,8 +56,6 @@ let minerRate = ''
 let totalMiner = ''
 
 
-const faucetRate = '0.01'
-
 const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
 	const [_node, _free] = await Promise.all([
 		getWasabiFile(`${block}_node`),
@@ -195,56 +193,6 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 }
 
 
-interface conetData {
-	address: string
-	balance: BigInt
-}
-
-const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[0], new ethers.JsonRpcProvider(conet_Holesky_rpc))
-const sentData = async (data: conetData, callback: (err?: null) => void) => {
-
-	
-	try{
-		const addr = ethers.getAddress(data.address)
-		const tx = {
-			to: addr,
-			// Convert currency unit from ether to wei
-			value: data.balance.toString()
-		}
-		await etherNew_Init_Admin.sendTransaction(tx)
-	} catch (ex) {
-		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error!`))
-		return callback(null)
-	}
-	console.log(Colors.grey(`${data.balance} CONET => [${data.address}]`))
-	return callback ()
-}
-
-const transCONETArray: conetData[] = []
-let transCONETLock = false
-const transCONET = (address: string, balance: BigInt) => {
-	transCONETArray.push ({
-		address, balance
-	})
-	
-	const trySent = async () => {
-		const data = transCONETArray.shift()
-		if (!data) {
-			transCONETLock = false
-			return
-		}
-		transCONETLock = true
-		return sentData(data, () => {
-			trySent ()
-		})
-	}
-
-	if (!transCONETLock) {
-		trySent()
-	}
-	
-}
-
 const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	
 	const option: RequestOptions = {
@@ -297,12 +245,10 @@ class conet_dl_server {
 
 
         logger (Colors.blue(`start local server!`))
-		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetFaucetAdmin[0])
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.s3Pass = await s3fsPasswd()
 		this.startServer()
-		
 
 	}
 
