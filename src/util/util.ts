@@ -1621,7 +1621,7 @@ export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass
 		try {
 			req = await s3Client.send(command)
 		} catch (ex) {
-			logger(colors.red(`storageWalletProfile s3.putObject Error`),ex)
+			logger(colors.red(`storageWalletProfile s3.putObject Error`))
 			return resolve(false)
 		}
 		logger(colors.grey(`storageWalletProfile hash [${ obj.hash }] data length = [${ obj.data.length }] success`))

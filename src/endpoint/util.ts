@@ -71,11 +71,11 @@ export const listeningRate = async (rateBack: (rate: number) => void) => {
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${currentBlock}] rate = [${ethers.formatEther(rate)}]!`))
 }
 
-const testRate = async () => {
-	const rate = await rateSC.rate()
-	const totalMiner = BigInt(1500)
-	const epochrate = rate/totalMiner
-	logger(Colors.magenta(`epochrate = ${ethers.formatEther(epochrate)}`))
-}
+// const testRate = async () => {
+// 	const rate = await rateSC.rate()
+// 	const totalMiner = BigInt(1500)
+// 	const epochrate = rate/totalMiner
+// 	logger(Colors.magenta(`epochrate = ${ethers.formatEther(epochrate)}`))
+// }
 
-testRate()
+// testRate()
