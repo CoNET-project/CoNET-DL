@@ -226,6 +226,7 @@ let unlockCONETLock = false
 const unlockArray: conetData[] = []
 
 const unlockCNTP = (address: string, req: Response) => {
+	logger(Colors.blue(`unlockCNTP [${address}]`))
 	unlockArray.push ({
 		address, req
 	})
@@ -473,12 +474,14 @@ class conet_dl_server {
 
 
 		router.post ('/unlockCONET',  async (req, res) => {
+			
 			const wallet = req.body.walletAddress
-
+			logger(Colors.blue(`unlockCNTP eq.body.walletAddress [${wallet}]`))
 			if (!wallet) {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
+			
 			const index = guardianNodesList.findIndex(n => n === wallet )
 			if (index < 0) {
 				return unlockCNTP(wallet, res)
