@@ -3,7 +3,7 @@ import Cluster from 'node:cluster'
 import { cpus } from 'node:os'
 import {logger} from '../util/logger'
 import Colors from 'colors/safe'
-
+import masterServer from './serverV2master'
 
 if (Cluster.isPrimary) {
 	const forkWorker = () => {
@@ -27,7 +27,7 @@ if (Cluster.isPrimary) {
 		return (fork)
 	}
 	forkWorker()
-	
+	new masterServer()
 } else {
 	new server()
 }
