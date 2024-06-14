@@ -247,7 +247,10 @@ const unlockCNTP = (address: string, req: Response) => {
 				unlockArray.unshift(data)
 				return unlock ()
 			}
-			req.json({tx}).end()
+			if (req.writable && !req.writableEnded) {
+				req.status(200).json({tx}).end()
+			}
+			
 			return unlock ()
 		})
 	}
@@ -282,7 +285,10 @@ const transCONET = (address: string, balance: BigInt, req: Response) => {
 				transCONETArray.unshift(data)
 				return trySent ()
 			}
-			req.json({tx}).end()
+			if (req.writable && !req.writableEnded) {
+				req.status(200).json({tx}).end()
+			}
+			
 			return trySent ()
 		})
 	}
