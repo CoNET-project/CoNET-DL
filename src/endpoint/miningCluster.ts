@@ -4,8 +4,18 @@ import v3Daemon from './newMiningDaemon'
 import Cluster from 'node:cluster'
 import Colors from 'colors/safe'
 import { logger } from '../util/util'
-if (Cluster.isPrimary) {
 
+
+if (Cluster.isPrimary) {
+	const forkWorker = () => {
+		
+		let numCPUs = cpus().length
+
+		for (let i = 0; i < numCPUs; i ++){
+			_forkWorker()
+		}
+	}
+	
 	const _forkWorker = () => {
 		const fork = Cluster.fork ()
 		fork.once ('exit', (code: number, signal: string) => {
@@ -18,14 +28,7 @@ if (Cluster.isPrimary) {
 		return (fork)
 	}
 
-	const forkWorker = () => {
-		
-		let numCPUs = cpus().length
 
-		for (let i = 0; i < numCPUs; i ++){
-			_forkWorker()
-		}
-	}
 	forkWorker()
 	new v3Daemon ()
 	

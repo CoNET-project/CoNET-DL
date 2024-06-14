@@ -56,7 +56,7 @@ let minerRate = ''
 let totalMiner = ''
 
 
-const faucetRate = '0.01'
+const faucetRate = BigInt('10000000000000000')
 
 const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
 	const [_node, _free] = await Promise.all([
@@ -198,33 +198,36 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 interface conetData {
 	address: string
 	balance: BigInt
+	req: any
 }
 
 const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[0], new ethers.JsonRpcProvider(conet_Holesky_rpc))
-const sentData = async (data: conetData, callback: (err?: null) => void) => {
+const sentData = async (data: conetData, callback: (err?: any, data?: ethers.TransactionResponse) => void) => {
 
-	
+	let tx
 	try{
 		const addr = ethers.getAddress(data.address)
-		const tx = {
+		const ts = {
 			to: addr,
 			// Convert currency unit from ether to wei
 			value: data.balance.toString()
 		}
-		await etherNew_Init_Admin.sendTransaction(tx)
+		tx = await etherNew_Init_Admin.sendTransaction(ts)
 	} catch (ex) {
 		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error!`))
-		return callback(null)
+		return callback(ex)
 	}
-	console.log(Colors.grey(`${data.balance} CONET => [${data.address}]`))
-	return callback ()
+	return callback (null, tx)
 }
 
 const transCONETArray: conetData[] = []
 let transCONETLock = false
-const transCONET = (address: string, balance: BigInt) => {
+
+
+
+const transCONET = (address: string, balance: BigInt, req: Response) => {
 	transCONETArray.push ({
-		address, balance
+		address, balance, req
 	})
 	
 	const trySent = async () => {
@@ -234,58 +237,26 @@ const transCONET = (address: string, balance: BigInt) => {
 			return
 		}
 		transCONETLock = true
-		return sentData(data, () => {
-			trySent ()
+		return sentData(data, (err, tx) => {
+			transCONETLock = false
+			if (err) {
+				transCONETArray.unshift(data)
+				return trySent ()
+			}
+			req.status(200).json({tx}).end()
+			return trySent ()
 		})
 	}
 
-	if (!transCONETLock) {
+	if (transCONETArray.length) {
 		trySent()
 	}
 	
 }
 
-const postLocalhost = async (path: string, obj: any, _res: Response)=> {
-	
-	const option: RequestOptions = {
-		hostname: 'localhost',
-		path,
-		port: 8002,
-		method: 'POST',
-		protocol: 'http:',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-
-	const req = await request (option, res => {
-		
-		let chunk = ''
-		
-		res.on('data', data => {
-			chunk += data
-		})
-
-		res.once ('end', () => {
-			logger(Colors.grey(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(chunk, false,3, true))
-			_res.status(res.statusCode||404).write(chunk)
-			_res.end()
-		})
-		
-	})
-
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		_res.status(502).end()
-	})
-
-	req.write(JSON.stringify(obj))
-	req.end()
-}
-
 class conet_dl_server {
 
-	private PORT = 8000
+	private PORT = 8001
 	private appsPath = ''
 	private serverID = ''
 
@@ -383,84 +354,22 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
-		
 
-		router.get ('/health', async (req,res) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.grey(` Router /health form [${ ipaddress}]`))
-
-			res.json ({ health: true }).end()
-			return res.socket?.end().destroy()
-
-		})
 
 		//********************			V2    		****** */				
 		router.post ('/conet-faucet', (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
-			let wallet_add = req.body?.walletAddr
-
-			if (!wallet_add ||!ipaddress) {
-				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
-				res.status(400).end()
-				return res.socket?.end().destroy()
-			}
 			
-			try {
-				wallet_add = ethers.getAddress(wallet_add)
-			} catch (ex) {
-				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
-				res.status(400).end()
-				return res.socket?.end().destroy()
-			}
-			
-			return regiestFaucet(wallet_add, ipaddress).then (async n => {
-				if (!n) {
-					res.status(400).end()
-					return res.socket?.end().destroy()
-				}
-				// transCONET(wallet_add, ethers.parseEther(faucetRate))
+			const wallet = req.body.walletAddress
 
-				postLocalhost('/conet-faucet', {walletAddress: wallet_add, }, res)
-				const tx = sendCONET(masterSetup.conetFaucetAdmin[0], FaucetCount, wallet_add)
-				if (!tx) {
-					res.status(403).end()
-					return res.socket?.end().destroy()
-				}
-				return res.status(200).json ({tx}).end ()
-			})
-
-		})
-
-		router.get ('/conet-nodes', async ( req, res ) => {
-			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
-		})
-
-		router.post ('/storageFragments', async (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-
-			if (!obj || !obj?.data || !this.s3Pass) {
-				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
+			if (!wallet) {
+				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
-			const uu = await storageWalletProfile(obj, this.s3Pass)
-			if (!uu) {
-				return res.status(504).end()
-			}
-			return res.status(200).json({}).end()
+
+			return transCONET (wallet, faucetRate, res)
+
 		})
+
 
 		router.post ('/claimToken', async ( req, res ) => {
 
@@ -481,20 +390,6 @@ class conet_dl_server {
 			}
 			return res.status(403).end()
 
-		})
-
-		router.get ('/asset-prices', async ( req, res ) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			
-			let kk
-			try {
-				kk = await getOraclePrice()
-			} catch (ex) {
-				logger(Colors.gray(`/asset-prices from ${ipaddress} Error!` ), ex)
-				return res.status(403).json({}).end()
-			}
-			logger(Colors.gray(`/asset-prices from ${ipaddress} success!` ), inspect(kk, false, 3, true))
-			return res.status(200).json(kk).end()
 		})
 
 		router.post ('/Purchase-Guardian', async (req,res) => {
@@ -601,30 +496,6 @@ class conet_dl_server {
 			return res.status(200).json(ret).end()
 		})
 
-		router.post ('/leaderboardData',  async (req, res) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let wallet: string
-			try {
-				wallet = req.body.wallet
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			if (!leaderboardData.epoch||!free_referrals_rate_lists||!guardians_referrals_rate_lists) {
-
-				return res.status(502).json({}).end()
-			}
-
-			const ret = {
-				leaderboardData,
-				free_referrals_rate: wallet ? free_referrals_rate_lists?.filter ? free_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': '',
-				guardians_referrals_rate: wallet ? guardians_referrals_rate_lists?.filter ? guardians_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': '',
-				totalMiner, minerRate
-			}
-			//logger(Colors.grey(` ${ipaddress} GET /leaderboardData wallet [${wallet}] free_referrals_rate = [${ret.free_referrals_rate}] guardians_referrals_rate = [${ret.guardians_referrals_rate}]`))
-
-			return res.status(200).json(ret).end()
-		})
 
 		router.post ('/unlockCONET',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)

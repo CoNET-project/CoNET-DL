@@ -77,9 +77,11 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	const req = await request (option, res => {
 		
 		let chunk = ''
+		
 		res.on('data', data => {
 			chunk += data
 		})
+
 		res.once ('end', () => {
 			logger(Colors.grey(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(chunk, false,3, true))
 			_res.status(res.statusCode||404).write(chunk)
