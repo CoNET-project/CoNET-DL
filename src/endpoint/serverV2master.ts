@@ -322,42 +322,12 @@ class conet_dl_server {
     }
 
 	private startServer = async () => {
-		const staticFolder = join ( this.appsPath, 'static' )
-		const launcherFolder = join ( this.appsPath, 'launcher' )
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
 		const Cors = require('cors')
-		app.use( Cors ())
-		app.use ( Express.static ( staticFolder ))
-        app.use ( Express.static ( launcherFolder ))
-		app.use (async (req, res, next) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
-
-			
-				
-			if (/^post$/i.test(req.method)) {
-				
-				return Express.json({limit: '1mb'})(req, res, err => {
-					if (err) {
-						res.sendStatus(400).end()
-						res.socket?.end().destroy()
-						logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
-						logger(inspect(req.body, false, 3, true))
-						return addAttackToCluster (ipaddress)
-					}
-					return next()
-				})
-			}
-				
-			return next()
-			
-		})
+		app.use(Cors ())
+		app.use(Express.json())
 
 		app.use( '/api', router )
 
@@ -481,7 +451,7 @@ class conet_dl_server {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
-			
+
 			const index = guardianNodesList.findIndex(n => n === wallet )
 			if (index < 0) {
 				return unlockCNTP(wallet, res)
