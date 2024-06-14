@@ -178,7 +178,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	})
 
 	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
+		console.error(`postLocalhost on Error! ${e.message}`,)
 		_res.status(502).end()
 	})
 
