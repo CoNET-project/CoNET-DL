@@ -801,7 +801,7 @@ export const sendCONET: (privateKey: string, amountInEther: string, receiverAddr
 
 	const wallet = new ethers.Wallet(privateKey, provide_write)
 	
-	return new Promise (resolve => {
+	return new Promise (async resolve => {
 		
 			let dtx
 			try {
@@ -811,11 +811,12 @@ export const sendCONET: (privateKey: string, amountInEther: string, receiverAddr
 					// Convert currency unit from ether to wei
 					value: ethers.parseEther(amountInEther)
 				}
-				dtx = wallet.sendTransaction(tx)
+				dtx = await wallet.sendTransaction(tx)
 			} catch (ex) {
 				logger (colors.red(`sendCONET ethers.getAddress(${receiverAddress}) ERROR!`))
 				return resolve (null)
 			}
+			logger(colors.magenta(`send CONET success ${dtx.hash}`))
 			return resolve(dtx)
 		
 		
