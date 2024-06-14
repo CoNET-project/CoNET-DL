@@ -322,13 +322,8 @@ class conet_dl_server {
 				}
 				// transCONET(wallet_add, ethers.parseEther(faucetRate))
 
-				postLocalhost('/conet-faucet', {walletAddress: wallet_add, }, res)
-				const tx = sendCONET(masterSetup.conetFaucetAdmin[0], FaucetCount, wallet_add)
-				if (!tx) {
-					res.status(403).end()
-					return res.socket?.end().destroy()
-				}
-				return res.status(200).json ({tx}).end ()
+				return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, }, res)
+
 			})
 
 		})
@@ -543,8 +538,9 @@ class conet_dl_server {
 				logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
 				return res.status(403).end()
 			}
-			logger(Colors.blue(`send /unlockCONET to master ${{ walletAddress: obj.walletAddress }}`))
-			postLocalhost('/unlockCONET', { walletAddress: obj.walletAddress }, res)
+			const _obj = { walletAddress: obj.walletAddress }
+			logger(Colors.blue(`send /unlockCONET to master ${inspect(_obj, false, 3, true)}`))
+			return postLocalhost('/api/unlockCONET', _obj, res)
 
 		})
 
