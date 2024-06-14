@@ -11,7 +11,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
-import {conet_Referral_contractV2, masterSetup, checkSignObj, storageWalletProfile, s3fsPasswd} from '../util/util'
+import {masterSetup, checkSignObj, storageWalletProfile, s3fsPasswd} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import {v4} from 'uuid'
@@ -25,17 +25,6 @@ const conet_Holesky_rpc = 'https://rpc.conet.network'
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 
-const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) => {
-	const blockDetail = await provider.getBlock(block)
-	if (!blockDetail?.transactions) {
-		return logger(Colors.gray(`Block ${block} hasn't transactions SKIP!`))
-	}
-
-	for (let u of blockDetail.transactions) {
-		await detailTransfer(u, provider)
-	}
-
-}
 
 interface epochRate {
 	totalNodes:string
@@ -45,30 +34,6 @@ interface epochRate {
 
 const epochRate: epochRate[]= []
 
-const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
-	const transObj = await provider.getTransactionReceipt(transferHash)
-	const toAddr = transObj?.to
-	if ( toAddr && toAddr.toLowerCase() === ReferralsV2Addr) {
-		
-		const wallet = transObj.from.toLowerCase()
-		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
-		let address
-		try {
-			const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-			address = await contract.getReferrer(wallet)
-		} catch (ex){
-			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
-			return
-		}
-
-		if (!address || address === '0x0000000000000000000000000000000000000000') {
-			return logger(Colors.red(`detailTransfer contract.getReferrer get null address`))
-		}
-		address = address.toLowerCase()
-		ReferralsMap.set(wallet, address)
-		logger(Colors.blue(`detailTransfer add Referrer [${wallet} => ${address}] to ReferralsMap success! ReferralsMap length = [${ReferralsMap.size}]`))
-	}
-}
 
 
 const storeToChain = async (data: epochRate) => {
@@ -218,7 +183,7 @@ class conet_dl_v3_server {
 		app.use(Express.json())
 		app.use( '/api', router )
 		
-		app.use(Express.json({limit: '100mb'}));
+		app.use(Express.json({limit: '1mb'}));
 		// app.use(Express.urlencoded({limit: '100mb'}));
 		app.once ( 'error', ( err: any ) => {
 			/**
@@ -233,7 +198,7 @@ class conet_dl_v3_server {
 
 		app.use (async (req, res, next) => {
 			if (/^post$/i.test(req.method)) {
-				return Express.json({limit: '25mb'})(req, res, err => {
+				return Express.json({limit: '1mb'})(req, res, err => {
 					if (err) {
 						res.sendStatus(400).end()
 						res.socket?.end().destroy()

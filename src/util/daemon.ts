@@ -10,6 +10,7 @@ import {transferPool, startTransfer} from './transferManager'
 let EPOCH = 0
 let transferEposh = 0
 const GuardianNodes_ContractV3 = '0x453701b80324C44366B34d167D40bcE2d67D6047'
+
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -52,14 +53,6 @@ const guardianReferrals = async (block: number) => {
 
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
-	// logger(inspect(referralsBoosts, false, 3, true))
-	// logger(inspect(payReferralsBoost, false, 3, true))
-	// logger(inspect(_referralsAddress, false, 3, true))
-
-	// transferCCNTP(masterSetup.GuardianReferrals, _referralsAddress, referralsBoosts.map(n =>n.toFixed(10)), () => {
-	// 	logger(Color.green(`guardianReferrals transferCCNTP success!`))
-	// })
-
 
 	transferPool.push({
 		privateKey: masterSetup.conetFaucetAdmin2,
@@ -68,18 +61,6 @@ const guardianReferrals = async (block: number) => {
 	})
 	startTransfer()
 
-	// const kk = {
-	// 	wallet: _referralsAddress,
-	// 	cntp: _referralsNodes.map(n => {
-	// 		const kk = parseInt(n)
-	// 		return kk === 1000 ? 1: (kk - 1000)/2 })
-	// }
-	
-
-	// logger(inspect(_referralsNodes, false, 3, true))
-	// await getNodesReferralsData(block.toString(), _referralsAddress,_referralsNodes, referralsBoosts.map(n =>n.toFixed(10)))
-
-	
 }
 
 
@@ -145,11 +126,9 @@ const guardianMining = async (block: number) => {
 	const payNodes: string[] = nodesBoosts.map (n => (n*eachBoostToken).toFixed(10))
 	let total = 0
 	payNodes.forEach(n => total += parseFloat(n))
-	// const kkkk = payNodes.sort((a,b) => parseFloat(b) - parseFloat(a))
-	// const kkkkBoost = nodesBoosts.sort((a, b) => b-a)
+
 	logger(Color.grey(`total pay ${total} nodesAddress.length [${nodesAddress.length}] payNodes.legth [${payNodes.length}] `))
-	// logger(inspect(nodesAddress, false, 3, true))
-	// logger(`Max pay [${kkkk[0]}] minPay [${kkkk[kkkk.length - 1]}] MacBoost = [${kkkkBoost[0]}] minBoost =[${kkkkBoost[kkkkBoost.length - 1]}] `)
+
 	const yyy: Map<number, number> = new Map()
 	nodesBoosts.forEach (n => {
 		const kk = yyy.get(n)
@@ -159,17 +138,7 @@ const guardianMining = async (block: number) => {
 			yyy.set (n, kk + 1)
 		}
 	})
-	// yyy.forEach((n,key) => {
-	// 	logger(inspect({n, key}, false, 3, true))
-	// })
-	// logger(inspect(nodesAddress, false,3, true))
-	// logger(inspect(payNodes, false,3, true))
-	
-	// transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
-	// 	logger(Color.green(`guardianMining transferCCNTP success!`))
-	// })
-	//logger(Color.blue(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
-	//storeLeaderboard(block.toString(), '', '', '', '')
+
 	transferPool.push({
 		privateKey: masterSetup.conetFaucetAdmin2,
 		walletList: nodesAddress,

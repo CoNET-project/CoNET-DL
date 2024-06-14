@@ -10,7 +10,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 import { getIpAddressFromForwardHeader,regiestMiningNode } from './help-database'
 import {sign} from 'eth-crypto'
 import {createServer, RequestOptions, request as HttpRequest} from 'node:https'
-import {conet_Referral_contractV2, masterSetup} from '../util/util'
+import { masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'

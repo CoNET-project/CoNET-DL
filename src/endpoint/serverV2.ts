@@ -542,7 +542,7 @@ class conet_dl_server {
 					return res.status(403).end()
 				}
 				const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
+				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys)
 				return res.status(200).json(ret).end()
 			}
 			
@@ -605,11 +605,11 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
-			// const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
-			// if (index < 0) {
-			// 	unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
-			// 	return res.status(200).json({ublock: true}).end()
-			// }
+			const index = guardianNodesList.findIndex(n => n === obj.walletAddress )
+			if (index < 0) {
+				await unlockCNTP(obj.walletAddress, masterSetup.claimableAdmin)
+				return res.status(200).json({ublock: true}).end()
+			}
 
 			return res.status(403).json({unlock: true}).end()
 		})
@@ -653,5 +653,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-
-

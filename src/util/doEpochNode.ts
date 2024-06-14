@@ -1,6 +1,6 @@
 import {ethers} from 'ethers'
 import {inspect} from 'node:util'
-import {GuardianNodes_ContractV2, masterSetup, storageWalletProfile, s3fsPasswd} from './util'
+import {masterSetup, storageWalletProfile, s3fsPasswd} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
 import type { RequestOptions } from 'node:http'
@@ -131,9 +131,11 @@ const postReferrals = async (totalNodes: string, epoch: string, callbak: (err: E
 	req.end()
 }
 
+const GuardianNodes_ContractV3 = '0x453701b80324C44366B34d167D40bcE2d67D6047'
+
 const guardianReferrals = async (block: string) => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV2, GuardianNodesV2ABI, CONETProvider)
+	const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, CONETProvider)
 	let nodes
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()

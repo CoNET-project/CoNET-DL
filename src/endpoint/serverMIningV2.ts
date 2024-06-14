@@ -10,7 +10,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 import { getIpAddressFromForwardHeader,regiestMiningNode } from './help-database'
 import {sign} from 'eth-crypto'
 import {createServer, RequestOptions, request as HttpRequest} from 'node:https'
-import {conet_Referral_contractV2, masterSetup} from '../util/util'
+import {masterSetup} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import epochRateABI from '../util/epochRate.json'
@@ -25,17 +25,6 @@ const conet_Holesky_rpc = 'https://rpc.conet.network'
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 
-const checkBlockEvent = async (block: number, provider: ethers.JsonRpcProvider) => {
-	const blockDetail = await provider.getBlock(block)
-	if (!blockDetail?.transactions) {
-		return logger(Colors.gray(`Block ${block} hasn't transactions SKIP!`))
-	}
-
-	for (let u of blockDetail.transactions) {
-		await detailTransfer(u, provider)
-	}
-
-}
 
 interface epochRate {
 	totalNodes:string
@@ -45,30 +34,7 @@ interface epochRate {
 
 const epochRate: epochRate[]= []
 
-const detailTransfer = async (transferHash: string, provider: ethers.JsonRpcProvider) => {
-	const transObj = await provider.getTransactionReceipt(transferHash)
-	const toAddr = transObj?.to
-	if ( toAddr && toAddr.toLowerCase() === ReferralsV2Addr) {
-		
-		const wallet = transObj.from.toLowerCase()
-		logger(Colors.grey(`ReferralsV2Addr has event! from ${wallet}`))
-		let address
-		try {
-			const contract = new ethers.Contract(conet_Referral_contractV2, CONET_Referral_ABI, new ethers.JsonRpcProvider(conet_Holesky_rpc))
-			address = await contract.getReferrer(wallet)
-		} catch (ex){
-			logger(Colors.red(`detailTransfer contract.getReferrer Error!`))
-			return
-		}
 
-		if (!address || address === '0x0000000000000000000000000000000000000000') {
-			return logger(Colors.red(`detailTransfer contract.getReferrer get null address`))
-		}
-		address = address.toLowerCase()
-		ReferralsMap.set(wallet, address)
-		logger(Colors.blue(`detailTransfer add Referrer [${wallet} => ${address}] to ReferralsMap success! ReferralsMap length = [${ReferralsMap.size}]`))
-	}
-}
 
 // const startListeningCONET_Holesky_EPOCH = async () => {
 // 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
