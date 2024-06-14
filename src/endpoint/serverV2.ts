@@ -260,7 +260,7 @@ class conet_dl_server {
 
 
         logger (Colors.blue(`start local server!`))
-		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetPointAdmin)
+		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetFaucetAdmin[0])
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.s3Pass = await s3fsPasswd()
