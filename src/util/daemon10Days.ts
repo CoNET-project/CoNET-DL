@@ -10,8 +10,8 @@ import {transferPool, startTransfer} from './transferManager'
 let EPOCH = 0
 let transferEposh = 0
 const GuardianNodes_ContractV3 = '0x453701b80324C44366B34d167D40bcE2d67D6047'
-const nodesEachEPOCH = 304.41400304414003
-const nodeRferralsEachEPOCH = 16.742770167427702
+const nodesEachEPOCH = 304.41400304414003 * 7200 * 10
+const nodeRferralsEachEPOCH = 16.742770167427702 * 7200 * 10
 const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, CONETProvider)
 
@@ -170,6 +170,8 @@ const guardianMining = async (block: number) => {
 	// })
 	//logger(Color.blue(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
 	//storeLeaderboard(block.toString(), '', '', '', '')
+
+
 	transferPool.push({
 		privateKey: masterSetup.conetFaucetAdmin[0],
 		walletList: nodesAddress,
@@ -178,6 +180,53 @@ const guardianMining = async (block: number) => {
 	
 	startTransfer()
 	
+}
+
+
+const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, contract: ethers.Contract, CallBack: (err:Error|null, data?: any) => void) => {
+	let _walletAddress = walletAddress.toLowerCase()
+	if (checkAddressArray.length) {
+		const index = checkAddressArray.findIndex(n => n.toLowerCase() === _walletAddress)
+		if (index <0) {
+			return CallBack (new Error(`CalculateReferrals walletAddress [${_walletAddress}] hasn't in checkAddressArray! STOP CalculateReferrals`))
+		}
+	}
+	
+	
+	
+	const addressList: string[] = []
+	const payList: string[] = []
+
+	for (let i of rewordArray) {
+		let address: string
+
+		try{
+			address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
+		} catch (ex: any) {
+			logger(Color.red(`CalculateReferrals await contract.getReferrer(${_walletAddress}) Error! ${ex.message}`))
+			break
+		}
+		
+		// logger (colors.blue(`CalculateReferrals get address = [${address}]`))
+		if (address === '0x0000000000000000000000000000000000000000') {
+			break
+		}
+
+		
+		address = address.toLowerCase()
+		ReferralsMap.set(_walletAddress, address)
+		if (checkAddressArray.length) {
+			const index = checkAddressArray.findIndex(n => n.toLowerCase() === address)
+			if (index< 0) {
+				return CallBack(new Error(`CalculateReferrals walletAddress [${_walletAddress}'s up layer address ${address}] hasn't in checkAddressArray! STOP CalculateReferrals`))
+			}
+		}
+		addressList.push(address)
+		payList.push((parseFloat(totalToken)*i).toString())
+		_walletAddress = address
+	}
+
+	return CallBack(null, {addressList, payList})
 }
 
 
@@ -194,7 +243,6 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 		EPOCH = block
 		return startDaemonProcess(parseInt(block.toString()))
 	})
-	
 }
 
 const startDaemonProcess = async (block: number) => {
@@ -204,4 +252,5 @@ const startDaemonProcess = async (block: number) => {
 	
 }
 
-startListeningCONET_Holesky_EPOCH()
+guardianMining(1)
+guardianReferrals(1)

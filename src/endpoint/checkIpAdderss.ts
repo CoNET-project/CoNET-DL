@@ -33,7 +33,7 @@ const limit = 25
 const addressMap : Map<string, number> = new Map()
 const startFilter = () => {
 	logger(Colors.blue(`start filter!`))
-	exec('sudo tail -n 10000 /var/log/nginx/error.log > kk', () => {
+	exec('sudo tail -n 10000 /var/log/nginx/access.log|grep \ HTTP\/1\.1\"\ 400\ 0\ > kk', () => {
 		logger(Colors.blue(`sudo tail -n 10000 /var/log/nginx/error.log success`))
 		return readFile('kk', (err, data) => {
 			if (err) {

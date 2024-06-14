@@ -55,7 +55,7 @@ const marginPool = () => {
 	margin()
 }
 
-const checkGasPrice = 1000010007
+const checkGasPrice = 2000010007
 
 
 export const startTransfer = async () => {
@@ -105,7 +105,7 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 		try {
 			tx = await cCNTPContract.multiTransferToken(walletList, payList)
 		} catch (ex) {
-			logger(Color.red(`transferCCNTP Error! [${walletList.length}] Wallet = [${wallet.address}] `))
+			logger(Color.red(`transferCCNTP Error! [${walletList.length}] Wallet = [${wallet.address}] amount[${amount}]`))
 
 			return callback()
 			// return setTimeout(() => {
@@ -113,7 +113,8 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 			// }, 1000)
 		}
 		
-		logger (Color.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] success!`))
+		logger (Color.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
+		logger(inspect(walletList.slice(0, 2), false, 3, true), inspect(PayList.slice(0, 2), false, 3, true))
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
 	}

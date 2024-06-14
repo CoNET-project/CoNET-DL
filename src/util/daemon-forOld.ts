@@ -3,6 +3,8 @@ import {logger} from './logger'
 import Color from 'colors/safe'
 import {masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import P from 'phin'
+
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
@@ -99,7 +101,24 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	})
 	return [retWalletAddr, retReferralsBoost]
 }
+const cntpErc20_V2_old_chain = '0x27A961F17E7244d8aA75eE19061f6360DeeDF76F'.toLowerCase()
+const getBalanceFromScan = async (wallet: string) => {
+	const url = `https://scanold.conet.network/api/v2/addresses/${wallet}/token-balances`
+	const res = await P({
+		url,
+		'parse': 'json'
+	})
+	//@ts-ignore
+	const assets: blockscoutResult[] = res.body
 
+	for (let i of assets) {
+		if (i.token.address.toLowerCase() === cntpErc20_V2_old_chain) {
+
+			return i.value
+		}
+	}
+	return 0
+}
 
 const guardianMining = async (block: number) => {
 	let nodes
@@ -136,48 +155,77 @@ const guardianMining = async (block: number) => {
 	})
 
 	logger(Color.gray(`nodesAirdrop total has NFT nodes = [${nodesAddress.length}] nodesBoosts = ${nodesBoosts.length} `))
-	
-	let totalBoosts = 0
-	nodesBoosts.forEach(n => totalBoosts += n)
-	const eachBoostToken = nodesEachEPOCH/totalBoosts
-	logger(Color.grey(`nodesAirdrop total boost [${totalBoosts}] eachBoostToken = ${eachBoostToken}`))
-
-	const payNodes: string[] = nodesBoosts.map (n => (n*eachBoostToken).toFixed(10))
+	const walletList = []
+	const payNodes1 = []
 	let total = 0
-	payNodes.forEach(n => total += parseFloat(n))
-	// const kkkk = payNodes.sort((a,b) => parseFloat(b) - parseFloat(a))
-	// const kkkkBoost = nodesBoosts.sort((a, b) => b-a)
-	logger(Color.grey(`total pay ${total} nodesAddress.length [${nodesAddress.length}] payNodes.legth [${payNodes.length}] `))
-	// logger(inspect(nodesAddress, false, 3, true))
-	// logger(`Max pay [${kkkk[0]}] minPay [${kkkk[kkkk.length - 1]}] MacBoost = [${kkkkBoost[0]}] minBoost =[${kkkkBoost[kkkkBoost.length - 1]}] `)
-	const yyy: Map<number, number> = new Map()
-	nodesBoosts.forEach (n => {
-		const kk = yyy.get(n)
-		if (!kk ) {
-			yyy.set (n, 1)
-		} else {
-			yyy.set (n, kk + 1)
-		}
-	})
-	// yyy.forEach((n,key) => {
-	// 	logger(inspect({n, key}, false, 3, true))
-	// })
-	// logger(inspect(nodesAddress, false,3, true))
-	// logger(inspect(payNodes, false,3, true))
-	
-	// transferCCNTP(masterSetup.GuardianAdmin, nodesAddress, payNodes, () => {
-	// 	logger(Color.green(`guardianMining transferCCNTP success!`))
-	// })
-	//logger(Color.blue(`guardianMining payList = ${payNodes[0]},${payNodes[1]},${payNodes[2]}`))
-	//storeLeaderboard(block.toString(), '', '', '', '')
+	for (let i = 352; i < nodesAddress.length; i ++ ) {
+		const wallet = nodesAddress[i]
+		walletList.push (wallet)
+		const token = await getBalanceFromScan(wallet)
+
+		payNodes1.push(ethers.formatEther(token))
+		const kk = parseFloat(ethers.formatEther(token))
+		logger (Color.blue(`Added [${wallet}] pay [${kk}]`))
+		total += kk
+	}
+
+	logger(Color.grey(`total pay ${total}  payNodes.legth [${payNodes1.length}] `))
+
 	transferPool.push({
 		privateKey: masterSetup.conetFaucetAdmin[0],
-		walletList: nodesAddress,
-		payList: payNodes
+		walletList: walletList,
+		payList: payNodes1
 	})
 	
 	startTransfer()
 	
+}
+
+
+const CalculateReferrals = async (walletAddress: string, totalToken: string, rewordArray: number[], checkAddressArray: string[], ReferralsMap: Map<string, string>, contract: ethers.Contract, CallBack: (err:Error|null, data?: any) => void) => {
+	let _walletAddress = walletAddress.toLowerCase()
+	if (checkAddressArray.length) {
+		const index = checkAddressArray.findIndex(n => n.toLowerCase() === _walletAddress)
+		if (index <0) {
+			return CallBack (new Error(`CalculateReferrals walletAddress [${_walletAddress}] hasn't in checkAddressArray! STOP CalculateReferrals`))
+		}
+	}
+	
+	
+	
+	const addressList: string[] = []
+	const payList: string[] = []
+
+	for (let i of rewordArray) {
+		let address: string
+
+		try{
+			address = ReferralsMap.get(_walletAddress) || await contract.getReferrer(_walletAddress)
+		} catch (ex: any) {
+			logger(Color.red(`CalculateReferrals await contract.getReferrer(${_walletAddress}) Error! ${ex.message}`))
+			break
+		}
+		
+		// logger (colors.blue(`CalculateReferrals get address = [${address}]`))
+		if (address === '0x0000000000000000000000000000000000000000') {
+			break
+		}
+
+		
+		address = address.toLowerCase()
+		ReferralsMap.set(_walletAddress, address)
+		if (checkAddressArray.length) {
+			const index = checkAddressArray.findIndex(n => n.toLowerCase() === address)
+			if (index< 0) {
+				return CallBack(new Error(`CalculateReferrals walletAddress [${_walletAddress}'s up layer address ${address}] hasn't in checkAddressArray! STOP CalculateReferrals`))
+			}
+		}
+		addressList.push(address)
+		payList.push((parseFloat(totalToken)*i).toString())
+		_walletAddress = address
+	}
+
+	return CallBack(null, {addressList, payList})
 }
 
 
@@ -194,14 +242,13 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 		EPOCH = block
 		return startDaemonProcess(parseInt(block.toString()))
 	})
-	
 }
 
 const startDaemonProcess = async (block: number) => {
 	console.log('')
 	guardianMining(block)
-	guardianReferrals(block)
+	// guardianReferrals(block)
 	
 }
 
-startListeningCONET_Holesky_EPOCH()
+guardianMining(1)
