@@ -230,7 +230,7 @@ const transCONET = (address: string, balance: BigInt, req: Response) => {
 		address, balance, req
 	})
 	
-	const trySent = async () => {
+	const trySent: any = async () => {
 		const data = transCONETArray.shift()
 		if (!data) {
 			transCONETLock = false
