@@ -475,21 +475,28 @@ class conet_dl_server {
 				return res.status(200).json(ret).end()
 			}
 			
+			
 			const value = txObj.tx1.value.toString()
 			if (obj.data.amount !== value) {
 				logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
 				return res.status(403).end()
 			}
 
+
+
+
 			const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
 			if (!kk) {
-				logger(Colors.red(`checkValueOfGuardianPlan Error!`))
+				logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
 				return res.status(403).end()
 			}
+
+			logger(Colors.red(`checkValueOfGuardianPlan non USDT obj.data.tokenName [${obj.data.tokenName}] Error! kk ${kk} ${value} ${inspect(txObj, false, 3, true)}`))
+			return res.status(403).end()
 			
-			const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-			const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
-			return res.status(200).json(ret).end()
+			// const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+			// const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
+			// return res.status(200).json(ret).end()
 		})
 
 		router.post ('/leaderboardData',  async (req, res) =>{
