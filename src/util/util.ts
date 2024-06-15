@@ -1972,7 +1972,7 @@ const Claimable_BlastUSDB_old = '0x53Aee1f4c9b0ff76781eFAC6e20eAe4561e29E8A'.toL
 
 
 const Claimable_ETHUSDT_v3 = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'.toLowerCase()
-const Claimable_BNBUSDT_v3 = '0xd008D56aa9A963FAD8FB1FbA1997C28dB85933e6'.toLowerCase()
+const Claimable_BNBUSDT_v3 = '0xAE752B49385812AF323240b26A49070bB839b10D'.toLowerCase()
 const Claimable_BlastUSDB_v3 = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()
 
 const CNTPV2_Contract_Blast = '0x0f43685B2cB08b9FB8Ca1D981fF078C22Fec84c5'
