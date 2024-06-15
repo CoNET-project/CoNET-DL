@@ -160,26 +160,17 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 			'Content-Type': 'application/json'
 		}
 	}
-
+	
 	const req = await request (option, res => {
-		
-		let chunk = ''
-		
-		res.on('data', data => {
-			chunk += data
-		})
-
-		res.once ('end', () => {
-			logger(Colors.grey(`postLocalhost ${path} got response [${res.statusCode}] pipe to res`), inspect(chunk, false,3, true))
-			_res.status(res.statusCode||404).write(chunk)
-			_res.end()
-		})
-		
+		res.pipe(_res)
 	})
 
 	req.once('error', (e) => {
-		console.error(`postLocalhost on Error! ${e.message}`,)
-		_res.status(502).end()
+		console.error(`postLocalhost to master on Error! ${e.message}`,)
+		if (_res.writable && !_res.writableEnded) {
+			_res.status(502).end()
+		}
+		_res.socket?.destroy()
 	})
 
 	req.write(JSON.stringify(obj))
@@ -286,11 +277,9 @@ class conet_dl_server {
 		
 
 		router.get ('/health', async (req,res) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.grey(` Router /health form [${ ipaddress}]`))
-
-			res.json ({ health: true }).end()
+			if (res.writable && !res.writableEnded) {
+				res.json ({ health: true }).end()
+			}
 			return res.socket?.end().destroy()
 
 		})
@@ -301,9 +290,11 @@ class conet_dl_server {
 			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
 			let wallet_add = req.body?.walletAddr
 
-			if (!wallet_add ||!ipaddress) {
+			if (! wallet_add ||! ipaddress) {
 				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
-				res.status(400).end()
+				if (res.writable && !res.writableEnded) {
+					res.status(400).end()
+				}
 				return res.socket?.end().destroy()
 			}
 			
@@ -311,13 +302,18 @@ class conet_dl_server {
 				wallet_add = ethers.getAddress(wallet_add)
 			} catch (ex) {
 				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
-				res.status(400).end()
+				if (res.writable && !res.writableEnded) {
+					res.status(400).end()
+				}
+				
 				return res.socket?.end().destroy()
 			}
 			
 			return regiestFaucet(wallet_add, ipaddress).then (async n => {
 				if (!n) {
-					res.status(400).end()
+					if (res.writable && !res.writableEnded) {
+						res.status(400).end()
+					}
 					return res.socket?.end().destroy()
 				}
 				// transCONET(wallet_add, ethers.parseEther(faucetRate))
