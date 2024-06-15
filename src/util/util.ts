@@ -2244,7 +2244,7 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 		return false
 	}
 	const provide = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const claimableAdmin = new ethers.Wallet(masterSetup.conetFaucetAdmin[0], provide)
+	const claimableAdmin = new ethers.Wallet(masterSetup.claimableAdmin, provide)
 	const claimableContract = new ethers.Contract(smartContractAddress, claimableToken, claimableAdmin)
 	let balance = ''
 	
