@@ -2299,11 +2299,12 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 	}
 	try {
 		const tx2 = await sc1d.transfer(wallet, requestAmount)
+		logger(colors.magenta(`checkClaimeToeknbalance success transfer ${requestAmount} to ${wallet}`), inspect(tx2, false, 3, true))
 	} catch (ex: any) {
 		logger(colors.red(`checkClaimeToeknbalance sc1d.transfer ERROR!`), ex.message)
 		return false
 	}
-
+	
 	return true
 }
 

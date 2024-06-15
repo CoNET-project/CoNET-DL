@@ -16,7 +16,6 @@ const testClaimable = async () => {
 }
 
 const testCheckClaimeToeknbalance = async () => {
-	const wallet = '0xb83c61630f21369acd4090e8ff8c8fd3eaad2515'
+	const wallet = '0x81bd23e001b9f7beb65fdbaca24787e3f04763a9'
 	await checkClaimeToeknbalance(wallet, 'cBNBUSDT')
 }
-testCheckClaimeToeknbalance()
