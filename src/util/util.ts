@@ -1922,7 +1922,9 @@ const getAmountOfNodes: (nodes: number, assetName: string) => Promise<number> = 
 	}
 	const totalUsdt = nodes * GuardianPlanPrice
 	const asssetSymbol = new RegExp (/usd/i.test(assetName) ? 'usd' : /bnb/i.test(assetName) ? 'bnb' : 'eth', 'i')
-	const index = assetPrice.findIndex(n => asssetSymbol.test(n.currency_name))
+	const index = assetPrice.findIndex(n => {	
+		asssetSymbol.test(n?.currency_name)
+	})
 	if (index < 0) {
 		return resolve(totalUsdt)
 	}

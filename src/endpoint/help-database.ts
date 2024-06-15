@@ -598,6 +598,7 @@ export const getOraclePrice: () => Promise<assetsStructure[]|boolean> = () => ne
 	])
 	await cassClient.shutdown()
 	//@ts-ignore
+	
 	resolve ([eth.rows[0], bnb.rows[0]])
 })
 
