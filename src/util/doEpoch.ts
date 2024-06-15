@@ -29,16 +29,6 @@ const sslOptions: TLSSocketOptions = {
 	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
 }
 
-const option = {
-	contactPoints : masterSetup.Cassandra.databaseEndPoints,
-	localDataCenter: 'dc1',
-	authProvider: new auth.PlainTextAuthProvider ( masterSetup.Cassandra.auth.username, masterSetup.Cassandra.auth.password ),
-	sslOptions: sslOptions,
-	keyspace: masterSetup.Cassandra.keyspace,
-	protocolOptions: { maxVersion: types.protocolVersion.v4 }
-}
-
-
 const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
 	if (!s3Pass) {
 		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
@@ -50,15 +40,6 @@ const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {refer
 	await storageWalletProfile(obj, s3Pass)
 }
 
-
-const getMinerCount = async (_epoch: number) => {
-	let count = 0
-	//free_wallets_657551
-	const epoch = (_epoch).toString()
-
-	
-	
-}
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	if (!address) {

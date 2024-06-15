@@ -2008,7 +2008,7 @@ export const getNetworkName = (tokenName: string) => {
 	}
 }
 
-const realToClaimableContractAddress = (tokenName: string) => {
+export const realToClaimableContractAddress = (tokenName: string) => {
 	switch(tokenName) {
 		//case 'dUSDT':
 		case 'usdt':{
@@ -2084,7 +2084,7 @@ const getCONETHoleskyClaimableContractAddress = (tokenName: string) => {
 	}
 }
 
-const sendClaimableAsset = async (privateKey: string, retClaimableContractAddress: string, toAddr: string, amount: string) => new Promise(resolve => {
+export const sendClaimableAsset = async (privateKey: string, retClaimableContractAddress: string, toAddr: string, amount: string) => new Promise(resolve => {
 
 	const trySend = async () => {
 		const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -2150,8 +2150,10 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
 
-	const bayerOwnNodes = await getReferralNode (GuardianNodesContract, paymentWallet, 1)
-	const referrerNodes = await getReferralNode (GuardianNodesContract, referrerAddress, 2)
+	const [bayerOwnNodes, referrerNodes] = await Promise.all ([
+		getReferralNode (GuardianNodesContract, paymentWallet, 1),
+		getReferralNode (GuardianNodesContract, referrerAddress, 2)
+	])
 
 	const _amount = nodes * 1250 * 0.1
 	const eachNodeReferral = _amount/nodes
@@ -2169,14 +2171,14 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 	}
 
 	if (paymentReferrerReturn > 0) {
-		ret.claimableAssetTx = await sendClaimableAsset (privateKey,retClaimableContractAddress, paymentWallet, paymentReferrerReturn.toFixed(8))
+		ret.claimableAssetTx = await sendClaimableAsset (privateKey, retClaimableContractAddress, paymentWallet, paymentReferrerReturn.toFixed(8))
 	}
 	
 	ret.guardianNodesTx = await sendGuardianNodesContract(privateKey, nodeAddr, paymentWallet)
 
-	// transferCCNTP(nodeAddr, '20000', () => {
-	// 	return logger(colors.blue(`transferCCNTP GuardianNodes ${inspect(nodeAddr, false, 3, true)} each 2000 success!`))
-	// })
+	transferCCNTP(nodeAddr, '20000', () => {
+		return logger(colors.blue(`transferCCNTP GuardianNodes ${inspect(nodeAddr, false, 3, true)} each 2000 success!`))
+	})
 
 	return (ret)
 

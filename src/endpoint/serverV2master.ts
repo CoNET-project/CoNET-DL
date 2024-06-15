@@ -407,47 +407,6 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/Purchase-Guardian', async (req,res) => {
-			logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
-			return res.status(403).end()
-			
-			// if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
-			// 	if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
-			// 		logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
-			// 		return res.status(403).end()
-			// 	}
-			// 	const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
-			// 	if (erc20Result === false) {
-			// 		logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
-			// 		return res.status(403).end()
-			// 	}
-			// 	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-			// 	if (!kk) {
-			// 		logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
-			// 		return res.status(403).end()
-			// 	}
-			// 	const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-			// 	const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys)
-			// 	return res.status(200).json(ret).end()
-			// }
-			
-			// const value = txObj.tx1.value.toString()
-			// if (obj.data.amount !== value) {
-			// 	logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
-			// 	return res.status(403).end()
-			// }
-
-			// const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-			// if (!kk) {
-			// 	logger(Colors.red(`checkValueOfGuardianPlan Error!`))
-			// 	return res.status(403).end()
-			// }
-			
-			// const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-			// const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
-			// return res.status(200).json(ret).end()
-		})
-
 
 		router.post ('/unlockCONET',  async (req, res) => {
 			
