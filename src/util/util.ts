@@ -2191,7 +2191,7 @@ export const transferCCNTP = (walletList: string[], amount: string, callback: ()
 		return callback ()
 	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
+	const wallet = new ethers.Wallet(masterSetup.claimableAdmin, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 
 	const send: any = async () => {
