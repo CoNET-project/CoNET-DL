@@ -20,6 +20,7 @@ const tryConnect = async (host: string) => new Promise(resolve => {
 	}
 
 	const req = request (option, res => {
+		clearTimeout(timeout)
 
 		if (res.statusCode === 200) {
 			logger(Colors.blue(`host [${host}] success!`))
@@ -34,6 +35,10 @@ const tryConnect = async (host: string) => new Promise(resolve => {
 		logger(Colors.red(`host [${host}] response on Error! Error!`), e)
 		resolve(false)
 	})
+
+	const timeout = setTimeout(() => {
+		logger(Colors.red(`host ${host} Timeout Error!`))
+	}, 1000)
 
 	req.end()
 })
@@ -61,6 +66,7 @@ const test = async () => {
 	if (!servers) {
 		return logger(Colors.red(`can't get all server!`))
 	}
+	logger(Colors.magenta(`start testing, total server is [${servers.length}]`))
 	const execProcess = []
 	servers.forEach(n => {
 		execProcess.push (tryConnect(n))
