@@ -287,7 +287,7 @@ class v3_master {
 			}
 			res.status(200).end()
 
-			await storeLeaderboardGuardians_referralsv2(epoch,)
+			//await storeLeaderboardGuardians_referralsv2(epoch,)
 
 			const index = epochRate.findIndex ( n => n.epoch === epoch )
 			if (index < 0) {
