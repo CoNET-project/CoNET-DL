@@ -94,7 +94,7 @@ const postReferrals = async (totalNodes: string, epoch: string, callbak: (err: E
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/guardians-data`,
-		port: 8001,
+		port: 8002,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
