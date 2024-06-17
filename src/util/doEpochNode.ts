@@ -60,12 +60,12 @@ const getNodesReferralsData = async (block: string, totalNodes: string, wallets:
 	const tableReferrals = tableNodes.map(n => n)
 	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-	const finalCNTP = tableCNTP.slice(0, 10)
-	const finalReferrals = tableReferrals.slice(0, 10)
+	const finalCNTP = tableCNTP
+	const finalReferrals = tableReferrals
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
 	
-	await store_Leaderboard_Free_referrals_toS3(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes})
+	await store_Leaderboard_Free_referrals_toS3(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes })
 	
 	// await storeLeaderboardGuardians_referralsv2(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	

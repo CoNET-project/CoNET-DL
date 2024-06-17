@@ -10,8 +10,9 @@
 		"resolveJsonModule": true
     },
 	"include": [
-		"src/**/*.ts"
-, "src/util/ReferralsDaemon.ts.old"	],
+		"src/**/*.ts",
+		"src/util/ReferralsDaemon.ts.old"
+	],
 	"exclude": [
 		"node_modules"
 	]
