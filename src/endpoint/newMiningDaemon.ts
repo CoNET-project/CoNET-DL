@@ -286,7 +286,9 @@ class v3_master {
 				return res.status(403).end()
 			}
 			res.status(200).end()
-			// await storeLeaderboardGuardians_referralsv2(epoch,)
+
+			await storeLeaderboardGuardians_referralsv2(epoch,)
+
 			const index = epochRate.findIndex ( n => n.epoch === epoch )
 			if (index < 0) {
 				return epochRate.push({
@@ -310,8 +312,7 @@ class v3_master {
 			res.status(200).end()
 			
 			logger(Colors.blue(`/free-data`), inspect(data, false, 3, true))
-			
-			
+
 		})
 
 		router.post('/minerCheck',  async (req, res) =>{
