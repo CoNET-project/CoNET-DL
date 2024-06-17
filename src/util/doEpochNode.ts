@@ -64,9 +64,9 @@ const getNodesReferralsData = async (block: string, totalNodes: string, wallets:
 	const finalReferrals = tableReferrals.slice(0, 10)
 	// logger(inspect(finalCNTP, false, 3, true))
 	// logger(inspect(finalReferrals, false, 3, true))
-	postReferrals (totalNodes, block, async () => {
-		await store_Leaderboard_Free_referrals_toS3(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes})
-	})
+	
+	await store_Leaderboard_Free_referrals_toS3(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes})
+	
 	// await storeLeaderboardGuardians_referralsv2(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
 }
@@ -159,7 +159,7 @@ const guardianReferrals = async (block: string) => {
 	}
 	const nodesAddress: string[] = []
 	NFTAssets.forEach((n, index) => {
-		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index].toLowerCase()) {
+		if (n) {
 			nodesAddress.push(_nodesAddress[index])
 		} else {
 			//logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))

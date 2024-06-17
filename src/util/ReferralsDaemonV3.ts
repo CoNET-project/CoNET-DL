@@ -33,7 +33,7 @@ const doWorker = async (epoch: string) => {
 	const command1 = `node dist/util/doEpoch epoch=${epoch}`
 	logger(Color.blue(`Start doWorker Epoch ${epoch}`))
 	await Promise.all ([
-		// doWorkerCom(command),
+		doWorkerCom(command),
 		doWorkerCom(command1)
 	])
 	logger(Color.blue(`doWorker Epoch ${epoch} Finished`),'\n\n')

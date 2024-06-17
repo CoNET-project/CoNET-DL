@@ -300,20 +300,6 @@ class v3_master {
 			epochRate.splice(index, 1)[0]
 		})
 
-		router.post ('/free-data',  async (req, res) =>{
-			
-			let data
-			try {
-				data = req.body.data
-			} catch (ex) {
-				logger (Colors.grey(`request /pay req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			res.status(200).end()
-			
-			logger(Colors.blue(`/free-data`), inspect(data, false, 3, true))
-
-		})
 
 		router.post('/minerCheck',  async (req, res) =>{
 					
