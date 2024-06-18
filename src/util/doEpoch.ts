@@ -29,7 +29,7 @@ const sslOptions: TLSSocketOptions = {
 	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
 }
 
-const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[], totalMiner: string, minerRate: string}) => {
+const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], totalMiner: string, minerRate: string}) => {
 	if (!s3Pass) {
 		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
 	}
@@ -238,10 +238,9 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	const tableReferrals = tableNodes.map(n => n)
 	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-	const finalCNTP = tableCNTP
 	const finalReferrals = tableReferrals.slice(0, 10)
 
-	await store_Leaderboard_Free_referrals_toS3 ( block, {referrals:finalReferrals, cntp: finalCNTP, referrals_rate_list: tableNodes, totalMiner, minerRate } )
+	await store_Leaderboard_Free_referrals_toS3 ( block, {referrals:finalReferrals, cntp: tableCNTP, totalMiner, minerRate } )
 
 	
 	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
