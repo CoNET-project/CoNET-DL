@@ -238,8 +238,8 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	const tableReferrals = tableNodes.map(n => n)
 	tableCNTP.sort((a, b) => parseFloat(b.cntpRate) - parseFloat(a.cntpRate))
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
-	const finalCNTP = tableCNTP.slice(0, 10)
-	const finalReferrals = tableReferrals.slice(0, 10)
+	const finalCNTP = tableCNTP
+	const finalReferrals = tableReferrals
 
 	await store_Leaderboard_Free_referrals_toS3 ( block, {referrals:finalReferrals, cntp: finalCNTP, referrals_rate_list: tableNodes, totalMiner, minerRate } )
 
