@@ -2152,16 +2152,16 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
 
-	const [bayerOwnNodes, referrerNodes] = await Promise.all ([
+	const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
 		getReferralNode (GuardianNodesContract, paymentWallet, 1),
-		getReferralNode (GuardianNodesContract, referrerAddress, 2)
+		getReferralNode (GuardianNodesContract, referrerAddress, 1)
 	])
 
 	const _amount = nodes * 1250 * 0.1
 	const eachNodeReferral = _amount/nodes
 
-	const referrerReturn = bayerOwnNodes > 0 ? 0: referrerNodes > 0 ? eachNodeReferral: 0
-	const paymentReferrerReturn = bayerOwnNodes > 0 ? _amount : _amount - eachNodeReferral
+	const referrerReturn = referrerHasNodes > 0 ? eachNodeReferral: 0
+	const paymentReferrerReturn = _amount - referrerReturn
 	
 	const ret: any = {
 		claimableAssetTx: null,
