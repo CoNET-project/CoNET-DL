@@ -2160,7 +2160,7 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 	const _amount = nodes * 1250 * 0.1
 	const eachNodeReferral = _amount/nodes
 
-	const referrerReturn = referrerHasNodes > 0 ? eachNodeReferral: 0
+	const referrerReturn = bayerOwnNodes > 0 ? 0 : referrerHasNodes ? eachNodeReferral : 0
 	const paymentReferrerReturn = _amount - referrerReturn
 	
 	const ret: any = {
