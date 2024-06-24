@@ -12,7 +12,7 @@ import {inspect} from 'node:util'
 import { mapLimit} from 'async'
 
 import rateABI from '../endpoint/conet-rate.json'
-const conet_Holesky_RPC = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'http://104.152.209.34:8000'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
