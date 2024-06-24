@@ -3,7 +3,7 @@ import {logger} from './logger'
 import Color from 'colors/safe'
 import {masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
-const conet_Holesky_rpc = 'https://rpc.conet.network'
+const conet_Holesky_rpc = 'http://38.102.84.245:8000'
 
 import {transferPool, startTransfer} from './transferManager'
 
