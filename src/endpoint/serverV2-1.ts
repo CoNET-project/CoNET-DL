@@ -87,35 +87,6 @@ let minerRate = 0
 let totalMiner = ''
 
 
-const selectLeaderboard: (block: number) => Promise<boolean> = (block) => new Promise(async resolve => {
-	const [_node, _free] = await Promise.all([
-		getWasabiFile(`${block}_node`),
-		getWasabiFile(`${block}_free`)
-	])
-	if (!_node||!_free) {
-		//logger(Colors.blue(`selectLeaderboard can't find block [${block}] data Error!! try again`))
-		return resolve(await selectLeaderboard(block-1))
-	}
-	let node, free
-	try {
-		node = JSON.parse(_node)
-		free = JSON.parse(_free)
-	} catch (ex) {
-		logger(Colors.blue(`selectLeaderboard JSON.parse [${ block }] data Error!`))
-		return resolve(false)
-	}
-	logger(Colors.blue(`selectLeaderboard got [${block}] data!`))
-	leaderboardData.epoch = block.toString()
-	leaderboardData.free_cntp = free.cntp
-	leaderboardData.free_referrals = free.referrals
-	leaderboardData.guardians_cntp = node.cntp
-	leaderboardData.guardians_referrals = node.referrals
-	free_referrals_rate_lists = free.referrals_rate_list
-	guardians_referrals_rate_lists = node.referrals_rate_list
-	minerRate = free.minerRate
-	totalMiner = free.totalMiner
-	return (true)
-})
 
 const getMinerCount = ( server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => new Promise( resolve => {
 	const message =JSON.stringify({walletAddress: nodeWallet})
