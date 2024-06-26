@@ -302,7 +302,9 @@ class v3_master {
 
 
 		router.post('/minerCheck',  async (req, res) =>{
-					
+			
+			
+
 			let walletAddress, ipAddress, nodeAddress
 			try {
 				walletAddress = req.body.walletAddress1
@@ -313,35 +315,55 @@ class v3_master {
 				logger (Colors.red(`Daemon /minerCheck req.body walletAddress1 ERROR! ${inspect(req.body, false, 3, true)}`))
 				return res.status(404).end()
 			}
-			
+
+			const addToPool = (a_ipAddress: string, a_walletAddress: string) => {
+				this.ipaddressWallet.set(a_ipAddress, a_walletAddress)
+				this.WalletIpaddress.set(a_walletAddress, a_ipAddress)
+				const nodeIPWallets = this.nodeIpaddressWallets.get(nodeAddress)
+				if (!nodeIPWallets) {
+					logger(Colors.red(`Daemon /minerCheck node [${nodeAddress}] hasn't nodeIPWallets Error!`))
+				} else {
+					nodeIPWallets.set(a_ipAddress, a_walletAddress)
+				}
+				return res.status(200).json({totalMiner: this.ipaddressWallet.size}).end()
+			}
 
 			if (! await checkNodeWallet(nodeAddress, true, this)) {
-				
 				return res.status(401).end()
 			}
 
+			let isDeveloper = false
 			if (ipAddress === '23.16.211.100') {
 				ipAddress = v4()
+				isDeveloper = true
 			}
 
 			const _wallet = this.ipaddressWallet.get(ipAddress)
 			const _wallet_ip = this.WalletIpaddress.get(walletAddress = walletAddress.toLowerCase())
+
+
+			if (!_wallet) {
+
+				//	totaly new
+				if (!_wallet_ip) {
+					return addToPool(ipAddress, walletAddress)
+				}
+
+				//	wallet changed IP address
+				//	reove the IP address 
+				this.WalletIpaddress.delete(_wallet_ip)
+				return addToPool(ipAddress, walletAddress)
+
+			}
+
+			//		IP address used by another Wallet
+			if (_wallet !== walletAddress) {
+				return res.status(400).end()
+			}
 			
-			if ( _wallet || _wallet_ip ) {
-				res.status(400).end()
-				return logger(Colors.grey(`Router /minerCheck Miner [${ipAddress}:${walletAddress}] already in Pool`))
-			}
-
-			this.ipaddressWallet.set(ipAddress, walletAddress)
-			this.WalletIpaddress.set(walletAddress, ipAddress)
-			const nodeIPWallets = this.nodeIpaddressWallets.get(nodeAddress)
-
-			if (!nodeIPWallets) {
-				logger(Colors.red(`Daemon /minerCheck node [${nodeAddress}] hasn't nodeIPWallets Error!`))
-			} else {
-				nodeIPWallets.set(ipAddress, walletAddress)
-			}
-			return res.status(200).json({totalMiner: this.ipaddressWallet.size}).end()
+			//	same wallet
+			return addToPool(ipAddress, walletAddress)
+			
 		})
 
 		router.post('/deleteMiner',  async (req, res) =>{
