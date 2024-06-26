@@ -127,7 +127,7 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) =
 
 	const nodeInited = v3.nodeIpaddressWallets.has (nodeWallet)
 	if (!nodeInited) {
-		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited nodeIpaddressWallets size = ${v3.nodeIpaddressWallets.size}`), inspect(v3.nodeIpaddressWallets.entries(), false, 3, true))
+		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't Inited nodeIpaddressWallets size = ${v3.nodeIpaddressWallets.size}`), inspect(v3.nodeIpaddressWallets.keys(), false, 3, true))
 		return false
 	}
 	
@@ -469,7 +469,7 @@ class v3_master {
 					this.nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
 				})
 			}
-			
+
 			nodeIPWallets.delete('initing')
 
 			logger(Colors.green(`/nodeRestart added node [${obj.walletAddress}] wallets [${this.nodeIpaddressWallets.get(obj.walletAddress)?.size}]! `))
