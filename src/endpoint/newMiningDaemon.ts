@@ -310,7 +310,7 @@ class v3_master {
 			
 			
 
-			let walletAddress, ipAddress, nodeAddress
+			let walletAddress: string, ipAddress: string, nodeAddress: string
 			try {
 				walletAddress = req.body.walletAddress1
 				ipAddress = req.body.ipAddress
