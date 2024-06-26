@@ -107,11 +107,13 @@ const initdata = async (v3: v3_master) => {
 }
 
 const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) => Promise<boolean> = async (nodeWallet, checkInit, v3) => {
+
 	let wallet = v3.regiestNodes.get(nodeWallet)
 	if (!wallet) {
 		await initdata(v3)
 		wallet = v3.regiestNodes.get(nodeWallet)
 	}
+
 	if (!wallet) {
 		logger (Colors.red(`Daemon checkNodeWallet node [${nodeWallet}] hasn't in nodelist ERROR! `), inspect(v3.regiestNodes.entries(), false, 3, true))
 		return false
@@ -134,9 +136,11 @@ const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) =
 
 const cleanupNode = (nodeWallet: string, v3: v3_master) => {
 	const nodeIPWallets = v3.nodeIpaddressWallets.get(nodeWallet)
+
 	if (!nodeIPWallets) {
 		return logger(Colors.red(`cleanupNode [${nodeWallet}] nodeWalletsIP empty!`))
 	}
+
 	nodeIPWallets.forEach((n, key) => {
 		v3.ipaddressWallet.delete(key)
 		v3.WalletIpaddress.delete(n)
@@ -161,6 +165,7 @@ const storageMinerData = async (block: number, WalletIpaddress: Map<string, stri
 	await storageWalletProfile(obj, s3Pass)
 	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
+
 
 
 class v3_master {
@@ -360,7 +365,7 @@ class v3_master {
 			if (_wallet !== walletAddress) {
 				return res.status(400).end()
 			}
-			
+
 			//	same wallet
 			return addToPool(ipAddress, walletAddress)
 			
@@ -423,11 +428,30 @@ class v3_master {
 			if (! await checkNodeWallet(obj.walletAddress, false, this)) {
 				return res.status(403).end()
 			}
+
+			const _nodeObj = this.nodeIpaddressWallets.get (obj.walletAddress)
+
+			if (_nodeObj) {
+				const init = _nodeObj.get('initing')
+
+				//	already init
+				if (init) {
+					return res.status(200).end()
+				}
+
+				cleanupNode(obj.walletAddress, this)
+
+			}
+
 			
-			cleanupNode(obj.walletAddress, this)
+			
+			//		setup INITing
 			const nodeIPWallets = new Map()
+			nodeIPWallets.set('initing','true')
 			this.nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
+
 			const data: minerArray[] = obj?.data
+
 			if (data) {
 				data.forEach( n => {
 					let _ip = this.WalletIpaddress.get(n.wallet)
@@ -445,6 +469,8 @@ class v3_master {
 					this.nodeIpaddressWallets.set(obj.walletAddress, nodeIPWallets)
 				})
 			}
+			
+			nodeIPWallets.delete('initing')
 
 			logger(Colors.green(`/nodeRestart added node [${obj.walletAddress}] wallets [${this.nodeIpaddressWallets.get(obj.walletAddress)?.size}]! `))
 			return res.status(200).end()
