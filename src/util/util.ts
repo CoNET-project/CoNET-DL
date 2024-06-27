@@ -18,6 +18,7 @@ import { Writable } from 'node:stream'
 import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
+import 
 
 import {getOraclePrice,txManager} from '../endpoint/help-database'
 
@@ -27,15 +28,11 @@ import {abi as CONET_Referral_ABI} from './conet-referral.json'
 import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
 import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
 import {abi as claimableToken } from './claimableToken.json'
-import CONET_StorgaeAbi from './cone-storage.json'
+
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {abi as erc20TokenABI} from './erc20.json'
 
 
-import {abi as fx168Abi} from './fx168.json'
-
-import {series, eachSeries, eachOfSeries, eachOfLimit, eachLimit} from 'async'
-import Web3, { Web3Eth } from 'web3'
 import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
 
 
@@ -1195,65 +1192,6 @@ export const getCNTPMastersBalance = async (privateKey: string) => {
 	
 }
 
-/**
- * 
- * 		TEST 
- * 
- */
-
-
-const walletAddress = [
-	'0xd3517e19A8F74c7f5AE1e0374d98b0432bce144B',
-	'0x8b02ec615B7a2d5B82F746F990062459DF996c48',
-	'0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
-	'0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38',
-	'0xd1A18F6aa5bC2b4928C313F1bDbE9f5799f1A2db',
-	'0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB',
-	'0x6eaE0202053c5aEf1b57911fec208f08D96050DE',
-	'0x295bA944D9a7e7b2c5EfC0e96b7a063c685F7c7d',
-	'0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845',
-	'0x060FC4A81a51393C3077B024b99f2DE63F020DdE',
-	'0x335Cf03756EF2B667a1F892F4382ce03b919265b',
-	'0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1',
-	'0xE30B823Aeb7d199D980b7480EC5667108DC583DD',
-	'0xf2e12cc4C09858AF1330b85E2c8A5aaD7b39Bf3C',
-	'0x04441E4BC3A8842473Fe974DB4351f0b126940be',
-	'0x4fa1FC4a2a96D77E8521628268631F735E2CcBee',
-	'0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD',
-	'0xcB25daB10170853C7626563D02af554fF34C0AbC',
-	'0xE101DE43c80A443F9F26CA6CEE4FDBE65874675d',
-	'0xaC9D75BF43CfDC5Ee13F11fd68006747C4578b15',
-	'0x831d6eA26B944834741994adbe96a9097B67176E',
-	'0xc68b2D00460c4b7396228d25Da771ade44Ff421C',
-	'0x3d4b4265a596705245906B856de058F4BFde9979',
-	'0x9765ec98E6D04e5C6eC097F6f360990c81D2114d',
-	'0x4a287A601Cf17A817fd764348cB0190cac68fbD1',
-	'0xbb06908a2AC01e42eBD93C4F5612B66BD4c7cBF6',
-	'0x28f1f457412074261F77A361Bd830134c5B32bd9',
-	'0x7B6732Ff1E9d9Be90DbDc3AaF5079DBD59f8077a',
-	'0xe21864bc255f545FAa86EEE6fe24E16E2aD7Af92',
-	'0xBD5e3a971327D0cdB30E06f6b7eEAd70e077Fb4F',
-	'0x6ebeBa25604079f8D993346c527646b8AD457ab3',
-	'0x7f212bEd5c8DF3027946Abc23e44A59ac5573aF2',
-	'0xADa0dB32D41e94192e167AdA206a3CFeA06e1f56',
-	'0x703173F256428e66989B2f63Cb7E9Ca02954ad54',
-	'0x092d2400E2C91B477fF2a244e7E806aA85c9114e',
-	'0xe0552C596B8E827dCa24bA5Fa93EE4eEa5819cCe',
-	'0x284AB0a1CD508a5B5a7cFCcADF49a69eEb442Bc7',
-	'0x4452425daFaf1B77f1eD4Ed5af83e5D6e5fF437f',
-	'0x35da437eE14b914bbF560f66Ba02ed60961cf127',
-	'0xe1ec8296Ae494f4cA7a8769B02933300218A31D3',
-	'0x0904CB73aB9Df2B0172143ebc3132583069329eF',
-	'0xF13f7edFDDfE22C5ca428Fd0f22BD12ca39dC0C7',
-	'0xdC1023608237b77278a46846c5E663B68F9B61a2',
-	'0x133EF0700E58C3CBDdE28f2790CFb366e9ac0d2F',
-	'0x382ce03cf62C8d6bbE7E14c4f527f365Ee823d3d',
-	'0xCa16Bf2b01F473232515324222b37627Ea523714',
-	'0x7Fdf3457919BB50EF558048c4d49Fd45434409E8',
-	'0xCd8641563B156B0Ee4d1e243847335D4c246f05a',
-	'0xB3e8e527175840c7020758a20B2508bB50CC1Fc8'
-
-]
 
 // const pay = [
 // 	//-		part 1
@@ -1421,176 +1359,6 @@ export const ReferralsReg_Blast: (referee: string, referrer: string, ReferralsMa
 const setupFile = join( homedir(),'.master.json' )
 export const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 
-const addReferral = async () => {
-	const seven = [
-		['0x295bA944D9a7e7b2c5EfC0e96b7a063c685F7c7d', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
-		['0x335Cf03756EF2B667a1F892F4382ce03b919265b', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
-		['0x4a287A601Cf17A817fd764348cB0190cac68fbD1', '0xd0D7006c30549fE2932b543815Fde2FB45a3AAEB'],
-
-		['0xf2e12cc4C09858AF1330b85E2c8A5aaD7b39Bf3C', '0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1'],
-		['0x019Ed74EF161AD1789bd2c61E39511A7E41b76c1', '0x060FC4A81a51393C3077B024b99f2DE63F020DdE'],
-		['0x522d89e0C5c8d53D9656eA0f33efa20a81bd76c6', '0x060FC4A81a51393C3077B024b99f2DE63F020DdE'],
-		['0x060FC4A81a51393C3077B024b99f2DE63F020DdE', '0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc'],
-		['0x318a3927EBDE5e06b0f9c7F1012C84e69916f5Fc', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
-		['0xE30B823Aeb7d199D980b7480EC5667108DC583DD', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
-
-		['0xd1A18F6aa5bC2b4928C313F1bDbE9f5799f1A2db', '0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845'],
-		['0x24D074530bB9526a67369b67FCf1Fa6cf6ef6845', '0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c'],
-		['0x6eaE0202053c5aEf1b57911fec208f08D96050DE', '0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44'],
-		['0x518b2eb8dffe6e826C737484c9f2Ead6696C7A44', '0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7'],
-		['0xBA34Ac9dabF6eF33Dd1A666675bDD52264274A7c', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
-		['0x6F226df857fFA0d1f8C3C0533db06e7E6042CCc7', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
-		['0x3A67775d2634BDC09336a7d2836016eA211B4F32', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
-
-		['0xEdd67DdD7870609461A606A2502ad6e8959e44E3', '0x2BD9D9EB221bd4e60b301C0D25Aa7c7829e76De3'],
-
-		['0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD', '0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813'],
-		['0x1Afc1Fcb4eC4931F1EA8B38026b93a7A8482A813', '0xc9043f661ADddCAF902d45D220e7aea38920d188'],
-		['0xc9043f661ADddCAF902d45D220e7aea38920d188', '0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A'],
-		['0xDBaa41dd7CABE1D5Ca41d38E8F768f94D531d85A', '0x4fa1FC4a2a96D77E8521628268631F735E2CcBee'],
-		['0x4fa1FC4a2a96D77E8521628268631F735E2CcBee', '0x04441E4BC3A8842473Fe974DB4351f0b126940be'],
-		['0x04441E4BC3A8842473Fe974DB4351f0b126940be', '0x8b02ec615B7a2d5B82F746F990062459DF996c48'],
-
-		['0x8b02ec615B7a2d5B82F746F990062459DF996c48', '0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2'],
-		['0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2', '0x3b2Ae491CEADaA454c99Bd3f64377e1EB66B9F38'],
-		['0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5', '0x3A67775d2634BDC09336a7d2836016eA211B4F32'],
-		['0x9F550F2E95df1Fd989da56f3cB706E3E839F7b5e', '0xDf6bA415F39CFd294F931eb54067cDC872B1d2B5'],
-
-		['0xB8f7bDfFee7C74B8d6619eB374d42AD5f89C626a', '0xEdd67DdD7870609461A606A2502ad6e8959e44E3'],
-		['0xC1E6ccf826322354ae935e15e750DFF6a6Ad1BfC', '0xB8f7bDfFee7C74B8d6619eB374d42AD5f89C626a'],
-
-		['0x368B873f37bc15e1bE12EeA0BDE1f0bbb9192bB8', '0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD'],
-	
-		['0xD130bB620f41838c05C65325b6ee84be1D4B4701','0xAF34d323683d8bA040Dac24cc537243AeC319A30'],
-
-		['0xAF34d323683d8bA040Dac24cc537243AeC319A30', '0xb1C01c53fcDA4E968CE21Af8055392779239eF1b'],
-		['0xb1C01c53fcDA4E968CE21Af8055392779239eF1b', '0x93AC5b9b1305616Cb5B46a03546356780FF6c0C7'],
-		['0x93AC5b9b1305616Cb5B46a03546356780FF6c0C7','0x12F3f8ac3966fed21Ec764E17d5d5D3fB1A4CBfD']
-
-	]
-	const nonceLock: nonceLock = {
-		conetPointAdmin: false,
-		cnptReferralAdmin: false,
-		blastConetPointAdmin: false,
-		blastcnptReferralAdmin: false
-	}
-	// const _series = seven.map (n => async (next: () => void) => await ReferralsReg_Blast(n[0], n[1], new Map(), masterSetup.conetPointAdmin, nonceLock))
-	const _series = seven.map (n => async (next: () => void) => await checkReferralSign(n[0], n[1], new Map(), masterSetup.cnptReferralAdmin, nonceLock))
-
-	series(_series, err => {
-		logger (colors.magenta(`success!`))
-	})
-	
-	// const yyy = await ReferralsReg_Blast(n[0], n[1],new Map(),masterSetup.conetPointAdmin, nonceLock)
-	// logger (colors.blue(`await checkReferralSign return ${yyy}`))
-}
-
-const airdropForTwitter=async () => {
-	const address=[
-		'0xAFFAC80D4BEB717E14A47C55E879B6BED35E6927',
-		'0x9995961D972f2d088fC641E96D1C904a6ACC824b',
-		'0x6EB626Ec2E810cC0DD464C2B7AC10D6edbE91b07',
-		'0x11F748c9aF68F9ce3D66d28fd44732c995e75Ccd',
-		'0x62C9D1C65CF4DB5CAC5952D6AB1846118E1B05B7',
-		'0x8efA3746E2B561bEfd5649570fCD8e5b94175F57',
-		'0x18863725079c0efA712ABe31ed4D82e77C901d6A',
-		'0x4484D0C9926350c9EB53675C96BEb649F1F1ad74',
-		'0x41F21f5cfD346EDDfeC01b591310F3702512981c',
-		'0xcDc52A47a10D84c8D7462148D144674A03d0d9b3',
-		'0x5D545D80AE40F9ADC41ED6A24DA0EA3866C99317',
-		'0x21a2213f7752d4c8BAD2B09c5eD113FB5C80f993',
-		'0xB8BBF03788D55E096FB066F7DE393A2BBE393C5F',
-		'0xeA9dEf62155fd3fcC2fA1cAf6fE9A95078C8C0d0',
-		'0xa6318365FDd658cE17aBD598BE66C50b1100Ebed',
-		'0xBB79856850532A7C863E7813A952C267660FB026',
-		'0x253378A9b21d08FFCa4F683B2C4041CB46B27EFE',
-		'0xfd8D02F61Ab8d7577E0Fc36DD7d094f009f56e96',
-		'0xCe4B0F9B8319C9Ce0feA119fb876d1F4C52270d3',
-		'0x5B03D895156A9F500CA0174B584FD5D4D7956E36'
-	]
-
-	const nonceLock: nonceLock = {
-		conetPointAdmin: false,
-		cnptReferralAdmin: false,
-		blastConetPointAdmin: false,
-		blastcnptReferralAdmin: false
-	}
-	
-	const payList = address.map(n=>ethers.parseEther('100').toString())
-	await sendTokenToMiner (address, payList, masterSetup.conetPointAdmin, nonceLock)
-}
-
-//addReferral()
-
-const tryTransferTest = () => {
-	const nonceLock: nonceLock = {
-		conetPointAdmin: false,
-		cnptReferralAdmin: false,
-		blastConetPointAdmin: false,
-		blastcnptReferralAdmin: false
-	}
-	const pay = nodesWalletAddr.map(n => ethers.parseEther("1").toString())
-
-	multiTransfer_original_Blast(masterSetup.conetPointAdmin, nodesWalletAddr, pay, nonceLock)
-}
-
-const getReferees = async (wallet: string, contract: ethers.Contract) => {
-	
-	let tt: string[]
-
-	try{
-		tt = await contract.getReferees(wallet)
-	} catch(ex) {
-		provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-		logger (colors.grey(`checkReferralSign call getReferrals Error, Try make new provide RPC`), ex)
-		return []
-	}
-	return tt
-}
-
-const getAllReferees = async (_wallet: string, contract: ethers.Contract) => {
-	const firstArray: string[] = await getReferees(_wallet, contract)
-	if (!firstArray.length) {
-		return []
-	}
-	const ret: any = []
-	const getData = async (wallet: string) => {
-		const kkk = await getReferees(wallet, contract)
-		const data = JSON.parse(`{"${wallet}": ${JSON.stringify(kkk)}}`)
-		return data
-	}
-	for (let i = 0; i < firstArray.length; i++) {
-		const kk = await getReferees(firstArray[i], contract)
-		const ret1 = []
-
-		if (kk.length) {
-			
-			for (let j = 0; j < kk.length; j ++) {
-				ret1.push(await getData(kk[j]))
-			}
-
-		}
-		const data = `{"${firstArray[i]}": ${JSON.stringify(ret1)}}`
-		const k = JSON.parse(data)
-		ret.push(k)
-	}
-	
-	return ret
-}
-
-const listeningStorgaeEvent = (CallBack:(data: any)=>void) => {
-	const conet_storage = new ethers.Contract(CONET_Stroage_Contract, CONET_StorgaeAbi, provideReader)
-
-	conet_storage.on('FragmentsStorage', (from, to, ver, data) => {
-		logger (`listeningStorgaeEvent from[${from}] to [${to}] ver [${ver}] data [${data}]`)
-		const ret = {
-			from, to, ver, data
-		}
-		CallBack(ret)
-	}).catch (ex => {
-		logger(`FragmentsStorage on Error`,ex)
-	})
-}
 
 export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass: s3pass) => {
 
@@ -1598,6 +1366,12 @@ export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass
 		if (!obj?.hash || !obj?.data) {
 			return resolve(false)
 		}
+		const test = await getWasabiFile (obj.hash)
+		
+		if (test) {
+			return resolve(true)
+		}
+
 		const wo = wasabiObj.us_east_1
 		
 		const option: S3.S3ClientConfig = {

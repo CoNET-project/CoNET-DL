@@ -66,7 +66,6 @@ const listeningGuardianNodes = async (block: number) => {
 const startListeningCONET_Holesky_EPOCH = async () => {
 	
 	getAllOwnershipOfGuardianNodes()
-
 	provideCONET.on ('block', async block => {
 		listeningGuardianNodes (block)
 	})
@@ -167,6 +166,7 @@ const getAllOwnershipOfGuardianNodes = async () => {
 			guardianNodesList.push(_nodesAddress[index])
 		}
 	})
+	
 	logger(Colors.blue(`guardianNodesList length = [${guardianNodesList.length}]`))
 	getAllOwnershipOfGuardianNodesProcessing = false
 }
