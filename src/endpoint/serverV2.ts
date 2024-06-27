@@ -441,7 +441,7 @@ class conet_dl_server {
 					return res.status(403).end()
 				}
 				const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys)
+				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys)
 				return res.status(200).json(ret).end()
 			}
 			

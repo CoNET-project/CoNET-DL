@@ -19,7 +19,9 @@ import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet} from './util'
+import {mapLimit} from 'async'
 
+const CGPNsAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 let s3Pass: s3pass
 //	for production
@@ -33,46 +35,41 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
-const FaucetCount = '0.01'
+const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
-let leaderboardData = {
-	epoch: '',
-	free_cntp: null,
-	free_referrals: null,
-	guardians_cntp: null, 
-	guardians_referrals: null
-}
-
-interface rate_list {
-	wallet: string
-	cntpRate: string
-	referrals: string
-}
-let free_referrals_rate_lists: rate_list[] = []
-
-let guardians_referrals_rate_lists: rate_list[] = []
-
-let minerRate = ''
-let totalMiner = ''
 
 
 const faucetRate = BigInt('10000000000000000')
 
+const detailTransfer = async (tx: string) => {
+	const transObj = await provideCONET.getTransactionReceipt(tx)
 
+	const toAddr = transObj?.to?.toLowerCase()
+	
+	if ( CGPNsAddr === toAddr) {
+		return await getAllOwnershipOfGuardianNodes()
+	}
+}
+const listeningGuardianNodes = async (block: number) => {
+
+	const blockDetail = await provideCONET.getBlock(block)
+	const transactions = blockDetail?.transactions
+	if (!transactions) {
+		return
+	}
+	//@ts-ignore
+	await mapLimit(transactions, 1, async (n, next) => {
+		await detailTransfer(n)
+	})
+}
 
 const startListeningCONET_Holesky_EPOCH = async () => {
 	
-	
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const block = await provideCONET.getBlockNumber()
-	getAllOwnershipOfGuardianNodes(provideCONET)
+	getAllOwnershipOfGuardianNodes()
 
-	provideCONET.on('block', async block => {
-		logger(Colors.blue(`startListeningCONET_Holesky_EPOCH on Block [${block}]`))
+	provideCONET.on ('block', async block => {
+		listeningGuardianNodes (block)
 	})
-
-	
-
 }
 
 
@@ -116,7 +113,7 @@ const addAttackToCluster = async (ipaddress: string) => {
 	req.write(JSON.stringify(postData))
 	req.end()
 }
-const CGPNsAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
+
 
 const guardianNodesList: string[] = []
  
@@ -136,12 +133,19 @@ const _unlockCNTP = async (wallet: string, privateKey: string, CallBack: (err?: 
 	return CallBack (null, tx)
 }
 
-const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvider) => {
+let getAllOwnershipOfGuardianNodesProcessing = false
+
+const getAllOwnershipOfGuardianNodes = async () => {
+	if (getAllOwnershipOfGuardianNodesProcessing) {
+		return logger(`getAllOwnershipOfGuardianNodes already process!`)
+	}
+	getAllOwnershipOfGuardianNodesProcessing = true
 	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI,provideCONET)
 	let nodes
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
 	} catch (ex: any) {
+		getAllOwnershipOfGuardianNodesProcessing = false
 		return logger(Colors.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
 	}
 	const _nodesAddress: string[] = nodes[0].map((n: string) => n.toLowerCase())
@@ -153,6 +157,7 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 	try {
 		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
 	} catch (ex: any) {
+		getAllOwnershipOfGuardianNodesProcessing = false
 		return logger(Colors.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
 	}
 
@@ -163,6 +168,7 @@ const getAllOwnershipOfGuardianNodes = async (provideCONET: ethers.JsonRpcProvid
 		}
 	})
 	logger(Colors.blue(`guardianNodesList length = [${guardianNodesList.length}]`))
+	getAllOwnershipOfGuardianNodesProcessing = false
 }
 
 
