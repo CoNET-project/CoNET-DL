@@ -18,7 +18,6 @@ import { Writable } from 'node:stream'
 import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
-import 
 
 import {getOraclePrice,txManager} from '../endpoint/help-database'
 
@@ -1367,7 +1366,7 @@ export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass
 			return resolve(false)
 		}
 		const test = await getWasabiFile (obj.hash)
-		
+
 		if (test) {
 			return resolve(true)
 		}
