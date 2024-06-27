@@ -18,7 +18,7 @@ import epochRateABI from '../util/epochRate.json'
 import rateABI from './conet-rate.json'
 
 const ReferralsMap: Map<string, string> = new Map()
-const conet_Holesky_RPC = 'http://38.102.85.245:8000'
+const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
