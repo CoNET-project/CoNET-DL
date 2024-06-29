@@ -74,14 +74,13 @@ class server {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
-		app.use(Express.json())
 		app.use( '/api', router )
 		
 		app.use(Express.json({limit: '100mb'}));
 		app.use(Express.urlencoded({limit: '100mb'}));
 		app.use (async (req, res, next) => {
 			if (/^post$/i.test(req.method)) {
-				return Express.json({limit: '10mb'})(req, res, err => {
+				return Express.json({limit: '100mb'})(req, res, err => {
 					if (err) {
 						res.sendStatus(400).end()
 						res.socket?.end().destroy()
