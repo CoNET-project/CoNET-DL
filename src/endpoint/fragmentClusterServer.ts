@@ -157,7 +157,7 @@ class server {
 		router.get (/\/getFragment\//,  async (req, res) => {
 			
 
-			const _hashName = req.path.split('/pai/getFragment/')
+			const _hashName = req.path.split('getFragment/')
 			if (_hashName.length < 2) {
 				logger(Colors.blue(`/getFragment unknow path ${req.path}`))
 				return res.status(404).end()
