@@ -176,5 +176,3 @@ class server {
 }
 
 export default server
-
-new server()
