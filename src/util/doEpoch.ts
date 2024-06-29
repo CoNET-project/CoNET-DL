@@ -2,7 +2,7 @@ import {ethers} from 'ethers'
 
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {masterSetup, s3fsPasswd, storageWalletProfile, getWasabiFile} from './util'
+import {masterSetup, storageIPFS, getIPFSfile} from './util'
 import Color from 'colors/safe'
 import { mapLimit} from 'async'
 import { logger } from './logger'
@@ -22,22 +22,14 @@ interface walletCount {
 
 const tokensEachEPOCH = 34.72
 
-const sslOptions: TLSSocketOptions = {
-	key : masterSetup.Cassandra.certificate.key,
-	cert : masterSetup.Cassandra.certificate.cert,
-	ca : masterSetup.Cassandra.certificate.ca,
-	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
-}
 
-const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], totalMiner: string, minerRate: string}) => {
-	if (!s3Pass) {
-		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
-	}
+const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], totalMiner: string, minerRate: string}) => {
+
 	const obj = {
 		data: JSON.stringify(data),
 		hash: `${epoch}_free`
 	}
-	await storageWalletProfile(obj, s3Pass)
+	await storageIPFS(obj, masterSetup.conetFaucetAdmin[0])
 }
 
 
@@ -87,46 +79,46 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	req.end()
 }
 
-const postReferrals = async (epoch: string, totalMiner: string, minerRate: string, callbak: (err: Error|null, data?: any) => void )=> {
+// const postReferrals = async (epoch: string, totalMiner: string, minerRate: string, callbak: (err: Error|null, data?: any) => void )=> {
 
-	const option: RequestOptions = {
-		hostname: 'localhost',
-		path: `/api/free-data`,
-		port: 8002,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	const postData = {
-		epoch, totalMiner, minerRate
-	}
+// 	const option: RequestOptions = {
+// 		hostname: 'localhost',
+// 		path: `/api/free-data`,
+// 		port: 8002,
+// 		method: 'POST',
+// 		headers: {
+// 			'Content-Type': 'application/json'
+// 		}
+// 	}
+// 	const postData = {
+// 		epoch, totalMiner, minerRate
+// 	}
 
-	const req = await request (option, res => {
-		let data = ''
-		res.on('data', _data => {
-			data += _data
-		})
+// 	const req = await request (option, res => {
+// 		let data = ''
+// 		res.on('data', _data => {
+// 			data += _data
+// 		})
 
-		res.once('end', () => {
-			try {
-				return callbak (null)
-			} catch (ex: any) {
-				console.error(`doEpoch/postReferrals got response JSON.parse(data) Error!`, data)
-				return callbak (ex)
-			}
+// 		res.once('end', () => {
+// 			try {
+// 				return callbak (null)
+// 			} catch (ex: any) {
+// 				console.error(`doEpoch/postReferrals got response JSON.parse(data) Error!`, data)
+// 				return callbak (ex)
+// 			}
 			
-		})
-	})
+// 		})
+// 	})
 
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (e)
-	})
+// 	req.once('error', (e) => {
+// 		console.error(`getReferrer req on Error! ${e.message}`)
+// 		return callbak (e)
+// 	})
 
-	req.write(JSON.stringify(postData))
-	req.end()
-}
+// 	req.write(JSON.stringify(postData))
+// 	req.end()
+// }
 
 const countReword = (reword: number, wallet: string, totalToken: number, callback: (data: null|{wallet: string,pay: string}) => void) => {
 	return getReferrer(wallet, async (err, data: any) => {
@@ -240,7 +232,7 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	tableReferrals.sort((a, b) => parseInt(b.referrals) - parseInt(a.referrals))
 	const finalReferrals = tableReferrals.slice(0, 10)
 
-	await store_Leaderboard_Free_referrals_toS3 ( block, {referrals:finalReferrals, cntp: tableCNTP, totalMiner, minerRate } )
+	await store_Leaderboard_Free_referrals ( block, {referrals:finalReferrals, cntp: tableCNTP, totalMiner, minerRate } )
 
 	
 	//await storeLeaderboardFree_referrals(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
@@ -251,9 +243,9 @@ let s3Pass: s3pass | null
 
 
 const stratFreeMinerReferrals = async (block: string) => {
-	s3Pass = await s3fsPasswd()
+
 	//	free_wallets_${block}
-	const data = await getWasabiFile (`free_wallets_${block}`)
+	const data = await getIPFSfile (`free_wallets_${block}`)
 	
 	if (!data) {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))

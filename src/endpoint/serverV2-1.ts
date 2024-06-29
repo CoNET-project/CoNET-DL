@@ -11,8 +11,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract, getWasabiFile,
-	 CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
+import { logger,CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, s3fsPasswd, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 import {transferPool, startTransfer} from '../util/transferManager'
 import CGPNsABI from '../util/CGPNs.json'

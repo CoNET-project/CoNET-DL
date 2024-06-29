@@ -10,8 +10,8 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract, getWasabiFile,
-	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getServerIPV4Address, s3fsPasswd, storageWalletProfile, conet_Holesky_rpc, sendCONET
+import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
+	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getServerIPV4Address, s3fsPasswd, storageIPFS, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 
 import CNTPAbi from '../util/cCNTP.json'
@@ -296,32 +296,6 @@ class conet_dl_server {
 
 		router.get ('/conet-nodes', async ( req, res ) => {
 			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
-		})
-
-		router.post ('/storageFragments', async (req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-
-			if (!obj || !obj?.data || !this.s3Pass) {
-				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
-				return res.status(403).end()
-			}
-			
-			const uu = await storageWalletProfile(obj, this.s3Pass)
-			if (!uu) {
-				return res.status(504).end()
-			}
-			return res.status(200).json({}).end()
 		})
 
 		router.post ('/claimToken', async ( req, res ) => {

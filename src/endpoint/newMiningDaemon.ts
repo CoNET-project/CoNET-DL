@@ -10,7 +10,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
-import { masterSetup, storageWalletProfile, s3fsPasswd} from '../util/util'
+import { masterSetup, storageIPFS} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import {v4} from 'uuid'
@@ -87,7 +87,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 
 	EPOCH = await provider.getBlockNumber()
 	await initdata(v3)
-	s3Pass = await s3fsPasswd()
+	
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
 
@@ -151,18 +151,16 @@ const cleanupNode = (nodeWallet: string, v3: v3_master) => {
 const storageMinerData = async (block: number, WalletIpaddress: Map<string, string>) => {
 	//	obj: {hash?: string, data?: string}
 	const walletsArray: string[] = []
-	if (!s3Pass) {
-		return logger(Colors.red(`storageMinerData s3Pass null Error!`))
-	}
 	WalletIpaddress.forEach((n, key) => {
 		walletsArray.push(key)
 	})
+
 	const obj = {
 		hash: `free_wallets_${block}`,
 		data: JSON.stringify(walletsArray)
 	}
 
-	await storageWalletProfile(obj, s3Pass)
+	await storageIPFS(obj, masterSetup.conetFaucetAdmin[0])
 	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
 

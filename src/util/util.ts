@@ -10,7 +10,7 @@ import Cluster from 'node:cluster'
 import { inspect } from 'node:util'
 import { exec } from 'node:child_process'
 import { createInterface } from 'readline'
-import { publicKeyByPrivateKey, cipher, decryptWithPrivateKey, hex, recover, hash, recoverPublicKey, util } from 'eth-crypto'
+import { publicKeyByPrivateKey, cipher, decryptWithPrivateKey, hex, recover, hash, sign } from 'eth-crypto'
 import { Buffer } from 'buffer'
 import { readCleartextMessage, verify, readKey, readMessage, readPrivateKey, decryptKey, decrypt, generateKey } from 'openpgp'
 import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
@@ -18,7 +18,6 @@ import { Writable } from 'node:stream'
 import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
-
 import {getOraclePrice,txManager} from '../endpoint/help-database'
 
 import {abi as CONET_Point_ABI} from './conet-point.json'
@@ -401,12 +400,13 @@ const wasabiObj = {
 	}
 }
 
-export const getWasabiFile: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
-	//const cloudStorageEndpointPath = `/conet-mvp/storage/FragmentOcean/${fileName}`
-	const cloudStorageEndpointUrl = `https://s3.us-east-1.wasabisys.com/conet-mvp/storage/FragmentOcean/${fileName}`
+const IPFSEndpoint = `https://ipfs.conet.network/api/getFragment/`
+
+export const getIPFSfile: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
+
+	const cloudStorageEndpointUrl = `${IPFSEndpoint}${fileName}`
 	HttpsGet(cloudStorageEndpointUrl, res => {
-		// console.log('statusCode:', res.statusCode)
-  		// console.log('headers:', res.headers)
+
 		if (res.statusCode !== 200) {
 			//logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
 			return resolve('')
@@ -566,6 +566,8 @@ export const listedServerIpAddress: _nodeType[] = [
 
 
 const conetServerTimeout = 1000 * 60
+
+
 const requestUrl = (option: RequestOptions, postData: string) => {
 
 	return new Promise((resolve: any) => {
@@ -1138,7 +1140,6 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 }
 
 
-
 export const multiTransfer_original_Blast = async (privateKey: string, nodes: string[], _payList: string[], nonceLock: nonceLock) => {
 	if (nonceLock.blastConetPointAdmin) {
 		return setTimeout(() => {multiTransfer_original_Blast(privateKey, nodes, _payList, nonceLock)}, 1000)
@@ -1359,17 +1360,17 @@ const setupFile = join( homedir(),'.master.json' )
 export const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 
 
-export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass: s3pass) => {
+export const storageWalletProfile111 = (obj: {hash?: string, data?: string}, s3pass: s3pass) => {
 
 	return new Promise (async resolve => {
 		if (!obj?.hash || !obj?.data) {
 			return resolve(false)
 		}
-		const test = await getWasabiFile (obj.hash)
+		// const test = await getWasabiFile (obj.hash)
 
-		if (test) {
-			return resolve(true)
-		}
+		// if (test) {
+		// 	return resolve(true)
+		// }
 
 		const wo = wasabiObj.us_east_1
 		
@@ -1400,6 +1401,40 @@ export const storageWalletProfile = (obj: {hash?: string, data?: string}, s3pass
 		logger(colors.grey(`storageWalletProfile hash [${ obj.hash }] data length = [${ obj.data.length }] success`))
 		return resolve(true)
 	})
+}
+
+export const storageIPFS = async (obj: {hash: string, data: any}, privateKey: string ) => {
+
+		if (!obj?.hash || !obj?.data) {
+			return false
+		}
+
+		const test = await getIPFSfile (obj.hash)
+
+		if (test) {
+			return true
+		}
+		const wallet = new ethers.Wallet(privateKey)
+		const message =JSON.stringify({walletAddress: wallet.address, data: obj.data})
+		const messageHash = ethers.id(message)
+		const signMessage = sign(privateKey, messageHash)
+		const sendData = {
+			message, signMessage
+		}
+
+		const option: RequestOptions = {
+			hostname: 'ipfs.conet.network',
+			path: `/api/storageFragment`,
+			port: 443,
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		}
+
+		return await requestUrl(option, JSON.stringify(sendData))
+		
+	
 }
 
 

@@ -1,15 +1,10 @@
 import {ethers} from 'ethers'
 
-import type { RequestOptions } from 'node:http'
-import {request} from 'node:http'
-import {masterSetup, s3fsPasswd, storageWalletProfile, getWasabiFile} from './util'
+import {masterSetup, getIPFSfile} from './util'
 import Color from 'colors/safe'
 import { logger } from './logger'
-import { Client, auth, types } from 'cassandra-driver'
-import type { TLSSocketOptions } from 'node:tls'
+
 import {transferPool, startTransfer} from '../util/transferManager'
-import {inspect} from 'node:util'
-import { mapLimit} from 'async'
 
 import rateABI from '../endpoint/conet-rate.json'
 const conet_Holesky_RPC = 'https://prc.conet.network'
@@ -21,7 +16,7 @@ const splitLength = 1000
 
 const stratFreeMinerTransfer = async (block: number) => {
 
-	const data = await getWasabiFile (`free_wallets_${block}`)
+	const data = await getIPFSfile (`free_wallets_${block}`)
 	
 	if (!data) {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))

@@ -2,62 +2,17 @@
  * 			
  * */
 import Express, { Router, Response, Request } from 'express'
-
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import {ethers} from 'ethers'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
-import {masterSetup, checkSignObj, storageWalletProfile, s3fsPasswd} from '../util/util'
-import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
+import {checkSignObj} from '../util/util'
 import {logger} from '../util/logger'
-import {v4} from 'uuid'
 
-import epochRateABI from '../util/epochRate.json'
-import type { RequestOptions,ServerResponse } from 'node:http'
+import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-const ReferralsMap: Map<string, string> = new Map()
-const conet_Holesky_rpc = 'https://rpc.conet.network'
-
-const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
-const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
-
-
-interface epochRate {
-	totalNodes:string
-	epoch: string
-	totalMiner: string
-}
-
-const epochRate: epochRate[]= []
-
-
-
-const storeToChain = async (data: epochRate) => {
-	logger(inspect(data, false, 3, true))
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(masterSetup.GuardianReferralsFree, provider)
-	const cCNTPContract = new ethers.Contract(epochRateAddr, epochRateABI, wallet)
-	let tx
-	try {
-		tx = await cCNTPContract.updateEpoch(data.totalMiner, data.totalNodes, data.epoch)
-	} catch (ex: any) {
-		logger(Colors.red(`storeToChain Error!`), ex.message)
-		
-		return
-	}
-	return logger(Colors.green(`storeToChain ${inspect(data, false, 3, true)} success! tx = [${tx.hash}]`))
-}
-
-const initAllServers: Map<string, string> = new Map()
-
-interface regiestNodes {
-	wallet: string
-	node_ipaddress: string
-
-}
 
 
 const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
@@ -97,7 +52,6 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	req.write(JSON.stringify(obj))
 	req.end()
 }
-
 
 const initdata = async (regiestNodes: Map<string, string>) => {
 	const nodes: any[]|void  = await getAllMinerNodes()

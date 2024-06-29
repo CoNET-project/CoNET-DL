@@ -1,6 +1,6 @@
 import {ethers} from 'ethers'
 import {inspect} from 'node:util'
-import {masterSetup, storageWalletProfile, s3fsPasswd} from './util'
+import {masterSetup, storageIPFS} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
 import type { RequestOptions } from 'node:http'
@@ -17,33 +17,17 @@ interface leaderboard {
 
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 const nodeRferralsEachEPOCH = 16.742770167427702
-const sslOptions: TLSSocketOptions = {
-	key : masterSetup.Cassandra.certificate.key,
-	cert : masterSetup.Cassandra.certificate.cert,
-	ca : masterSetup.Cassandra.certificate.ca,
-	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
-}
-
-const option = {
-	contactPoints : masterSetup.Cassandra.databaseEndPoints,
-	localDataCenter: 'dc1',
-	authProvider: new auth.PlainTextAuthProvider ( masterSetup.Cassandra.auth.username, masterSetup.Cassandra.auth.password ),
-	sslOptions: sslOptions,
-	keyspace: masterSetup.Cassandra.keyspace,
-	protocolOptions: { maxVersion: types.protocolVersion.v4 }
-}
 
 
-let s3Pass: s3pass | null
-const store_Leaderboard_Free_referrals_toS3 = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[]}) => {
-	if (!s3Pass) {
-		return logger(Color.red(`store_Leaderboard_Free_referrals_toS3 s3Pass NULL error!`))
-	}
+
+
+const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[]}) => {
+
 	const obj = {
 		data: JSON.stringify(data),
 		hash: `${epoch}_node`
 	}
-	await storageWalletProfile(obj, s3Pass)
+	await storageIPFS(obj, masterSetup.conetFaucetAdmin[0])
 }
 
 const getNodesReferralsData = async (block: string, totalNodes: string, wallets: string[], nodes: string[], payList: string[]) => {
@@ -65,7 +49,7 @@ const getNodesReferralsData = async (block: string, totalNodes: string, wallets:
 	// logger(inspect(finalCNTP, false, 3, true))`
 	// logger(inspect(finalReferrals, false, 3, true))
 	
-	await store_Leaderboard_Free_referrals_toS3(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes })
+	await store_Leaderboard_Free_referrals(block, {cntp: finalCNTP, referrals: finalReferrals, referrals_rate_list: tableNodes })
 	
 	// await storeLeaderboardGuardians_referralsv2(block, JSON.stringify(finalReferrals), JSON.stringify(finalCNTP), JSON.stringify(tableNodes))
 	
@@ -89,47 +73,6 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	return [retWalletAddr, retReferralsBoost]
 }
 
-const postReferrals = async (totalNodes: string, epoch: string, callbak: (err: Error|null, data?: any) => void)=> {
-
-	const option: RequestOptions = {
-		hostname: 'localhost',
-		path: `/api/guardians-data`,
-		port: 8002,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	const postData = {
-		epoch, totalNodes
-	}
-
-	const req = await request (option, res => {
-		let data = ''
-		res.on('data', _data => {
-			data += _data
-		})
-		res.once('end', () => {
-
-			try {
-				
-				return callbak (null)
-			} catch (ex: any) {
-				console.error(`POST /api/guardians-data got response JSON.parse(data) Error!`, data)
-				return callbak (ex)
-			}
-			
-		})
-	})
-
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (e)
-	})
-
-	req.write(JSON.stringify(postData))
-	req.end()
-}
 
 const GuardianNodes_ContractV3 = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 
@@ -148,7 +91,7 @@ const guardianReferrals = async (block: string) => {
 	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())
 	
 	const [_referralsAddress, _referralsNodes] = mergeReferrals(referralsAddress, referralsBoost)
-	s3Pass = await s3fsPasswd()
+
 	let NFTAssets: number[]
 	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
 	try {
