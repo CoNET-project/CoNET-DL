@@ -68,17 +68,15 @@ class server {
     }
 
 	private startServer = async () => {
-		
-		const app = Express()
-		const router = Router ()
-		app.disable('x-powered-by')
 		const Cors = require('cors')
-		app.use( Cors ())
-
-		app.use( '/api', router )
-		
+		const app = Express()
 		app.use(Express.json({ limit: '50mb' }))
 		app.use(Express.urlencoded({ extended: true }))
+		app.disable('x-powered-by')
+		app.use( Cors ())
+		const router = Router ()
+		app.use( '/api', router )
+	
 
 	
 
