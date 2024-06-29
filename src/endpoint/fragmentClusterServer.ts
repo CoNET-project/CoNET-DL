@@ -154,7 +154,7 @@ class server {
 
 		})
 
-		router.get ('/getFragment',  async (req, res) => {
+		router.get ('/getFragment/',  async (req, res) => {
 			
 
 			const _hashName = req.path.split('/pai/getFragment/')
