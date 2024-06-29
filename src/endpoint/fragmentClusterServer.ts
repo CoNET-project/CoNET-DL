@@ -77,22 +77,10 @@ class server {
 
 		app.use( '/api', router )
 		
-		app.use(Express.json({limit: '50Mb'}));
+		app.use(Express.json({ limit: '50mb' }))
+		app.use(Express.urlencoded({ extended: true }))
 
-		app.use (async (req, res, next) => {
-			if (/^post$/i.test(req.method)) {
-				return Express.json({limit: '50Mb'})(req, res, err => {
-					if (err) {
-						res.sendStatus(400).end()
-						res.socket?.end().destroy()
-						return logger(Colors.red(`/^post$/i.test Express.json Error ${req.url} ! ${JSON.stringify(req.body)}`))
-						
-					}
-					return next()
-				})
-			}
-			return next()
-		})
+	
 
 		app.once ( 'error', ( err: any ) => {
 			/**
