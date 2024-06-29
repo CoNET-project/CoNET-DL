@@ -74,6 +74,7 @@ class server {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
+		app.use(Express.json())
 		app.use( '/api', router )
 		
 		app.use(Express.json({limit: '100mb'}));
@@ -132,7 +133,7 @@ class server {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /storageFragment req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(403).end()
 			}
 
