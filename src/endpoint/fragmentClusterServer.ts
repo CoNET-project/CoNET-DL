@@ -76,6 +76,8 @@ class server {
 		app.use( Cors ())
 
 		app.use( '/api', router )
+		
+		app.use(Express.json({limit: '50Mb'}));
 
 		app.use (async (req, res, next) => {
 			if (/^post$/i.test(req.method)) {
