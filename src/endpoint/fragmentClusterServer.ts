@@ -39,18 +39,20 @@ const getFragment = async (hashName: string, res: Response) => {
 	const n = parseInt(`0x${lastChar}`, 16)
 	const path = storagePath[n%storagePath.length]
 	const filename = `${path}/${hashName}`
-	stat(filename, err => {
+	return stat(filename, err => {
 		if (err) {
 			logger(Colors.red(`getFragment file [${filename}] does not exist!`))
-			res.status(404).end()
+			return res.status(404).end()
 		}
-	})
-	const req = createReadStream(filename, 'utf8')
-	res.status(200)
 
-	req.pipe(res).on(`error`, err => {
-		logger(Colors.red(`getFragment on error ${err.message}`))
+		const req = createReadStream(filename, 'utf8')
+		res.status(200)
+
+		req.pipe(res).on(`error`, err => {
+			logger(Colors.red(`getFragment on error ${err.message}`))
+		})
 	})
+	
 
 }
 
