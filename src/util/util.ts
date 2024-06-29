@@ -1406,6 +1406,7 @@ export const storageWalletProfile111 = (obj: {hash?: string, data?: string}, s3p
 export const storageIPFS = async (obj: {hash: string, data: any}, privateKey: string ) => {
 
 		if (!obj?.hash || !obj?.data) {
+			logger(colors.red(`storageIPFS Format no hash || no data Error!`))
 			return false
 		}
 
@@ -1415,6 +1416,8 @@ export const storageIPFS = async (obj: {hash: string, data: any}, privateKey: st
 			return true
 		}
 
+
+		logger(colors.blue(`storageIPFS start post [${obj.hash}] to ipfs.conet.network data length = ${obj.data.length}`))
 		const wallet = new ethers.Wallet(privateKey)
 		const message =JSON.stringify({walletAddress: wallet.address, data: obj.data, hash: obj.hash})
 		const messageHash = ethers.id(message)
