@@ -81,7 +81,7 @@ class server {
 
 		app.use (async (req, res, next) => {
 			if (/^post$/i.test(req.method)) {
-				return Express.json({limit: '50mb'})(req, res, err => {
+				return Express.json({limit: '50Mb'})(req, res, err => {
 					if (err) {
 						res.sendStatus(400).end()
 						res.socket?.end().destroy()
