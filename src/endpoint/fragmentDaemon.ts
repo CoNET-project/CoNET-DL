@@ -3,7 +3,7 @@ import Cluster from 'node:cluster'
 import { cpus } from 'node:os'
 import {logger} from '../util/logger'
 import Colors from 'colors/safe'
-import server from './serverV2master'
+import server from './fragmentClusterServer'
 
 if (Cluster.isPrimary) {
 	const forkWorker = () => {
@@ -24,7 +24,7 @@ if (Cluster.isPrimary) {
 				return _forkWorker ()
 			}, 1000 * 10 )
 		})
-		
+
 		return (fork)
 	}
 	

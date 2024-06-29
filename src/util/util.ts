@@ -1414,6 +1414,7 @@ export const storageIPFS = async (obj: {hash: string, data: any}, privateKey: st
 		if (test) {
 			return true
 		}
+		
 		const wallet = new ethers.Wallet(privateKey)
 		const message =JSON.stringify({walletAddress: wallet.address, data: obj.data})
 		const messageHash = ethers.id(message)
