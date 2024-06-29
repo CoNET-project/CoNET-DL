@@ -7,7 +7,7 @@ import { logger } from './logger'
 import {transferPool, startTransfer} from '../util/transferManager'
 
 import rateABI from '../endpoint/conet-rate.json'
-const conet_Holesky_RPC = 'https://prc.conet.network'
+const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
