@@ -81,7 +81,7 @@ class server {
 		app.use(Express.urlencoded({limit: '100mb'}));
 		app.use (async (req, res, next) => {
 			if (/^post$/i.test(req.method)) {
-				return Express.json({limit: '1mb'})(req, res, err => {
+				return Express.json({limit: '10mb'})(req, res, err => {
 					if (err) {
 						res.sendStatus(400).end()
 						res.socket?.end().destroy()
