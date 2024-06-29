@@ -124,7 +124,8 @@ class server {
 
 	private router ( router: Router ) {
 		
-		router.post ('/storageFragment',  async (req, res) =>{
+		router.post ('/storageFragment',  async (req, res) => {
+			logger(Colors.blue(`/storageFragment`))
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -142,6 +143,7 @@ class server {
 				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(obj, false, 3, true))
 				return res.status(403).end()
 			}
+
 			const result = await saveFragment(obj.hash, obj.data)
 
 			if (result) {
@@ -175,3 +177,4 @@ class server {
 
 export default server
 
+new server()
