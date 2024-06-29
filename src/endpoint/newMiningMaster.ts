@@ -7,7 +7,6 @@ import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import {ethers} from 'ethers'
-import {transferPool, startTransfer} from '../util/transferManager'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 import {createServer} from 'node:http'
 import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'

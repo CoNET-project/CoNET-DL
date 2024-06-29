@@ -316,6 +316,7 @@ class conet_dl_server {
 				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(this.s3Pass, false, 3, true), inspect(obj, false, 3, true))
 				return res.status(403).end()
 			}
+			
 			const uu = await storageWalletProfile(obj, this.s3Pass)
 			if (!uu) {
 				return res.status(504).end()
