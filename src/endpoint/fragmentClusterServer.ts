@@ -138,7 +138,7 @@ class server {
 			const obj = checkSignObj (message, signMessage)
 
 			if (!obj || !obj?.data || !obj?.hash) {
-				logger (Colors.grey(`Router /storageFragments !obj or this.saPass Error! ${ipaddress} `), inspect(obj, false, 3, true))
+				logger (Colors.grey(`Router /storageFragments !obj Format Error Error! ${ipaddress} hash ${obj?.hash} data length [${obj?.data?.length}]`))
 				return res.status(403).end()
 			}
 

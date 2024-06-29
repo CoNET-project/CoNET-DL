@@ -11,7 +11,7 @@ import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
-	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getServerIPV4Address, s3fsPasswd, storageIPFS, conet_Holesky_rpc, sendCONET
+	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getServerIPV4Address, s3fsPasswd, conet_Holesky_rpc
 } from '../util/util'
 
 import CNTPAbi from '../util/cCNTP.json'
