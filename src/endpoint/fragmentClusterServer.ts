@@ -78,6 +78,20 @@ class server {
 		
 		app.use(Express.json({limit: '100mb'}));
 		app.use(Express.urlencoded({limit: '100mb'}));
+		app.use (async (req, res, next) => {
+			if (/^post$/i.test(req.method)) {
+				return Express.json({limit: '100mb'})(req, res, err => {
+					if (err) {
+						res.sendStatus(400).end()
+						res.socket?.end().destroy()
+						return logger(Colors.red(`/^post$/i.test Express.json Error ${req.url} ! ${JSON.stringify(req.body)}`))
+						
+					}
+					return next()
+				})
+			}
+			return next()
+		})
 
 		app.once ( 'error', ( err: any ) => {
 			/**
