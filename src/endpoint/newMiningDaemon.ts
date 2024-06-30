@@ -490,7 +490,7 @@ class v3_master {
 				return res.status(401).end()
 			}
 
-			const responseData = {totalMiner: this.ipaddressWallet.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate)}
+			const responseData = {totalMiner: this.WalletIpaddress.size, tokensEachEPOCH, minerRate: ethers.formatEther(minerRate)}
 			return res.status(200).json(responseData).end()
 		})
 

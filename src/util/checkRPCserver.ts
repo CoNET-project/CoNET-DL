@@ -71,6 +71,7 @@ const test = async () => {
 	servers.forEach(n => {
 		execProcess.push (tryConnect(n))
 	})
+	
 	await Promise.all ([
 		...servers
 	])
