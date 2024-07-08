@@ -220,7 +220,7 @@ const sendAlldata = (server: string, livenessListeningPool: Map <string, livenes
 	const sendData = {
 		message, signMessage
 	}
-
+	logger(`sendAlldata processing!`)
 	return sendMesageToCluster(server, '/api/nodeRestart', sendData, livenessListeningPool, (err, data) => {
 		if (err) {
 			logger(Colors.grey(`sendAlldata sendMesageToCluster /api/minerCheck gor Error${err}`))
@@ -260,6 +260,8 @@ const sendMesageToCluster = (server: string, path: string, pData: any, livenessL
 					sendAlldataProcess = true
 					await sendAlldata (server, livenessListeningPool)
 					sendAlldataProcess = false
+				} else {
+					logger(`sendAlldata already prcessing!`)
 				}
 
 				return setTimeout(async () => {
