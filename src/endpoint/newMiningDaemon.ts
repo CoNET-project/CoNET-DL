@@ -306,8 +306,6 @@ class v3_master {
 
 		router.post('/minerCheck',  async (req, res) =>{
 			
-			
-
 			let walletAddress: string, ipAddress: string, nodeAddress: string
 			try {
 				walletAddress = req.body.walletAddress1
@@ -320,6 +318,7 @@ class v3_master {
 			}
 
 			const addToPool = (a_ipAddress: string, a_walletAddress: string) => {
+				logger(`${a_ipAddress}:${a_walletAddress} addToPool !`)
 				this.ipaddressWallet.set(a_ipAddress, a_walletAddress)
 				this.WalletIpaddress.set(a_walletAddress, a_ipAddress)
 				const nodeIPWallets = this.nodeIpaddressWallets.get(nodeAddress)
@@ -361,6 +360,7 @@ class v3_master {
 
 			//		IP address used by another Wallet
 			if (_wallet !== walletAddress) {
+				logger(`/minerCheck ${_wallet} !== ${walletAddress} Error!`)
 				return res.status(400).end()
 			}
 

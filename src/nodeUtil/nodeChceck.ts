@@ -9,11 +9,9 @@ import {tryConnect} from '../util/utilNew'
 
 const CONETRpcProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 const cGPNAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
-const GuardianNodesV4Addr = '0x264ea87162463165101A500a6Bf8755b91220350'
+const GuardianNodesV5Addr = '0x617b3CE079c653c8A9Af1B5957e69384919a7084'
 const cGPNAddrSC = new ethers.Contract(cGPNAddr, cGPNAbi, CONETRpcProvider)
-const GuardianNodesSC = new ethers.Contract(GuardianNodesV4Addr, GuardianNodesV4, CONETRpcProvider)
-
-
+const GuardianNodesSC = new ethers.Contract(GuardianNodesV5Addr, GuardianNodesV4, CONETRpcProvider)
 
 const getAllNodes = async () => {
 	let nodeNumber: BigInt
@@ -31,7 +29,7 @@ const getAllNodes = async () => {
 	const addressMap = new Map ()
 	const regionMap = new Map()
 	const controy = new Map()
-	await mapLimit(processArray, 4, async (n, next) => {
+	await mapLimit(processArray, 1, async (n, next) => {
 		const [ipaddress, regionName, pgp] = await GuardianNodesSC.getNodeInfoById(n)
 		if (ipaddress) {
 			nodes.push(ipaddress)
@@ -44,7 +42,8 @@ const getAllNodes = async () => {
 
 			logger(Colors.blue(`mapLimit ${n} added ${ipaddress} [${regionName}] to nodes pool ${nodes.length} !`), JSON.stringify(Buffer.from(pgp,'base64').toString()))
 		} else {
-			next(new Error('end'))
+			logger(Colors.red(`id ${n} got null node INFO!`))
+			next(new Error(''))
 		}
 		
 	}).catch(ex => {
@@ -58,7 +57,7 @@ const getAllNodes = async () => {
 	nodes.forEach(n => {
 		execProcess.push (tryConnect(n))
 	})
-	await mapLimit(execProcess, 10, async (n, next) => {
+	await mapLimit(execProcess, 1, async (n, next) => {
 		await n
 	})
 

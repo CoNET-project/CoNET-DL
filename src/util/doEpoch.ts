@@ -239,7 +239,6 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	
 }
 
-let s3Pass: s3pass | null
 
 
 const stratFreeMinerReferrals = async (block: string) => {
