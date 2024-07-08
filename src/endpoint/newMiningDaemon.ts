@@ -88,7 +88,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	EPOCH = await provider.getBlockNumber()
 	await initdata(v3)
 	
-	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
+	logger(Colors.grey(`Cluster startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
 let initdataing = false
 const initdata = async (v3: v3_master) => {

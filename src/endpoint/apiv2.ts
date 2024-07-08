@@ -26,7 +26,10 @@ if (Cluster.isPrimary) {
 		})
 		return (fork)
 	}
-	forkWorker()
+	setTimeout (() => {
+		forkWorker()
+	}, 5000)
+	
 	new masterServer()
 } else {
 	new server()
