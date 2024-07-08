@@ -52,10 +52,15 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	req.write(JSON.stringify(obj))
 	req.end()
 }
-
+let initdataing = false
 const initdata = async (regiestNodes: Map<string, string>) => {
+	if (initdataing) {
+		return 
+	}
+	initdataing = true
 	const nodes: any[]|void  = await getAllMinerNodes()
 	if (!nodes) {
+		initdataing = false
 		return logger(Colors.red(`initdata return NULL! `))
 	}
 	
@@ -70,6 +75,7 @@ const initdata = async (regiestNodes: Map<string, string>) => {
 	})
 
 	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(regiestNodes.entries(), false, 3, true)}`))
+	initdataing = false
 }
 
 const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
