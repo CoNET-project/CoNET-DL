@@ -63,7 +63,7 @@ export const sendAlldata = () => new Promise( resolve => {
 	const sendData = {
 		message, signMessage
 	}
-
+	logger(`sendAlldata to Cluster!`)
 	return sendMesageToCluster('/api/nodeRestart', sendData, (err, data) => {
 		if (err) {
 			logger(Colors.grey(`sendAlldata sendMesageToCluster /api/minerCheck gor Error${err}`))
@@ -76,29 +76,6 @@ export const sendAlldata = () => new Promise( resolve => {
 })
 
 const sendMesageToCluster = async (path: string, pData: any, callbak: (err: number|undefined, data?: any)=> void) => {
-
-
-	// const res = await p({
-	// 	'url': `${clusterManager}${path}`,
-	// 	method: 'POST',
-	// 	data: pData
-	// })
-
-	// if (res.statusCode !== 200 ) {
-	// 	if (res.statusCode === 401) {
-	// 		if (!sendAlldataProcess) {
-	// 			sendAlldataProcess = true
-	// 			await sendAlldata ()
-	// 			sendAlldataProcess = false
-	// 		}
-	// 		setTimeout(async () => {
-	// 			return sendMesageToCluster(path, pData, callbak)
-	// 		}, 2000)
-	// 		return
-	// 	}
-	// 	return callbak(res.statusCode)
-	// }
-	// return callbak (undefined, res.body)
 
 	const postData = JSON.stringify(pData)
 	const option: RequestOptions = {
