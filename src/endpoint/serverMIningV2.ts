@@ -103,6 +103,8 @@ const sendMesageToCluster = async (path: string, pData: any, callbak: (err: numb
 					sendAlldataProcess = true
 					await sendAlldata ()
 					sendAlldataProcess = false
+				} else {
+					logger(`sendAlldata already processing`)
 				}
 
 				return setTimeout(async () => {
