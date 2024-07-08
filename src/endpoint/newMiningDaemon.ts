@@ -90,10 +90,16 @@ const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 }
-
+let initdataing = false
 const initdata = async (v3: v3_master) => {
+	if (initdataing) {
+		return
+	}
+	initdataing = true
 	const nodes: any[]|void  = await getAllMinerNodes()
+
 	if (!nodes) {
+		initdataing = false
 		return logger(Colors.red(`initdata return NULL! `))
 	}
 	
@@ -104,6 +110,7 @@ const initdata = async (v3: v3_master) => {
 	})
 
 	logger(Colors.blue(`Daemon initdata regiestNodes = ${inspect(v3.regiestNodes.entries(), false, 3, true)}`))
+	initdataing = false
 }
 
 const checkNodeWallet: (nodeWallet: string, checkInit: boolean, v3: v3_master) => Promise<boolean> = async (nodeWallet, checkInit, v3) => {
