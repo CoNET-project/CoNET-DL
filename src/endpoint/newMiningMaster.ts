@@ -52,7 +52,9 @@ const postLocalhost = async (path: string, obj: minerObj, _res: Response)=> {
 	req.write(JSON.stringify(obj))
 	req.end()
 }
+
 let initdataing = false
+
 const initdata = async (regiestNodes: Map<string, string>) => {
 	if (initdataing) {
 		return 
@@ -135,7 +137,7 @@ class conet_dl_v3_server {
     }
 
 	private startServer = async () => {
-		
+		await initdata(this.regiestNodes)
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')

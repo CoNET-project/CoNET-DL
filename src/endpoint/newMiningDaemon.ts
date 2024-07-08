@@ -181,11 +181,12 @@ class v3_master {
 	public regiestNodes: Map<string, string> = new Map()
 	public nodeIpaddressWallets: Map<string, Map<string, string>> = new Map()
 	constructor () {
+		
 		this.startServer()
     }
 
 	private startServer = async () => {
-		
+		await startListeningCONET_Holesky_EPOCH_v2(this)
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
@@ -218,7 +219,7 @@ class v3_master {
 		})
 
 		server.listen(this.PORT, '127.0.0.1',() => {
-			startListeningCONET_Holesky_EPOCH_v2(this)
+			
 			return console.table([
                 { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
