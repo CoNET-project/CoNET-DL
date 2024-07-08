@@ -213,6 +213,7 @@ class conet_dl_v3_server {
 
 			const obj = await checkNode(req, this.regiestNodes)
 			if (!obj) {
+				logger(`/nodeRestart obj Error!`)
 				res.status(404).end()
 				return logger(Colors.blue(`/nodeRestart checkNode error!`))
 			}
