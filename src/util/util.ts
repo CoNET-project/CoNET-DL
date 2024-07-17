@@ -1963,6 +1963,7 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
+
 	const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
 		getReferralNode (GuardianNodesContract, paymentWallet, 1),
 		getReferralNode (GuardianNodesContract, referrerAddress, 1)
@@ -2204,20 +2205,39 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 
 }
 
-const test = async () => {
-	// const kkk = await getWasabiFile (`free_wallets_${657651}`)
-	// // const kkk = await burnFrom('cBNBUSDT', '0x848b08302bF95DE9a1BF6be988c9D9Ef5616c4eF', '1375')
-	// logger(inspect(kkk, false, 3, true))
-	const paymentAddress = '0x2d53b71d0a44e80a21a1883002deb81b84d154de'
-	const nodes = [
-		'0xecCD2F8822d02280656d048154a7c4239cE4b9ea',
-		'0x28E79091182638A1cd3bA04f9c17C5E2b838c2B5',
-		'0xA7c18305dfe4B5fd1AF00aEe6FcffDD15d86b322',
-		'0x9157315EEdb494f84D82f7872CFB04df40C36e21',
-		'0x9c8f24F20B15aC10E56b4A07953cD80a30d4EC22'
-	]
-	const referee = '0x6d4489d62829ff5ba0c3ff69b021e78d4992f068'
-}
+// const test1 = async () => {
+// 	const privateKey = masterSetup.conetFaucetAdmin[0]
+
+// 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+// 	const wallet = new ethers.Wallet(privateKey, provider)
+// 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
+
+// 	const paymentWallet = '0x3Fe974097894aD1392A3A48e337b288EA7B79275'
+// 	const referrerAddress = '0x9BDcDd34260f48b2fed4Dd396c83cFE6F3bfE686'
+// 	const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
+// 		getReferralNode (GuardianNodesContract, paymentWallet, 1),
+// 		getReferralNode (GuardianNodesContract, referrerAddress, 1)
+// 	])
+
+// 	logger(inspect(bayerOwnNodes), inspect(referrerHasNodes ? true : false))
+// }
+
+// const test = async () => {
+// 	const privateKey = masterSetup.conetFaucetAdmin[0]
+
+// 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+// 	const wallet = new ethers.Wallet(privateKey, provider)
+// 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
+
+// 	const paymentWallet = '0x55D39f7397F2c1f5faDb3829F5CDb8aCcc107799'
+// 	const referrerAddress = '0xE482da05cB82d2b996780Db17D8B916356E1323d'
+// 	const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
+// 		getReferralNode (GuardianNodesContract, paymentWallet, 1),
+// 		getReferralNode (GuardianNodesContract, referrerAddress, 1)
+// 	])
+
+// 	logger(inspect(bayerOwnNodes), inspect(referrerHasNodes ? true : false))
+// }
 
 // const wallet = new ethers.Wallet(masterSetup.claimableAdmin)
 // logger(wallet.address)
@@ -2231,7 +2251,7 @@ const test = async () => {
 
 // nodesReferrals()
 
-test()
+// test()
 
 
 // nodesAirdrop()

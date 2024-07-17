@@ -28,7 +28,6 @@ if (Cluster.isPrimary) {
 		return (fork)
 	}
 
-
 	forkWorker()
 	new v3Daemon ()
 	

@@ -3,6 +3,8 @@ import {request as HTTP_request} from 'node:http'
 import { logger } from './logger'
 import Colors from 'colors/safe'
 
+
+
 export const tryConnect = async (host: string) => new Promise(resolve => {
 	
 	const option: RequestOptions = {
@@ -13,26 +15,33 @@ export const tryConnect = async (host: string) => new Promise(resolve => {
 		protocol: 'http:'
 	}
 
+	const exit = () => {
+		setTimeout(() => {
+			resolve (true)
+		}, 1000)
+	}
 	const req = HTTP_request (option, res => {
 		clearTimeout(timeout)
 
 		if (res.statusCode === 200) {
 			logger(Colors.blue(`host [${host}] success!`))
-			return resolve (true)
+			return exit()
 		}
+
 		logger(Colors.red(`host [${host}] response [${res.statusCode}] Error!`))
-		return resolve(false)
+		return exit()
 		
 	})
 
 	req.once('error', (e) => {
 		logger(Colors.red(`host [${host}] response on Error! Error!`), e)
-		resolve(false)
+		return exit()
 	})
 
 	const timeout = setTimeout(() => {
 		logger(Colors.red(`host ${host} Timeout Error!`))
-	}, 1000)
+		return exit()
+	}, 10000)
 
 	req.end()
 })
