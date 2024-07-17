@@ -145,7 +145,7 @@ const guardianMining = async (block: number) => {
 	const splitBase =  Math.round(kkk/splitTimes)
 	const dArray: string[][] = []
 	const payArray: string[][] = []
-	logger(Color.grey(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(minerRate)}`))
+
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
 		const a  = nodesAddress.slice(i, i+ splitBase)
