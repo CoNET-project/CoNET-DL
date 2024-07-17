@@ -2,7 +2,10 @@ import {ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
 import {masterSetup} from './util'
+import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+
+
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
@@ -53,13 +56,17 @@ const guardianReferrals = async (block: number) => {
 
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
-
-	transferPool.push({
+	const a = {
 		privateKey: masterSetup.conetFaucetAdmin2,
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
-	})
-	startTransfer()
+	}
+	//transferPool.push(a)
+
+	logger(inspect(a.walletList, false, 3, true))
+	logger(inspect(a.payList, false, 3, true))
+
+	//startTransfer()
 
 }
 const splitLength = 400
