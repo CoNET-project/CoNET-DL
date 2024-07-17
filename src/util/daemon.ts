@@ -61,12 +61,9 @@ const guardianReferrals = async (block: number) => {
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
 	}
-	//transferPool.push(a)
+	transferPool.push(a)
 
-	logger(inspect(a.walletList, false, 3, true))
-	logger(inspect(a.payList, false, 3, true))
-
-	//startTransfer()
+	startTransfer()
 
 }
 const splitLength = 400

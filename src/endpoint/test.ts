@@ -1,7 +1,7 @@
 import { logger } from '../util/logger'
 import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, regiestMiningNode} from './help-database'
 import {inspect} from 'node:util'
-
+import { transferCCNTP } from '../util/transferManager'
 import {ethers} from 'ethers'
 // import {selectLeaderboard} from './serverV2'
 import Colors from 'colors/safe'
@@ -35,5 +35,5 @@ const test = () => {
 
 }
 
-
+// test()
 // testDatabase()

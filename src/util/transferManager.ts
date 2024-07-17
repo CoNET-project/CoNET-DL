@@ -98,7 +98,7 @@ export const startTransfer = async () => {
 	})
 }
 
-const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: (err?: Error) => void) => {
+export const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: (err?: Error) => void) => {
 	if (walletList.length < 1) {
 		return callback()
 	}
