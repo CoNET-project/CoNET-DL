@@ -81,15 +81,24 @@ export const startTransfer = async () => {
 		startTransfering = false
 		return logger(Color.grey(`startTransfer Pool Empty, STOP startTransfer  GAS fee is [${gasPrice}]`))
 	}
+
 	logger(Color.grey(`startTransfer transferPool length = ${transferPool.length} waiting list length = ${obj.walletList.length} `))
 
-	return transferCCNTP(obj.privateKey, obj.walletList, obj.payList, () => {
+	return transferCCNTP(obj.privateKey, obj.walletList, obj.payList, (err) => {
+		
 		startTransfering = false
-		startTransfer ()
+		if (err) {
+			transferPool.unshift(obj)
+		}
+
+		setTimeout (() => {
+			startTransfer ()
+		}, 1000)
+		
 	})
 }
 
-const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: () => void) => {
+const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: (err?: Error) => void) => {
 	if (walletList.length < 1) {
 		return callback()
 	}
@@ -104,10 +113,10 @@ const transferCCNTP = (privateKey: string, walletList: string[], PayList: string
 		let tx
 		try {
 			tx = await cCNTPContract.multiTransferToken(walletList, payList)
-		} catch (ex) {
+		} catch (ex: any) {
 			logger(Color.red(`transferCCNTP Error! [${walletList.length}] Wallet = [${wallet.address}] amount[${amount}]`))
 			logger(ex)
-			return callback()
+			return callback(ex)
 			// return setTimeout(() => {
 			// 	return send()
 			// }, 1000)
