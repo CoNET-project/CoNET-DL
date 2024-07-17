@@ -62,7 +62,7 @@ const guardianReferrals = async (block: number) => {
 	startTransfer()
 
 }
-
+const splitLength = 400
 
 const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	const _retWalletAddr: Map<string, string> = new Map()
@@ -139,15 +139,45 @@ const guardianMining = async (block: number) => {
 		}
 	})
 
-	transferPool.push({
-		privateKey: masterSetup.conetFaucetAdmin2,
-		walletList: nodesAddress,
-		payList: payNodes
+
+	const kkk = nodesAddress.length
+	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
+	const splitBase =  Math.round(kkk/splitTimes)
+	const dArray: string[][] = []
+	const payArray: string[][] = []
+	logger(Color.grey(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(minerRate)}`))
+
+	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
+		const a  = nodesAddress.slice(i, i+ splitBase)
+		const b = payNodes.slice(i, i+ splitBase)
+		dArray[j] = a
+		payArray[j] = b
+	}
+
+	if (masterSetup.conetFaucetAdmin.length < dArray.length ) {
+		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`),'\n')
+	}
+	let ss = 0
+	dArray.forEach((n, index) => {
+
+		transferPool.push({
+			privateKey: masterSetup.conetFaucetAdmin[index],
+			walletList: n,
+			payList: payArray[ss]
+		})
+		ss ++
 	})
+
+	// transferPool.push({
+	// 	privateKey: masterSetup.conetFaucetAdmin2,
+	// 	walletList: nodesAddress,
+	// 	payList: payNodes
+	// })
 	
 	startTransfer()
 	
 }
+
 
 
 const startListeningCONET_Holesky_EPOCH = async () => {

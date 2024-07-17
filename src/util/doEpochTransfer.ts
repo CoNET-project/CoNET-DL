@@ -64,6 +64,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 			payList: n.map(n => ethers.formatEther(minerRate))
 		})
 	})
+	
 	logger(Color.blue(`transferPool.length = ${transferPool.length}`))
 	await startTransfer()
 }
