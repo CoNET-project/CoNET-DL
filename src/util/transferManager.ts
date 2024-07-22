@@ -110,7 +110,7 @@ export const transferCCNTP = (privateKey: string, _walletList: string[], _PayLis
 	_walletList.forEach((v, i) => {
 		const uu = ethers.isAddress(v)
 		if (!uu) {
-			return logger(`transferCCNTP WalletAddress Error! [${v}] Pay [${PayList[i]}]`)
+			return logger(`transferCCNTP WalletAddress Error! [${v}] Pay [${_PayList[i]}]`)
 		}
 		fixedWallet.push(v)
 		fixedPayList.push(_PayList[i])
