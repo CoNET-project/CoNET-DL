@@ -101,34 +101,34 @@ export const startTransfer = async () => {
 const checkWalletList = (walletList: string[], PayList: string[]) => {
 	
 }
-export const transferCCNTP = (privateKey: string, walletList: string[], PayList: string[], callback: (err?: Error) => void) => {
-	if (walletList.length < 1) {
+export const transferCCNTP = (privateKey: string, _walletList: string[], _PayList: string[], callback: (err?: Error) => void) => {
+	if (_walletList.length < 1) {
 		return callback()
 	}
 	const fixedWallet:string[] = []
 	const fixedPayList: string[] = []
-	walletList.forEach((v, i) => {
+	_walletList.forEach((v, i) => {
 		const uu = ethers.isAddress(v)
 		if (!uu) {
 			return logger(`transferCCNTP WalletAddress Error! [${v}] Pay [${PayList[i]}]`)
 		}
 		fixedWallet.push(v)
-		fixedPayList.push(PayList[i])
+		fixedPayList.push(_PayList[i])
 	})
 
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 	let amount = 0
-	PayList.forEach(n => amount += parseFloat(n))
-	const payList = PayList.map(n => ethers.parseEther(n))
+	fixedPayList.forEach(n => amount += parseFloat(n))
+	const payList = fixedPayList.map(n => ethers.parseEther(n))
 	const send: any = async () => {
 		
 		let tx
 		try {
-			tx = await cCNTPContract.multiTransferToken(fixedWallet, fixedPayList)
+			tx = await cCNTPContract.multiTransferToken(fixedWallet, payList)
 		} catch (ex: any) {
-			logger(Color.red(`transferCCNTP Error! [${walletList.length}] Wallet = [${wallet.address}] amount[${amount}]`))
+			logger(Color.red(`transferCCNTP Error! [${_walletList.length}] Wallet = [${wallet.address}] amount[${amount}]`))
 			logger(ex)
 			return callback(ex)
 			// return setTimeout(() => {
@@ -136,8 +136,8 @@ export const transferCCNTP = (privateKey: string, walletList: string[], PayList:
 			// }, 1000)
 		}
 		
-		logger (Color.magenta(`transferCCNTP [${walletList.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
-		logger(inspect(walletList.slice(0, 2), false, 3, true), inspect(PayList.slice(0, 2), false, 3, true))
+		logger (Color.magenta(`transferCCNTP [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
+		logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
 	}
