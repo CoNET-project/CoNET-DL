@@ -101,19 +101,19 @@ export const startTransfer = async () => {
 const checkWalletList = (walletList: string[], PayList: string[]) => {
 	
 }
-export const transferCCNTP = (privateKey: string, _walletList: string[], _PayList: string[], callback: (err?: Error) => void) => {
-	if (_walletList.length < 1) {
+export const transferCCNTP = (privateKey: string, __walletList: string[], __PayList: string[], callback: (err?: Error) => void) => {
+	if (__walletList.length < 1) {
 		return callback()
 	}
 	const fixedWallet:string[] = []
 	const fixedPayList: string[] = []
-	_walletList.forEach((v, i) => {
+	__walletList.forEach((v, i) => {
 		const uu = ethers.isAddress(v)
 		if (!uu) {
-			return logger(`transferCCNTP WalletAddress Error! [${v}] Pay [${_PayList[i]}]`)
+			return logger(`transferCCNTP WalletAddress Error! [${v}] Pay [${__PayList[i]}]`)
 		}
 		fixedWallet.push(v)
-		fixedPayList.push(_PayList[i])
+		fixedPayList.push(__PayList[i])
 	})
 
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -128,15 +128,15 @@ export const transferCCNTP = (privateKey: string, _walletList: string[], _PayLis
 		try {
 			tx = await cCNTPContract.multiTransferToken(fixedWallet, payList)
 		} catch (ex: any) {
-			logger(Color.red(`transferCCNTP Error! [${_walletList.length}] Wallet = [${wallet.address}] amount[${amount}]`))
-			logger(ex)
+			logger(Color.red(`transferCCNTP Error! [${fixedWallet.length}] Wallet = [${wallet.address}] amount[${amount}]`))
+
 			return callback(ex)
 			// return setTimeout(() => {
 			// 	return send()
 			// }, 1000)
 		}
 		
-		logger (Color.magenta(`transferCCNTP [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
+		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
 		logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
