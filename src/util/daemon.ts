@@ -66,7 +66,7 @@ const guardianReferrals = async (block: number) => {
 	startTransfer()
 
 }
-const splitLength = 400
+const splitLength = 300
 
 const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	const _retWalletAddr: Map<string, string> = new Map()
