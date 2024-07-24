@@ -1114,6 +1114,10 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 			countList.set (item, count+1)
 			
 			const nextIndexFun = () => {
+				if (!_nodeList) {
+					return nextItem()
+				}
+
 				const nextIndex = _nodeList.findIndex(nn => nn === item)
 				//		no more item
 				if (nextIndex<0) {
