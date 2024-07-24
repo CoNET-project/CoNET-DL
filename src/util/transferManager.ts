@@ -56,7 +56,10 @@ const marginPool = () => {
 }
 
 const checkGasPrice = 2000010007
-
+let lastTransferTimeStamp = new Date().getTime()
+const longestWaitingTime = 1000 * 60 * 15
+let transferWithoutGasFee = false
+let transferWithoutGasFeeLoopLength = 0
 
 export const startTransfer = async () => {
 	if (startTransfering) {
@@ -69,14 +72,29 @@ export const startTransfer = async () => {
 	const feeData = await provideCONET.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
 	marginPool()
-	
-	if (gasPrice > checkGasPrice || !gasPrice) {
-		startTransfering = false
-		return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
-	}
-	
-	const obj = transferPool.shift()
+	const timeStamp = new Date().getTime()
 
+	if ( !transferWithoutGasFee && (gasPrice > checkGasPrice || !gasPrice )) {
+		if (timeStamp - lastTransferTimeStamp > longestWaitingTime) {
+			transferWithoutGasFee = true
+			transferWithoutGasFeeLoopLength = transferPool.length
+		} else {
+			startTransfering = false
+			return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
+		}
+	}
+
+	if (transferWithoutGasFee) {
+		if (--transferWithoutGasFeeLoopLength < 0) {
+			startTransfering = false
+			transferWithoutGasFee = false
+			
+			return
+		}
+	}
+
+	const obj = transferPool.shift()
+	
 	if (!obj) {
 		startTransfering = false
 		return logger(Color.grey(`startTransfer Pool Empty, STOP startTransfer  GAS fee is [${gasPrice}]`))
@@ -89,18 +107,14 @@ export const startTransfer = async () => {
 		startTransfering = false
 		if (err) {
 			transferPool.unshift(obj)
+		} else {
+			lastTransferTimeStamp = new Date().getTime()
 		}
-
-		setTimeout (() => {
-			startTransfer ()
-		}, 1000)
 		
+		startTransfer ()
 	})
 }
 
-const checkWalletList = (walletList: string[], PayList: string[]) => {
-	
-}
 export const transferCCNTP = (privateKey: string, __walletList: string[], __PayList: string[], callback: (err?: Error) => void) => {
 	if (__walletList.length < 1) {
 		return callback()
