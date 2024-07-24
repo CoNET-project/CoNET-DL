@@ -69,7 +69,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	const feeData = await provider.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
 	const timeStamp = new Date().getTime()
-	
+
 	if ((gasPrice > checkGasPrice || !gasPrice )) {
 		if (timeStamp - lastTransferTimeStamp < longestWaitingTime) {
 			return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
@@ -111,7 +111,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	})
 
 	logger (`stratFreeMinerTransfer transfer success!`)
-	
+	waitingWalletArray = waitingPayArray = []
 }
 
 
