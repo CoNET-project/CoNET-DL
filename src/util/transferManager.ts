@@ -57,7 +57,7 @@ const marginPool = () => {
 
 const checkGasPrice = 2000010007
 let lastTransferTimeStamp = new Date().getTime()
-const longestWaitingTime = 1000 * 60 * 15
+const longestWaitingTime = 1000 * 60 * 5
 let transferWithoutGasFee = false
 let transferWithoutGasFeeLoopLength = 0
 
@@ -107,7 +107,7 @@ export const startTransfer = async () => {
 		} else {
 			lastTransferTimeStamp = new Date().getTime()
 		}
-		
+
 		setTimeout(() => {
 			startTransfer ()
 		}, 2000)
