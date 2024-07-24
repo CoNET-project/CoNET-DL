@@ -86,10 +86,7 @@ export const startTransfer = async () => {
 
 	if (transferWithoutGasFee) {
 		if (--transferWithoutGasFeeLoopLength < 0) {
-			startTransfering = false
 			transferWithoutGasFee = false
-			
-			return
 		}
 	}
 
