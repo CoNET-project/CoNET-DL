@@ -1090,67 +1090,25 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 	const walletList: string[] = []
 	const payList: string[] = []
-	const countList: Map<string, number> = new Map()
+
 	const walletsPay: Map<string, number> = new Map()
 
-	const beforeLength = _nodeList.length
+
 	//logger(colors.blue(`mergeTransfers _nodeList length [${_nodeList.length}] pay length [${pay.length}]`))
-	const nextItem = () => {
 
-		const item = _nodeList.shift()
-			
-			//			the end of array
-			if (!item) {
-				// logger(colors.magenta(`the end of Array`))
-				return
-			}
+	_nodeList.forEach((n, index) => {
+		const payItem = pay[index]
+		if (!payItem) {
+			return
+		}
 
-			const payItem = pay.shift()
+		const itemToLowCast = n.toLowerCase()
+		const floatPay = parseFloat (payItem)
+		const _itemValue = walletsPay.get(itemToLowCast)||0
+		const totalPay = _itemValue + floatPay
 
-			if (!payItem) {
-				logger(colors.red(`mergeTransfers _nodeList length [${_nodeList.length}] !== pay length [${pay.length}]`))
-				return
-			}
-
-
-			const itemToLowCast = item.toLowerCase()
-			const floatPay = parseFloat (payItem)
-			const _itemValue = walletsPay.get(itemToLowCast)||0
-			const totalPay = _itemValue + floatPay
-
-			walletsPay.set (itemToLowCast, totalPay)
-
-
-			// walletList.push(item)
-			// payList.push(payItem)
-			// const count = countList.get (item)||0
-			// countList.set (item, count+1)
-			
-			// const nextIndexFun = () => {
-			// 	if (!_nodeList) {
-			// 		return nextItem()
-			// 	}
-
-			// 	const nextIndex = _nodeList.findIndex(nn => nn === item)
-			// 	//		no more item
-			// 	if (nextIndex<0) {
-			// 		return nextItem()
-			// 	}
-			// 	_nodeList.splice(nextIndex, 1)[0]
-			// 	const _pay = pay.splice(nextIndex, 1)[0]
-			// 	const currentIndex = payList.length - 1
-			// 	const oldPay = parseFloat(payList[currentIndex])
-			// 	const newPay = parseFloat(_pay)
-			// 	const fixed = oldPay + newPay
-			// 	payList[currentIndex] = fixed > 1000 ? fixed.toFixed(0) : fixed.toFixed(10)
-			// 	nextIndexFun()
-			// }
-
-			// nextIndexFun()
-		nextItem()
-	}
-
-	nextItem()
+		walletsPay.set (itemToLowCast, totalPay)
+	})
 
 	//logger(colors.blue(`mergeTransfers length from [${beforeLength}] to [${payList.length}]`))
 
