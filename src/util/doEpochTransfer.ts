@@ -112,6 +112,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 
 	logger (`stratFreeMinerTransfer transfer success!`)
 	waitingWalletArray = waitingPayArray = []
+	lastTransferTimeStamp = new Date().getTime()
 }
 
 
