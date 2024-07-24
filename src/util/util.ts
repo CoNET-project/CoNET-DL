@@ -1091,15 +1091,18 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 	const walletList: string[] = []
 	const payList: string[] = []
 	const countList: Map<string, number> = new Map()
+	const walletsPay: Map<string, number> = new Map()
+
 	const beforeLength = _nodeList.length
 	//logger(colors.blue(`mergeTransfers _nodeList length [${_nodeList.length}] pay length [${pay.length}]`))
 	const nextItem = () => {
-			const item = _nodeList.shift()
+
+		const item = _nodeList.shift()
 			
 			//			the end of array
 			if (!item) {
 				// logger(colors.magenta(`the end of Array`))
-				return 
+				return
 			}
 
 			const payItem = pay.shift()
@@ -1108,39 +1111,55 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 				logger(colors.red(`mergeTransfers _nodeList length [${_nodeList.length}] !== pay length [${pay.length}]`))
 				return
 			}
-			walletList.push(item)
-			payList.push(payItem)
-			const count = countList.get (item)||0
-			countList.set (item, count+1)
+
+
+			const itemToLowCast = item.toLowerCase()
+			const floatPay = parseFloat (payItem)
+			const _itemValue = walletsPay.get(itemToLowCast)||0
+			const totalPay = _itemValue + floatPay
+
+			walletsPay.set (itemToLowCast, totalPay)
+
+
+			// walletList.push(item)
+			// payList.push(payItem)
+			// const count = countList.get (item)||0
+			// countList.set (item, count+1)
 			
-			const nextIndexFun = () => {
-				if (!_nodeList) {
-					return nextItem()
-				}
+			// const nextIndexFun = () => {
+			// 	if (!_nodeList) {
+			// 		return nextItem()
+			// 	}
 
-				const nextIndex = _nodeList.findIndex(nn => nn === item)
-				//		no more item
-				if (nextIndex<0) {
-					return nextItem()
-				}
-				_nodeList.splice(nextIndex, 1)[0]
-				const _pay = pay.splice(nextIndex, 1)[0]
-				const currentIndex = payList.length - 1
-				const oldPay = parseFloat(payList[currentIndex])
-				const newPay = parseFloat(_pay)
-				const fixed = oldPay + newPay
-				payList[currentIndex] = fixed > 1000 ? fixed.toFixed(0) : fixed.toFixed(10)
-				nextIndexFun()
-			}
+			// 	const nextIndex = _nodeList.findIndex(nn => nn === item)
+			// 	//		no more item
+			// 	if (nextIndex<0) {
+			// 		return nextItem()
+			// 	}
+			// 	_nodeList.splice(nextIndex, 1)[0]
+			// 	const _pay = pay.splice(nextIndex, 1)[0]
+			// 	const currentIndex = payList.length - 1
+			// 	const oldPay = parseFloat(payList[currentIndex])
+			// 	const newPay = parseFloat(_pay)
+			// 	const fixed = oldPay + newPay
+			// 	payList[currentIndex] = fixed > 1000 ? fixed.toFixed(0) : fixed.toFixed(10)
+			// 	nextIndexFun()
+			// }
 
-			nextIndexFun()
-		
+			// nextIndexFun()
+		nextItem()
 	}
 
 	nextItem()
+
 	//logger(colors.blue(`mergeTransfers length from [${beforeLength}] to [${payList.length}]`))
-	
-	return {walletList, payList, countList}
+
+	walletsPay.forEach((v,k) => {
+		walletList.push(k)
+		payList.push(v > 100000 ? v.toFixed(0): v.toFixed(10))
+	})
+
+	return {walletList, payList}
 }
 
 
