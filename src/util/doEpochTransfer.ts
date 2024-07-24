@@ -12,7 +12,7 @@ const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
 
-const splitLength = 1000
+const splitLength = 900
 
 const stratFreeMinerTransfer = async (block: number) => {
 
