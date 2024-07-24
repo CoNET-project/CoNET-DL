@@ -57,7 +57,7 @@ const marginPool = () => {
 
 export const checkGasPrice = 2000010007
 let lastTransferTimeStamp = new Date().getTime()
-export const longestWaitingTime = 1000 * 60 * 5
+export const longestWaitingTime = 1000 * 60 * 10
 let transferWithoutGasFee = false
 let transferWithoutGasFeeLoopLength = 0
 
@@ -136,7 +136,7 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 	let amount = 0
 	fixedPayList.forEach(n => amount += parseFloat(n))
 	const payList = fixedPayList.map(n => ethers.parseEther(n))
-	
+
 	const send: any = async () => {
 		
 		let tx
