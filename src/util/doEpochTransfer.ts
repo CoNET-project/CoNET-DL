@@ -76,16 +76,19 @@ const stratFreeMinerTransfer = async (block: number) => {
 		}
 	}
 
-	const kkk = walletArray.length
+	const kkk = waitingWalletArray.length
 	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
 	const splitBase =  Math.round(kkk/splitTimes)
 	const dArray: string[][] = []
+	const pArray: string[][] = []
 
 	logger(Color.grey(`Array total = ${kkk} splitTimes = ${splitTimes} splitBase ${splitBase} payList = ${ethers.formatEther(minerRate)}`))
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
-		const a  = walletArray.slice(i, i+ splitBase)
+		const a  = waitingWalletArray.slice(i, i+ splitBase)
+		const b  = waitingPayArray.slice(i, i+ splitBase)
 		dArray[j] = a
+		pArray[j] = b
 	}
 
 	if (masterSetup.conetFaucetAdmin.length < dArray.length ) {
@@ -94,13 +97,15 @@ const stratFreeMinerTransfer = async (block: number) => {
 
 
 	dArray.forEach( (n, index) => {
+		const paymentList = pArray[index]
+		
 		if (index > masterSetup.conetFaucetAdmin.length-1) {
 			index = 0
 		}
 		transferPool.push({
 			privateKey: masterSetup.conetFaucetAdmin[index],
 			walletList: n,
-			payList: n.map(n => ethers.formatEther(minerRate))
+			payList: paymentList
 		})
 	})
 	
