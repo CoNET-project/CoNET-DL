@@ -108,7 +108,10 @@ export const startTransfer = async () => {
 			lastTransferTimeStamp = new Date().getTime()
 		}
 		
-		startTransfer ()
+		setTimeout(() => {
+			startTransfer ()
+		}, 2000)
+		
 	})
 }
 
