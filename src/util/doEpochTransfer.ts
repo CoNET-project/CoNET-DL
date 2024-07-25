@@ -78,7 +78,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 
 	const kkk = waitingWalletArray.length
 	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
-	const splitBase =  Math.round(kkk/splitTimes)
+	const splitBase =  Math.floor(kkk/splitTimes)
 	const dArray: string[][] = []
 	const pArray: string[][] = []
 

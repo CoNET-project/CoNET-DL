@@ -1088,6 +1088,11 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 
 
 export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
+	if (_nodeList.length !== pay.length) {
+		logger(colors.red(`mergeTransfersv1 Error! _nodeList length(${_nodeList.length}) !== pay length (${pay.length})`))
+		return {_nodeList, pay}
+	}
+
 	const walletList: string[] = []
 	const payList: string[] = []
 
@@ -1098,15 +1103,14 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 
 	_nodeList.forEach((n, index) => {
 		const payItem = pay[index]
-		if (!payItem) {
-			return
-		}
 
 		const itemToLowCast = n.toLowerCase()
 		const floatPay = parseFloat (payItem)
 		const _itemValue = walletsPay.get(itemToLowCast)||0
 		const totalPay = _itemValue + floatPay
-
+		if (totalPay < 0.0001) {
+			logger(`mergeTransfersv1 Error! totalPay ${totalPay} < 0.0001 `)
+		}
 		walletsPay.set (itemToLowCast, totalPay)
 	})
 
