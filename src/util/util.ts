@@ -1114,7 +1114,7 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 
 	walletsPay.forEach((v,k) => {
 		walletList.push(k)
-		payList.push(v > 100000 ? v.toFixed(0): v.toFixed(10))
+		payList.push(v.toString())
 	})
 
 	return {walletList, payList}
