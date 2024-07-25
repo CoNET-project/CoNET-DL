@@ -1090,7 +1090,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 	if (_nodeList.length !== pay.length) {
 		logger(colors.red(`mergeTransfersv1 Error! _nodeList length(${_nodeList.length}) !== pay length (${pay.length})`))
-		return {_nodeList, pay}
+		return {walletList: _nodeList, payList: pay}
 	}
 
 	const walletList: string[] = []
