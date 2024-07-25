@@ -118,7 +118,7 @@ const stratFreeMinerTransfer = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
 	const rate = await rateSC.rate()
 	const minerRate =rate/BigInt(walletArray.length)
-	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] MinerWallets length = [${walletArray.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] waitingWalletArray = ${waitingWalletArray.length} MinerWallets length = [${walletArray.length}]`))
 
 	
 	walletArray.forEach(n => {
