@@ -1109,7 +1109,7 @@ export const mergeTransfersv1 = (_nodeList: string[], pay: string[]) => {
 		const _itemValue = walletsPay.get(itemToLowCast)||0
 		const totalPay = _itemValue + floatPay
 		if (totalPay < 0.0001) {
-			logger(`mergeTransfersv1 Error! totalPay ${totalPay} < 0.0001 `)
+			logger(`mergeTransfersv1 Error! _itemValue = ${_itemValue} payItem= totalPay ${totalPay} < 0.0001 `)
 		}
 		walletsPay.set (itemToLowCast, totalPay)
 	})
