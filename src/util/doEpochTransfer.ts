@@ -99,6 +99,7 @@ const stratFreeMinerTransfer = async () => {
 	const data = await getIPFSfile (`free_wallets_${block}`)
 	
 	if (!data) {
+		stratFreeMinerTransfer()
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
 	let walletArray: string[]
@@ -106,10 +107,12 @@ const stratFreeMinerTransfer = async () => {
 	try{
 		walletArray = JSON.parse(data)
 	} catch (ex) {
+		stratFreeMinerTransfer()
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
 	
 	if (!walletArray.length) {
+		stratFreeMinerTransfer()
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
@@ -122,6 +125,8 @@ const stratFreeMinerTransfer = async () => {
 		waitingWalletArray.push(n)
 		waitingPayArray.push(ethers.formatEther(minerRate))
 	})
+
+	logger(`walletArray.forEach success! waitingWalletArray === ${waitingWalletArray.length}, waitingPayArray = ${waitingPayArray.slice(0,10)}`)
 
 	const merged = mergeTransfersv1 (waitingWalletArray, waitingPayArray)
 	waitingWalletArray = merged.walletList
