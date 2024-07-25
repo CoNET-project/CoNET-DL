@@ -5,7 +5,7 @@ import Color from 'colors/safe'
 import { logger } from './logger'
 import {mapLimit} from 'async'
 
-import {transferPool, checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transferManager'
+import {checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transferManager'
 
 import rateABI from '../endpoint/conet-rate.json'
 const conet_Holesky_RPC = 'https://rpc.conet.network'
@@ -72,7 +72,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 
 	if ((gasPrice > checkGasPrice || !gasPrice )) {
 		if (timeStamp - lastTransferTimeStamp < longestWaitingTime) {
-			return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
+			return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice}`))
 		}
 	}
 
@@ -95,10 +95,10 @@ const stratFreeMinerTransfer = async (block: number) => {
 		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`),'\n')
 	}
 
-
+	const transferPool: any[]= []
 	dArray.forEach( (n, index) => {
 		const paymentList = pArray[index]
-		
+
 		if (index > masterSetup.conetFaucetAdmin.length-1) {
 			index = 0
 		}
