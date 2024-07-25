@@ -118,7 +118,7 @@ const stratFreeMinerTransfer = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
 	const rate = await rateSC.rate()
 	const minerRate =rate/BigInt(walletArray.length)
-	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] waitingWalletArray = ${waitingWalletArray.length} MinerWallets length = [${walletArray.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] waitingWalletArray = ${waitingWalletArray.length} waitingPayArray = ${waitingPayArray.length} MinerWallets length = [${walletArray.length}]`))
 
 	
 	walletArray.forEach(n => {
@@ -126,7 +126,7 @@ const stratFreeMinerTransfer = async () => {
 		waitingPayArray.push(ethers.formatEther(minerRate))
 	})
 
-	logger(`walletArray.forEach success! waitingWalletArray === ${waitingWalletArray.length}, waitingPayArray = ${waitingPayArray.slice(0,10)}`)
+	logger(`walletArray.forEach success! waitingWalletArray === ${waitingWalletArray.length}, waitingPayArray = ${waitingPayArray.slice(0,5)} waitingWalletArray = ${waitingWalletArray.slice(0,5)}`)
 
 	const merged = mergeTransfersv1 (waitingWalletArray, waitingPayArray)
 	waitingWalletArray = merged.walletList
