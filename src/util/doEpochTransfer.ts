@@ -120,11 +120,8 @@ const stratFreeMinerTransfer = async () => {
 	const minerRate =rate/BigInt(walletArray.length)
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] waitingWalletArray = ${waitingWalletArray.length} waitingPayArray = ${waitingPayArray.length} MinerWallets length = [${walletArray.length}]`))
 
-	
-	walletArray.forEach(n => {
-		waitingWalletArray.push(n)
-		waitingPayArray.push(ethers.formatEther(minerRate))
-	})
+	waitingWalletArray = [...waitingWalletArray, ...walletArray]
+	waitingPayArray = [...waitingPayArray, ...walletArray.map(n => ethers.formatEther(minerRate))]
 
 	logger(`walletArray.forEach success! waitingWalletArray === ${waitingWalletArray.length}, waitingPayArray = ${waitingPayArray.slice(0,5)} waitingWalletArray = ${waitingWalletArray.slice(0,5)}`)
 
