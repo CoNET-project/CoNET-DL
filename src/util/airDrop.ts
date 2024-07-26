@@ -18,7 +18,7 @@ const start = async (fileName: string) => {
 			}
 			wallets.push(n)
 		})
-		const pay = wallets.map(n => '1000')
+		const pay = wallets.map(n => '1')
 		transferCCNTP('', wallets, pay, err => {
 			if (err) {
 				return logger(err)

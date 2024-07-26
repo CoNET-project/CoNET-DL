@@ -135,7 +135,7 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 	let amount = 0
 	fixedPayList.forEach(n => amount += parseFloat(n))
-	const payList = fixedPayList.map(n => ethers.parseEther(n))
+	const payList = fixedPayList.map(n => ethers.parseEther(parseFloat(n).toFixed(10)))
 
 	const send: any = async () => {
 		
