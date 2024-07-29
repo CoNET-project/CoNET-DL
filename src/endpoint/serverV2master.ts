@@ -276,6 +276,11 @@ const transCONET = (address: string, balance: BigInt, req: Response) => {
 	
 }
 
+
+const checkTimeLimited = (wallet: string, ipaddress: string, req: Response) => {
+
+}
+
 class conet_dl_server {
 
 	private PORT = 8001
@@ -384,6 +389,11 @@ class conet_dl_server {
 
 		})
 
+		router.post ('/lottery', async ( req, res ) => {
+			logger(Colors.blue(`Cluster Master got: /lottery `))
+			logger(inspect(req.body, false, 3, true))
+			res.status(200).end()
+		})
 
 		router.post ('/unlockCONET',  async (req, res) => {
 			

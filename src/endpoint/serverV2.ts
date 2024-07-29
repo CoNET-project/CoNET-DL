@@ -288,7 +288,7 @@ class conet_dl_server {
 				}
 				// transCONET(wallet_add, ethers.parseEther(faucetRate))
 
-				return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, }, res)
+				return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add}, res)
 
 			})
 
@@ -490,6 +490,47 @@ class conet_dl_server {
 			logger(Colors.blue(`send /unlockCONET to master ${inspect(_obj, false, 3, true)}`))
 			return postLocalhost('/api/unlockCONET', _obj, res)
 
+		})
+
+		
+		router.post ('/lottery', async ( req, res ) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+				return  res.status(403).end()
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj||!obj?.data) {
+				logger (Colors.grey(`Router /Purchase-Guardian checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+			obj.ipAddress = ipaddress
+			return postLocalhost('/api/lottery', {obj}, res)
+		})
+
+		router.post ('/lotteryDouble', async ( req, res ) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
 		})
 
 		router.post ('/checkAccount',  async (req, res) => {
