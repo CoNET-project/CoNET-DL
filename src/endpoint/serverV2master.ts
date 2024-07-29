@@ -289,6 +289,8 @@ const putClientToPool = (wallet: string, ipAddress: string) => {
 	}
 
 	setTimeout(() => {
+		logger(`putClientToPool delete obj`)
+		inspect(obj, false, 3, true)
 		walletPool.delete(wallet)
 	}, LimitAccess)
 
