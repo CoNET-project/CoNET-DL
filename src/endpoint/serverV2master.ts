@@ -282,6 +282,7 @@ interface clientRequestTimeControl {
 }
 
 const LimitAccess = 1000
+const doubleWinnerWaiting = 10 * 1000
 const putClientToPool = (wallet: string, ipAddress: string) => {
 	const obj: clientRequestTimeControl = {
 		lastTimestamp: new Date().getTime(),
@@ -303,13 +304,18 @@ const _rand1 = 0.1
 const _rand2 = _rand1 * 5
 const _rand3 = _rand2 * 2
 
+const MaximumBet= 1000
+
 interface winnerObj {
 	bet: number
 	wallet: string
 	ipAddress: string
+	Daemon: NodeJS.Timeout
 }
 
+const transferPool: Map<string, number> = new Map()
 const LotteryWinnerPool: Map<string, winnerObj> = new Map()
+
 const randomLottery = () => {
 	
 	const rand1 = !(Math.floor(Math.random()*10) % 7 && Math.floor(Math.random()*10) % 5)
@@ -329,13 +335,60 @@ const randomLottery = () => {
 	return {lottery: 0}
 }
 
+const addToWinnerPool = (winnObj: winnerObj) => {
+	
+	const setT = setTimeout(() => {
+		LotteryWinnerPool.delete (winnObj.wallet)
+		const send = transferPool.get(winnObj.wallet)||0
+		transferPool.set(winnObj.wallet, send + winnObj.bet)
+		logger(Colors.blue(`Move winn [${winnObj.ipAddress}] Pay [${send + winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
+	}, doubleWinnerWaiting)
+	winnObj.Daemon = setT
+	LotteryWinnerPool.set(winnObj.wallet, winnObj)
+}
+
+const double = (wallet: string) => {
+	const winner = LotteryWinnerPool.get (wallet)
+
+	if (!winner) {
+		return randomLottery ()
+	}
+
+	clearTimeout(winner.Daemon)
+
+	if (winner.bet >= MaximumBet) {
+		LotteryWinnerPool.delete (wallet)
+		return {lottery: 0}
+	}
+
+	const rand1 = !(Math.floor(Math.random()*10) % 7)
+	
+	if (rand1) {
+		winner.bet *= 2
+		addToWinnerPool (winner)
+		return {lottery: winner.bet}
+	}
+
+	LotteryWinnerPool.delete (wallet)
+	return {lottery: 0}
+}
+
+
+const soLottery = (wallet: string, ipaddress: string, res: Response) => {
+	
+	const obj = double (wallet)
+	return res.status(200).json(obj).end()
+
+}
+
 const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
 	const lastAccess = walletPool.get(wallet)
 	if (lastAccess) {
 		return res.status(301).end()
 	}
-	putClientToPool(wallet, ipaddress)
-	return res.status(200).json(randomLottery()).end()
+	soLottery (wallet, ipaddress, res)
+	
+	
 }
 
 class conet_dl_server {
