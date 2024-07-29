@@ -276,9 +276,35 @@ const transCONET = (address: string, balance: BigInt, req: Response) => {
 	
 }
 
+interface clientRequestTimeControl {
+	lastTimestamp: number
+	ipAddress: string
+}
 
-const checkTimeLimited = (wallet: string, ipaddress: string, req: Response) => {
+const LimitAccess = 1000
+const putClientToPool = (wallet: string, ipAddress: string) => {
+	const obj: clientRequestTimeControl = {
+		lastTimestamp: new Date().getTime(),
+		ipAddress
+	}
 
+	setTimeout(() => {
+		walletPool.delete(wallet)
+	}, LimitAccess)
+
+	walletPool.set(wallet, obj)
+}
+
+
+const walletPool: Map<string, clientRequestTimeControl> = new Map()
+
+const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
+	const lastAccess = walletPool.get(wallet)
+	if (lastAccess) {
+		return res.status(301).end()
+	}
+	putClientToPool(wallet, ipaddress)
+	return res.status(200).json({lottery: true}).end()
 }
 
 class conet_dl_server {
@@ -391,7 +417,9 @@ class conet_dl_server {
 		router.post ('/lottery', async ( req, res ) => {
 			logger(Colors.blue(`Cluster Master got: /lottery `))
 			logger(inspect(req.body, false, 3, true))
-			res.status(200).json({lottery: true}).end()
+			const wallet = req.body.walletAddress
+			const ipaddress = req.body.ipAddress
+			return checkTimeLimited(wallet, ipaddress, res)
 		})
 
 		router.post ('/unlockCONET',  async (req, res) => {
