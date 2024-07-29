@@ -512,8 +512,8 @@ class conet_dl_server {
 
 			const obj = checkSignObj (message, signMessage)
 
-			if (!obj||!obj?.data) {
-				logger (Colors.grey(`Router /Purchase-Guardian checkSignObj obj Error!`), message, signMessage)
+			if (!obj) {
+				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
 				return res.status(403).end()
 			}
 			obj.ipAddress = ipaddress
