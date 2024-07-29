@@ -290,7 +290,7 @@ const putClientToPool = (wallet: string, ipAddress: string) => {
 
 	setTimeout(() => {
 		logger(`putClientToPool delete obj`)
-		inspect(obj, false, 3, true)
+		logger(inspect(obj, false, 3, true))
 		walletPool.delete(wallet)
 	}, LimitAccess)
 
@@ -299,6 +299,27 @@ const putClientToPool = (wallet: string, ipAddress: string) => {
 
 
 const walletPool: Map<string, clientRequestTimeControl> = new Map()
+const _rand1 = 0.1
+const _rand2 = _rand1 * 5
+const _rand3 = _rand2 * 2
+
+const randomLottery = () => {
+	const rand1 = !(Math.floor(Math.random()*10) % 7 && Math.floor(Math.random()*10) % 5)
+
+	if (rand1) {
+		const rand2 = !(Math.floor(Math.random()*10) % 7)
+
+		if (rand2)	{
+			const rand3 = !(Math.floor(Math.random()*10) % 7)
+			if (rand3) {
+				return {lottery: _rand3}
+			}
+			return {lottery: _rand2}
+		}
+		return {lottery: _rand1}
+	}
+	return {lottery: 0}
+}
 
 const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
 	const lastAccess = walletPool.get(wallet)
@@ -306,7 +327,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
 		return res.status(301).end()
 	}
 	putClientToPool(wallet, ipaddress)
-	return res.status(200).json({lottery: true}).end()
+	return res.status(200).json(randomLottery()).end()
 }
 
 class conet_dl_server {
