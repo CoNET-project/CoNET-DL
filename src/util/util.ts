@@ -365,30 +365,6 @@ export const generateSslCertificatesV1 = async (ipAddr: string, wallet_Addr: str
 	const out = '-subj "/C=US/ST=Kharkov/L=Kharkov/O=Super Secure Company/OU=IT Department/CN=example.com"'
 }
 
-export const s3fsPasswd: () => Promise<s3pass|null> = () => {
-	return new Promise (resolve => {
-		const s3fsPasswdFile = join(homedir(), '.passwd-s3fs')
-		return readFile (s3fsPasswdFile, 'utf-8', (err, data ) => {
-			if ( err || !data ) {
-				logger (colors.red(`s3fsPasswd have no [.passwd-s3fs] setup file!`))
-				return resolve (null)
-			}
-			const pass = data.split(':')
-			if ( pass.length < 2 ) {
-				logger (colors.red(`[.passwd-s3fs] have not correct!`))
-				return resolve (null)
-			}
-			pass[1] = pass[1].replace(/\n/i,'')
-			const ret: s3pass = {
-				ACCESS_KEY: pass[0],
-				SECRET_KEY: pass[1]
-			}
-			return resolve (ret)
-		})
-		
-	})
-}
-
 
 
 const wasabiObj = {

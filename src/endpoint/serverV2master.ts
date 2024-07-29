@@ -11,7 +11,7 @@ import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
-	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, s3fsPasswd, conet_Holesky_rpc, sendCONET
+	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 import CGPNsABI from '../util/CGPNs.json'
 import CNTPAbi from '../util/cCNTP.json'
@@ -298,7 +298,6 @@ class conet_dl_server {
 		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetFaucetAdmin[0])
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
-		this.s3Pass = await s3fsPasswd()
 		this.startServer()
 		
 
