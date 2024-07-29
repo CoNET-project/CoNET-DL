@@ -303,7 +303,15 @@ const _rand1 = 0.1
 const _rand2 = _rand1 * 5
 const _rand3 = _rand2 * 2
 
+interface winnerObj {
+	bet: number
+	wallet: string
+	ipAddress: string
+}
+
+const LotteryWinnerPool: Map<string, winnerObj> = new Map()
 const randomLottery = () => {
+	
 	const rand1 = !(Math.floor(Math.random()*10) % 7 && Math.floor(Math.random()*10) % 5)
 
 	if (rand1) {
@@ -440,8 +448,8 @@ class conet_dl_server {
 		router.post ('/lottery', async ( req, res ) => {
 			logger(Colors.blue(`Cluster Master got: /lottery `))
 			logger(inspect(req.body, false, 3, true))
-			const wallet = req.body.walletAddress
-			const ipaddress = req.body.ipAddress
+			const wallet = req.body.obj.walletAddress
+			const ipaddress = req.body.obj.ipAddress
 			return checkTimeLimited(wallet, ipaddress, res)
 		})
 
