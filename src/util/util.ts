@@ -885,6 +885,7 @@ export const getCONETConfirmations = async (txHash: string, receiveAddr: string)
 
 export const checkSignObj = (message: string, signMess: string) => {
 	if (!message || !signMess) {
+		logger(colors.red(`checkSignObj message ${message} signMess ${signMess} null Error`))
 		return null
 	}
 	let obj: minerObj
@@ -900,7 +901,7 @@ export const checkSignObj = (message: string, signMess: string) => {
 		recoverPublicKey = ethers.recoverAddress(digest, signMess)
 		ethers.getAddress(recoverPublicKey)
 	} catch (ex) {
-		// logger (colors.red(`checkSignObj recoverPublicKey ERROR digest = ${digest} signMess = ${signMess}`))
+		logger (colors.red(`checkSignObj recoverPublicKey ERROR digest = ${digest} signMess = ${signMess}`))
 		return null
 	}
 	
