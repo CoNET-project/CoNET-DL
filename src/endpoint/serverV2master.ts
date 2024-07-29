@@ -392,7 +392,7 @@ class conet_dl_server {
 		router.post ('/lottery', async ( req, res ) => {
 			logger(Colors.blue(`Cluster Master got: /lottery `))
 			logger(inspect(req.body, false, 3, true))
-			res.status(200).end()
+			res.status(200).json({lottery: true}).end()
 		})
 
 		router.post ('/unlockCONET',  async (req, res) => {
