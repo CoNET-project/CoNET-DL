@@ -355,6 +355,7 @@ const double = (wallet: string) => {
 	}
 
 	clearTimeout(winner.Daemon)
+	logger(Colors.magenta(`Double Game Start for [${wallet}] Bet = [${winner.bet}]`))
 
 	if (winner.bet >= MaximumBet) {
 		LotteryWinnerPool.delete (wallet)
@@ -366,6 +367,7 @@ const double = (wallet: string) => {
 	if (rand1) {
 		winner.bet *= 2
 		addToWinnerPool (winner)
+		logger(Colors.magenta(`Double Gate WIn for [${wallet}] Amount = [${winner.bet}]`))
 		return {lottery: winner.bet}
 	}
 
