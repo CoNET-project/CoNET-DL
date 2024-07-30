@@ -55,7 +55,8 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
-
+const conet_Holesky_RPC = 'https://rpc.conet.network'
+const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -516,19 +517,6 @@ class conet_dl_server {
 			}
 			obj.ipAddress = ipaddress
 			return postLocalhost('/api/lottery', {obj}, res)
-		})
-
-		router.post ('/lotteryDouble', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
 		})
 
 		router.post ('/checkAccount',  async (req, res) => {

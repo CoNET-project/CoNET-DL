@@ -13,6 +13,9 @@ import Cluster from 'node:cluster'
 import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
 	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
 } from '../util/util'
+
+import {} from '../util/transferManager'
+
 import CGPNsABI from '../util/CGPNs.json'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
@@ -336,13 +339,15 @@ const randomLottery = () => {
 }
 
 const addToWinnerPool = (winnObj: winnerObj) => {
-	
+	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
+
 	const setT = setTimeout(() => {
 		LotteryWinnerPool.delete (winnObj.wallet)
 		const send = transferPool.get(winnObj.wallet)||0
 		transferPool.set(winnObj.wallet, send + winnObj.bet)
-		logger(Colors.blue(`Move winn [${winnObj.ipAddress}] Pay [${send + winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
+		logger(Colors.blue(`Move winner [${winnObj.wallet}:${winnObj.ipAddress}] Pay [${send + winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
 	}, doubleWinnerWaiting)
+
 	winnObj.Daemon = setT
 	LotteryWinnerPool.set(winnObj.wallet, winnObj)
 }
@@ -354,6 +359,7 @@ const double = (wallet: string) => {
 		return randomLottery ()
 	}
 
+	logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] Win${winner.bet} START play Double`))
 	clearTimeout(winner.Daemon)
 	logger(Colors.magenta(`Double Game Start for [${wallet}] Bet = [${winner.bet}]`))
 
@@ -367,10 +373,10 @@ const double = (wallet: string) => {
 	if (rand1) {
 		winner.bet *= 2
 		addToWinnerPool (winner)
-		logger(Colors.magenta(`Double Gate WIn for [${wallet}] Amount = [${winner.bet}]`))
+		logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] Winner ${winner.bet} WIN Double! `))
 		return {lottery: winner.bet}
 	}
-
+	logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] ${winner.bet} Double GAME OVER!`))
 	LotteryWinnerPool.delete (wallet)
 	return {lottery: 0}
 }
