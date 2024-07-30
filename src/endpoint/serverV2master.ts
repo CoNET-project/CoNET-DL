@@ -395,7 +395,7 @@ const double = (wallet: string, ipAddress: string) => {
 		return {lottery: 0}
 	}
 
-	const rand1 = !(Math.floor(Math.random()*10) % 7)
+	const rand1 = !(Math.floor(Math.random()*3))
 	
 	if (rand1) {
 		winner.bet *= 2
