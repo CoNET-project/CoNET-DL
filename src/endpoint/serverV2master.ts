@@ -318,13 +318,13 @@ const LotteryWinnerPool: Map<string, winnerObj> = new Map()
 
 const randomLottery = () => {
 	
-	const rand1 = !(Math.floor(Math.random()*10) % 7 && Math.floor(Math.random()*10) % 5)
+	const rand1 = !(Math.floor(Math.random()))
 
 	if (rand1) {
-		const rand2 = !(Math.floor(Math.random()*10) % 7)
+		const rand2 = !(Math.floor(Math.random()))
 
 		if (rand2)	{
-			const rand3 = !(Math.floor(Math.random()*10) % 7)
+			const rand3 = !(Math.floor(Math.random()))
 			if (rand3) {
 				return {lottery: _rand3}
 			}
