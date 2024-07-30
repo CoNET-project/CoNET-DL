@@ -10,11 +10,10 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
-	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
+import { cCNTP_Contract, masterSetup, returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
 } from '../util/util'
-
-import {} from '../util/transferManager'
+import {logger} from '../util/logger'
+import {transferCCNTP} from '../util/transferManager'
 
 import CGPNsABI from '../util/CGPNs.json'
 import CNTPAbi from '../util/cCNTP.json'
@@ -26,15 +25,13 @@ import {mapLimit} from 'async'
 
 const CGPNsAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
-let s3Pass: s3pass
+
 //	for production
 	import {createServer} from 'node:http'
 
 //	for debug
 	// import {createServer as createServerForDebug} from 'node:http'
 
-const setup = join( homedir(),'.master.json' )
-const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
@@ -353,7 +350,7 @@ const addToWinnerPool = (winnObj: winnerObj) => {
 	LotteryWinnerPool.set(winnObj.wallet, winnObj)
 }
 
-const stratlivenessV2 = (eposh: number) => {
+const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 	if (transferPool.size === 0) {
 		return logger(Colors.blue(`stratlivenessV2 eposh = [${eposh}] transferPool has zero STOP!`))
 	}
@@ -362,6 +359,10 @@ const stratlivenessV2 = (eposh: number) => {
 	transferPool.forEach((v, key) => {
 		wallets.push(key)
 		pay.push()
+	})
+
+	transferCCNTP(masterSetup.conetFaucetAdmin[0], wallets, pay, err => {
+		logger(Colors.magenta(`transferCCNTP success!`))
 	})
 }
 
@@ -405,13 +406,6 @@ const double = (wallet: string, ipAddress: string) => {
 	return {lottery: 0}
 }
 
-const startListeningCONET_Holesky_EPOCH_v2 = async () => {
-
-	provideCONET.on('block', async block => {
-		return stratlivenessV2(block.toString())
-	})
-}
-
 
 const soLottery = (wallet: string, ipaddress: string, res: Response) => {
 	const obj = double (wallet, ipaddress)
@@ -432,16 +426,16 @@ class conet_dl_server {
 
 	private PORT = 8001
 	private serverID = ''
-
 	private initSetupData = async () => {
 
 
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
+		provideCONET.on ('block', async block => {
+			return stratlivenessV2(block.toString(), this)
+		})
 		this.startServer()
-		
-
 	}
 
 	constructor () {
@@ -450,6 +444,7 @@ class conet_dl_server {
     }
 
 	private startServer = async () => {
+		
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
