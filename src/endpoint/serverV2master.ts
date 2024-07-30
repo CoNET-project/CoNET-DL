@@ -285,7 +285,7 @@ interface clientRequestTimeControl {
 }
 
 const LimitAccess = 1000
-const doubleWinnerWaiting = 10 * 1000
+const doubleWinnerWaiting = 20 * 1000
 const putClientToPool = (wallet: string, ipAddress: string) => {
 	const obj: clientRequestTimeControl = {
 		lastTimestamp: new Date().getTime(),
