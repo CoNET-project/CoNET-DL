@@ -321,10 +321,10 @@ const randomLottery = () => {
 	const rand1 = !(Math.floor(Math.random()))
 
 	if (rand1) {
-		const rand2 = !(Math.floor(Math.random()))
+		const rand2 = !(Math.floor(Math.random()*2))
 
 		if (rand2)	{
-			const rand3 = !(Math.floor(Math.random()))
+			const rand3 = !(Math.floor(Math.random()*4))
 			if (rand3) {
 				return {lottery: _rand3}
 			}
