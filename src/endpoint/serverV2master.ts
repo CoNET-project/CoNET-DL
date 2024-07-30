@@ -383,8 +383,9 @@ const double = (wallet: string) => {
 
 
 const soLottery = (wallet: string, ipaddress: string, res: Response) => {
-	
+	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`))
 	const obj = double (wallet)
+	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
 
 }
