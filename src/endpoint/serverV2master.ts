@@ -356,9 +356,11 @@ const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 	}
 	const wallets: string[] = []
 	const pay: string[] = []
+
 	transferPool.forEach((v, key) => {
 		wallets.push(key)
 		pay.push(v.toFixed(10))
+		transferPool.delete(key)
 	})
 
 	transferCCNTP(masterSetup.conetFaucetAdmin[0], wallets, pay, err => {
