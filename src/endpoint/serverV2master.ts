@@ -177,7 +177,7 @@ const getAllOwnershipOfGuardianNodes = async () => {
 
 interface conetData {
 	address: string
-	balance?: BigInt
+	balance?: any
 	req: any
 }
 
@@ -194,7 +194,7 @@ const sentData = async (data: conetData, callback: (err?: any, data?: ethers.Tra
 		}
 		tx = await etherNew_Init_Admin.sendTransaction(ts)
 	} catch (ex) {
-		console.log(Colors.red(`${data.balance} CONET => [${data.address}] Error!`))
+		console.log(Colors.red(`${ethers.formatEther(data.balance||0)} CONET => [${data.address}] Error!`))
 		return callback(ex)
 	}
 	return callback (null, tx)
@@ -313,7 +313,7 @@ interface winnerObj {
 	bet: number
 	wallet: string
 	ipAddress: string
-	Daemon: NodeJS.Timeout
+	Daemon: NodeJS.Timeout|null
 }
 
 const transferPool: Map<string, number> = new Map()
@@ -340,7 +340,8 @@ const randomLottery = () => {
 
 const addToWinnerPool = (winnObj: winnerObj) => {
 	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
-
+	
+	
 	const setT = setTimeout(() => {
 		LotteryWinnerPool.delete (winnObj.wallet)
 		const send = transferPool.get(winnObj.wallet)||0
@@ -352,15 +353,38 @@ const addToWinnerPool = (winnObj: winnerObj) => {
 	LotteryWinnerPool.set(winnObj.wallet, winnObj)
 }
 
-const double = (wallet: string) => {
+const stratlivenessV2 = (eposh: number) => {
+	if (transferPool.size === 0) {
+		return logger(Colors.blue(`stratlivenessV2 eposh = [${eposh}] transferPool has zero STOP!`))
+	}
+	const wallets: string[] = []
+	const pay: string[] = []
+	transferPool.forEach((v, key) => {
+		wallets.push(key)
+		pay.push()
+	})
+}
+
+const double = (wallet: string, ipAddress: string) => {
 	const winner = LotteryWinnerPool.get (wallet)
 
 	if (!winner) {
-		return randomLottery ()
+		const obj = randomLottery ()
+		if (obj.lottery > 0){
+			addToWinnerPool ({
+				ipAddress, wallet, bet: obj.lottery, Daemon: null
+			})
+			
+		}
+		return obj
 	}
 
 	logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] Win${winner.bet} START play Double`))
-	clearTimeout(winner.Daemon)
+
+	if (winner.Daemon) {
+		clearTimeout(winner.Daemon)
+	}
+
 	logger(Colors.magenta(`Double Game Start for [${wallet}] Bet = [${winner.bet}]`))
 
 	if (winner.bet >= MaximumBet) {
@@ -381,10 +405,16 @@ const double = (wallet: string) => {
 	return {lottery: 0}
 }
 
+const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+
+	provideCONET.on('block', async block => {
+		return stratlivenessV2(block.toString())
+	})
+}
+
 
 const soLottery = (wallet: string, ipaddress: string, res: Response) => {
-	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`))
-	const obj = double (wallet)
+	const obj = double (wallet, ipaddress)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
 
@@ -396,25 +426,17 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
 		return res.status(301).end()
 	}
 	soLottery (wallet, ipaddress, res)
-	
-	
 }
 
 class conet_dl_server {
 
 	private PORT = 8001
-	private appsPath = ''
 	private serverID = ''
-
-	private si_pool: nodeType[] = []
-	private masterBalance: CNTPMasterBalance|null = null
-	private s3Pass: s3pass|null = null
 
 	private initSetupData = async () => {
 
 
         logger (Colors.blue(`start local server!`))
-		this.masterBalance = await getCNTPMastersBalance(masterSetup.conetFaucetAdmin[0])
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.startServer()
@@ -454,7 +476,7 @@ class conet_dl_server {
 
 		app.all ('*', (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
