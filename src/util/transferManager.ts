@@ -80,7 +80,7 @@ export const startTransfer = async () => {
 			transferWithoutGasFeeLoopLength = transferPool.length
 		} else {
 			startTransfering = false
-			return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
+			return logger(Color.grey(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${transferPool.length}]`))
 		}
 	}
 
@@ -153,18 +153,19 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 			// }, 1000)
 		}
 		
-		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
-		logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
+		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}] success!`))
+		// logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
 
+		const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
 
+		if (index > -1) {
+			logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${__PayList[index]}]`))
+		}
+		
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
 	}
 	send()
-	const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
-
-	if (index > -1) {
-		logger(Color.magenta(`transferCCNTP wallet [${searchWallet}] pay [${__PayList[index]}]`))
-	}
+	
 
 }
