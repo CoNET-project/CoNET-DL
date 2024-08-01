@@ -115,6 +115,8 @@ export const startTransfer = async () => {
 	})
 }
 
+const searchWallet = '0xA6827E09f6aC9Ff28beB0CF6aEB7EF05F1A73DF1'
+
 export const transferCCNTP = (privateKey: string, __walletList: string[], __PayList: string[], callback: (err?: Error) => void) => {
 	if (__walletList.length < 1) {
 		return callback()
@@ -153,8 +155,16 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		
 		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}]	success!`))
 		logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
+
+
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
 	}
 	send()
+	const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
+
+	if (index > -1) {
+		logger(Color.magenta(`transferCCNTP wallet [${searchWallet}] pay [${ethers.formatEther(__PayList[index])}]`))
+	}
+
 }
