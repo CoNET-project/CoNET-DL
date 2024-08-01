@@ -155,14 +155,14 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		
 		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}] success!`))
 		// logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
-
+		const balance1 = await cCNTPContract.balanceOf(fixedWallet[0])
+		logger(Color.red(`getBrance array[0] [$${fixedWallet[0]}] balance = ${ethers.formatEther(balance1)}`))
 		const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
 
 		if (index > -1) {
 			
 			const balance = await cCNTPContract.balanceOf(searchWallet)
-			const balance1 = await cCNTPContract.balanceOf(fixedWallet[0])
-			logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${__PayList[index]}] balance [${ethers.formatEther(balance)}] array[0] [$${fixedWallet[0]}] balance = ${ethers.formatEther(balance1)}`))
+			logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${__PayList[index]}] balance [${ethers.formatEther(balance)}]!!! `))
 		}
 		
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
