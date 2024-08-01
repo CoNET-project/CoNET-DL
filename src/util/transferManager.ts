@@ -132,7 +132,7 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		fixedPayList.push(__PayList[i])
 	})
 
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provider = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 	let amount = 0
