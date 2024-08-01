@@ -159,7 +159,9 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
 
 		if (index > -1) {
-			logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${__PayList[index]}]`))
+			
+			const balance = await cCNTPContract.balanceOf(searchWallet)
+			logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${__PayList[index]}] balance [${ethers.formatEther(balance)}]`))
 		}
 		
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
