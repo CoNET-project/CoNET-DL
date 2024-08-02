@@ -228,7 +228,7 @@ class conet_dl_server {
 
 		app.all ('*', (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
