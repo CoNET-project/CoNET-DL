@@ -1,7 +1,7 @@
 
 import {logger} from './logger'
 import Color from 'colors/safe'
-import {conet_Holesky_rpc, cCNTP_Contract, mergeTransfersv1} from './util'
+import {cCNTP_Contract, mergeTransfersv1} from './util'
 import {ethers} from 'ethers'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import { inspect } from 'node:util'
@@ -14,7 +14,7 @@ export const transferPool: transferObj[] = []
 let startTransfering = false
 let marginPooling = false
 
-
+const conet_Holesky_rpc = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
 const marginPool = () => {
 	if (marginPooling) {
 		return logger(Color.red(`marginPool stoped because other marginPool is processing!`))
@@ -68,8 +68,7 @@ export const startTransfer = async () => {
 
 	startTransfering = true
 
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const feeData = await provideCONET.getFeeData()
+	const feeData = await conet_Holesky_rpc.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
 	marginPool()
 	const timeStamp = new Date().getTime()
@@ -132,8 +131,8 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		fixedPayList.push(__PayList[i])
 	})
 
-	const provider = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
-	const wallet = new ethers.Wallet(privateKey, provider)
+
+	const wallet = new ethers.Wallet(privateKey, conet_Holesky_rpc)
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 	let amount = 0
 	fixedPayList.forEach(n => amount += parseFloat(n))

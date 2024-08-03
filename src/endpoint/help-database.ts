@@ -24,7 +24,7 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
 const FaucetTTL = 60 * 60 * 24
 
-
+const developIP = '38.102.87.58'
 
 const wei = 1000000000000000000
 const si_last_Update_time_timeout = 1000 * 60 *5
@@ -208,7 +208,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 
 		let result = await cassClient.execute (cmd)
 
-		if ( result?.rowLength > 3 && ipAddr !== '23.16.211.100') {
+		if ( result?.rowLength > 3 && ipAddr !== developIP) {
 			logger (Color.grey(`regiestFaucet IP address [${ ipAddr }] over 10 in 24 hours! STOP!`))
 			await cassClient.shutdown ()
 			return resolve (false)

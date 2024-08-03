@@ -173,7 +173,7 @@ const storageMinerData = async (block: number, WalletIpaddress: Map<string, stri
 	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
 
-
+const developIP = '38.102.87.58'
 
 class v3_master {
 
@@ -345,7 +345,7 @@ class v3_master {
 			}
 
 			let isDeveloper = false
-			if (ipAddress === '23.16.211.100') {
+			if (ipAddress === developIP) {
 				ipAddress = v4()
 				isDeveloper = true
 			}
@@ -401,11 +401,11 @@ class v3_master {
 			
 			walletAddress=walletAddress.toLowerCase()
 			//obj = {ipaddress, wallet, walletAddress: nodeWallet}
-			if (ipAddress === '23.16.211.100') {
+			if (ipAddress === developIP) {
 				const ips = this.WalletIpaddress.get (walletAddress)
 
 				if (!ips) {
-					logger(Colors.red(`/deleteMiner 23.16.211.100 cant get WalletIpaddress.get(${walletAddress})`))
+					logger(Colors.red(`/deleteMiner ${developIP} cant get WalletIpaddress.get(${walletAddress})`))
 				} else {
 					ipAddress = ips
 				}
@@ -463,10 +463,10 @@ class v3_master {
 			if (data) {
 				data.forEach( n => {
 					let _ip = this.WalletIpaddress.get(n.wallet)
-					if (_ip && n.address === '23.16.211.100'){
+					if (_ip && n.address === developIP){
 						n.address = _ip
 					}
-					if (n.address ==='23.16.211.100') {
+					if (n.address ===developIP) {
 						n.address = v4()
 					}
 					

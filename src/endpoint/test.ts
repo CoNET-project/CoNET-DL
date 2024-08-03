@@ -42,5 +42,6 @@ const test = async () => {
 	logger(uuu)
 }
 
-test()
+
+// test()
 // testDatabase()
