@@ -126,7 +126,7 @@ export const start = async(privateKeyArmor: string) => {
 
 	let first = true
 	let CNTPbalance = await cCNTPContract.balanceOf(wallet.address)
-	logger(Colors.green(`Start a miner!`))
+	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
 		logger(Colors.green(`startTestMiner response!`))
 		if (err) {
