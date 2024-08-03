@@ -85,7 +85,7 @@ const startTestMiner = (url: string,POST: string,  callback: (err?: string, data
 	const kkk = requestHttps(option, res => {
 
 		if (res.statusCode !==200) {
-			return callback('res.statusCode !==200')
+			return callback(`res.statusCode[$${res.statusCode}] !==200`)
 		}
 		let data = ''
 		res.on ('data', _data => {
