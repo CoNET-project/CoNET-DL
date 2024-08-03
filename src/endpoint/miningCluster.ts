@@ -27,13 +27,12 @@ if (Cluster.isPrimary) {
 		})
 		return (fork)
 	}
-
+	setTimeout(() => {
+		forkWorker()
+	}, 10000)
 	
 	new v3Daemon ()
 	
 } else {
-	setTimeout(() => {
-		new server()
-	}, 10000)
-	
+	new server()
 }
