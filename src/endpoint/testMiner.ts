@@ -2,7 +2,7 @@ import {start} from './util'
 import {ethers} from 'ethers'
 import { logger } from '../util/logger'
 import {inspect} from 'node:util'
-
+import {mapLimit} from 'async'
 const getWallet = (SRP: string, max: number) => {
 	const acc = ethers.Wallet.fromPhrase(SRP)
 	const wallets: string[] = []
@@ -12,8 +12,9 @@ const getWallet = (SRP: string, max: number) => {
 		wallets.push (sub.signingKey.privateKey)
 	}
 	logger(inspect(wallets, false, 3, true))
-	wallets.forEach(n => {
-		start(n)
+
+	mapLimit(wallets, 1, async (n, next) => {
+		await start(n)
 	})
 
 }

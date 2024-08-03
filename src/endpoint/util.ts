@@ -110,8 +110,8 @@ const startTestMiner = (url: string,POST: string,  callback: (err?: string, data
 
 }
 
-export const start = async(privateKeyArmor: string) => {
-	
+export const start = (privateKeyArmor: string) => new Promise(async resolve => {
+		
 	const wallet = new ethers.Wallet(privateKeyArmor, CONET_Holesky_RPC)
 	const message  = JSON.stringify({walletAddress: wallet.address.toLowerCase()})
 	const messageHash =  ethers.id(message)
@@ -128,6 +128,10 @@ export const start = async(privateKeyArmor: string) => {
 	let CNTPbalance = await cCNTPContract.balanceOf(wallet.address)
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
+		setTimeout(() => {
+			resolve (true)
+		}, 1000)
+		
 		logger(Colors.green(`startTestMiner response!`))
 		if (err) {
 			return logger(Colors.red(err))
@@ -135,8 +139,7 @@ export const start = async(privateKeyArmor: string) => {
 		return logger(Colors.blue(`${data}`))
 	})
 
-
-}
+})
 
 // const testRate = async () => {
 // 	const rate = await rateSC.rate()
