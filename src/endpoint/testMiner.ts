@@ -12,11 +12,9 @@ const getWallet = (SRP: string, max: number) => {
 		wallets.push (sub.signingKey.privateKey)
 	}
 	logger(inspect(wallets, false, 3, true))
-	// wallets.forEach(n => {
-	// 	start(n)
-	// })
-
-	start(wallets[0])
+	wallets.forEach(n => {
+		start(n)
+	})
 
 }
 
