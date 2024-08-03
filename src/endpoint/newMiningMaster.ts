@@ -114,7 +114,7 @@ const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
 	let _ip = regiestNodes.get (obj.walletAddress)
 
 	if (!_ip) {
-		logger(Colors.red(`[${request}] ${inspect(obj, false, 3, true)} checkNode _ip is empty`))
+		
 		await initdata(regiestNodes)
 		_ip = regiestNodes.get (obj.walletAddress)
 
