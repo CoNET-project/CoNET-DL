@@ -141,8 +141,6 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 		setTimeout(() => {
 			resolve (true)
 		}, 3000)
-		
-		logger(Colors.green(`startTestMiner response!`))
 		if (err) {
 			return logger(Colors.red(err))
 		}
