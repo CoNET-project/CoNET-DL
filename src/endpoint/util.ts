@@ -146,7 +146,7 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 		if (err) {
 			return logger(Colors.red(err))
 		}
-		return logger(Colors.blue(`${data}`))
+		
 	})
 
 })
