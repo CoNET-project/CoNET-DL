@@ -13,7 +13,7 @@ import type {RequestOptions} from 'node:http'
 
 
 const api_endpoint = 'https://api.conet.network/api/'
-const CONET_Holesky_RPC = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
+
 cCNTP_Contract
 const setup = join( homedir(),'.master.json' )
 
@@ -23,16 +23,18 @@ const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 const Claimable_CONET_Point_addr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const cntpV1_new_chain = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'.toLowerCase()
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
-const sendCNTP_v2_New_ChainContract = new ethers.Contract(cntpV1_new_chain, cCNTPAbi, CONET_Holesky_RPC)
+
 
 
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
 
-const rateSC = new ethers.Contract(rateAddr, rateABI, CONET_Holesky_RPC)
+
 
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
+	const CONET_Holesky_RPC = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
+	const rateSC = new ethers.Contract(rateAddr, rateABI, CONET_Holesky_RPC)
 	const transObj = await CONET_Holesky_RPC.getTransaction(tx)
 	const toAddr = transObj?.to?.toLowerCase()
 	if (!toAddr || toAddr !== rateAddr) {
@@ -46,6 +48,7 @@ const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
 }
 
 const listenRateChange = async (block: number, rateBack: (rate: number) => void) => {
+	const CONET_Holesky_RPC = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
 	const blockInfo = await CONET_Holesky_RPC.getBlock(block)
 	const transferArray = blockInfo?.transactions
 	if (! transferArray) {
@@ -61,7 +64,8 @@ const listenRateChange = async (block: number, rateBack: (rate: number) => void)
 }
 
 export const listeningRate = async (rateBack: (rate: number) => void) => {
-	
+	const CONET_Holesky_RPC = new ethers.JsonRpcProvider('http://38.102.84.245:8000')
+	const rateSC = new ethers.Contract(rateAddr, rateABI, CONET_Holesky_RPC)
 	CONET_Holesky_RPC.on('block', async block => {
 		listenRateChange(block, rateBack)
 	})
@@ -120,8 +124,7 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 }
 
 export const start = (privateKeyArmor: string) => new Promise(async resolve => {
-		
-	const wallet = new ethers.Wallet(privateKeyArmor, CONET_Holesky_RPC)
+	const wallet = new ethers.Wallet(privateKeyArmor)
 	const message  = JSON.stringify({walletAddress: wallet.address.toLowerCase()})
 	const messageHash =  ethers.id(message)
 	const signMessage = EthCrypto.sign(privateKeyArmor, messageHash)
