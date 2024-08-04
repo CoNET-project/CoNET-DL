@@ -158,14 +158,17 @@ const guardianMining = async (block: number) => {
 		payArray[j] = b
 	}
 
-	if (masterSetup.conetFaucetAdmin.length < dArray.length ) {
-		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`),'\n')
-	}
+	
 	let ss = 0
+	let i = 0
 	dArray.forEach((n, index) => {
-
+		i ++
+		if (i > masterSetup.conetFaucetAdmin.length-1) {
+			i = 0
+		}
+		
 		transferPool.push({
-			privateKey: masterSetup.conetFaucetAdmin[index],
+			privateKey: masterSetup.conetFaucetAdmin[i],
 			walletList: n,
 			payList: payArray[ss]
 		})

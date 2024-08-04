@@ -60,19 +60,16 @@ const startTransferAll = async () => {
 		pArray[j] = b
 	}
 
-	if (masterSetup.conetFaucetAdmin.length < dArray.length ) {
-		return logger(Color.red(` masterSetup.conetFaucetAdmin.length [${masterSetup.conetFaucetAdmin.length}] < dArray.length [${dArray.length}] Error! Stop startTransfer !`),'\n')
-	}
-
 	const transferPool: any[]= []
+	let i = 0
 	dArray.forEach( (n, index) => {
 		const paymentList = pArray[index]
-
-		if (index > masterSetup.conetFaucetAdmin.length-1) {
-			index = 0
+		i ++
+		if (i > masterSetup.conetFaucetAdmin.length-1) {
+			i = 0
 		}
 		transferPool.push({
-			privateKey: masterSetup.conetFaucetAdmin[index],
+			privateKey: masterSetup.conetFaucetAdmin[i],
 			walletList: n,
 			payList: paymentList
 		})
