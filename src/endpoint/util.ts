@@ -70,7 +70,7 @@ export const listeningRate = async (rateBack: (rate: number) => void) => {
 	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${currentBlock}] rate = [${ethers.formatEther(rate)}]!`))
 }
 
-const startTestMiner = (url: string,POST: string,  callback: (err?: string, data?: string) => void) => {
+const startTestMiner = (url: string, POST: string,  callback: (err?: string, data?: string) => void) => {
 	const Url = new URL(url)
 	const option: RequestOptions = {
 		hostname: Url.hostname,
@@ -82,22 +82,29 @@ const startTestMiner = (url: string,POST: string,  callback: (err?: string, data
 		},
 		path: Url.pathname
 	}
+
 	const kkk = requestHttps(option, res => {
 
 		if (res.statusCode !==200) {
 			return callback(`res.statusCode[$${res.statusCode}] !==200`)
 		}
 		let data = ''
+		let _Time: NodeJS.Timeout
 		res.on ('data', _data => {
 			data += _data.toString()
 			if (/\r\n\r\n/.test(data)) {
+				clearTimeout(_Time)
 				callback ('', data)
+				_Time = setTimeout(() => {
+					return startTestMiner (url, POST, callback)
+				}, 24 * 1000)
 			}
 		})
 		
 	})
 
 	kkk.on('error', err => {
+		return startTestMiner (url, POST, callback)
 		return logger(Colors.red(`startTestMiner had Error [${err.message}]`))
 	})
 
@@ -106,7 +113,6 @@ const startTestMiner = (url: string,POST: string,  callback: (err?: string, data
 	})
 
 	kkk.end(POST)
-
 
 }
 
@@ -127,6 +133,7 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	let first = true
 	let CNTPbalance = await cCNTPContract.balanceOf(wallet.address)
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
+
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
 		setTimeout(() => {
 			resolve (true)
