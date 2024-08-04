@@ -86,7 +86,11 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 	const kkk = requestHttps(option, res => {
 
 		if (res.statusCode !==200) {
-			return callback(`res.statusCode[$${res.statusCode}] !==200`)
+			setTimeout(() => {
+				startTestMiner (url, POST, callback)
+			}, 3000)
+			
+			return
 		}
 		let data = ''
 		let _Time: NodeJS.Timeout
@@ -105,7 +109,6 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 
 	kkk.on('error', err => {
 		return startTestMiner (url, POST, callback)
-		return logger(Colors.red(`startTestMiner had Error [${err.message}]`))
 	})
 
 	kkk.once('end', () => {
