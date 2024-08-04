@@ -136,8 +136,6 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 
 	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
 
-	let first = true
-	let CNTPbalance = await cCNTPContract.balanceOf(wallet.address)
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
