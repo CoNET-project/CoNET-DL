@@ -1,7 +1,7 @@
 
 import {logger} from './logger'
 import Color from 'colors/safe'
-import {cCNTP_Contract, mergeTransfersv1} from './util'
+import {newCNTP_Contract, mergeTransfersv1} from './util'
 import {ethers} from 'ethers'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import { inspect } from 'node:util'
@@ -133,7 +133,7 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 
 
 	const wallet = new ethers.Wallet(privateKey, conet_Holesky_rpc)
-	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
+	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, wallet)
 	let amount = 0
 	fixedPayList.forEach(n => amount += parseFloat(n))
 	const payList = fixedPayList.map(n => ethers.parseEther(parseFloat(n).toFixed(10)))
