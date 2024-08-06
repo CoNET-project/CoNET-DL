@@ -152,7 +152,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 
 class conet_dl_server {
 
-	private PORT = 8000
+	private PORT = 80
 	private appsPath = ''
 	private serverID = ''
 
@@ -235,7 +235,7 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, '127.0.0.1', () => {
+		server.listen(this.PORT, () => {
 			return console.table([
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
