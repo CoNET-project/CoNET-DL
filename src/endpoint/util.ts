@@ -1,20 +1,18 @@
 import {ethers} from 'ethers'
 import { join } from 'node:path'
 import { homedir, platform } from 'node:os'
-import cCNTPAbi from '../util/cCNTP.json'
-import { logger, cCNTP_Contract } from '../util/util'
+import { logger, cCNTP_Contract, newCNTP_Contract } from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 import {request as requestHttps} from 'node:https'
 import EthCrypto from 'eth-crypto'
 import {abi as CONET_Point_ABI} from '../util/conet-point.json'
 import type {RequestOptions} from 'node:http'
-
-
+import initCONETABI from './initCONET.json'
 
 const api_endpoint = 'https://api.conet.network/api/'
 
-cCNTP_Contract
+
 const setup = join( homedir(),'.master.json' )
 
 
@@ -24,12 +22,7 @@ const Claimable_CONET_Point_addr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const cntpV1_new_chain = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'.toLowerCase()
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
-
-
-
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
-
-
 
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
@@ -149,6 +142,50 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	})
 
 })
+
+const conetOldRPC = 'http://212.227.243.233:8000'
+const initCONETContractAddr = '0xc78771Fc7C371b553188859023A14Ab3AbE08807'
+const conetProvider = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+
+export const initNewCONET: (wallet: string, provateKey: string) =>Promise<false|string> = (wallet, provateKey ) => new Promise(async resolve => {
+	const managerWallet = new ethers.Wallet(provateKey, conetProvider)
+	const initContract = new ethers.Contract(initCONETContractAddr, initCONETABI, managerWallet)
+	const isInit = await initContract.checkInit(wallet)
+	if (isInit) {
+		logger(Colors.gray(`initNewCONET ${wallet} already INIT!`))
+		return resolve (false)
+	}
+	logger(Colors.blue(`initNewCONET for wallet [${wallet}]`))
+	const oldProvider = new ethers.JsonRpcProvider(conetOldRPC)
+	const oldCntpContract =new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, oldProvider)
+	let conetOldB, cntpOldB
+	try {
+		[conetOldB, cntpOldB] = await Promise.all([
+			oldProvider.getBalance(wallet),
+			oldCntpContract.balanceOf(wallet)
+		])
+	} catch (ex) {
+		resolve (false)
+	}
+	
+	if (conetOldB) {
+		const ts = {
+			to: wallet,
+			// Convert currency unit from ether to wei
+			value: conetOldB
+		}
+		const [sendCONET_tx,] = 
+		await Promise.all([
+			managerWallet.sendTransaction(ts),
+			initContract.changeInit(wallet)
+		])
+
+		logger(Colors.magenta(`initNewCONET send CONET ${ethers.formatEther(conetOldB)} => ${Colors.blue(wallet)} tx = ${sendCONET_tx.hash}`))
+	}
+	
+	return resolve (ethers.formatEther(cntpOldB))
+})
+
 
 // const testRate = async () => {
 // 	const rate = await rateSC.rate()

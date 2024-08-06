@@ -20,7 +20,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
-import {cntpAdminWallet} from './util'
+import {cntpAdminWallet, initNewCONET} from './util'
 import {mapLimit} from 'async'
 
 const CGPNsAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'.toLowerCase()
@@ -283,23 +283,11 @@ interface clientRequestTimeControl {
 
 const LimitAccess = 1000
 const doubleWinnerWaiting = 20 * 1000
-const putClientToPool = (wallet: string, ipAddress: string) => {
-	const obj: clientRequestTimeControl = {
-		lastTimestamp: new Date().getTime(),
-		ipAddress
-	}
-
-	setTimeout(() => {
-		logger(`putClientToPool delete obj`)
-		logger(inspect(obj, false, 3, true))
-		walletPool.delete(wallet)
-	}, LimitAccess)
-
-	walletPool.set(wallet, obj)
-}
 
 
 const walletPool: Map<string, clientRequestTimeControl> = new Map()
+
+const initWalletPool: Map<string, boolean> = new Map()
 const _rand1 = 0.1
 const _rand2 = _rand1 * 5
 const _rand3 = _rand2 * 2
@@ -549,6 +537,26 @@ class conet_dl_server {
 			}
 
 			return res.status(403).json({unlock: true}).end()
+		})
+
+		router.post ('/initV3',  async (req, res) => {
+			const wallet: string = req.body.wallet
+			logger(Colors.blue(`/initV3 ${wallet}`))
+			const getInitStat = initWalletPool.get (wallet)
+			if (getInitStat) {
+				return res.status(404).end()
+			}
+			initWalletPool.set (wallet, true)
+			const kk = await initNewCONET(wallet, masterSetup.conetFaucetAdmin[0])
+			if (kk === false) {
+				return res.status(404).end()
+			}
+			const val = parseFloat(kk)
+			const oldV = transferPool.get (wallet)||0
+
+			transferPool.set (wallet, oldV+ val)
+			return res.status(200).json({})
+			
 		})
 
 

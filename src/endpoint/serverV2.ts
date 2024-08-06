@@ -5,7 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {regiestFaucet, getLast5Price, getOraclePrice, txManager, claimeToekn} from './help-database'
+import {regiestFaucet, getOraclePrice, txManager, claimeToekn} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
@@ -19,6 +19,7 @@ import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet} from './util'
+
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 let s3Pass: s3pass
@@ -55,7 +56,7 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
-const conet_Holesky_RPC = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'https://rpc1.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 //			getIpAddressFromForwardHeader(req.header(''))
@@ -101,6 +102,8 @@ const addAttackToCluster = async (ipaddress: string) => {
 const CGPNsAddr = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
 
 const guardianNodesList: string[] = []
+
+
  
 const unlockCNTP = async (wallet: string, privateKey: string) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
@@ -117,7 +120,6 @@ const unlockCNTP = async (wallet: string, privateKey: string) => {
 	}
 	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
 }
-
 
 const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	
@@ -254,7 +256,7 @@ class conet_dl_server {
 		})
 
 		//********************			V2    		****** */				
-		router.post ('/conet-faucet', (req, res ) => {
+		router.post ('/conet-faucet', async (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
 			let wallet_add = req.body?.walletAddr
@@ -272,24 +274,18 @@ class conet_dl_server {
 			} catch (ex) {
 				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
 				if (res.writable && !res.writableEnded) {
-					res.status(400).end()
+					return res.status(400).end()
 				}
 				
 				return res.socket?.end().destroy()
 			}
 			
-			return regiestFaucet(wallet_add, ipaddress).then (async n => {
-				if (!n) {
-					if (res.writable && !res.writableEnded) {
-						res.status(400).end()
-					}
-					return res.socket?.end().destroy()
-				}
-				// transCONET(wallet_add, ethers.parseEther(faucetRate))
-
-				return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add}, res)
-
-			})
+			const balance = await provider.getBalance(wallet_add) - BigInt(10000000000000)
+			if (balance > 0) {
+				return res.status(403).end()
+			}
+			
+			return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add}, res)
 
 		})
 
@@ -506,7 +502,7 @@ class conet_dl_server {
 
 			if (!message||!signMessage) {
 				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return  res.status(403).end()
+				return res.status(403).end()
 			}
 
 			const obj = checkSignObj (message, signMessage)
@@ -546,6 +542,20 @@ class conet_dl_server {
 			
 			
 			return res.status(403).json({ublock: true}).end()
+		})
+
+
+		router.post ('/initV3',  async (req, res) => {
+			const _wallet: string = req.body.walletAddress
+			let wallet: string 
+			try {
+				wallet = ethers.getAddress(_wallet)
+			} catch (ex) {
+				return res.status(403).end()
+			}
+
+			return postLocalhost('/api/initV3', {wallet: wallet.toLowerCase()}, res)
+			
 		})
 
 		router.all ('*', (req, res ) =>{
