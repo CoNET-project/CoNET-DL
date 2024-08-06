@@ -64,6 +64,12 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 
 	
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]||req.headers['X-Forwarded-For'.toLowerCase()]||req.headers['CF-Connecting-IP'.toLowerCase()]||req.ip
+	if (!ipaddress) {
+		return ''
+	}
+	if (typeof ipaddress === 'object') {
+		return ipaddress[0]
+	}
 	return ipaddress
 }
 
@@ -200,7 +206,7 @@ class conet_dl_server {
 						res.socket?.end().destroy()
 						logger(Colors.red(`/^post$/i.test Attack black ${ipaddress} ! ${req.url}`))
 						logger(inspect(req.body, false, 3, true))
-						return addAttackToCluster (ipaddress)
+						return 
 					}
 					return next()
 				})
@@ -489,6 +495,9 @@ class conet_dl_server {
 		
 		router.post ('/lottery', async ( req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
+			if (!ipaddress) {
+				return res.status(404).end()
+			}
 			let message, signMessage
 			try {
 				message = req.body.message
