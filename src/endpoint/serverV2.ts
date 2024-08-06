@@ -235,7 +235,7 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, () => {
+		server.listen(this.PORT, '0.0.0.0', () => {
 			return console.table([
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
