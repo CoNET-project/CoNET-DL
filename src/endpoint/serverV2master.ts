@@ -340,7 +340,7 @@ const addToWinnerPool = (winnObj: winnerObj) => {
 
 const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 	if (transferPool.size === 0) {
-		return logger(Colors.blue(`stratlivenessV2 eposh = [${eposh}] transferPool has zero STOP!`))
+		return logger(Colors.grey(`stratlivenessV2 eposh = [${eposh}] transferPool has zero STOP!`))
 	}
 	const wallets: string[] = []
 	const pay: string[] = []
