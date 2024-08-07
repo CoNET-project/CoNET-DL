@@ -57,6 +57,7 @@ interface ICoNET_DL_masterSetup {
 	cnptReferralAdmin: string
 	conetStorageAdmin: string
 	conetFaucetAdmin: string[]
+	newFaucetAdmin: string[]
 	conetFaucetAdmin2
 	claimableAdmin: string
 	claimableAdminForNode: string

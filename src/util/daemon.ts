@@ -57,7 +57,7 @@ const guardianReferrals = async (block: number) => {
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
 	const a = {
-		privateKey: masterSetup.conetFaucetAdmin2,
+		privateKey: masterSetup.newFaucetAdmin[masterSetup.newFaucetAdmin.length - 1],
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
 	}
@@ -163,12 +163,12 @@ const guardianMining = async (block: number) => {
 	let i = 0
 	dArray.forEach((n, index) => {
 		i ++
-		if (i > masterSetup.conetFaucetAdmin.length-1) {
+		if (i > masterSetup.newFaucetAdmin.length-1) {
 			i = 0
 		}
 		
 		transferPool.push({
-			privateKey: masterSetup.conetFaucetAdmin[i],
+			privateKey: masterSetup.newFaucetAdmin[i],
 			walletList: n,
 			payList: payArray[ss]
 		})
