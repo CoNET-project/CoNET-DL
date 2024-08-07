@@ -36,7 +36,7 @@ const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 
 
-const faucetRate = BigInt('10000000000000000')
+const faucetRate = BigInt('1000000000000000')
 
 const detailTransfer = async (tx: string) => {
 	const transObj = await provideCONET.getTransactionReceipt(tx)
