@@ -12,7 +12,7 @@ import {transferPool, startTransfer} from './transferManager'
 
 let EPOCH = 0
 let transferEposh = 0
-const GuardianNodes_ContractV3 = '0x453701b80324C44366B34d167D40bcE2d67D6047'
+const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
