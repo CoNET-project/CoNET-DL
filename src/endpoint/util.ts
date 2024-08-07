@@ -10,8 +10,8 @@ import initCONETABI from './initCONET.json'
 import ReferralsV3ABI from './ReferralsV3.json'
 import {abi as claimableToken } from '../util/claimableToken.json'
 const api_endpoint = 'https://api.conet.network/api/'
-
-
+import oldGuardianABI from '../util/CGPNs.json'
+import CGPNsV4ABI from './CGPNsV4.json'
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
@@ -142,12 +142,14 @@ const referralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 const old_cUSDTAddr = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'
 const old_cBNBUsdtAddr = '0xAE752B49385812AF323240b26A49070bB839b10D'
 const old_cUSDBAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'
+const oldGuardianAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 
 const cUSDTAddr = '0x79E2EdE2F479fA7E44C89Bbaa721EB1f0d529b7B'
 const bnbcUSDTAddr = '0xd008D56aa9A963FAD8FB1FbA1997C28dB85933e6'
 const cUSDBAddr = '0x16cDB3C07Db1d58330FF0e930C3C58935CB6Cc97'
 
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
+const newGuardianAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 
 export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => new Promise(async resolve => {
 	const managerWallet = new ethers.Wallet(masterSetup.cnptReferralAdmin, conetProvider)
@@ -161,7 +163,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	}
 	
 	logger(Colors.blue(`initNewCONET for wallet [${wallet}] isInit = ${isInit}`))
+	
 	const oldProvider = new ethers.JsonRpcProvider(conetOldRPC)
+	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, oldProvider)
 	const oldCntpContract =new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, oldProvider)
 	const oldReferralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, oldProvider)
 	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, oldProvider)
@@ -170,17 +174,21 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	const blastTestnet = new ethers.JsonRpcProvider('https://blast-sepolia.blockpi.network/v1/rpc/public')
 	const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
 	const new_cntpV1 = '0x6Eb683B666310cC4E08f32896ad620E5F204c8f8'
-	let conetOldB = BigInt(0), cntpOldB = BigInt(0), referrer = '0x0000000000000000000000000000000000000000', USDBoldB = BigInt(0), cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0)
+	const GuardianmanagerWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0], conetProvider)
+	const GuardianNFTV4Contract = new ethers.Contract(newGuardianAddr, CGPNsV4ABI, GuardianmanagerWallet)
+	let conetOldB = BigInt(0), cntpOldB = BigInt(0), referrer = '0x0000000000000000000000000000000000000000', USDBoldB = BigInt(0), cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0), oldGuardianNFT1 = BigInt(0), newGuardianNFT1 = BigInt(0)
 
 	try {
-		[conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1 ] = await Promise.all([
+		[conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1, oldGuardianNFT1, newGuardianNFT1 ] = await Promise.all([
 			oldProvider.getBalance(wallet),
 			oldCntpContract.balanceOf(wallet),
 			oldReferralsContract.getReferrer(wallet),
 			old_cUSDB.balanceOf(wallet),
 			old_cBNBUsdt.balanceOf(wallet),
 			old_cUSDT.balanceOf(wallet),
-			oldCNTPv1.balanceOf(wallet)
+			oldCNTPv1.balanceOf(wallet),
+			oldGuardianContract.balanceOf(wallet, 1),
+			GuardianNFTV4Contract.balanceOf(wallet, 1)
 		])
 	} catch (ex) {
 		return resolve (false)
@@ -275,11 +283,24 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		resolve (true)
 	})
 
-
+	const guardianDataRestore = async () => {
+		const oldG  = parseInt(oldGuardianNFT1.toString())
+		const newG =  parseInt(newGuardianNFT1.toString())
+		if (oldG > 1) {
+			if (newG === 0) {
+				await GuardianNFTV4Contract.mintNode_NFTBatch ([wallet], [oldG])
+				return logger(Colors.magenta(`guardianDataRestore added #1 NFT ${oldG} to wallet ${wallet}`))
+			}
+			if (newG !== oldG) {
+				return logger(Colors.red(`guardianDataRestore ${wallet} old #1 NFT is (${oldG}) new NFT ${newG}`))
+			}
+		}
+	}
 
 	await Promise.all([
 		managerWalletPool(),
-		pool1()
+		pool1(),
+		guardianDataRestore()
 	])
 
 	await initContract.changeInit(wallet)

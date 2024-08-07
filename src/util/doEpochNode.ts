@@ -136,7 +136,6 @@ const guardianReferrals = async (block: string) => {
 
 	getNodesReferralsData(block.toString(), nodesAddress.length.toString(), _referralsAddress, _referralsNodes, kkk)
 	
-	
 }
 
 let epoch = ''
