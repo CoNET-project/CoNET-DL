@@ -1,7 +1,5 @@
 import {ethers} from 'ethers'
-import { join } from 'node:path'
-import { homedir, platform } from 'node:os'
-import { logger, cCNTP_Contract, newCNTP_Contract } from '../util/util'
+import { logger, cCNTP_Contract, newCNTP_Contract, masterSetup } from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 import {request as requestHttps} from 'node:https'
@@ -9,17 +7,11 @@ import EthCrypto from 'eth-crypto'
 import {abi as CONET_Point_ABI} from '../util/conet-point.json'
 import type {RequestOptions} from 'node:http'
 import initCONETABI from './initCONET.json'
-
+import ReferralsV3ABI from './ReferralsV3.json'
+import {abi as claimableToken } from '../util/claimableToken.json'
 const api_endpoint = 'https://api.conet.network/api/'
 
 
-const setup = join( homedir(),'.master.json' )
-
-
-const masterSetup: ICoNET_DL_masterSetup = require ( setup )
-
-const Claimable_CONET_Point_addr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
-const cntpV1_new_chain = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'.toLowerCase()
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
 const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
@@ -146,44 +138,152 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 const conetOldRPC = 'http://212.227.243.233:8000'
 const initCONETContractAddr = '0xc78771Fc7C371b553188859023A14Ab3AbE08807'
 const conetProvider = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+const referralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
+const old_cUSDTAddr = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'
+const old_cBNBUsdtAddr = '0xAE752B49385812AF323240b26A49070bB839b10D'
+const old_cUSDBAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'
 
-export const initNewCONET: (wallet: string, provateKey: string) =>Promise<false|string> = (wallet, provateKey ) => new Promise(async resolve => {
-	const managerWallet = new ethers.Wallet(provateKey, conetProvider)
+const cUSDTAddr = '0x79E2EdE2F479fA7E44C89Bbaa721EB1f0d529b7B'
+const bnbcUSDTAddr = '0xd008D56aa9A963FAD8FB1FbA1997C28dB85933e6'
+const cUSDBAddr = '0x16cDB3C07Db1d58330FF0e930C3C58935CB6Cc97'
+
+const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
+
+export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => new Promise(async resolve => {
+	const managerWallet = new ethers.Wallet(masterSetup.cnptReferralAdmin, conetProvider)
+	
 	const initContract = new ethers.Contract(initCONETContractAddr, initCONETABI, managerWallet)
+
 	const isInit = await initContract.checkInit(wallet)
 	if (isInit) {
 		logger(Colors.gray(`initNewCONET ${wallet} already INIT!`))
-		return resolve (false)
+		return resolve (true)
 	}
-	logger(Colors.blue(`initNewCONET for wallet [${wallet}]`))
+	
+	logger(Colors.blue(`initNewCONET for wallet [${wallet}] isInit = ${isInit}`))
 	const oldProvider = new ethers.JsonRpcProvider(conetOldRPC)
 	const oldCntpContract =new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, oldProvider)
-	let conetOldB, cntpOldB
+	const oldReferralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, oldProvider)
+	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, oldProvider)
+	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, oldProvider)
+	const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, oldProvider)
+	const blastTestnet = new ethers.JsonRpcProvider('https://blast-sepolia.blockpi.network/v1/rpc/public')
+	const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
+	const new_cntpV1 = '0x6Eb683B666310cC4E08f32896ad620E5F204c8f8'
+	let conetOldB = BigInt(0), cntpOldB = BigInt(0), referrer = '0x0000000000000000000000000000000000000000', USDBoldB = BigInt(0), cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0)
+
 	try {
-		[conetOldB, cntpOldB] = await Promise.all([
+		[conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1 ] = await Promise.all([
 			oldProvider.getBalance(wallet),
-			oldCntpContract.balanceOf(wallet)
+			oldCntpContract.balanceOf(wallet),
+			oldReferralsContract.getReferrer(wallet),
+			old_cUSDB.balanceOf(wallet),
+			old_cBNBUsdt.balanceOf(wallet),
+			old_cUSDT.balanceOf(wallet),
+			oldCNTPv1.balanceOf(wallet)
 		])
 	} catch (ex) {
-		resolve (false)
+		return resolve (false)
 	}
-	
-	if (conetOldB) {
-		const ts = {
-			to: wallet,
-			// Convert currency unit from ether to wei
-			value: conetOldB
-		}
-		const [sendCONET_tx,] = 
-		await Promise.all([
-			managerWallet.sendTransaction(ts),
-			initContract.changeInit(wallet)
-		])
 
-		logger(Colors.magenta(`initNewCONET send CONET ${ethers.formatEther(conetOldB)} => ${Colors.blue(wallet)} tx = ${sendCONET_tx.hash}`))
-	}
+
+	const managerWalletPool: ()=>Promise<true> = () => new Promise(async resolve => {
+		if (conetOldB) {
+			const ts = {
+				to: wallet,
+				// Convert currency unit from ether to wei
+				value: conetOldB
+			}
+			try {
+				await managerWallet.sendTransaction(ts)
+			} catch (ex) {
+				logger (Colors.red(`managerWalletPool managerWallet.sendTransaction (${wallet}) CONET ${conetOldB} Error!`), ex)
+				return managerWalletPool()
+			}
+			conetOldB = BigInt(0)
+		}
+
+		if (referrer !== '0x0000000000000000000000000000000000000000') {
+			const referralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, managerWallet)
+			try {
+				await referralsContract.initAddReferrer(referrer, wallet)
+			}catch (ex) {
+				logger(Colors.red(`referralsV3Addr initAddReferrer(${referrer}, ${wallet}) error `), ex)
+				return managerWalletPool()
+			}
+			referrer = '0x0000000000000000000000000000000000000000'
+		}
+		if (cntpOldB) {
+			const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, managerWallet)
+			try {
+				await cCNTPContract.multiTransferToken([wallet], [cntpOldB])
+			} catch (ex) {
+				logger(Colors.red(`newCNTP_Contract multiTransferToken error ${wallet} ${cntpOldB}`), ex)
+				return managerWalletPool()
+			}
+			cntpOldB = BigInt(0)
+		}
 	
-	return resolve (ethers.formatEther(cntpOldB))
+		if (cntpV1) {
+			const cCNTPV1Contract = new ethers.Contract(new_cntpV1, CONET_Point_ABI, managerWallet)
+			try {
+				await cCNTPV1Contract.multiTransferToken([wallet], [cntpV1])
+			} catch (ex) {
+				logger(Colors.red(`cCNTPV1Contract multiTransferToken error ${wallet} ${cntpV1}`), ex)
+				return managerWalletPool()
+			}
+			cntpV1 = BigInt(0)
+		}
+		resolve (true)
+	})
+
+	const pool1: ()=>Promise<true> = () => new Promise(async resolve => {
+		const wallet1 = new ethers.Wallet(masterSetup.cusdtAdmin, conetProvider)
+		if (USDBoldB) {
+			const usdbContract = new ethers.Contract(cUSDBAddr, claimableToken, wallet1)
+			try {
+				await usdbContract.mint(wallet, USDBoldB)
+			} catch (ex) {
+				logger(Colors.red(`usdbContract mint ${wallet} ${USDBoldB} Error`), ex)
+				return pool1 ()
+			}
+			USDBoldB = BigInt(0)
+			
+		}
+	
+		if (cBNBUoldB) {
+			const bnbUsdtContract = new ethers.Contract(bnbcUSDTAddr, claimableToken, wallet1)
+			try {
+				await bnbUsdtContract.mint(wallet, cBNBUoldB)
+			} catch (ex) {
+				logger(Colors.red(`bnbUsdtContract mint ${wallet} ${cBNBUoldB} Error`), ex)
+				return pool1 ()
+			}
+			cBNBUoldB = BigInt(0)
+		}
+	
+		if (cUSDToldB) {
+			const usdtContract = new ethers.Contract(cUSDTAddr, claimableToken, wallet1)
+			try {
+				await usdtContract.mint(wallet, cUSDToldB)
+			} catch (ex) {
+				logger(Colors.red(`usdtContract mint ${wallet} ${cUSDToldB} Error`), ex)
+				return pool1 ()
+			}
+			cUSDToldB = BigInt(0)
+		}
+		resolve (true)
+	})
+
+
+
+	await Promise.all([
+		managerWalletPool(),
+		pool1()
+	])
+
+	await initContract.changeInit(wallet)
+	return resolve (true)
 })
 
 

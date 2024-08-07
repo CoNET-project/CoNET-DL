@@ -27,14 +27,16 @@ import Colors from 'colors/safe'
 const testDatabase = async () => {
 	await regiestMiningNode()
 }
-
+// 0xa801173E44C97C75639447827c2Ea8A484eed9bf
 const test = async () => {
-	const wallet = '0x0882510982A6e6768baF9472B2c62a77863fb889'
-	const uuu = await initNewCONET(wallet, masterSetup.conetFaucetAdmin[0])
-	logger(inspect(uuu, false, 3, true))
+	const wallet = '0x454428d883521c8af9e88463e97e4d343c600914'
+
+	const yyy = await initNewCONET(wallet)
+
+	logger(yyy)
 }
 
-test()
+// test()
 // testDatabase()
 
 //		curl -H "origin: https://scannew.conet.network/" -v "https://scanapi.conet.network/api/v2/stats"

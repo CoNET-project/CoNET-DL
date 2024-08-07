@@ -5,13 +5,10 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {regiestFaucet, getLast5Price, getOraclePrice, txManager, claimeToekn} from './help-database'
+import {claimeToekn} from './help-database'
 import Colors from 'colors/safe'
-import { homedir } from 'node:os'
-import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { cCNTP_Contract, masterSetup, returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
-} from '../util/util'
+import { cCNTP_Contract, masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
 import {logger} from '../util/logger'
 import {transferCCNTP} from '../util/transferManager'
 
@@ -412,6 +409,38 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
 	soLottery (wallet, ipaddress, res)
 }
 
+let startinitWalletPoolProcess = false
+
+const finishedInitWallet: Map<string, true> = new Map()
+
+const startinitWalletPool = async () => {
+	if (startinitWalletPoolProcess) {
+		return
+	}
+	
+	if (!initWalletPool.size) {
+		return
+	}
+	startinitWalletPoolProcess = true
+	const [first] = initWalletPool.keys()
+	const result = await initNewCONET (first)
+
+	if (result) {
+		finishedInitWallet.set(first, true)
+		initWalletPool.delete(first)
+
+	} else {
+		logger(Colors.blue (`initNewCONET return false ! try again!`))
+	}
+	
+	
+	setTimeout (() => {
+		startinitWalletPoolProcess = false
+		startinitWalletPool ()
+	}, 1000)
+	
+}
+
 class conet_dl_server {
 
 	private PORT = 8001
@@ -542,20 +571,20 @@ class conet_dl_server {
 		router.post ('/initV3',  async (req, res) => {
 			const wallet: string = req.body.wallet
 			logger(Colors.blue(`/initV3 ${wallet}`))
-			const getInitStat = initWalletPool.get (wallet)
-			if (getInitStat) {
-				return res.status(404).end()
-			}
-			initWalletPool.set (wallet, true)
-			const kk = await initNewCONET(wallet, masterSetup.conetFaucetAdmin[0])
-			if (kk === false) {
-				return res.status(404).end()
-			}
-			const val = parseFloat(kk)
-			const oldV = transferPool.get (wallet)||0
 
-			transferPool.set (wallet, oldV+ val)
-			return res.status(200).json({})
+			const finished = finishedInitWallet.get(wallet)
+			const getInitStat = initWalletPool.get (wallet)
+			res.status(200).json({})
+			if (finished) {
+				return
+			}
+
+			if (getInitStat) {
+				return
+			}
+
+			initWalletPool.set (wallet, true)
+			startinitWalletPool()
 			
 		})
 

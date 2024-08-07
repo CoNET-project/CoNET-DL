@@ -1,0 +1,100 @@
+[
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "referrer",
+                "type": "address"
+            }
+        ],
+        "name": "addReferrer",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "refere",
+                "type": "address"
+            },
+            {
+                "internalType": "address[]",
+                "name": "referees",
+                "type": "address[]"
+            }
+        ],
+        "name": "checkReferees",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "hasAddress",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "referrer",
+                "type": "address"
+            }
+        ],
+        "name": "getReferees",
+        "outputs": [
+            {
+                "internalType": "address[]",
+                "name": "referees",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "referee",
+                "type": "address"
+            }
+        ],
+        "name": "getReferrer",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "referrer",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "referrer",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_referee",
+                "type": "address"
+            }
+        ],
+        "name": "initAddReferrer",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
