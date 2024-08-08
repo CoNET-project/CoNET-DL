@@ -175,7 +175,7 @@ interface conetData {
 	req: any
 }
 
-const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[4], new ethers.JsonRpcProvider(conet_Holesky_rpc))
+const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[3], new ethers.JsonRpcProvider(conet_Holesky_rpc))
 const sentData = async (data: conetData, callback: (err?: any, data?: ethers.TransactionResponse) => void) => {
 
 	let tx
