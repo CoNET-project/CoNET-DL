@@ -236,7 +236,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 
 
 
-	const managerWalletPool: ()=>Promise<true> = () => new Promise(async resolve => {
+	const managerWalletPool = async () =>{
 		if (conetOldB) {
 			sendCONETPool.push({
 				wallet,
@@ -250,26 +250,25 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			const referralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, managerWallet)
 			try {
 				await referralsContract.initAddReferrer(referrer, wallet)
-			}catch (ex) {
+				referrer = '0x0000000000000000000000000000000000000000'
+			} catch (ex) {
+				
 				logger(Colors.red(`referralsV3Addr initAddReferrer(${referrer}, ${wallet}) error `), ex)
-				return setTimeout(async () => {
-					resolve(await managerWalletPool())
-				}, 1000)
+				return resolve (false)
 			}
-			referrer = '0x0000000000000000000000000000000000000000'
+			
 		}
 		if (cntpOldB) {
 			const managerCNTPW = new ethers.Wallet(masterSetup.initManager[1], conetProvider)
 			const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, managerCNTPW)
 			try {
 				await cCNTPContract.multiTransferToken([wallet], [cntpOldB])
+				cntpOldB = BigInt(0)
 			} catch (ex) {
 				logger(Colors.red(`newCNTP_Contract multiTransferToken error ${wallet} ${cntpOldB}`), ex)
-				return setTimeout(async () => {
-					resolve(await managerWalletPool())
-				}, 1000)
+				return resolve (false)
 			}
-			cntpOldB = BigInt(0)
+			
 		}
 	
 		if (cntpV1) {
@@ -277,30 +276,27 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			const cCNTPV1Contract = new ethers.Contract(new_cntpV1, CONET_Point_ABI, managerWallet)
 			try {
 				await cCNTPV1Contract.multiTransferToken([wallet], [cntpV1])
+				cntpV1 = BigInt(0)
 			} catch (ex) {
 				logger(Colors.red(`cCNTPV1Contract multiTransferToken error ${wallet} ${cntpV1}`), ex)
-				return setTimeout(async () => {
-					resolve(await managerWalletPool())
-				}, 1000)
+				return resolve (false)
 			}
-			cntpV1 = BigInt(0)
+			
 		}
-		resolve (true)
-	})
+		
+	}
 
-	const pool1: ()=>Promise<true> = () => new Promise(async resolve => {
+	const pool1 = async () => {
 		const wallet1 = new ethers.Wallet(masterSetup.cusdtAdmin, conetProvider)
 		if (USDBoldB) {
 			const usdbContract = new ethers.Contract(cUSDBAddr, claimableToken, wallet1)
 			try {
 				await usdbContract.mint(wallet, USDBoldB)
+				USDBoldB = BigInt(0)
 			} catch (ex) {
 				logger(Colors.red(`usdbContract mint ${wallet} ${USDBoldB} Error`), ex)
-				return setTimeout(async () => {
-					resolve (await pool1 ())
-				}, 1000)
+				return resolve (false)
 			}
-			USDBoldB = BigInt(0)
 			
 		}
 	
@@ -308,29 +304,27 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			const bnbUsdtContract = new ethers.Contract(bnbcUSDTAddr, claimableToken, wallet1)
 			try {
 				await bnbUsdtContract.mint(wallet, cBNBUoldB)
+				cBNBUoldB = BigInt(0)
 			} catch (ex) {
 				logger(Colors.red(`bnbUsdtContract mint ${wallet} ${cBNBUoldB} Error`), ex)
-				return setTimeout(async () => {
-					resolve (await pool1 ())
-				}, 1000)
+				return resolve (false)
 			}
-			cBNBUoldB = BigInt(0)
+			
 		}
 	
 		if (cUSDToldB) {
 			const usdtContract = new ethers.Contract(cUSDTAddr, claimableToken, wallet1)
 			try {
 				await usdtContract.mint(wallet, cUSDToldB)
+				cUSDToldB = BigInt(0)
 			} catch (ex) {
 				logger(Colors.red(`usdtContract mint ${wallet} ${cUSDToldB} Error`), ex)
-				return setTimeout(async () => {
-					resolve (await pool1 ())
-				}, 1000)
+				return resolve (false)
 			}
-			cUSDToldB = BigInt(0)
+			
 		}
-		resolve (true)
-	})
+		
+	}
 
 	const guardianDataRestore = async () => {
 		const oldG  = parseInt(oldGuardianNFT1.toString())
@@ -341,6 +335,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 					await GuardianNFTV4Contract.mintNode_NFTBatch ([wallet], [oldG])
 				} catch (ex){
 					logger(`guardianDataRestore GuardianNFTV4Contract.mintNode_NFTBatch Error!`, ex)
+					return resolve (false)
 				}
 				
 				return logger(Colors.magenta(`guardianDataRestore added #1 NFT ${oldG} to wallet ${wallet}`))

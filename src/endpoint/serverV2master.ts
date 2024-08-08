@@ -15,7 +15,7 @@ import {transferCCNTP} from '../util/transferManager'
 import CGPNsABI from '../util/CGPNs.json'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
-import type { RequestOptions, get } from 'node:http'
+import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET} from './util'
 import {mapLimit} from 'async'
@@ -420,20 +420,24 @@ const startinitWalletPool = async () => {
 	if (!initWalletPool.size) {
 		return
 	}
+
 	startinitWalletPoolProcess = true
 	const [first] = initWalletPool.keys()
-	const result = await initNewCONET (first)
-
-	if (result) {
-		finishedInitWallet.set(first, true)
-		initWalletPool.delete(first)
-
-	} else {
-		logger(Colors.blue (`initNewCONET return false ! try again!`))
+	try {
+		const result = await initNewCONET (first)
+		if (result) {
+			finishedInitWallet.set(first, true)
+			initWalletPool.delete(first)
+			
+		} 
+	} catch (ex) {
+		logger(Colors.magenta(`startinitWalletPool initNewCONET Error! try again!`))
 	}
 	
-	startinitWalletPoolProcess = false
-	startinitWalletPool ()
+	setTimeout(() => {
+		startinitWalletPoolProcess = false
+		startinitWalletPool ()
+	}, 1000)
 }
 
 class conet_dl_server {

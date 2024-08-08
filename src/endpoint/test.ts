@@ -29,9 +29,9 @@ const testDatabase = async () => {
 }
 // 0xa801173E44C97C75639447827c2Ea8A484eed9bf
 const test = async () => {
-	const wallet = '0x454428d883521c8af9e88463e97e4d343c600914'
+	const wallet = '0x9e8718a3bf09a30ebba3904065adfdc69c9528d7'
 	const admin = new ethers.Wallet(masterSetup.cnptReferralAdmin)
-	
+	await initNewCONET(wallet)
 
 	logger(admin.address)
 }
