@@ -225,7 +225,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			referrer = '0x0000000000000000000000000000000000000000'
 		}
 		if (cntpOldB) {
-			const managerCNTPW = new ethers.Wallet(masterSetup.initManager[2], conetProvider)
+			const managerCNTPW = new ethers.Wallet(masterSetup.initManager[1], conetProvider)
 			const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, managerCNTPW)
 			try {
 				await cCNTPContract.multiTransferToken([wallet], [cntpOldB])
