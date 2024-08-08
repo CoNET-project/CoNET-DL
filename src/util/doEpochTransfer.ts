@@ -65,11 +65,11 @@ const startTransferAll = async () => {
 	dArray.forEach( (n, index) => {
 		const paymentList = pArray[index]
 		i ++
-		if (i > masterSetup.conetFaucetAdmin.length-1) {
+		if (i > masterSetup.newFaucetAdmin.length-1) {
 			i = 0
 		}
 		transferPool.push({
-			privateKey: masterSetup.conetFaucetAdmin[i],
+			privateKey: masterSetup.newFaucetAdmin[i],
 			walletList: n,
 			payList: paymentList
 		})
