@@ -196,8 +196,13 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			logger(inspect(req.headers, false, 3, true))
-				
+			const head = req.headers['host']
+			
+			if (!head || !/apiv2\.conet\.network/i.test(head)) {
+				res.status(404).end()
+				return res.socket?.end().destroy()
+			}
+			
 			if (/^post$/i.test(req.method)) {
 				
 				return Express.json({limit: '1mb'})(req, res, err => {
