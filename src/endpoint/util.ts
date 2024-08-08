@@ -158,6 +158,7 @@ interface sendCONETObj {
 const sendCONETPool: sendCONETObj[] = []
 let startSendCONETProcess = false
 const sendCONETWallet = new ethers.Wallet(masterSetup.initManager[0], conetProvider)
+
 const startSendCONET = async () => {
 	if (startSendCONETProcess) {
 		return
@@ -336,7 +337,12 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		const newG =  parseInt(newGuardianNFT1.toString())
 		if (oldG > 1) {
 			if (newG === 0) {
-				await GuardianNFTV4Contract.mintNode_NFTBatch ([wallet], [oldG])
+				try {
+					await GuardianNFTV4Contract.mintNode_NFTBatch ([wallet], [oldG])
+				} catch (ex){
+					logger(`guardianDataRestore GuardianNFTV4Contract.mintNode_NFTBatch Error!`, ex)
+				}
+				
 				return logger(Colors.magenta(`guardianDataRestore added #1 NFT ${oldG} to wallet ${wallet}`))
 			}
 			if (newG !== oldG) {
