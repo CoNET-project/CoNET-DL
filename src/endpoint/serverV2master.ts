@@ -256,8 +256,7 @@ const transCONET = (address: string, balance: BigInt, req: Response) => {
 		return sentData(data, (err, tx) => {
 			transCONETLock = false
 			if (err) {
-				transCONETArray.unshift(data)
-				return trySent ()
+				return req.status(404).end()
 			}
 			if (req.writable && !req.writableEnded) {
 				req.status(200).json({tx}).end()
