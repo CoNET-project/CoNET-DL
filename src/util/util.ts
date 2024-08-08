@@ -34,7 +34,7 @@ import {abi as erc20TokenABI} from './erc20.json'
 import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
 
 
-export const conet_Holesky_rpc = 'https://rpc1.conet.network'
+export const conet_Holesky_rpc = 'https://rpc.conet.network'
 const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
 const balstMainchainRPC = 'https://rpc.ankr.com/blast'
 
