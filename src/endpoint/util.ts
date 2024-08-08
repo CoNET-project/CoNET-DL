@@ -225,7 +225,8 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			referrer = '0x0000000000000000000000000000000000000000'
 		}
 		if (cntpOldB) {
-			const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, managerWallet)
+			const managerCNTPW = new ethers.Wallet(masterSetup.newFaucetAdmin[4], conetProvider)
+			const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, managerCNTPW)
 			try {
 				await cCNTPContract.multiTransferToken([wallet], [cntpOldB])
 			} catch (ex) {
@@ -238,6 +239,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		}
 	
 		if (cntpV1) {
+
 			const cCNTPV1Contract = new ethers.Contract(new_cntpV1, CONET_Point_ABI, managerWallet)
 			try {
 				await cCNTPV1Contract.multiTransferToken([wallet], [cntpV1])
