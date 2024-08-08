@@ -151,6 +151,45 @@ const oldCNTPAddr='0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
 const newGuardianAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 
+interface sendCONETObj {
+	wallet: string
+	amount: string
+}
+const sendCONETPool: sendCONETObj[] = []
+let startSendCONETProcess = false
+const sendCONETWallet = new ethers.Wallet(masterSetup.initManager[0], conetProvider)
+const startSendCONET = async () => {
+	if (startSendCONETProcess) {
+		return
+	}
+	startSendCONETProcess = true
+	const obj = sendCONETPool.shift()
+	if (!obj) {
+		startSendCONETProcess = false
+		return logger(Colors.blue(`startSendCONET STOP! sendCONETPool is null`))
+	}
+	
+	const ts = {
+		to: obj.wallet,
+		// Convert currency unit from ether to wei
+		value: obj.amount
+	}
+	try {
+		await sendCONETWallet.sendTransaction(ts)
+		startSendCONETProcess = false
+		return setTimeout(() => {
+			startSendCONET ()
+		}, 1000)
+	} catch (ex) {
+		logger (Colors.red(`managerWalletPool managerWallet.sendTransaction (${obj.wallet}) CONET ${obj.amount} Error!`), ex)
+	}
+	startSendCONETProcess = false
+	sendCONETPool.unshift(obj)
+	return setTimeout(() => {
+		startSendCONET ()
+	}, 1000)
+}
+
 export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => new Promise(async resolve => {
 	const managerWallet = new ethers.Wallet(masterSetup.cnptReferralAdmin, conetProvider)
 	
@@ -195,20 +234,14 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	}
 
 
+
 	const managerWalletPool: ()=>Promise<true> = () => new Promise(async resolve => {
 		if (conetOldB) {
-			const managerCONET = new ethers.Wallet(masterSetup.initManager[0], conetProvider)
-			const ts = {
-				to: wallet,
-				// Convert currency unit from ether to wei
-				value: conetOldB
-			}
-			try {
-				await managerCONET.sendTransaction(ts)
-			} catch (ex) {
-				return logger (Colors.red(`managerWalletPool managerWallet.sendTransaction (${wallet}) CONET ${conetOldB} Error!`), ex)
-			}
-			conetOldB = BigInt(0)
+			sendCONETPool.push({
+				wallet,
+				amount: conetOldB.toString()
+			})
+			startSendCONET()
 		}
 
 		if (referrer !== '0x0000000000000000000000000000000000000000') {
