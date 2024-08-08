@@ -28,15 +28,17 @@ const testDatabase = async () => {
 	await regiestMiningNode()
 }
 // 0xa801173E44C97C75639447827c2Ea8A484eed9bf
-const test = async () => {
-	const wallet = '0xf8262c9aff23db1419f8ee4f63eba7455648bd55'
-	const admin = new ethers.Wallet(masterSetup.cnptReferralAdmin)
-	await initNewCONET(wallet)
-
-	logger(admin.address)
+const test = async (_wallet: string) => {
+	const kkk = await initNewCONET(_wallet)
+	logger(kkk)
 }
 
-test()
+const wallet = process.argv[2]
+
+if (wallet) {
+	test(wallet)
+}
+
 // testDatabase()
 
 //		curl -H "origin: https://scannew.conet.network/" -v "https://scanapi.conet.network/api/v2/stats"

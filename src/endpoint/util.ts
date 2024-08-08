@@ -77,7 +77,7 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 		if (res.statusCode !==200) {
 			setTimeout(() => {
 				startTestMiner (url, POST, callback)
-			}, 3000)
+			}, 1000)
 			
 			return
 		}
@@ -119,14 +119,12 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 
 	const url = `${ api_endpoint }startMining`
 
-	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, wallet)
-
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
 		setTimeout(() => {
 			resolve (true)
-		}, 3000)
+		}, 1000)
 		if (err) {
 			return logger(Colors.red(err))
 		}
