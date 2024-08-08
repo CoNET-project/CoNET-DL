@@ -14,7 +14,7 @@ import oldGuardianABI from '../util/CGPNs.json'
 import CGPNsV4ABI from './CGPNsV4.json'
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
-const rateAddr = '0x9C845d9a9565DBb04115EbeDA788C6536c405cA1'.toLowerCase()
+const rateAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()
 
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
