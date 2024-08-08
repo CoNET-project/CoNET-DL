@@ -8,7 +8,7 @@ import {inspect} from 'node:util'
 import {tryConnect} from '../util/utilNew'
 
 const CONETRpcProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
-const cGPNAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
+const cGPNAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 const GuardianNodesV5Addr = '0x617b3CE079c653c8A9Af1B5957e69384919a7084'
 const cGPNAddrSC = new ethers.Contract(cGPNAddr, cGPNAbi, CONETRpcProvider)
 const GuardianNodesSC = new ethers.Contract(GuardianNodesV5Addr, GuardianNodesV4, CONETRpcProvider)

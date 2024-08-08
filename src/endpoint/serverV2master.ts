@@ -20,7 +20,7 @@ import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET} from './util'
 import {mapLimit} from 'async'
 
-const CGPNsAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'.toLowerCase()
+const CGPNsAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
