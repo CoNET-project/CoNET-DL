@@ -498,15 +498,15 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 			
-			return res.status(403).end()
-			// const obj = checkSignObj (message, signMessage)
-			// if (!obj) {
-			// 	logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
-			// 	return res.status(403).end()
-			// }
-			// const _obj = { walletAddress: obj.walletAddress }
-			// logger(Colors.blue(`send /unlockCONET to master ${inspect(_obj, false, 3, true)}`))
-			// return postLocalhost('/api/unlockCONET', _obj, res)
+
+			const obj = checkSignObj (message, signMessage)
+			if (!obj) {
+				logger (Colors.grey(`Router /unlockCONET !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+			const _obj = { walletAddress: obj.walletAddress }
+			logger(Colors.blue(`send /unlockCONET to master ${inspect(_obj, false, 3, true)}`))
+			return postLocalhost('/api/unlockCONET', _obj, res)
 
 		})
 
