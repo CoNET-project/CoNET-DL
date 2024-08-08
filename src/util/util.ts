@@ -1966,7 +1966,7 @@ export const transferCCNTP = (walletList: string[], amount: string, callback: ()
 		return callback ()
 	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const wallet = new ethers.Wallet(masterSetup.claimableAdmin, provider)
+	const wallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provider)
 	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, wallet)
 
 	const send: any = async () => {
