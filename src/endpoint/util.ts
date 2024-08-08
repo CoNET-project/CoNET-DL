@@ -1,5 +1,5 @@
 import {ethers} from 'ethers'
-import { logger, cCNTP_Contract, newCNTP_Contract, masterSetup } from '../util/util'
+import { logger, newCNTP_Contract, masterSetup } from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 import {request as requestHttps} from 'node:https'
@@ -119,7 +119,7 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 
 	const url = `${ api_endpoint }startMining`
 
-	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
+	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, wallet)
 
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 
@@ -147,7 +147,7 @@ const oldGuardianAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 const cUSDTAddr = '0x79E2EdE2F479fA7E44C89Bbaa721EB1f0d529b7B'
 const bnbcUSDTAddr = '0xd008D56aa9A963FAD8FB1FbA1997C28dB85933e6'
 const cUSDBAddr = '0x16cDB3C07Db1d58330FF0e930C3C58935CB6Cc97'
-
+const oldCNTPAddr='0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
 const newGuardianAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 
@@ -166,7 +166,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	
 	const oldProvider = new ethers.JsonRpcProvider(conetOldRPC)
 	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, oldProvider)
-	const oldCntpContract =new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, oldProvider)
+	const oldCntpContract =new ethers.Contract(oldCNTPAddr, CONET_Point_ABI, oldProvider)
 	const oldReferralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, oldProvider)
 	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, oldProvider)
 	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, oldProvider)
@@ -197,23 +197,22 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 
 	const managerWalletPool: ()=>Promise<true> = () => new Promise(async resolve => {
 		if (conetOldB) {
+			const managerCONET = new ethers.Wallet(masterSetup.initManager[0], conetProvider)
 			const ts = {
 				to: wallet,
 				// Convert currency unit from ether to wei
 				value: conetOldB
 			}
 			try {
-				await managerWallet.sendTransaction(ts)
+				await managerCONET.sendTransaction(ts)
 			} catch (ex) {
-				logger (Colors.red(`managerWalletPool managerWallet.sendTransaction (${wallet}) CONET ${conetOldB} Error!`), ex)
-				return setTimeout(async () => {
-					resolve(await managerWalletPool())
-				}, 1000)
+				return logger (Colors.red(`managerWalletPool managerWallet.sendTransaction (${wallet}) CONET ${conetOldB} Error!`), ex)
 			}
 			conetOldB = BigInt(0)
 		}
 
 		if (referrer !== '0x0000000000000000000000000000000000000000') {
+
 			const referralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, managerWallet)
 			try {
 				await referralsContract.initAddReferrer(referrer, wallet)

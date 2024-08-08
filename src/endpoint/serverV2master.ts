@@ -8,7 +8,7 @@ import { inspect } from 'node:util'
 import {claimeToekn} from './help-database'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { cCNTP_Contract, masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
+import { newCNTP_Contract, masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
 import {logger} from '../util/logger'
 import {transferCCNTP} from '../util/transferManager'
 
@@ -116,7 +116,7 @@ const guardianNodesList: string[] = []
 const _unlockCNTP = async (wallet: string, privateKey: string, CallBack: (err?: any, data?: ethers.TransactionResponse) => void) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const walletObj = new ethers.Wallet(privateKey, provider)
-	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CNTPAbi, walletObj)
+	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CNTPAbi, walletObj)
 	let tx
 	try {
 		tx = await cCNTPContract.changeAddressInWhitelist(wallet, true)
@@ -347,7 +347,7 @@ const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 		transferPool.delete(key)
 	})
 
-	transferCCNTP(masterSetup.conetFaucetAdmin[0], wallets, pay, err => {
+	transferCCNTP(masterSetup.newFaucetAdmin[5], wallets, pay, err => {
 		logger(Colors.magenta(`transferCCNTP success!`))
 	})
 }

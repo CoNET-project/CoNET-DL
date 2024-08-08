@@ -90,7 +90,7 @@ const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 const conet_point_contract_blast = `0x0E75599668A157B00419b58Ff3711913d2a716e0`
 
 
-export const cCNTP_Contract = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
+export const oldCNTP_Contract = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 export const newCNTP_Contract = '0xa4b389994A591735332A67f3561D60ce96409347'
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
@@ -1967,7 +1967,7 @@ export const transferCCNTP = (walletList: string[], amount: string, callback: ()
 	}
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(masterSetup.claimableAdmin, provider)
-	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CONET_Point_ABI, wallet)
+	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, wallet)
 
 	const send: any = async () => {
 		const paymentList = walletList.map(n => ethers.parseEther(amount))

@@ -10,7 +10,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, cCNTP_Contract,
+import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, newCNTP_Contract,
 	returnGuardianPlanReferral, CONET_guardian_Address,checkSignObj, getNetworkName, getServerIPV4Address, conet_Holesky_rpc
 } from '../util/util'
 
@@ -113,7 +113,7 @@ const guardianNodesList: string[] = []
 const unlockCNTP = async (wallet: string, privateKey: string) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const walletObj = new ethers.Wallet(privateKey, provider)
-	const cCNTPContract = new ethers.Contract(cCNTP_Contract, CNTPAbi, walletObj)
+	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CNTPAbi, walletObj)
 	let tx
 	try {
 		tx = await cCNTPContract.changeAddressInWhitelist(wallet, true)
