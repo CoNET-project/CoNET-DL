@@ -56,7 +56,7 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
-const conet_Holesky_RPC = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'https://rpc2.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 //			getIpAddressFromForwardHeader(req.header(''))

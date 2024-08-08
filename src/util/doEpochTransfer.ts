@@ -8,7 +8,7 @@ import {mapLimit} from 'async'
 import {checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transferManager'
 
 import rateABI from '../endpoint/conet-rate.json'
-const conet_Holesky_RPC = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'https://rpc2.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const rateAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()

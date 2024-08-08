@@ -21,7 +21,7 @@ import type {Response, Request } from 'express'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 
 const ReferralsMap: Map<string, string> = new Map()
-const conet_Holesky_rpc = 'https://rpc.conet.network'
+const conet_Holesky_rpc = 'https://rpc2.conet.network'
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
 

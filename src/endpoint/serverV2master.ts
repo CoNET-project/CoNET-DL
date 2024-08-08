@@ -432,12 +432,8 @@ const startinitWalletPool = async () => {
 		logger(Colors.blue (`initNewCONET return false ! try again!`))
 	}
 	
-	
-	setTimeout (() => {
-		startinitWalletPoolProcess = false
-		startinitWalletPool ()
-	}, 1000)
-	
+	startinitWalletPoolProcess = false
+	startinitWalletPool ()
 }
 
 class conet_dl_server {
