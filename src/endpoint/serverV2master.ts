@@ -188,7 +188,7 @@ const sentData = async (data: conetData, callback: (err?: any, data?: ethers.Tra
 		}
 		tx = await etherNew_Init_Admin.sendTransaction(ts)
 	} catch (ex) {
-		console.log(Colors.red(`${ethers.formatEther(data.balance||0)} CONET => [${data.address}] Error!`))
+		console.log(Colors.red(`${ethers.formatEther(data.balance||0)} CONET => [${data.address}] Error!`), ex)
 		return callback(ex)
 	}
 	return callback (null, tx)
