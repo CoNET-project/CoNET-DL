@@ -206,7 +206,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await managerWallet.sendTransaction(ts)
 			} catch (ex) {
 				logger (Colors.red(`managerWalletPool managerWallet.sendTransaction (${wallet}) CONET ${conetOldB} Error!`), ex)
-				return managerWalletPool()
+				return setTimeout(() => {
+					managerWalletPool()
+				}, 1000)
 			}
 			conetOldB = BigInt(0)
 		}
@@ -217,7 +219,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await referralsContract.initAddReferrer(referrer, wallet)
 			}catch (ex) {
 				logger(Colors.red(`referralsV3Addr initAddReferrer(${referrer}, ${wallet}) error `), ex)
-				return managerWalletPool()
+				return setTimeout(() => {
+					managerWalletPool()
+				}, 1000)
 			}
 			referrer = '0x0000000000000000000000000000000000000000'
 		}
@@ -227,7 +231,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await cCNTPContract.multiTransferToken([wallet], [cntpOldB])
 			} catch (ex) {
 				logger(Colors.red(`newCNTP_Contract multiTransferToken error ${wallet} ${cntpOldB}`), ex)
-				return managerWalletPool()
+				return setTimeout(() => {
+					managerWalletPool()
+				}, 1000)
 			}
 			cntpOldB = BigInt(0)
 		}
@@ -238,7 +244,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await cCNTPV1Contract.multiTransferToken([wallet], [cntpV1])
 			} catch (ex) {
 				logger(Colors.red(`cCNTPV1Contract multiTransferToken error ${wallet} ${cntpV1}`), ex)
-				return managerWalletPool()
+				return setTimeout(() => {
+					managerWalletPool()
+				}, 1000)
 			}
 			cntpV1 = BigInt(0)
 		}
@@ -253,7 +261,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await usdbContract.mint(wallet, USDBoldB)
 			} catch (ex) {
 				logger(Colors.red(`usdbContract mint ${wallet} ${USDBoldB} Error`), ex)
-				return pool1 ()
+				return setTimeout(() => {
+					pool1 ()
+				}, 1000)
 			}
 			USDBoldB = BigInt(0)
 			
@@ -265,7 +275,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await bnbUsdtContract.mint(wallet, cBNBUoldB)
 			} catch (ex) {
 				logger(Colors.red(`bnbUsdtContract mint ${wallet} ${cBNBUoldB} Error`), ex)
-				return pool1 ()
+				return setTimeout(() => {
+					pool1 ()
+				}, 1000)
 			}
 			cBNBUoldB = BigInt(0)
 		}
@@ -276,7 +288,9 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 				await usdtContract.mint(wallet, cUSDToldB)
 			} catch (ex) {
 				logger(Colors.red(`usdtContract mint ${wallet} ${cUSDToldB} Error`), ex)
-				return pool1 ()
+				return setTimeout(() => {
+					pool1 ()
+				}, 1000)
 			}
 			cUSDToldB = BigInt(0)
 		}
