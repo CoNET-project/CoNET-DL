@@ -196,7 +196,7 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 
-			
+			logger(inspect(req.headers, false, 3, true))
 				
 			if (/^post$/i.test(req.method)) {
 				
