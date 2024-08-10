@@ -3,10 +3,11 @@ import oldGuardianABI from '../util/CGPNs.json'
 import {logger} from '../util/logger'
 import referralsV3ABI from './ReferralsV3.json'
 import {mapLimit} from 'async'
-import Colors from 'colors/safe'
+import Colors, { blue } from 'colors/safe'
 import { masterSetup } from '../util/util'
 import CGPNsV4ABI from './CGPNsV4.json'
-
+import {abi as CONET_Point_ABI} from '../util/conet-point.json'
+import newCNTPABI from './cCNTPv7.json'
 import { inspect } from 'util'
 const oldProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
 
@@ -17,10 +18,15 @@ const referralsContract = new ethers.Contract(referralsV3Addr, referralsV3ABI, o
 const newCONETURL = 'http://207.90.195.48:8889'
 const newRPCPublic = 'https://rpc.conet.network'
 const newRPC = new ethers.JsonRpcProvider(newCONETURL)
-const managerWallet = new ethers.Wallet(masterSetup.conetCNTPAdmin[0], newRPC)
+const managerWallet = new ethers.Wallet(masterSetup.conetNodeAdmin[0], newRPC)
 const CGPNsV5addr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
 
+const cCNTPAddr = '0x17bA5d837CB7964ab768439A530f340efbf8BEbE'
+const cCNTPOldAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
+
+const oldCntpContract =new ethers.Contract(cCNTPOldAddr, CONET_Point_ABI, oldProvider)
 const GuardianNFTV4Contract = new ethers.Contract(CGPNsV5addr, CGPNsV4ABI, managerWallet)
+const newCNTPContract = new ethers.Contract(cCNTPAddr, newCNTPABI, managerWallet)
 //		856 
 
 const start = async () => {
@@ -32,11 +38,32 @@ const start = async () => {
 
 	[nodeAddressArray, boostersNumberArray, nodeReferrerAddressArray, referrerNodesNumber] = await GuardianNFTV4Contract.getAllIdOwnershipAndBooster()
 
+	//			Restore nodeAddressArray
+
+	const _nodeArray = nodeAddressArray
+	const nodeArray = _nodeArray.map(n => n)
+	// logger(inspect(nodeArray, false, 3, true))
+	
+	let iii = 0
+	mapLimit(nodeArray, 1, async (n: any) => {
+		const balance = await oldCntpContract.balanceOf(n)
+		const tx = await newCNTPContract.initAccount(n, balance)
+		logger(Colors.blue(`${n} = ${balance} ${tx.hash}`))
+	}, () => {
+		
+	})
+
+	
+
 
 	//			Restore nodeAddressArray
-	const _nodeArray = nodeAddressArray.slice(600)
-	const nodeArray = _nodeArray.map(n => n)
-	logger(inspect(nodeArray, false, 3, true))
+	// const _nodeArray = nodeAddressArray.slice(0,300)
+	// const nodeArray = _nodeArray.map(n => n)
+	// logger(inspect(nodeArray, false, 3, true))
+	
+	// const balance: string[] = []
+	
+
 	// const tt= await GuardianNFTV4Contract.mintNodeBatch(nodeArray)
 
 	//			Restore boostersNumberArray
@@ -185,4 +212,4 @@ const start = async () => {
 
 	// })
 }
-start()
+// start()

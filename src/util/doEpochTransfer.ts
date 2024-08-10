@@ -8,10 +8,12 @@ import {mapLimit} from 'async'
 import {checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transferManager'
 
 import rateABI from '../endpoint/conet-rate.json'
-const conet_Holesky_RPC = 'https://rpc2.conet.network'
+
+
+const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
-const rateAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()
+const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
 
 const splitLength = 900
 
@@ -65,11 +67,11 @@ const startTransferAll = async () => {
 	dArray.forEach( (n, index) => {
 		const paymentList = pArray[index]
 		i ++
-		if (i > masterSetup.newFaucetAdmin.length-1) {
+		if (i > masterSetup.conetCNTPAdmin.length-1) {
 			i = 0
 		}
 		transferPool.push({
-			privateKey: masterSetup.newFaucetAdmin[i],
+			privateKey: masterSetup.conetCNTPAdmin[i],
 			walletList: n,
 			payList: paymentList
 		})
