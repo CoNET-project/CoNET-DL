@@ -6,13 +6,13 @@ import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
 
-const conet_Holesky_rpc = 'https://rpc2.conet.network'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
 
 let EPOCH = 0
 let transferEposh = 0
-const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
+const GuardianNodes_ContractV3 = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
 
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
@@ -25,8 +25,9 @@ const guardianReferrals = async (block: number) => {
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
 	} catch (ex: any) {
-		logger(Color.red(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
+		return logger(Color.red(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
 	}
+
 	const referralsAddress: string[] = nodes[2].map((n: string) => n)
 	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())
 	
@@ -57,7 +58,7 @@ const guardianReferrals = async (block: number) => {
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
 	const a = {
-		privateKey: masterSetup.newFaucetAdmin[masterSetup.newFaucetAdmin.length - 1],
+		privateKey: masterSetup.conetNodeAdmin[masterSetup.conetNodeAdmin.length - 1],
 		walletList: _referralsAddress,
 		payList: referralsBoosts.map(n =>n.toFixed(10))
 	}
@@ -112,12 +113,10 @@ const guardianMining = async (block: number) => {
 	const nodesBoosts: number[] = []
 
 	NFTAssets.forEach((n, index) => {
-		if (n || '0x345837652d9832a8398AbACC956De27b9B2923E1'.toLowerCase() === _nodesAddress[index].toLowerCase()) {
+
 			nodesAddress.push(_nodesAddress[index])
 			nodesBoosts.push(_nodesBoosts[index])
-		} else {
-			//logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))
-		}
+
 	})
 
 	logger(Color.gray(`nodesAirdrop total has NFT nodes = [${nodesAddress.length}] nodesBoosts = ${nodesBoosts.length} `))

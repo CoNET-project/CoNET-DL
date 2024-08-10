@@ -15,10 +15,8 @@ interface leaderboard {
 	cntpRate: string
 }
 
-const conet_Holesky_rpc = 'https://rpc2.conet.network'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 const nodeRferralsEachEPOCH = 16.742770167427702
-
-
 
 
 const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], referrals_rate_list: leaderboard[]}) => {
@@ -74,7 +72,7 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 }
 
 
-const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
+const GuardianNodes_ContractV3 = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
 
 const guardianReferrals = async (block: string) => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)

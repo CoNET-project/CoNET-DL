@@ -51,6 +51,12 @@ interface ICoNET_DecryptedPayload {
 }
 
 interface ICoNET_DL_masterSetup {
+
+	//			new Admin	
+	conetNodeAdmin: string[]
+	conetCNTPAdmin: string[]
+
+
 	initManager: string[]
 	conetPointAdmin: string
 	GuardianReferralsFree: string
