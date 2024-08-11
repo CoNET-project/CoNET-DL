@@ -13,7 +13,7 @@ const oldProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
 
 const oldGuardianNFTAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 const oldGuardianContract = new ethers.Contract(oldGuardianNFTAddr, oldGuardianABI, oldProvider)
-const referralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
+const referralsV3Addr ='0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const referralsContract = new ethers.Contract(referralsV3Addr, referralsV3ABI, oldProvider)
 const newCONETURL = 'http://207.90.195.48:8889'
 const newRPCPublic = 'https://rpc.conet.network'

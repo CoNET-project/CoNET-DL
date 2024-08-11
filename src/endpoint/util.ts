@@ -146,7 +146,7 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 const conetOldRPC = 'http://212.227.243.233:8000'
 const initCONETContractAddr = '0xc78771Fc7C371b553188859023A14Ab3AbE08807'
 
-const referralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
+const referralsV3Addr ='0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const old_cUSDTAddr = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'
 const old_cBNBUsdtAddr = '0xAE752B49385812AF323240b26A49070bB839b10D'
 const old_cUSDBAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'
