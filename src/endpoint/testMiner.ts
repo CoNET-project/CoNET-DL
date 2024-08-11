@@ -24,6 +24,7 @@ const getWallet = (SRP: string, max: number, __start: number) => {
 		i++
 		logger (`start connect ${i}`)
 		await start(n)
+		
 	})
 
 }
@@ -42,7 +43,9 @@ const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
-		resolve (true)
+		setTimeout(() => {
+			resolve (true)
+		},4000)
 
 		if (err) {
 			return logger(Colors.red(err))
