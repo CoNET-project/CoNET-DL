@@ -81,7 +81,7 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 		},
 		path: Url.pathname
 	}
-
+	let first = true
 	const kkk = requestHttps(option, res => {
 
 		if (res.statusCode !==200) {
@@ -89,15 +89,20 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 				startTestMiner (url, POST, callback)
 			}, 1000)
 			
-			return
+			return logger(`startTestMiner got res.statusCode = [${res.statusCode}] != 200 error! restart`)
 		}
+
 		let data = ''
 		let _Time: NodeJS.Timeout
 		res.on ('data', _data => {
 			data += _data.toString()
 			if (/\r\n\r\n/.test(data)) {
 				clearTimeout(_Time)
-				callback ('', data)
+				if (first) {
+					first = false
+					callback ('', data)
+				}
+				
 				_Time = setTimeout(() => {
 					return startTestMiner (url, POST, callback)
 				}, 24 * 1000)
@@ -111,7 +116,7 @@ const startTestMiner = (url: string, POST: string,  callback: (err?: string, dat
 	})
 
 	kkk.once('end', () => {
-		return callback('end')
+		return startTestMiner (url, POST, callback)
 	})
 
 	kkk.end(POST)
@@ -132,9 +137,8 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	logger(Colors.green(`Start a miner! [${wallet.address}]`))
 
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
-		setTimeout(() => {
-			resolve (true)
-		}, 1000)
+		resolve (true)
+
 		if (err) {
 			return logger(Colors.red(err))
 		}
