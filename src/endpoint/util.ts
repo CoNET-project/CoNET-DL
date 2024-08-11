@@ -146,7 +146,7 @@ export const start = (privateKeyArmor: string) => new Promise(async resolve => {
 const conetOldRPC = 'http://212.227.243.233:8000'
 const initCONETContractAddr = '0xc78771Fc7C371b553188859023A14Ab3AbE08807'
 
-const referralsV3Addr ='0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const oldrReferralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 const old_cUSDTAddr = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'
 const old_cBNBUsdtAddr = '0xAE752B49385812AF323240b26A49070bB839b10D'
 const old_cUSDBAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'
@@ -441,6 +441,7 @@ export const startEposhTransfer = () => {
 		startUsdtPool()
 		startusdbPool()
 		startCGNPPoolProcess()
+		logger(`start Eposh Init () ${block}`)
 	})
 }
 
@@ -450,7 +451,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	const oldProvider = new ethers.JsonRpcProvider(conetOldRPC)
 	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, oldProvider)
 	const oldCntpContract =new ethers.Contract(oldCNTPAddr, CONET_Point_ABI, oldProvider)
-	const oldReferralsContract = new ethers.Contract(referralsV3Addr, ReferralsV3ABI, oldProvider)
+	const oldReferralsContract = new ethers.Contract(oldrReferralsV3Addr, ReferralsV3ABI, oldProvider)
 	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, oldProvider)
 	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, oldProvider)
 	const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, oldProvider)
