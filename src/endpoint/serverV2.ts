@@ -544,6 +544,10 @@ class conet_dl_server {
 			return res.status(403).json({ublock: true}).end()
 		})
 
+		router.post ('/unlockCONET', (req, res) => {
+			return res.status(200).json({}).end()
+		})
+
 
 		router.post ('/initV3',  async (req, res) => {
 			const _wallet: string = req.body.walletAddress
