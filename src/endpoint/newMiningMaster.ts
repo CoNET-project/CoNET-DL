@@ -232,7 +232,7 @@ class conet_dl_v3_server {
 				return logger(Colors.red(`/nodeRestart hasn't include data error!`))
 			}
 			
-			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon`))
+			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon ${obj}`))
 			return postLocalhost('/api/nodeRestart', obj, res)
 		})
 

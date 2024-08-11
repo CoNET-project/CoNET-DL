@@ -388,7 +388,8 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	let conetOldB = BigInt(0), cntpOldB = BigInt(0), referrer ='0x0000000000000000000000000000000000000000', newReferrer ='0x0000000000000000000000000000000000000000', USDBoldB = BigInt(0),
 	 cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0), oldGuardianNFT1 = BigInt(0), newGuardianNFT1 = BigInt(0), cCNTP_initStats = false, 
 	 CONET_initStats = false, CNTP_v1_initStats = false, newUSDT_depositTx = false, 
-	 newUSDB_depositTx = false, new_BNB_USDT_depositTx = false
+	 newUSDB_depositTx = false, new_BNB_USDT_depositTx = false,
+	 newCNTPBalance = BigInt(0)
 	const walletID = ethers.id(wallet)
 	
 	
@@ -396,7 +397,8 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		[conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1, oldGuardianNFT1, newGuardianNFT1, cCNTP_initStats, 
 			newReferrer, 
 			CONET_initStats, CNTP_v1_initStats,
-			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx
+			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx,
+			newCNTPBalance
 		] = await Promise.all([
 			oldProvider.getBalance(wallet),
 			oldCntpContract.balanceOf(wallet),
@@ -413,15 +415,15 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			newCNTP_V1.checkInit(wallet),
 			newUSDT.depositTx(walletID),
 			newUSDB.depositTx(walletID),
-			new_BNB_USDT.depositTx(walletID)
+			new_BNB_USDT.depositTx(walletID),
+			newCNTPContract.balanceOf(wallet)
 		])
 	} catch (ex) {
-
 		logger(ex)
 		return resolve (false)
 	}
 
-	logger(Colors.blue(`cCNTP_initStats [${cCNTP_initStats}]`))
+	logger(Colors.blue(`cCNTP_initStats ${wallet} CNTP old [${ethers.formatEther(cntpOldB)}] new [${ethers.formatEther(newCNTPBalance)}] [${cCNTP_initStats}]`))
 
 	if (!CONET_initStats && conetOldB ) {
 

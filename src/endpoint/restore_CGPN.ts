@@ -43,27 +43,28 @@ const start = async () => {
 
 	//			Restore nodeAddressArray
 
-	const _nodeArray = nodeAddressArray.slice(800)
+	const _nodeArray = nodeAddressArray
 	const nodeArray = _nodeArray.map(n => n)
 	// logger(inspect(nodeArray, false, 3, true))
 	
 	logger(Colors.green(`${nodeArray.length}`))
 	let iii = 0
-	await mapLimit(nodeArray, 1, async (n: any) => {
+	await mapLimit(nodeArray, 10, async (n: any) => {
 		const y = n.toLowerCase()
 		
 		const balance = await oldCntpContract.balanceOf(y)
-		const hasInit = await newCNTPContractread.initV2(y)
-		if (!hasInit) {
-			const tx = await newCNTPContract.initAccount(n, balance)
-			if (y === '0x9824fdf7bde5821e5d5ba43daa1615f9c980f3ce' || y === '0xf01974341104ec97e1451b8c103d31a21f539717') {
-				logger(Colors.magenta(`${n} = ${ethers.formatEther(balance)} ${tx.hash}`))
-			} else {
-				logger(Colors.blue(`${n} = ${ethers.formatEther(balance)} ${tx.hash}`))
-			}
-		}
+		const hasInit = await newCNTPContractread.balanceOf(y)
+		logger(Colors.blue (`${n} Old balancd = [${ethers.formatEther(balance)}] new Balance ${ethers.formatEther(hasInit)}`))
+		// if (!hasInit) {
+		// 	const tx = await newCNTPContract.initAccount(n, balance)
+		// 	if (y === '0x9824fdf7bde5821e5d5ba43daa1615f9c980f3ce' || y === '0xf01974341104ec97e1451b8c103d31a21f539717') {
+		// 		logger(Colors.magenta(`${n} = ${ethers.formatEther(balance)} ${tx.hash}`))
+		// 	} else {
+		// 		logger(Colors.blue(`${n} = ${ethers.formatEther(balance)} ${tx.hash}`))
+		// 	}
+		// }
 		++iii
-		logger(Colors.grey(`[${iii}] ${y} [${ethers.formatEther(balance)}] hasInit [${hasInit}]`))
+		// logger(Colors.grey(`[${iii}] ${y} [${ethers.formatEther(balance)}] hasInit [${hasInit}]`))
 	}, err => {
 		if (err) {
 			return logger(err)
