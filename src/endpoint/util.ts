@@ -349,7 +349,7 @@ const startSendCNTPPool = async () => {
 	
 
 	try {
-		const initStatus = newCNTPContract.initV2(first) 
+		const initStatus = await newCNTPContract.initV2(first) 
 		logger(`startSendCNTPPool ${first} => ${ethers.formatEther(amount)} initStatus [${initStatus}]`)
 		if (!initStatus) {
 			await newCNTPContract.initAccount(first, amount)
