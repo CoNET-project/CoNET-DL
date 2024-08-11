@@ -17,18 +17,21 @@ const referralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 const referralsContract = new ethers.Contract(referralsV3Addr, referralsV3ABI, oldProvider)
 const newCONETURL = 'http://207.90.195.48:8889'
 const newRPCPublic = 'https://rpc.conet.network'
-const newRPC = new ethers.JsonRpcProvider(newCONETURL)
-const managerWallet = new ethers.Wallet(masterSetup.conetNodeAdmin[0], newRPC)
+const newRPC = new ethers.JsonRpcProvider(newRPCPublic)
+const managerWallet = new ethers.Wallet(masterSetup.initManager[11], newRPC)
 const CGPNsV5addr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
 
-const cCNTPAddr = '0x17bA5d837CB7964ab768439A530f340efbf8BEbE'
+const cCNTPAddr = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 const cCNTPOldAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 
 const oldCntpContract =new ethers.Contract(cCNTPOldAddr, CONET_Point_ABI, oldProvider)
 const GuardianNFTV4Contract = new ethers.Contract(CGPNsV5addr, CGPNsV4ABI, managerWallet)
 const newCNTPContract = new ethers.Contract(cCNTPAddr, newCNTPABI, managerWallet)
+const newCNTPContractread = new ethers.Contract(cCNTPAddr, newCNTPABI, newRPC)
 //		856 
 
+logger(inspect(masterSetup.initManager, false, 3, true))
+logger(managerWallet.address)
 const start = async () => {
 	let boostersNumberArray: string[]
 	let nodeAddressArray: string[]
@@ -40,17 +43,32 @@ const start = async () => {
 
 	//			Restore nodeAddressArray
 
-	const _nodeArray = nodeAddressArray
+	const _nodeArray = nodeAddressArray.slice(800)
 	const nodeArray = _nodeArray.map(n => n)
 	// logger(inspect(nodeArray, false, 3, true))
 	
+	logger(Colors.green(`${nodeArray.length}`))
 	let iii = 0
-	mapLimit(nodeArray, 1, async (n: any) => {
-		const balance = await oldCntpContract.balanceOf(n)
-		const tx = await newCNTPContract.initAccount(n, balance)
-		logger(Colors.blue(`${n} = ${balance} ${tx.hash}`))
-	}, () => {
+	await mapLimit(nodeArray, 1, async (n: any) => {
+		const y = n.toLowerCase()
 		
+		const balance = await oldCntpContract.balanceOf(y)
+		const hasInit = await newCNTPContractread.initV2(y)
+		if (!hasInit) {
+			const tx = await newCNTPContract.initAccount(n, balance)
+			if (y === '0x9824fdf7bde5821e5d5ba43daa1615f9c980f3ce' || y === '0xf01974341104ec97e1451b8c103d31a21f539717') {
+				logger(Colors.magenta(`${n} = ${ethers.formatEther(balance)} ${tx.hash}`))
+			} else {
+				logger(Colors.blue(`${n} = ${ethers.formatEther(balance)} ${tx.hash}`))
+			}
+		}
+		++iii
+		logger(Colors.grey(`[${iii}] ${y} [${ethers.formatEther(balance)}] hasInit [${hasInit}]`))
+	}, err => {
+		if (err) {
+			return logger(err)
+		}
+		logger('success')
 	})
 
 	
@@ -212,4 +230,4 @@ const start = async () => {
 
 	// })
 }
-// start()
+start()

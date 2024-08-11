@@ -38,6 +38,8 @@ if (wallet) {
 	test(wallet)
 }
 
+
+
 // testDatabase()
 
 //		curl -H "origin: https://scannew.conet.network/" -v "https://scanapi.conet.network/api/v2/stats"
