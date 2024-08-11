@@ -74,6 +74,7 @@ class server {
 		app.use(Express.urlencoded({ extended: true }))
 		app.disable('x-powered-by')
 		app.use( Cors ())
+		app.use(Express.urlencoded({ extended: false }));
 		const router = Router ()
 		app.use( '/api', router )
 	
