@@ -89,7 +89,6 @@ const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
 
 const conet_point_contract_blast = `0x0E75599668A157B00419b58Ff3711913d2a716e0`
 
-
 export const oldCNTP_Contract = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 export const newCNTP_Contract = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 

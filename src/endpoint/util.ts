@@ -20,8 +20,7 @@ import {inspect} from 'node:util'
 
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
-const rateAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()
-
+const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
 
 const api_endpoint = 'https://api.conet.network/api/'
 const conetProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')

@@ -101,6 +101,7 @@ const stratFreeMinerTransfer = async () => {
 		stratFreeMinerTransfer()
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
+	
 	let walletArray: string[]
 	
 	try{

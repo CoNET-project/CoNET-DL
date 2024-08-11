@@ -3,10 +3,11 @@ import { logger } from '../util/logger'
 import {inspect} from 'node:util'
 import { transferCCNTP } from '../util/transferManager'
 import {ethers} from 'ethers'
-import {initNewCONET} from './util'
+import {initNewCONET, } from './util'
 import {checkSignObj, masterSetup} from '../util/util'
 // import {selectLeaderboard} from './serverV2'
 import Colors from 'colors/safe'
+import { forEach } from 'async'
 
 // const test = async () => {
 // 	// await testInsert()
@@ -36,6 +37,12 @@ const wallet = process.argv[2]
 
 if (wallet) {
 	test(wallet)
+} else {
+
+	masterSetup.conetCNTPAdmin.forEach(n => {
+		const kk = new ethers.Wallet(n)
+		logger(kk.address)
+	})
 }
 
 
