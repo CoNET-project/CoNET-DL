@@ -339,9 +339,18 @@ const startSendCNTPPool = async () => {
 	sendCNTPPoolLook = true
 	const [first] = sendCNTPPool.keys()
 	const amount = sendCNTPPool.get(first)
+	if (amount === undefined) {
+		logger(`startSendCNTPPool ${first} amount undefined Error!`)
+		return setTimeout(() => {
+			sendCNTPPoolLook = false
+			startSendCNTPPool ()
+		}, 1000)
+	}
+	
 
 	try {
 		const initStatus = newCNTPContract.initV2(first) 
+		logger(`startSendCNTPPool ${first} => ${ethers.formatEther(amount)} initStatus [${initStatus}]`)
 		if (!initStatus) {
 			await newCNTPContract.initAccount(first, amount)
 		}
@@ -439,7 +448,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		refferPool.set(wallet,referrer)
 	}
 	
-	if (cntpOldB) {
+	if (cntpOldB && !cCNTP_initStats) {
 		sendCNTPPool.set(wallet, conetOldB.toString())
 	}
 	
