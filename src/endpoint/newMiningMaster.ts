@@ -112,7 +112,7 @@ const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
 	}
 
 	let _ip = regiestNodes.get (obj.walletAddress)
-
+	
 	if (!_ip) {
 		
 		await initdata(regiestNodes)
@@ -123,6 +123,7 @@ const checkNode = async (req: Request, regiestNodes: Map<string, string>) => {
 		logger (Colors.grey(`request ${request} [${ipaddress}:${obj.walletAddress}] wallet or IP address didn't match nodes regiested IP address _ip [${_ip}]`))
 		return false
 	}
+	obj.ipAddress = _ip
 	//logger(Colors.grey(`[${ req.path }]checkNode return obj!`), inspect(obj, false, 3, true))
 	return obj
 }
@@ -233,7 +234,9 @@ class conet_dl_v3_server {
 				return logger(Colors.red(`/nodeRestart hasn't include data error!`))
 			}
 			
-			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon ${obj}`))
+			logger(Colors.blue(`forward /api/nodeRestart to cluster daemon ${obj.ipAddress}:${obj.walletAddress}`))
+			logger(inspect(obj, false, 3, true))
+
 			return postLocalhost('/api/nodeRestart', obj, res)
 		})
 
