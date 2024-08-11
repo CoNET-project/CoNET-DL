@@ -223,7 +223,7 @@ export const regiestFaucet = (wallet_addr: string, ipAddr: string ) => {
 		result = await cassClient.execute (cmd)
 		
 		if ( result?.rowLength > 0 ) {
-			logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
+			//logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
 			await cassClient.shutdown ()
 			return resolve (false)
 		}
@@ -273,7 +273,7 @@ export const regiestFaucetBlast = (wallet_addr: string, ipAddr: string ) => {
 		result = await cassClient.execute (cmd)
 		
 		if ( result?.rowLength > 0 ) {
-			logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
+			//logger (Color.grey(`regiestFauce Wallet Address [${ wallet_addr }] did Faucet in 24 hours! STOP! `))
 			await cassClient.shutdown ()
 			return resolve (false)
 		}
