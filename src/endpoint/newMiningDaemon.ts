@@ -350,11 +350,15 @@ class v3_master {
 			}
 
 			let isDeveloper = false
-
+			
 
 			if (checkDevelopIP(ipAddress)) {
 				ipAddress = v4()
 				isDeveloper = true
+			}
+
+			if (ipAddress === undefined) {
+				return res.status(400).end()
 			}
 
 			const _wallet = this.ipaddressWallet.get(ipAddress)
