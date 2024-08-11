@@ -200,7 +200,7 @@ class v3_master {
 		const Cors = require('cors')
 		app.use( Cors ())
 		app.use( '/api', router )
-		app.use(Express.urlencoded({limit: '100mb'}));
+		app.use(Express.json({ limit: '50mb' }))
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
