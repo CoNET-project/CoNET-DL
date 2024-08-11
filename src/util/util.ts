@@ -1747,7 +1747,7 @@ const Claimable_BNBUSDT_old = '0xC06D98B3185D3de0dF02b8a7AfD1fF9cB3c9399a'.toLow
 const Claimable_BlastUSDB_old = '0x53Aee1f4c9b0ff76781eFAC6e20eAe4561e29E8A'.toLowerCase()
 
 
-const Claimable_ETHUSDT_v3 = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'.toLowerCase()
+const Claimable_ETHUSDT_v3 = '0xc1CaB2539BbB59d45D739720942E257fF52aa708'.toLowerCase()
 const Claimable_BNBUSDT_v3 = '0xAE752B49385812AF323240b26A49070bB839b10D'.toLowerCase()
 const Claimable_BlastUSDB_v3 = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()
 

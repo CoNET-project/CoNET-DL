@@ -39,9 +39,10 @@ if (wallet) {
 	test(wallet)
 } else {
 
-	masterSetup.conetCNTPAdmin.forEach(n => {
+	masterSetup.conetFaucetAdmin.forEach(n => {
 		const kk = new ethers.Wallet(n)
-		logger(kk.address)
+
+		logger(kk.address, kk.privateKey)
 	})
 }
 
