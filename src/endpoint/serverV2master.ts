@@ -17,7 +17,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './util'
+import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 
 const CGPNsAddr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'.toLowerCase()

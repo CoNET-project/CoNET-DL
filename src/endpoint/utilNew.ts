@@ -22,7 +22,6 @@ export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0]
 
 const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
 
-
 const conetProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {

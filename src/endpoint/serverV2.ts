@@ -18,7 +18,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
 import {request} from 'node:http'
-import {cntpAdminWallet} from './util'
+import {cntpAdminWallet} from './utilNew'
 
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`

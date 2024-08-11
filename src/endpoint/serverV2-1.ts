@@ -19,7 +19,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:https'
 import {request} from 'node:http'
-import {cntpAdminWallet} from './util'
+import {cntpAdminWallet} from './utilNew'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {sign} from 'eth-crypto'
 
