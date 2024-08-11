@@ -199,10 +199,7 @@ class v3_master {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		app.use( Cors ())
-		app.use(Express.json())
 		app.use( '/api', router )
-		
-		app.use(Express.json({limit: '100mb'}));
 		app.use(Express.urlencoded({limit: '100mb'}));
 		app.once ( 'error', ( err: any ) => {
 			/**
