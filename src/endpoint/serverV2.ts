@@ -507,7 +507,6 @@ class conet_dl_server {
 			}
 
 			const obj = checkSignObj (message, signMessage)
-
 			if (!obj) {
 				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
 				return res.status(403).end()

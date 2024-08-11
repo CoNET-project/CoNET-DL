@@ -16,6 +16,7 @@ import initCONET_ABI from './initCONETABI.json'
 import newCNTP_v1_ABI from './CNTP_V1.ABI.json'
 import newUSDT_ABI from './newUSDT.ABI.json'
 import {mapLimit} from 'async'
+import {inspect} from 'node:util'
 
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
@@ -239,6 +240,8 @@ const startCGNPPoolProcess = async () => {
 			CGNPPool = []
 		} catch (ex) {
 			logger(`startCGNPPool Error`, ex)
+			logger(inspect(_wallets, false, 3, true))
+			logger(inspect(_amounts, false, 3, true))
 		}
 		startCGNPPoolLock = false
 	})
@@ -261,7 +264,7 @@ const startBnbUsdtPool = async () => {
 		await new_BNB_USDT.mint(wallet, usdbAmount, hash)
 		bnbUsdtPool.delete(wallet)
 	} catch (ex) {
-		logger(`startBnbUsdtPool Error!`, ex)
+		logger(`startBnbUsdtPool Error! [${wallet}] usdbAmount ${usdbAmount} hash ${hash}`, ex)
 	}
 
 	setTimeout(() => {
@@ -284,7 +287,7 @@ const startusdbPool = async () => {
 		await newUSDB.mint(wallet, usdbAmount, hash)
 		usdbPool.delete(wallet)
 	} catch (ex) {
-		logger(`startusdbPool Error!`, ex)
+		logger(`startusdbPool Error! [${wallet}] => usdbAmount [${usdbAmount}] hash [${hash}]`, ex)
 	}
 
 	
@@ -310,7 +313,7 @@ const startUsdtPool = async () => {
 		await newUSDT.mint(wallet, usdtAmount, hash)
 		usdtPool.delete(wallet)
 	} catch (ex) {
-		logger(`startUsdtPool Error!`, ex)
+		logger(`startUsdtPool Error! [${wallet}] => usdbAmount [${usdtAmount}] hash [${hash}]`, ex)
 	}
 
 	
@@ -336,7 +339,7 @@ const startRefferPool = async () => {
 		await newReferralsContract.initAddReferrer(referrer, wallet)
 		refferPool.delete(wallet)
 	} catch (ex) {
-		logger(`startRefferPool Error!`, ex)
+		logger(`startRefferPool Error! `, ex)
 	}
 
 	
@@ -372,6 +375,8 @@ const startsendCONETPool = async () => {
 		sendCONETPool = []
 	} catch (ex) {
 		logger(`startsendCONETPool Error`, ex)
+		logger(inspect(wallets, false, 3, true))
+		logger(inspect(amounts, false, 3, true))
 	}
 	startsendCONETPoolLock = false
 }
@@ -388,7 +393,7 @@ const startSendCNTPv1Pool = async () => {
 		await newCNTP_V1.initAccount(first, amount)
 		sendCNTPv1Pool.delete(first)
 	} catch (ex) {
-		logger(`startSendCNTP v1 Pool Error!`, ex)
+		logger(`startSendCNTP v1 Pool Error! [${first}] => ${amount}`, ex)
 	}
 
 	
@@ -411,11 +416,15 @@ const startSendCNTPPool = async () => {
 	const amount = sendCNTPPool.get(first)
 
 	try {
-		await newCNTPContract.initAccount(first, amount)
+		const initStatus = newCNTPContract.initV2(first) 
+		if (!initStatus) {
+			await newCNTPContract.initAccount(first, amount)
+		}
+		
 		sendCNTPPool.delete(first)
 
 	} catch (ex) {
-		logger(`startSendCNTPPool Error!`, ex)
+		logger(`startSendCNTPPool Error! [${first}] => ${amount}`, ex)
 	}
 	
 	setTimeout(() => {
