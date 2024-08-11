@@ -377,7 +377,7 @@ class v3_master {
 
 			//		IP address used by another Wallet
 			if (_wallet !== walletAddress) {
-				logger(`/minerCheck ${_wallet} !== ${walletAddress} Error!`)
+				logger(`/minerCheck ${_wallet}:${ipAddress} !== ${walletAddress}:${_wallet_ip} Error!`)
 				return res.status(400).end()
 			}
 
