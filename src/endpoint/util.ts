@@ -2,10 +2,10 @@ import {ethers} from 'ethers'
 import { logger, newCNTP_Contract, masterSetup } from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
-import {request as requestHttps} from 'node:https'
-import EthCrypto from 'eth-crypto'
+
+
 import {abi as CONET_Point_ABI} from '../util/conet-point.json'
-import type {RequestOptions} from 'node:http'
+
 import initCONETABI from './initCONET.json'
 import ReferralsV3ABI from './ReferralsV3.json'
 import {abi as claimableToken } from '../util/claimableToken.json'
@@ -22,7 +22,7 @@ export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0]
 
 const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
 
-const api_endpoint = 'https://api.conet.network/api/'
+
 const conetProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
@@ -68,84 +68,6 @@ export const listeningRate = async (rateBack: (rate: number) => void) => {
 }
 
 
-
-const startTestMiner = (url: string, POST: string,  callback: (err?: string, data?: string) => void) => {
-	const Url = new URL(url)
-	const option: RequestOptions = {
-		hostname: Url.hostname,
-		port: 443,
-		method: 'POST',
-		protocol: 'https:',
-		headers: {
-			'Content-Type': 'application/json;charset=UTF-8'
-		},
-		path: Url.pathname
-	}
-	let first = true
-	const kkk = requestHttps(option, res => {
-
-		if (res.statusCode !==200) {
-			setTimeout(() => {
-				startTestMiner (url, POST, callback)
-			}, 1000)
-			
-			return logger(`startTestMiner got res.statusCode = [${res.statusCode}] != 200 error! restart`)
-		}
-
-		let data = ''
-		let _Time: NodeJS.Timeout
-		res.on ('data', _data => {
-			data += _data.toString()
-			if (/\r\n\r\n/.test(data)) {
-				clearTimeout(_Time)
-				if (first) {
-					first = false
-					callback ('', data)
-				}
-				
-				_Time = setTimeout(() => {
-					return startTestMiner (url, POST, callback)
-				}, 24 * 1000)
-			}
-		})
-		
-	})
-
-	kkk.on('error', err => {
-		return startTestMiner (url, POST, callback)
-	})
-
-	kkk.once('end', () => {
-		return startTestMiner (url, POST, callback)
-	})
-
-	kkk.end(POST)
-
-}
-
-export const start = (privateKeyArmor: string) => new Promise(async resolve => {
-	const wallet = new ethers.Wallet(privateKeyArmor)
-	const message  = JSON.stringify({walletAddress: wallet.address.toLowerCase()})
-	const messageHash =  ethers.id(message)
-	const signMessage = EthCrypto.sign(privateKeyArmor, messageHash)
-	const sendData = {
-		message, signMessage
-	}
-
-	const url = `${ api_endpoint }startMining`
-
-	logger(Colors.green(`Start a miner! [${wallet.address}]`))
-
-	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
-		resolve (true)
-
-		if (err) {
-			return logger(Colors.red(err))
-		}
-		
-	})
-
-})
 
 const conetOldRPC = 'http://212.227.243.233:8000'
 const initCONETContractAddr = '0xc78771Fc7C371b553188859023A14Ab3AbE08807'
