@@ -203,7 +203,8 @@ class conet_dl_v3_server {
 				logger(Colors.red(`/minerCheck obj format Error`), inspect(obj, false, 3, true))
 				return res.status(404).end()
 			}
-
+			logger(Colors.magenta(`/minerCheck post to Cluster Master!`))
+			logger(inspect(obj, false, 3, true))
 			return postLocalhost('/api/minerCheck', obj, res)
 		})
 
