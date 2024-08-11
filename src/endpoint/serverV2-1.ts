@@ -312,8 +312,10 @@ const checkMiner = (server: string, ipaddress: string, wallet: string, livenessL
 		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
 		return resolve (false)
 	}
+	const obj = {ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet}
+	logger(inspect(obj, false, 3, true))
+	const message =JSON.stringify(obj)
 
-	const message =JSON.stringify({ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet})
 	const messageHash = ethers.id(message)
 	const signMessage = sign(mainKey, messageHash)
 	const sendData = {
