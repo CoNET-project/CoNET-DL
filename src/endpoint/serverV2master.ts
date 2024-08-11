@@ -20,7 +20,7 @@ import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './util'
 import {mapLimit} from 'async'
 
-const CGPNsAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'.toLowerCase()
+const CGPNsAddr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -518,23 +518,6 @@ class conet_dl_server {
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
 			return checkTimeLimited(wallet, ipaddress, res)
-		})
-
-		router.post ('/unlockCONET',  async (req, res) => {
-			
-			const wallet = req.body.walletAddress
-			logger(Colors.blue(`unlockCNTP eq.body.walletAddress [${wallet}]`))
-			if (!wallet) {
-				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
-				return res.status(403).end()
-			}
-
-			const index = guardianNodesList.findIndex(n => n === wallet )
-			if (index < 0) {
-				return unlockCNTP(wallet, res)
-			}
-
-			return res.status(403).json({unlock: true}).end()
 		})
 
 		router.post ('/initV3',  async (req, res) => {
