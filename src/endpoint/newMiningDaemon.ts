@@ -202,8 +202,8 @@ class v3_master {
 		app.use(Express.json())
 		app.use( '/api', router )
 		
-		app.use(Express.json({limit: '200mb'}));
-		app.use(Express.urlencoded({limit: '200mb'}));
+		app.use(Express.json({limit: '300mb'}));
+		app.use(Express.urlencoded({limit: '300mb'}));
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
