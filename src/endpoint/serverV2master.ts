@@ -17,7 +17,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {cntpAdminWallet, initNewCONET} from './util'
+import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './util'
 import {mapLimit} from 'async'
 
 const CGPNsAddr = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'.toLowerCase()
@@ -408,37 +408,6 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
 	soLottery (wallet, ipaddress, res)
 }
 
-let startinitWalletPoolProcess = false
-
-const finishedInitWallet: Map<string, true> = new Map()
-
-const startinitWalletPool = async () => {
-	if (startinitWalletPoolProcess) {
-		return
-	}
-	
-	if (!initWalletPool.size) {
-		return
-	}
-
-	startinitWalletPoolProcess = true
-	const [first] = initWalletPool.keys()
-	try {
-		const result = await initNewCONET (first)
-		if (result) {
-			finishedInitWallet.set(first, true)
-			initWalletPool.delete(first)
-			
-		} 
-	} catch (ex) {
-		logger(Colors.magenta(`startinitWalletPool initNewCONET Error! try again!`))
-	}
-	
-	setTimeout(() => {
-		startinitWalletPoolProcess = false
-		startinitWalletPool ()
-	}, 1000)
-}
 
 class conet_dl_server {
 
@@ -495,6 +464,7 @@ class conet_dl_server {
 		})
 
 		server.listen(this.PORT, '127.0.0.1', () => {
+			startEposhTransfer()
 			return console.table([
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
@@ -570,20 +540,8 @@ class conet_dl_server {
 		router.post ('/initV3',  async (req, res) => {
 			const wallet: string = req.body.wallet
 			logger(Colors.blue(`/initV3 ${wallet}`))
-
-			const finished = finishedInitWallet.get(wallet)
-			const getInitStat = initWalletPool.get (wallet)
-			res.status(200).json({})
-			if (finished) {
-				return
-			}
-
-			if (getInitStat) {
-				return
-			}
-
-			initWalletPool.set (wallet, true)
-			startinitWalletPool()
+			await initNewCONET(wallet)
+			res.status(200).json({}).end()
 			
 		})
 

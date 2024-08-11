@@ -1,5 +1,5 @@
 import { logger } from '../util/logger'
-import {selectLeaderboardEpoch, storeLeaderboardGuardians_referralsV1, regiestMiningNode} from './help-database'
+
 import {inspect} from 'node:util'
 import { transferCCNTP } from '../util/transferManager'
 import {ethers} from 'ethers'
@@ -24,11 +24,10 @@ import Colors from 'colors/safe'
 // 	// logger(inspect(Object.keys(kk1), false, 3, true))
 // }
 
-const testDatabase = async () => {
-	await regiestMiningNode()
-}
+
 // 0xa801173E44C97C75639447827c2Ea8A484eed9bf
 const test = async (_wallet: string) => {
+	logger(`Start test ${_wallet}`)
 	const kkk = await initNewCONET(_wallet)
 	logger(kkk)
 }
