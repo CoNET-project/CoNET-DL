@@ -450,7 +450,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	}
 	
 	if (cntpOldB && !cCNTP_initStats) {
-		sendCNTPPool.set(wallet, conetOldB.toString())
+		sendCNTPPool.set(wallet, cntpOldB.toString())
 	}
 	
 	if (cntpV1 && !CNTP_v1_initStats) {
