@@ -141,7 +141,8 @@ class conet_dl_v3_server {
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
-		app.use(Express.json({ limit: '50mb' }))
+		app.use(Express.json({limit: '300mb'}));
+		app.use(Express.urlencoded({limit: '300mb'}));
 		const Cors = require('cors')
 		app.use( Cors ())
 		app.use(Express.json())
