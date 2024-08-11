@@ -19,7 +19,6 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:https'
 import {request} from 'node:http'
-import {cntpAdminWallet} from './utilNew'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 import {sign} from 'eth-crypto'
 
@@ -465,7 +464,7 @@ class conet_dl_server {
 
 		server.listen(this.PORT, () => {
 			return console.table([
-                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}] domain [${this.domain}]` }
+                { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
 		
