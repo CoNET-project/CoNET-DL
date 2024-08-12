@@ -130,9 +130,8 @@ class server {
 				logger (Colors.grey(`Router /storageFragments !obj Format Error Error! ${ipaddress} hash ${obj?.hash} data length [${obj?.data?.length}]`))
 				return res.status(403).end()
 			}
-			logger(Colors.blue (`/storageFragment from ${ipaddress}`))
-			logger(inspect(obj, false, 3, true))
-			
+			logger(Colors.blue (`/storageFragment from ${ipaddress} ${obj.hash}`))
+
 			const result = await saveFragment(obj.hash, obj.data)
 
 			if (result) {
