@@ -267,7 +267,7 @@ class conet_dl_server {
 		//********************			V2    		****** */				
 		router.post ('/conet-faucet', async (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			// logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
+			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
 			let wallet_add = req.body?.walletAddr
 
 			if (! wallet_add ||! ipaddress) {
