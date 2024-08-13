@@ -277,16 +277,16 @@ interface clientRequestTimeControl {
 	ipAddress: string
 }
 
-const LimitAccess = 1000
+const LimitAccess = 50000
 const doubleWinnerWaiting = 20 * 1000
 
 
 const walletPool: Map<string, clientRequestTimeControl> = new Map()
 
 const initWalletPool: Map<string, boolean> = new Map()
-const _rand1 = 0.1
+const _rand1 = 1
 const _rand2 = _rand1 * 5
-const _rand3 = _rand2 * 2
+const _rand3 = _rand2 * 10
 
 const MaximumBet= 1000
 
