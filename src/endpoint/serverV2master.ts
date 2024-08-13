@@ -5,7 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {claimeToekn} from './help-database'
+import {claimeToekn, conet_lotte} from './help-database'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import { newCNTP_Contract, masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
@@ -346,9 +346,15 @@ const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 		pay.push(v.toFixed(10))
 		transferPool.delete(key)
 	})
-
+	let iii = 0
 	transferCCNTP(masterSetup.newFaucetAdmin[5], wallets, pay, err => {
-		logger(Colors.magenta(`transferCCNTP success!`))
+		mapLimit(wallets, 1, async (n, next) => {
+			await conet_lotte (n, parseInt(pay[iii]), false )
+			iii ++
+		}, err => {
+			logger(err)
+		})
+
 	})
 }
 

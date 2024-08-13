@@ -381,13 +381,25 @@ export const getLast5Price = () => {
 
 
 
-export const conet_lotte = (wallet: string, winlotte: number) => new Promise(async resolve=> {
+export const conet_lotte = (wallet: string, winlotte: number, reset: boolean) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
-		await cassClient.connect ()
-		const time = new Date()
+	await cassClient.connect ()
+	const time = new Date()
 
+	const cmd = `SELECT * from conet_lotte WHERE wallet = '${wallet}'`
+	
+	const result = await cassClient.execute (cmd)
+	logger(inspect(result.rows[0], false, 3, true))
+	let win_cntp = winlotte
+	if (result.rows.length && !reset ) {
 		
-		let cmd = `SELECT * from conet_lotte WHERE wallet = '${wallet}'`
+		win_cntp += result.rows[0].win_cntp
+	}
+	const cmd1 = `INSERT INTO conet_lotte (wallet, win_cntp, reset_timestamp) VALUES ('${wallet}', ${win_cntp}, '${time.toISOString()}')`
+	logger(Color.blue(`${cmd1}`))
+	await cassClient.execute (cmd1)
+	await cassClient.shutdown()
+	resolve(true)
 })
 
 

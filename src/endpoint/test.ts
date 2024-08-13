@@ -36,7 +36,7 @@ const test = async (_wallet: string) => {
 
 
 const testLottle = async (_wallet: string) => {
-	await conet_lotte(_wallet, 0xB86BE81d9D0448F3136204D14ddD3918BE3e53c4)
+	await conet_lotte(_wallet, 10, false)
 }
 const wallet = process.argv[2]
 
@@ -49,8 +49,6 @@ if (wallet) {
 
 	// 	logger(kk.address, kk.privateKey)
 	// })
-
-
 
 }
 
