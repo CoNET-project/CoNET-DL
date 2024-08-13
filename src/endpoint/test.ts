@@ -5,6 +5,7 @@ import { transferCCNTP } from '../util/transferManager'
 import {ethers} from 'ethers'
 import {initNewCONET, } from './utilNew'
 import {checkSignObj, masterSetup} from '../util/util'
+import {conet_lotte} from './help-database'
 // import {selectLeaderboard} from './serverV2'
 import Colors from 'colors/safe'
 import { forEach } from 'async'
@@ -33,17 +34,24 @@ const test = async (_wallet: string) => {
 	logger(kkk)
 }
 
+
+const testLottle = async (_wallet: string) => {
+	await conet_lotte(_wallet, 0xB86BE81d9D0448F3136204D14ddD3918BE3e53c4)
+}
 const wallet = process.argv[2]
 
 if (wallet) {
-	test(wallet)
+	testLottle(wallet)
 } else {
 
-	masterSetup.conetFaucetAdmin.forEach(n => {
-		const kk = new ethers.Wallet(n)
+	// masterSetup.conetFaucetAdmin.forEach(n => {
+	// 	const kk = new ethers.Wallet(n)
 
-		logger(kk.address, kk.privateKey)
-	})
+	// 	logger(kk.address, kk.privateKey)
+	// })
+
+
+
 }
 
 

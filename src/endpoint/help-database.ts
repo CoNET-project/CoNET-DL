@@ -372,6 +372,24 @@ export const getLast5Price = () => {
 		return resolve(res.rows)
 	})
 }
+//	`CREATE TABLE IF NOT EXISTS conet_lotte (` +
+// `wallet text, ` +
+// `win_cntp double, ` +
+// `reset_timestamp text,` +
+// `PRIMARY KEY ((wallet), win_cntp)) WITH CLUSTERING ORDER BY (win_cntp DESC)`
+
+
+
+
+export const conet_lotte = (wallet: string, winlotte: number) => new Promise(async resolve=> {
+	const cassClient = new Client (option)
+		await cassClient.connect ()
+		const time = new Date()
+
+		
+		let cmd = `SELECT * from conet_lotte WHERE wallet = '${wallet}'`
+})
+
 
 // export const exchangeUSDC = (txHash: string) => {
 // 	return new Promise ( async resolve => {
@@ -630,19 +648,6 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 	}
 	
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -45,7 +45,7 @@ const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	startTestMiner(url, JSON.stringify(sendData), (err, data) => {
 		setTimeout(() => {
 			resolve (true)
-		},4000)
+		},1000)
 
 		if (err) {
 			return logger(Colors.red(err))

@@ -286,7 +286,7 @@ const walletPool: Map<string, clientRequestTimeControl> = new Map()
 const initWalletPool: Map<string, boolean> = new Map()
 const _rand1 = 1
 const _rand2 = _rand1 * 5
-const _rand3 = _rand2 * 10
+const _rand3 = _rand1 * 10
 
 const MaximumBet= 1000
 
