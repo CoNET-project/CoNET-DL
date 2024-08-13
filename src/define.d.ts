@@ -56,7 +56,7 @@ interface ICoNET_DL_masterSetup {
 	conetNodeAdmin: string[]
 	conetCNTPAdmin: string[]
 	guardianAmin: string[]
-
+	guardianBuyADMIN: string[]
 	initManager: string[]
 	conetPointAdmin: string
 	GuardianReferralsFree: string

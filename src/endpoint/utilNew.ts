@@ -11,7 +11,7 @@ import ReferralsV3ABI from './ReferralsV3.json'
 import {abi as claimableToken } from '../util/claimableToken.json'
 import cCNTPv7ABI from './cCNTPv7.json'
 import oldGuardianABI from '../util/CGPNs.json'
-import CGPNsV4ABI from './CGPNsV4.json'
+import CGPNsV7ABI from './CGPNsV7.json'
 import initCONET_ABI from './initCONETABI.json'
 import newCNTP_v1_ABI from './CNTP_V1.ABI.json'
 import newUSDT_ABI from './newUSDT.ABI.json'
@@ -81,7 +81,7 @@ const newReffAddr= '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
 const oldCNTPAddr='0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
-const newGuardianAddr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
+const newGuardianAddr = '0x5a6466A9CA775E4a98f3c6Fc269a3CA8B7805226'
 const new_cntp = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 const initCONETAddr = '0xDAFD7bb588014a7D96501A50256aa74755953c18'
 const newCNTP_v1 = '0x38b1C16D6e69af20Aa5CC053fc3924ac82003596'
@@ -106,7 +106,7 @@ const initmanagerW_6 = new ethers.Wallet(masterSetup.initManager[6], conetProvid
 const initmanagerW_7 = new ethers.Wallet(masterSetup.initManager[7], conetProvider)
 
 const newReferralsContract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_1)
-const GuardianNFTV4Contract = new ethers.Contract(newGuardianAddr, CGPNsV4ABI, initmanagerW_2)
+const GuardianNFTV7Contract = new ethers.Contract(newGuardianAddr, CGPNsV7ABI, initmanagerW_2)
 const newCNTPContract = new ethers.Contract(new_cntp, cCNTPv7ABI, initmanagerW_3)
 const initCONETContract = new ethers.Contract(initCONETAddr, initCONET_ABI, initmanagerW_4)
 const newCNTP_V1 = new ethers.Contract(newCNTP_v1, newCNTP_v1_ABI, initmanagerW_5)
@@ -121,58 +121,81 @@ const refferPool: Map<string, string> = new Map()
 const usdtPool: Map<string, string> = new Map()
 const usdbPool: Map<string, string> = new Map()
 const bnbUsdtPool: Map<string, string> = new Map()
-let CGNPPool: sendCONETObj[] = []
+const CGNP_no1_Pool: Map<string, string> = new Map()
+const CGNP_no2_Pool: Map<string, string> = new Map()
 
-
-let startCGNPPoolLock = false
-const startCGNPPoolProcess = async () => {
-	if (startCGNPPoolLock|| !CGNPPool.length) {
+let startCGNPPool1Lock = false
+const startCGNPPool_no1_Process = async () => {
+	if (startCGNPPool1Lock|| !CGNP_no1_Pool.size) {
 		return
 	}
-	startCGNPPoolLock = true
-	
-	const pool: Map<string, string> = new Map()
-	
-	CGNPPool.forEach(n => {
-		pool.set(n.wallet, n.amount)
-	})
+	startCGNPPool1Lock = true
+
 
 	const wallets: string[] = []
 	const amounts: string[] =[]
 
-	pool.forEach((v,k) => {
+	CGNP_no1_Pool.forEach((v,k) => {
 		wallets.push(k)
 		amounts.push(v)
 	})
+	let iii = 0
+	mapLimit(wallets, 1, async (n, next) => {
+		const [status] = await GuardianNFTV7Contract.getBUYER_Status(n)
 
-	mapLimit(wallets, 5, async (n, next) => {
-		const balance = await GuardianNFTV4Contract.balanceOf(n, 1)
-		if (balance){
-			pool.delete(n)
+		if (!status){
+			try {
+				const uuu = await GuardianNFTV7Contract.mintBUYER_NFT(n, amounts[iii])
+				logger(Colors.blue(`startCGNPPool_no1_Process added ${n} #1 NFT ${ amounts[iii]} success ${uuu.hash}`))
+			} catch (ex) {
+				logger(Colors.red(`startCGNPPool_no1_Process Error!`), ex)
+			}
+			
 		}
+		CGNP_no1_Pool.delete(n)
+		iii ++
 	}, async err => {
-
-		const _wallets: string[] = []
-		const _amounts: string[] = []
-
-		pool.forEach((v,k) => {
-			_wallets.push(k)
-			_amounts.push(v)
-		})
-		try {
-			await GuardianNFTV4Contract.mintNode_NFTBatch(_wallets, _amounts)
-			CGNPPool = []
-		} catch (ex) {
-			logger(`startCGNPPool Error`, ex)
-			logger(inspect(_wallets, false, 3, true))
-			logger(inspect(_amounts, false, 3, true))
-		}
-		startCGNPPoolLock = false
+		startCGNPPool1Lock = false
+		startCGNPPool_no1_Process ()
 	})
 
 }
 
+let startCGNPPoo21Lock = false
+const startCGNPPool_no2_Process = async () => {
+	if (startCGNPPoo21Lock|| !CGNP_no2_Pool.size) {
+		return
+	}
+	startCGNPPoo21Lock = true
 
+
+	const wallets: string[] = []
+	const amounts: string[] =[]
+
+	CGNP_no2_Pool.forEach((v,k) => {
+		wallets.push(k)
+		amounts.push(v)
+	})
+	let iii = 0
+	mapLimit(wallets, 1, async (n, next) => {
+		const status = await GuardianNFTV7Contract.getREFERRER_Status(n)
+		if (!status){
+			try {
+				const uuu = await GuardianNFTV7Contract.mintREFERRER_NFT(n, amounts[iii])
+				logger(Colors.blue(`startCGNPPool_no2_Process added ${n} #2 NFT ${ amounts[iii]} success ${uuu.hash}`))
+			} catch (ex) {
+				logger(Colors.red(`startCGNPPool_no2_Process Error!`), ex)
+			}
+			
+		}
+		CGNP_no2_Pool.delete(n)
+		iii ++
+	}, async err => {
+		startCGNPPoo21Lock = false
+		startCGNPPool_no2_Process ()
+	})
+
+}
 
 let startBnbUsdtPoolLock = false
 const startBnbUsdtPool = async () => {
@@ -247,8 +270,6 @@ const startUsdtPool = async () => {
 		startUsdtPool ()
 	}, 1000)
 }
-
-
 
 let startRefferPoolLock = false
 const startRefferPool = async () => {
@@ -375,7 +396,8 @@ export const startEposhTransfer = () => {
 		startRefferPool()
 		startUsdtPool()
 		startusdbPool()
-		startCGNPPoolProcess()
+		startCGNPPool_no1_Process()
+		startCGNPPool_no2_Process()
 		logger(`start Eposh Init () ${block}`)
 	})
 }
@@ -395,7 +417,11 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 
 
 	let conetOldB = BigInt(0), cntpOldB = BigInt(0), referrer ='0x0000000000000000000000000000000000000000', newReferrer ='0x0000000000000000000000000000000000000000', USDBoldB = BigInt(0),
-	 cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0), oldGuardianNFT1 = BigInt(0), newGuardianNFT1 = BigInt(0), cCNTP_initStats = false, 
+	 cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0), 
+	 oldGuardianNFT1 = BigInt(0), newGuardianNFT1_initSTatus = [], 
+	 oldGuardianNFT2 = BigInt(0), newGuardianNFT2_initSTatus = false, 
+	 
+	 cCNTP_initStats = false, 
 	 CONET_initStats = false, CNTP_v1_initStats = false, newUSDT_depositTx = false, 
 	 newUSDB_depositTx = false, new_BNB_USDT_depositTx = false,
 	 newCNTPBalance = BigInt(0)
@@ -403,7 +429,11 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	
 	
 	try {
-		[conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1, oldGuardianNFT1, newGuardianNFT1, cCNTP_initStats, 
+		[
+			conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1, 
+			oldGuardianNFT1, newGuardianNFT1_initSTatus, 
+			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
+			cCNTP_initStats, 
 			newReferrer, 
 			CONET_initStats, CNTP_v1_initStats,
 			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx,
@@ -416,8 +446,13 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			old_cBNBUsdt.balanceOf(wallet),
 			old_cUSDT.balanceOf(wallet),
 			oldCNTPv1.balanceOf(wallet),
+
 			oldGuardianContract.balanceOf(wallet, 1),
-			GuardianNFTV4Contract.balanceOf(wallet, 1),
+			GuardianNFTV7Contract.getBUYER_Status(wallet),
+
+			oldGuardianContract.balanceOf(wallet, 2),
+			GuardianNFTV7Contract.getREFERRER_Status (wallet),
+
 			newCNTPContract.initV2(wallet),
 			newReferralsContract.getReferrer(wallet),
 			initCONETContract.checkInit(wallet),
@@ -425,7 +460,8 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 			newUSDT.depositTx(walletID),
 			newUSDB.depositTx(walletID),
 			new_BNB_USDT.depositTx(walletID),
-			newCNTPContract.balanceOf(wallet)
+			newCNTPContract.balanceOf(wallet),
+			
 		])
 	} catch (ex) {
 		logger(ex)
@@ -468,16 +504,27 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		usdbPool.set(wallet,USDBoldB.toString())
 	}
 
-	const oldG  = parseInt(oldGuardianNFT1.toString())
-	const newG =  parseInt(newGuardianNFT1.toString())
-	if (oldG > 1) {
-		if (newG === 0) {
-			CGNPPool.push({
-				wallet,
-				amount: oldG.toString()
-			})
+	const oldG1 = parseInt(oldGuardianNFT1.toString())
+
+	if (oldG1 > 1) {
+		if (!newGuardianNFT1_initSTatus[0]) {
+			CGNP_no1_Pool.set(wallet, oldGuardianNFT1.toString())
 		}
 	}
 
+	const oldG2 = parseInt(oldGuardianNFT2.toString())
+	if (oldG2 > 1) {
+		if (!newGuardianNFT2_initSTatus) {
+			CGNP_no2_Pool.set(wallet, oldGuardianNFT2.toString())
+		}
+	}
 	return resolve (true)
 })
+
+
+// const testCGNPPoolProcess = async (wallet: string, _amounts: string) => {
+
+// 	await GuardianNFTV4Contract.mintNode_NFTBatch([wallet], [_amounts])
+// }
+
+// testCGNPPoolProcess('0x609A656EAB159f808dE6DCf1FDB83b32e479da5e', '1')

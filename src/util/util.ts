@@ -384,7 +384,7 @@ export const getIPFSfile: (fileName: string) => Promise<string> = async (fileNam
 	HttpsGet(cloudStorageEndpointUrl, res => {
 
 		if (res.statusCode !== 200) {
-			//logger(Colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
+			logger(colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
 			return resolve('')
 		}
 		res.once('error', err => {

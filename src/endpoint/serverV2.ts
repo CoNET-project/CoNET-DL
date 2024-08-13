@@ -157,7 +157,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 
 class conet_dl_server {
 
-	private PORT = 80
+	private PORT = 8080
 	private appsPath = ''
 	private serverID = ''
 

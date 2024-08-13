@@ -310,13 +310,13 @@ const randomLottery = () => {
 		if (rand2)	{
 			const rand3 = !(Math.floor(Math.random()*4))
 			if (rand3) {
-				return {lottery: _rand3}
+				return {lotterRate: [_rand1, _rand2, _rand3],lottery: _rand3}
 			}
-			return {lottery: _rand2}
+			return {lotterRate: [_rand1, _rand2, _rand3],lottery: _rand2}
 		}
-		return {lottery: _rand1}
+		return {lotterRate: [_rand1, _rand2, _rand3],lottery: _rand1}
 	}
-	return {lottery: 0}
+	return {lotterRate: [_rand1, _rand2, _rand3],lottery: 0}
 }
 
 const addToWinnerPool = (winnObj: winnerObj) => {
