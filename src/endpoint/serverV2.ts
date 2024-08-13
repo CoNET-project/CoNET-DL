@@ -62,7 +62,7 @@ const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
 
-	
+	logger(inspect(req.headers, false, 3, true))
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]||req.headers['X-Forwarded-For'.toLowerCase()]||req.headers['CF-Connecting-IP'.toLowerCase()]||req.ip
 	if (!ipaddress) {
 		return ''
@@ -256,7 +256,6 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 		
-
 		router.get ('/health', async (req,res) => {
 			if (res.writable && !res.writableEnded) {
 				res.json ({ health: true }).end()
