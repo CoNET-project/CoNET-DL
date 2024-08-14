@@ -506,14 +506,16 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 
 	const oldG1 = parseInt(oldGuardianNFT1.toString())
 
-	if (oldG1 > 1) {
+	if (oldG1 > 0) {
+		logger(Colors.blue(`${wallet} has NFT #1 asset && newGuardianNFT1_initSTatus[0] = ${newGuardianNFT1_initSTatus[0]}`))
 		if (!newGuardianNFT1_initSTatus[0]) {
 			CGNP_no1_Pool.set(wallet, oldGuardianNFT1.toString())
 		}
 	}
 
 	const oldG2 = parseInt(oldGuardianNFT2.toString())
-	if (oldG2 > 1) {
+	if (oldG2 > 0) {
+		logger(Colors.blue(`${wallet} has NFT #2 asset && newGuardianNFT1_initSTatus[0] = ${newGuardianNFT1_initSTatus[0]}`))
 		if (!newGuardianNFT2_initSTatus) {
 			CGNP_no2_Pool.set(wallet, oldGuardianNFT2.toString())
 		}
