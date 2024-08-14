@@ -419,7 +419,7 @@ export const listAllLotte: ()=> Promise<lottleArray[]> = () => new Promise(async
 	})
 	const kk = yy.sort((a,b) => b.win_cntp - a.win_cntp)
 	
-	resolve(kk.slice(0,10))
+	resolve(kk.slice(0,20))
 })
 
 
