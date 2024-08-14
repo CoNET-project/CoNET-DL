@@ -32,3 +32,5 @@ export const start = () => {
 		return startWriteReadboard (block)
 	})
 }
+
+start()
