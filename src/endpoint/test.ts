@@ -5,7 +5,7 @@ import { transferCCNTP } from '../util/transferManager'
 import {ethers} from 'ethers'
 import {initNewCONET, } from './utilNew'
 import {checkSignObj, masterSetup} from '../util/util'
-import {conet_lotte, listAllLotte} from './help-database'
+import {conet_lotte, listAllLotte, conet_lotte_bio} from './help-database'
 // import {selectLeaderboard} from './serverV2'
 import Colors from 'colors/safe'
 import { forEach } from 'async'
@@ -38,7 +38,8 @@ const test = async (_wallet: string) => {
 const testLottle = async (_wallet: string) => {
 	// await conet_lotte ('0x8fe94537b3f39d25f3e55425d1ea98cafa1c76c9', 4, false)
 	// await conet_lotte ('0x80d9f0b27803c583cca27bb6592945da958241da', 58, false)
-	const kk = await listAllLotte()
+	//const kk = await conet_lotte_bio('0x7728aa515d635e44dfcad7af903d177b35b8525a', '')
+	const kk = await listAllLotte ()
 	logger(kk)
 }
 const wallet = process.argv[2]

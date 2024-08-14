@@ -219,6 +219,7 @@ interface minerObj {
 	hash?: string
 	data?: any
 	allWallets?: string[]
+	bio?: string
 }
 
 interface nodeType {

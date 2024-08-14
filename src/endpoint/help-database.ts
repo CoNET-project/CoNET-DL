@@ -379,7 +379,14 @@ export const getLast5Price = () => {
 // `PRIMARY KEY ((wallet), win_cntp)) WITH CLUSTERING ORDER BY (win_cntp DESC)`
 
 
-
+export const conet_lotte_bio = (wallet: string, bio: string) => new Promise(async resolve=> {
+	const cassClient = new Client (option)
+	await cassClient.connect ()
+	const cmd = `UPDATE conet_lotte_new SET bio = '${bio}' WHERE wallet = '${wallet}'`
+	await cassClient.execute (cmd)
+	await cassClient.shutdown()
+	resolve (true)
+})
 
 export const conet_lotte = (wallet: string, winlotte: number, reset: boolean) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
@@ -392,7 +399,6 @@ export const conet_lotte = (wallet: string, winlotte: number, reset: boolean) =>
 	logger(inspect(result.rows[0], false, 3, true))
 	let win_cntp = winlotte
 	if (result.rows.length && !reset ) {
-		
 		win_cntp += result.rows[0].win_cntp
 	}
 	const cmd1 = `INSERT INTO conet_lotte_new (wallet, win_cntp, reset_timestamp) VALUES ('${wallet}', ${win_cntp}, '${time.toISOString()}')`
@@ -409,12 +415,12 @@ interface lottleArray {
 export const listAllLotte: ()=> Promise<lottleArray[]> = () => new Promise(async resolve=> {
 	const cassClient = new Client (option)
 	await cassClient.connect ()
-	const cmd = `SELECT wallet, win_cntp from conet_lotte_new `
+	const cmd = `SELECT * from conet_lotte_new `
 	const result = await cassClient.execute (cmd)
 	await cassClient.shutdown()
 	const yy = result.rows.map(n => {
 		return {
-			wallet: n.wallet, win_cntp: n.win_cntp
+			wallet: n.wallet, win_cntp: n.win_cntp, bio: n.bio
 		}
 	})
 	const kk = yy.sort((a,b) => b.win_cntp - a.win_cntp)
