@@ -21,14 +21,14 @@ const newRPC = new ethers.JsonRpcProvider(newRPCPublic)
 const managerWallet = new ethers.Wallet(masterSetup.guardianBuyADMIN[0], newRPC)
 const CGPNsV5addr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
 
-const CGPNsV7addr = '0x5a6466A9CA775E4a98f3c6Fc269a3CA8B7805226'
+const CGPNsV8addr = '0xc3e210034868e8d739feE46ac5D1b1953895C87E'
 
 const cCNTPAddr = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 const cCNTPOldAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 
 const oldCntpContract =new ethers.Contract(cCNTPOldAddr, CONET_Point_ABI, oldProvider)
 
-const GuardianNFTV7Contract = new ethers.Contract(CGPNsV7addr, CGPNsV7ABI, managerWallet)
+const GuardianNFTV7Contract = new ethers.Contract(CGPNsV8addr, CGPNsV7ABI, managerWallet)
 
 const newCNTPContract = new ethers.Contract(cCNTPAddr, newCNTPABI, managerWallet)
 const newCNTPContractread = new ethers.Contract(cCNTPAddr, newCNTPABI, newRPC)
@@ -80,13 +80,13 @@ const start = async () => {
 
 
 	//			Restore nodeAddressArray
-	// const _nodeArray = nodeAddressArray.slice(600)
-	// const nodeArray = _nodeArray.map(n => n)
-	// logger(inspect(nodeArray, false, 3, true))
+	const _nodeArray = nodeAddressArray.slice(600)
+	const nodeArray = _nodeArray.map(n => n)
+	logger(inspect(nodeArray, false, 3, true))
 	
-	// const tt= await GuardianNFTV7Contract.mintNodeBatch(nodeArray)
+	const tt= await GuardianNFTV7Contract.mintNodeBatch(nodeArray)
 
-	// logger(inspect(tt.hash, false, 3, true))
+	logger(inspect(tt.hash, false, 3, true))
 				//	Restore boostersNumberArray
 	// logger(inspect(boostersNumberArray, false, 3, true))
 	// const boostersArray = boostersNumberArray.map(n => n)
@@ -247,4 +247,4 @@ const start = async () => {
 }
 
 
-// start()
+start()

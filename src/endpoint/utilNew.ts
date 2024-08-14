@@ -81,7 +81,7 @@ const newReffAddr= '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
 const oldCNTPAddr='0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
-const newGuardianAddr = '0x5a6466A9CA775E4a98f3c6Fc269a3CA8B7805226'
+const newGuardianAddr = '0xc3e210034868e8d739feE46ac5D1b1953895C87E'
 const new_cntp = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 const initCONETAddr = '0xDAFD7bb588014a7D96501A50256aa74755953c18'
 const newCNTP_v1 = '0x38b1C16D6e69af20Aa5CC053fc3924ac82003596'
@@ -509,7 +509,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	if (oldG1 > 0) {
 		logger(Colors.blue(`${wallet} has NFT #1 asset && newGuardianNFT1_initSTatus[0] = ${newGuardianNFT1_initSTatus[0]}`))
 		if (!newGuardianNFT1_initSTatus[0]) {
-			// CGNP_no1_Pool.set(wallet, oldGuardianNFT1.toString())
+			CGNP_no1_Pool.set(wallet, oldGuardianNFT1.toString())
 		}
 	}
 
@@ -517,7 +517,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	if (oldG2 > 0) {
 		logger(Colors.blue(`${wallet} has NFT #2 asset && newGuardianNFT1_initSTatus[0] = ${newGuardianNFT1_initSTatus[0]}`))
 		if (!newGuardianNFT2_initSTatus) {
-			// CGNP_no2_Pool.set(wallet, oldGuardianNFT2.toString())
+			CGNP_no2_Pool.set(wallet, oldGuardianNFT2.toString())
 		}
 	}
 	return resolve (true)
