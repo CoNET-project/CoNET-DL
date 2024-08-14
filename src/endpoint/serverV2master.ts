@@ -287,6 +287,8 @@ const initWalletPool: Map<string, boolean> = new Map()
 const _rand1 = 1
 const _rand2 = _rand1 * 5
 const _rand3 = _rand1 * 10
+const _rand4 = _rand1 * 50
+const _rand5 = _rand1 * 100
 
 const MaximumBet= 1000
 
@@ -300,23 +302,35 @@ interface winnerObj {
 const transferPool: Map<string, number> = new Map()
 const LotteryWinnerPool: Map<string, winnerObj> = new Map()
 
-const randomLottery = () => {
+const randomLottery = (test = false) => {
 	
-	const rand1 = !(Math.floor(Math.random()))
+	const rand1 = !(Math.floor(Math.random() * 3))
 
 	if (rand1) {
-		const rand2 = !(Math.floor(Math.random()*2))
+		const rand2 = !(Math.floor(Math.random()*3))
 
 		if (rand2)	{
 			const rand3 = !(Math.floor(Math.random()*4))
 			if (rand3) {
-				return {lotterRate: [_rand1, _rand2, _rand3],lottery: _rand3}
+				if (!test) {
+					return {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand3}
+				}
+				const rand4 = !(Math.floor(Math.random()*10))
+				if (!rand4) {
+					return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand3}
+				}
+				const rand5 = !(Math.floor(Math.random()*10))
+				if (rand5) {
+					return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand5}
+				}
+
+				return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand4}
 			}
-			return {lotterRate: [_rand1, _rand2, _rand3],lottery: _rand2}
+			return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand2} : {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand2}
 		}
-		return {lotterRate: [_rand1, _rand2, _rand3],lottery: _rand1}
+		return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5],lottery: _rand1} :  {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand1}
 	}
-	return {lotterRate: [_rand1, _rand2, _rand3],lottery: 0}
+	return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: 0} : {lotterRate: [_rand1, _rand2, _rand3], lottery: 0}
 }
 
 const addToWinnerPool = (winnObj: winnerObj) => {
@@ -358,11 +372,11 @@ const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 	})
 }
 
-const double = (wallet: string, ipAddress: string) => {
+const double = (wallet: string, ipAddress: string, test = false) => {
 	const winner = LotteryWinnerPool.get (wallet)
 
 	if (!winner) {
-		const obj = randomLottery ()
+		const obj = randomLottery (test)
 		if (obj.lottery > 0){
 			addToWinnerPool ({
 				ipAddress, wallet, bet: obj.lottery, Daemon: null
@@ -399,19 +413,19 @@ const double = (wallet: string, ipAddress: string) => {
 }
 
 
-const soLottery = (wallet: string, ipaddress: string, res: Response) => {
-	const obj = double (wallet, ipaddress)
+const soLottery = (wallet: string, ipaddress: string, res: Response, test = false) => {
+	const obj = double (wallet, ipaddress, test)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
 
 }
 
-const checkTimeLimited = (wallet: string, ipaddress: string, res: Response) => {
+const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, test = false) => {
 	const lastAccess = walletPool.get(wallet)
 	if (lastAccess) {
 		return res.status(301).end()
 	}
-	soLottery (wallet, ipaddress, res)
+	soLottery (wallet, ipaddress, res, test)
 }
 
 
@@ -519,11 +533,19 @@ class conet_dl_server {
 		})
 
 		router.post ('/lottery', async ( req, res ) => {
-			logger(Colors.blue(`Cluster Master got: /lottery `))
+			logger(Colors.blue(`Cluster Master got: /lottery`))
 			logger(inspect(req.body, false, 3, true))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
 			return checkTimeLimited(wallet, ipaddress, res)
+		})
+
+		router.post ('/lottery_test', async ( req, res ) => {
+			logger(Colors.blue(`Cluster Master got: /lottery_test`))
+			logger(inspect(req.body, false, 3, true))
+			const wallet = req.body.obj.walletAddress
+			const ipaddress = req.body.obj.ipAddress
+			return checkTimeLimited(wallet, ipaddress, res, true)
 		})
 
 		router.post ('/initV3',  async (req, res) => {
