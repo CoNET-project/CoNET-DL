@@ -13,6 +13,7 @@ import type {Response, Request } from 'express'
 import Color from 'colors/safe'
 import {Wallet, ethers} from 'ethers'
 import { Client, auth, types } from 'cassandra-driver'
+import type {ClientOptions} from 'cassandra-driver'
 import moment from 'moment'
 const setup = join( homedir(),'.master.json' )
 import {request as HttpRequest } from 'node:http'
@@ -44,13 +45,15 @@ const sslOptions: TLSSocketOptions = {
 	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
 }
 
-const option = {
+const option: ClientOptions = {
 	contactPoints : masterSetup.Cassandra.databaseEndPoints,
 	localDataCenter: 'dc1',
 	authProvider: new auth.PlainTextAuthProvider ( masterSetup.Cassandra.auth.username, masterSetup.Cassandra.auth.password ),
 	sslOptions: sslOptions,
 	keyspace: masterSetup.Cassandra.keyspace,
-	protocolOptions: { maxVersion: types.protocolVersion.v4 }
+	protocolOptions: { maxVersion: types.protocolVersion.v4, maxSchemaAgreementWaitSeconds: 360 },
+	prepareOnAllHosts: true,
+	pooling: {maxRequestsPerConnection: 128}
 }
 
 const checkPayloadWalletSign = (payload: ICoNET_DL_POST_register_SI) => {
