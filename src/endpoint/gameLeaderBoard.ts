@@ -8,7 +8,6 @@ const startWriteReadboard = async (block:  number) => {
 	const list = await listAllLotte ()
 	await saveFragment('gaem_LeaderBoard', JSON.stringify(list))
 	console.log (`GameLeaderBoard [${block}] = gaem_LeaderBoard success`)
-	inspect(list, false, 3, true)
 }
 
 const storagePath = ['/home/peter/FragmentIPFS/FragmentIPFS1', '/home/peter/FragmentIPFS/FragmentIPFS2', '/home/peter/FragmentIPFS/FragmentIPFS3']

@@ -392,16 +392,21 @@ export const conet_lotte_bio = (wallet: string, bio: string) => new Promise(asyn
 
 export const restoreAllOld_lotte = () => new Promise(async resolve=> {
 	const cassClient = new Client (option)
+	const basetime = moment.utc()
+	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
+	const weeklyTime = moment.utc(basetime).day(0)
+	const monthlyTime = moment.utc(basetime).date(0)
 	await cassClient.connect ()
-	const cmd = `SELECT * from conet_lotte_new `
+
+	const cmd = `SELECT * from conet_lotte_new`
 	const result = await cassClient.execute (cmd)
 	let iii = 0
 	logger(`start restoreAllOld_lotte length = ${result.rowLength}`)
 	mapLimit(result.rows, 5, async (n, next) => {
-		const cmd1 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'total')`
-		const cmd2 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'weekly')`
-		const cmd3 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'daliy')`
-		const cmd4 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'monthly')`
+		const cmd1 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'total', 'total')`
+		const cmd2 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'weekly', '${weeklyTime.format('x')}')`
+		const cmd3 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'daliy', '${basetime.format('x')}')`
+		const cmd4 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'monthly', '${monthlyTime.format('x')}')`
 		await Promise.all([
 			cassClient.execute (cmd1),
 			cassClient.execute (cmd2),
@@ -482,7 +487,7 @@ interface lottleArray {
 	win_cntp: number
 }
 
-export const listAllLotte: ()=> Promise<lottleArray[]> = () => new Promise(async resolve=> {
+export const listAllLotte = () => new Promise(async resolve=> {
 	const basetime = moment.utc()
 	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
 	const weeklyTime = moment.utc(basetime).day(0)
@@ -504,11 +509,12 @@ export const listAllLotte: ()=> Promise<lottleArray[]> = () => new Promise(async
 		cassClient.execute (cmd4),
 	])
 	await cassClient.shutdown()
+
 	logger(inspect(result.rows))
 	logger(inspect(result_weekly.rows))
 	logger(inspect(result_daliy.rows))
 	logger(inspect(result_monthly.rows))
-	
+	resolve({weekly: result_weekly.rows, daliy: result_daliy.rows, monthly: result_monthly.rows, totally: result.rows})
 })
 
 
