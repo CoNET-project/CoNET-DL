@@ -437,9 +437,9 @@ export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(a
 	try {
 		const gas = await faucetContract.getFaucet.estimateGas(wallet, IPaddress)
 		const tx = await faucetContract.getFaucet(wallet, IPaddress)
-		logger(gas, tx)
+		logger(`faucet_call [${wallet}:${IPaddress}] Susess!`)
 	} catch (ex){
-		logger(`faucet_call Error!`, ex)
+		logger(`faucet_call [${wallet}:${IPaddress}] Error!`)
 		return resolve (false)
 	}
 	return resolve (true)
