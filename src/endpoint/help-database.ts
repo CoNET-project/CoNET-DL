@@ -437,7 +437,7 @@ export const conet_lotte = (wallet: string, winlotte: number) => new Promise(asy
 
 export const conet_lotte_new = (wallet: string, winlotte: number) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
-	const timeNow = moment.utc().format('X')
+	const timeNow = new Date().getTime()
 	const basetime = moment.utc()
 	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
 	const weeklyTime = moment.utc(basetime).day(0)
@@ -446,29 +446,26 @@ export const conet_lotte_new = (wallet: string, winlotte: number) => new Promise
 	const cmd = `SELECT * from conet_lotte_new WHERE wallet = '${wallet}'`
 	await cassClient.connect ()
 	const result = await cassClient.execute (cmd)
+
 	const data = result.rows[0]
-	const isDaliy = data
+	const _timestamp = data?.reset_timestamp
+	const timestamp = _timestamp ? (/\:/.test(_timestamp) ? new Date(_timestamp).getTime():parseInt(_timestamp)) : 0
+	const isDaliy =  timestamp - parseInt(basetime.format('x')) > 0
+	const isWeekly = timestamp - parseInt(weeklyTime.format('x')) > 0
+	const isMonthly = timestamp - parseInt(monthlyTime.format('x')) > 0
+
 	const total_cntp = (data?.win_cntp||0) + winlotte
-	// const 
+	const daliy_cntp = isDaliy ? ((data?.win_cntp_daliy||0) + winlotte) : winlotte
+	const weekly_cntp = isWeekly ? ((data?.win_cntp_weekly||0) + winlotte) : winlotte
+	const monthly_cntp = isMonthly ? ((data?.win_cntp_monthly||0) + winlotte) : winlotte
 
-	// const cmd_1 = `UPDATE conet_lotte_new SET win_cntp = ${win_cntp} WHERE wallet = '${wallet}' and kinds = 'total' `
+	const cmd1 = `INSERT INTO conet_lotte_new (wallet, win_cntp, win_cntp_weekly, win_cntp_daliy, win_cntp_monthly, reset_timestamp) VALUES ('${wallet}', ${total_cntp}, ${weekly_cntp}, ${daliy_cntp}, ${monthly_cntp}, '${timeNow}')`
 
-
-	// const cmd4 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp} WHERE wallet = '${wallet}' and kinds = 'total' `
-	// const cmd5 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp_weekly} WHERE wallet = '${wallet}' and kinds = 'weekly' `
-	// const cmd6 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp3_daliy} WHERE wallet = '${wallet}' and kinds = 'daliy' `
-	// const cmd7 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp3_monthly} WHERE wallet = '${wallet}' and kinds = 'monthly' `
-
-	// await Promise.all([
-	// 	cassClient.execute (cmd4),
-	// 	cassClient.execute (cmd5),
-	// 	cassClient.execute (cmd6),
-	// 	cassClient.execute (cmd7)
-	// ])
-
-	// await cassClient.shutdown()
+	await await cassClient.execute (cmd1)
+	await cassClient.shutdown()
 	resolve(true)
 })
+
 interface lottleArray {
 	wallet: string
 	win_cntp: number
