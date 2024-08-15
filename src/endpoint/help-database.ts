@@ -13,11 +13,12 @@ import type {Response, Request } from 'express'
 import Color from 'colors/safe'
 import {Wallet, ethers} from 'ethers'
 import { Client, auth, types } from 'cassandra-driver'
-
+import moment from 'moment'
 const setup = join( homedir(),'.master.json' )
 import {request as HttpRequest } from 'node:http'
 import {sign} from 'eth-crypto'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
+import { mapLimit } from 'async'
 
 const masterSetup: ICoNET_DL_masterSetup = require ( setup )
 
@@ -388,23 +389,84 @@ export const conet_lotte_bio = (wallet: string, bio: string) => new Promise(asyn
 	resolve (true)
 })
 
-export const conet_lotte = (wallet: string, winlotte: number, reset: boolean) => new Promise(async resolve=> {
+
+export const restoreAllOld_lotte = () => new Promise(async resolve=> {
 	const cassClient = new Client (option)
 	await cassClient.connect ()
-	const time = new Date()
+	const cmd = `SELECT * from conet_lotte_new `
+	const result = await cassClient.execute (cmd)
+	let iii = 0
+	logger(`start restoreAllOld_lotte length = ${result.rowLength}`)
+	mapLimit(result.rows, 5, async (n, next) => {
+		const cmd1 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'total')`
+		const cmd2 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'weekly')`
+		const cmd3 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'daliy')`
+		const cmd4 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds) VALUES ('${n.wallet}', ${n.win_cntp}, '${n.bio}', 'monthly')`
+		await Promise.all([
+			cassClient.execute (cmd1),
+			cassClient.execute (cmd2),
+			cassClient.execute (cmd3),
+			cassClient.execute (cmd4)
+		])
+		
+		logger(`${iii++} setup ${n.wallet} => ${n.win_cntp}`)
+	}, async err => {
+		await cassClient.shutdown()
+		logger(`success!`)
+	})
+	
+})
+
+export const conet_lotte = (wallet: string, winlotte: number) => new Promise(async resolve=> {
+	const cassClient = new Client (option)
+	await cassClient.connect ()
+	const time = new Date().getTime()
 
 	const cmd = `SELECT * from conet_lotte_new WHERE wallet = '${wallet}'`
 	
 	const result = await cassClient.execute (cmd)
 	logger(inspect(result.rows[0], false, 3, true))
-	let win_cntp = winlotte
-	if (result.rows.length && !reset ) {
-		win_cntp += result.rows[0].win_cntp
-	}
-	const cmd1 = `INSERT INTO conet_lotte_new (wallet, win_cntp, reset_timestamp) VALUES ('${wallet}', ${win_cntp}, '${time.toISOString()}')`
+	const win_cntp = winlotte + (result.rows[0]?.win_cntp||0)
+	
+	const cmd1 = `INSERT INTO conet_lotte_new (wallet, win_cntp, reset_timestamp) VALUES ('${wallet}', ${win_cntp}, '${time}')`
 	logger(Color.blue(`${cmd1}`))
 	await cassClient.execute (cmd1)
 	await cassClient.shutdown()
+	resolve(true)
+})
+
+export const conet_lotte_new = (wallet: string, winlotte: number) => new Promise(async resolve=> {
+	const cassClient = new Client (option)
+	const timeNow = moment.utc().format('X')
+	const basetime = moment.utc()
+	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
+	const weeklyTime = moment.utc(basetime).day(0)
+	const monthlyTime = moment.utc(basetime).date(0)
+
+	const cmd = `SELECT * from conet_lotte_new WHERE wallet = '${wallet}'`
+	await cassClient.connect ()
+	const result = await cassClient.execute (cmd)
+	const data = result.rows[0]
+	const isDaliy = data
+	const total_cntp = (data?.win_cntp||0) + winlotte
+	// const 
+
+	// const cmd_1 = `UPDATE conet_lotte_new SET win_cntp = ${win_cntp} WHERE wallet = '${wallet}' and kinds = 'total' `
+
+
+	// const cmd4 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp} WHERE wallet = '${wallet}' and kinds = 'total' `
+	// const cmd5 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp_weekly} WHERE wallet = '${wallet}' and kinds = 'weekly' `
+	// const cmd6 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp3_daliy} WHERE wallet = '${wallet}' and kinds = 'daliy' `
+	// const cmd7 = `UPDATE conet_lotte_new_total SET win_cntp = ${win_cntp3_monthly} WHERE wallet = '${wallet}' and kinds = 'monthly' `
+
+	// await Promise.all([
+	// 	cassClient.execute (cmd4),
+	// 	cassClient.execute (cmd5),
+	// 	cassClient.execute (cmd6),
+	// 	cassClient.execute (cmd7)
+	// ])
+
+	// await cassClient.shutdown()
 	resolve(true)
 })
 interface lottleArray {
@@ -414,18 +476,27 @@ interface lottleArray {
 
 export const listAllLotte: ()=> Promise<lottleArray[]> = () => new Promise(async resolve=> {
 	const cassClient = new Client (option)
-	await cassClient.connect ()
-	const cmd = `SELECT * from conet_lotte_new `
-	const result = await cassClient.execute (cmd)
-	await cassClient.shutdown()
-	const yy = result.rows.map(n => {
-		return {
-			wallet: n.wallet, win_cntp: n.win_cntp, bio: n.bio
-		}
-	})
-	const kk = yy.sort((a,b) => b.win_cntp - a.win_cntp)
+	const cmd1 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'total' LIMIT 20`
+	const cmd2 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'weekly' LIMIT 20`
+	const cmd3 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'daliy' LIMIT 20`
+	const cmd4 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'monthly' LIMIT 20`
+
 	
-	resolve(kk.slice(0,20))
+
+	await cassClient.connect ()
+	const [result, result_weekly, result_daliy, result_monthly] = await Promise.all([
+		
+		cassClient.execute (cmd1),
+		cassClient.execute (cmd2),
+		cassClient.execute (cmd3),
+		cassClient.execute (cmd4),
+	])
+	await cassClient.shutdown()
+	logger(inspect(result.rows))
+	logger(inspect(result_weekly.rows))
+	logger(inspect(result_daliy.rows))
+	logger(inspect(result_monthly.rows))
+	
 })
 
 

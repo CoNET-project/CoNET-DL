@@ -31,8 +31,6 @@ import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {abi as erc20TokenABI} from './erc20.json'
 
 
-import S3, {S3Client, PutObjectCommand} from '@aws-sdk/client-s3'
-
 
 export const conet_Holesky_rpc = 'https://rpc2.conet.network'
 const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
@@ -1322,48 +1320,48 @@ const setupFile = join( homedir(),'.master.json' )
 export const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 
 
-export const storageWalletProfile111 = (obj: {hash?: string, data?: string}, s3pass: s3pass) => {
+// export const storageWalletProfile111 = (obj: {hash?: string, data?: string}, s3pass: s3pass) => {
 
-	return new Promise (async resolve => {
-		if (!obj?.hash || !obj?.data) {
-			return resolve(false)
-		}
-		// const test = await getWasabiFile (obj.hash)
+// 	return new Promise (async resolve => {
+// 		if (!obj?.hash || !obj?.data) {
+// 			return resolve(false)
+// 		}
+// 		// const test = await getWasabiFile (obj.hash)
 
-		// if (test) {
-		// 	return resolve(true)
-		// }
+// 		// if (test) {
+// 		// 	return resolve(true)
+// 		// }
 
-		const wo = wasabiObj.us_east_1
+// 		const wo = wasabiObj.us_east_1
 		
-		const option: S3.S3ClientConfig = {
-			credentials: {
-				accessKeyId: s3pass.ACCESS_KEY,
-				secretAccessKey: s3pass.SECRET_KEY
-			},
-			endpoint: wo.endpoint,
-			region: wo.region
-		}
+// 		const option: S3.S3ClientConfig = {
+// 			credentials: {
+// 				accessKeyId: s3pass.ACCESS_KEY,
+// 				secretAccessKey: s3pass.SECRET_KEY
+// 			},
+// 			endpoint: wo.endpoint,
+// 			region: wo.region
+// 		}
 
-		const s3cmd: S3.PutObjectCommandInput = {
-			Bucket: wo.Bucket,
-			Key: `${ wo.Bucket_key }/FragmentOcean/${obj.hash}`,
-			Body: obj.data,
-		}
+// 		const s3cmd: S3.PutObjectCommandInput = {
+// 			Bucket: wo.Bucket,
+// 			Key: `${ wo.Bucket_key }/FragmentOcean/${obj.hash}`,
+// 			Body: obj.data,
+// 		}
 
-		const s3Client = new S3Client(option)
-		const command = new PutObjectCommand(s3cmd)
-		let req
-		try {
-			req = await s3Client.send(command)
-		} catch (ex: any) {
-			logger(colors.red(`storageWalletProfile s3.putObject Error ${ex.message}`))
-			return resolve(false)
-		}
-		logger(colors.grey(`storageWalletProfile hash [${ obj.hash }] data length = [${ obj.data.length }] success`))
-		return resolve(true)
-	})
-}
+// 		const s3Client = new S3Client(option)
+// 		const command = new PutObjectCommand(s3cmd)
+// 		let req
+// 		try {
+// 			req = await s3Client.send(command)
+// 		} catch (ex: any) {
+// 			logger(colors.red(`storageWalletProfile s3.putObject Error ${ex.message}`))
+// 			return resolve(false)
+// 		}
+// 		logger(colors.grey(`storageWalletProfile hash [${ obj.hash }] data length = [${ obj.data.length }] success`))
+// 		return resolve(true)
+// 	})
+// }
 
 export const storageIPFS = async (obj: {hash: string, data: any}, privateKey: string ) => {
 
