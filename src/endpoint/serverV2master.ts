@@ -333,6 +333,8 @@ const randomLottery = (test = false) => {
 	return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: 0} : {lotterRate: [_rand1, _rand2, _rand3], lottery: 0}
 }
 
+process.on('unhandledRejection', (reason) => { throw reason; })
+
 const addToWinnerPool = (winnObj: winnerObj) => {
 	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
 	
