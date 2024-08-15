@@ -310,7 +310,7 @@ const randomLottery = (test = false) => {
 		const rand2 = !(Math.floor(Math.random()))
 
 		if (rand2)	{
-			const rand3 = !(Math.floor(Math.random()))
+			const rand3 = !(Math.floor(Math.random())*2)
 			if (rand3) {
 				if (!test) {
 					return {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand3}
