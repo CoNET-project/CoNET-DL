@@ -469,9 +469,9 @@ export const conet_lotte_new = (wallet: string, winlotte: number) => new Promise
 	const cmdPool = []
 	cmdPool.push(`INSERT INTO conet_lotte_new (wallet, win_cntp, win_cntp_weekly, win_cntp_daliy, win_cntp_monthly, reset_timestamp) VALUES ('${wallet}', ${total_cntp}, ${weekly_cntp}, ${daliy_cntp}, ${monthly_cntp}, '${timeNow}')`)
 	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'total', 'total')`)
-	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'weekly', '${weeklyTime.format('x')}')`)
-	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'daliy', '${basetime.format('x')}')`)
-	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'monthly', '${monthlyTime.format('x')}')`)
+	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${weekly_cntp}, '${data?.bio}', 'weekly', '${weeklyTime.format('x')}')`)
+	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${daliy_cntp}, '${data?.bio}', 'daliy', '${basetime.format('x')}')`)
+	cmdPool.push(`INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${monthly_cntp}, '${data?.bio}', 'monthly', '${monthlyTime.format('x')}')`)
 	
 	mapLimit(cmdPool, 1, async (n, next) => {
 		await cassClient.execute (n)
