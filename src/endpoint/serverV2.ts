@@ -289,24 +289,7 @@ class conet_dl_server {
 				return res.socket?.end().destroy()
 			}
 			
-			const balance = await provider.getBalance(wallet_add) - BigInt(10000000000000)
-			if (balance > 0) {
-				return res.status(403).end()
-			}
-			
-			return regiestFaucet(wallet_add, ipaddress).then (async n => {
-				if (!n) {
-					if (res.writable && !res.writableEnded) {
-						res.status(400).end()
-					}
-					return res.socket?.end().destroy()
-				}
-				// transCONET(wallet_add, ethers.parseEther(faucetRate))
-
-				return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add}, res)
-
-			})
-
+			return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
 
 		})
 

@@ -19,6 +19,7 @@ import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
+import faucetABI from './faucet_abi.json'
 
 const CGPNsAddr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -36,7 +37,6 @@ const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 
 
-const faucetRate = BigInt('1000000000000000')
 
 const detailTransfer = async (tx: string) => {
 	const transObj = await provideCONET.getTransactionReceipt(tx)
@@ -415,7 +415,6 @@ const double = (wallet: string, ipAddress: string, test = false) => {
 	return {lottery: 0}
 }
 
-
 const soLottery = (wallet: string, ipaddress: string, res: Response, test = false) => {
 	const obj = double (wallet, ipaddress, test)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
@@ -430,7 +429,21 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, test
 	}
 	soLottery (wallet, ipaddress, res, test)
 }
+const faucetAddr = `0x947643C25a39180d3603aE32949DEe8d221ddf74`
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[4], provideCONET)
+const faucetContract = new ethers.Contract(faucetAddr, faucetABI, faucetWallet)
+export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(async resolve => {
 
+	try {
+		const gas = await faucetContract.getFaucet.estimateGas(wallet, IPaddress)
+		const tx = await faucetContract.getFaucet(wallet, IPaddress)
+		logger(gas, tx)
+	} catch (ex){
+		logger(`faucet_call Error!`, ex)
+		return resolve (false)
+	}
+	return resolve (true)
+})
 
 class conet_dl_server {
 
@@ -500,16 +513,20 @@ class conet_dl_server {
 
 
 		//********************			V2    		****** */				
-		router.post ('/conet-faucet', (req, res ) => {
+		router.post ('/conet-faucet', async (req, res ) => {
 			
 			const wallet = req.body.walletAddress
-
+			const ipaddress = req.body.ipaddress
 			if (!wallet) {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
 
-			return transCONET (wallet, faucetRate, res)
+			const tx = await faucet_call(wallet, ipaddress)
+			if (tx) {
+				return res.status(200).json([]).end()
+			}
+			return res.status(403).end()
 
 		})
 
@@ -571,3 +588,5 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+
