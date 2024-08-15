@@ -460,8 +460,19 @@ export const conet_lotte_new = (wallet: string, winlotte: number) => new Promise
 	const monthly_cntp = isMonthly ? ((data?.win_cntp_monthly||0) + winlotte) : winlotte
 
 	const cmd1 = `INSERT INTO conet_lotte_new (wallet, win_cntp, win_cntp_weekly, win_cntp_daliy, win_cntp_monthly, reset_timestamp) VALUES ('${wallet}', ${total_cntp}, ${weekly_cntp}, ${daliy_cntp}, ${monthly_cntp}, '${timeNow}')`
+	const cmd2 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'total', 'total')`
+	const cmd3 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'weekly', '${weeklyTime.format('x')}')`
+	const cmd4 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'daliy', '${basetime.format('x')}')`
+	const cmd5 = `INSERT INTO conet_lotte_new_total (wallet, win_cntp, bio, kinds, timestamp) VALUES ('${wallet}', ${total_cntp}, '${data?.bio}', 'monthly', '${monthlyTime.format('x')}')`
 
-	await await cassClient.execute (cmd1)
+	Promise.all([
+		cassClient.execute (cmd1),
+		cassClient.execute (cmd2),
+		cassClient.execute (cmd3),
+		cassClient.execute (cmd4),
+		cassClient.execute (cmd5)
+	])
+
 	await cassClient.shutdown()
 	resolve(true)
 })
@@ -472,11 +483,15 @@ interface lottleArray {
 }
 
 export const listAllLotte: ()=> Promise<lottleArray[]> = () => new Promise(async resolve=> {
+	const basetime = moment.utc()
+	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
+	const weeklyTime = moment.utc(basetime).day(0)
+	const monthlyTime = moment.utc(basetime).date(0)
 	const cassClient = new Client (option)
-	const cmd1 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'total' LIMIT 20`
-	const cmd2 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'weekly' LIMIT 20`
-	const cmd3 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'daliy' LIMIT 20`
-	const cmd4 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'monthly' LIMIT 20`
+	const cmd1 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'total' and timestamp = 'total' LIMIT 20`
+	const cmd2 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'weekly' and timestamp = '${weeklyTime.format('x')}' LIMIT 20`
+	const cmd3 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'daliy' and timestamp = '${basetime.format('x')}' LIMIT 20`
+	const cmd4 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'monthly' and timestamp = '${monthlyTime.format('x')}' LIMIT 20`
 
 	
 
