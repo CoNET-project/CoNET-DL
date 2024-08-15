@@ -307,19 +307,19 @@ const randomLottery = (test = false) => {
 	const rand1 = !(Math.floor(Math.random()))
 
 	if (rand1) {
-		const rand2 = !(Math.floor(Math.random()*2))
+		const rand2 = !(Math.floor(Math.random()))
 
 		if (rand2)	{
-			const rand3 = !(Math.floor(Math.random()*2))
+			const rand3 = !(Math.floor(Math.random()))
 			if (rand3) {
 				if (!test) {
 					return {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand3}
 				}
-				const rand4 = !(Math.floor(Math.random()*5))
+				const rand4 = !(Math.floor(Math.random()*3))
 				if (!rand4) {
 					return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand3}
 				}
-				const rand5 = !(Math.floor(Math.random()*5))
+				const rand5 = !(Math.floor(Math.random()*3))
 				if (rand5) {
 					return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand5}
 				}
