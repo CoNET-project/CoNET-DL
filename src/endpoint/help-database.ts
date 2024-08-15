@@ -488,18 +488,29 @@ interface lottleArray {
 	win_cntp: number
 }
 
+const marginKey = (kk: any[]) => {
+	const ss = new Map()
+	kk.forEach(n => {
+		ss.set(n.wallet, n)
+	})
+	const kkk: any[] = []
+	ss.forEach((v,k) => {
+		kkk.push(v)
+	})
+	const ss1 = kkk.sort((a,b) => b.win_cntp - a.win_cntp)
+	return ss1
+}
+
 export const listAllLotte = () => new Promise(async resolve=> {
 	const basetime = moment.utc()
 	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
 	const weeklyTime = moment.utc(basetime).day(0)
 	const monthlyTime = moment.utc(basetime).date(0)
 	const cassClient = new Client (option)
-	const cmd1 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'total' and timestamp = 'total' LIMIT 20`
-	const cmd2 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'weekly' and timestamp = '${weeklyTime.format('x')}' LIMIT 20`
-	const cmd3 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'daliy' and timestamp = '${basetime.format('x')}' LIMIT 20`
-	const cmd4 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'monthly' and timestamp = '${monthlyTime.format('x')}' LIMIT 20`
-
-	
+	const cmd1 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'total' and timestamp = 'total' LIMIT 1000`
+	const cmd2 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'weekly' and timestamp = '${weeklyTime.format('x')}' LIMIT 1000`
+	const cmd3 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'daliy' and timestamp = '${basetime.format('x')}' LIMIT 1000`
+	const cmd4 = `SELECT * FROM conet_lotte_new_total WHERE kinds = 'monthly' and timestamp = '${monthlyTime.format('x')}' LIMIT 1000`
 
 	await cassClient.connect ()
 	const [result, result_weekly, result_daliy, result_monthly] = await Promise.all([
@@ -511,11 +522,12 @@ export const listAllLotte = () => new Promise(async resolve=> {
 	])
 	await cassClient.shutdown()
 
-	logger(inspect(result.rows))
-	logger(inspect(result_weekly.rows))
-	logger(inspect(result_daliy.rows))
-	logger(inspect(result_monthly.rows))
-	resolve({weekly: result_weekly.rows, daliy: result_daliy.rows, monthly: result_monthly.rows, totally: result.rows})
+	const totally = marginKey(result.rows)
+	const weekly = marginKey(result_weekly.rows)
+	const daliy = marginKey(result_daliy.rows)
+	const monthly = marginKey(result_monthly.rows)
+
+	resolve({weekly, daliy, monthly, totally})
 })
 
 
