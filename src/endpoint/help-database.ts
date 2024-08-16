@@ -843,15 +843,33 @@ export const regiestMiningNode = async () => {
 }
 
 export const getAllMinerNodes = async () => {
-	const cassClient = new Client (option)
-	const cmd = `SELECT * FROM conet_mining_nodes`
-	try {
-		const ret = await cassClient.execute(cmd)
-		await cassClient.shutdown()
-		return ret.rows
-	} catch(ex: any) {
-		return logger(Color.red(`getAllMinerNodes ${cmd} Error ${ex.message}`))
-	}
+	// const cassClient = new Client (option)
+	// const cmd = `SELECT * FROM conet_mining_nodes`
+	// try {
+	// 	const ret = await cassClient.execute(cmd)
+	// 	await cassClient.shutdown()
+	// 	return ret.rows
+	// } catch(ex: any) {
+	// 	return logger(Color.red(`getAllMinerNodes ${cmd} Error ${ex.message}`))
+	// }
+
+return ([
+	{
+		wallet: '0x6c00bd0714b708b1b4cacd504fa04b3d7af0464c',
+		node_ipaddress: '23.94.0.207'
+	},
+	{
+		wallet: '0x141e6edb104082ff6cebdde410046ae633c51181',
+		node_ipaddress: '148.135.82.23'
+	  },{
+		wallet: '0xd3ea4f4750ffc8b3903fd7ba66e91368fe1fef54',
+		node_ipaddress: '162.250.191.129'
+	  }, 
+	  {
+		wallet: '0xb84633de926921930eb3940161790557169adb2c',
+		node_ipaddress: '172.98.12.115'
+	  }
+])
 }
 
 
