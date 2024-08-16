@@ -33,6 +33,10 @@ interface epochRate {
 	totalMiner: string
 }
 
+process.on('uncaughtException', err=> {
+	logger(`Catch uncaughtException`, err)
+})
+
 const epochRate: epochRate[]= []
 
 
@@ -173,7 +177,7 @@ const storageMinerData = async (block: number, WalletIpaddress: Map<string, stri
 	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
 
-const developIP = ['38.102.87.58','207.90.195.68']
+const developIP = ['38.102.87.58','207.90.195.68','73.170.63.192']
 
 const checkDevelopIP = (ipaddress: string) => {
 	const index = developIP.findIndex(v => v === ipaddress)
