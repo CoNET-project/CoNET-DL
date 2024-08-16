@@ -307,12 +307,12 @@ const sendMesageToCluster = (server: string, path: string, pData: any, livenessL
 const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const nodeWallet = new ethers.Wallet(mainKey, _provider).address.toLowerCase()
 
-const checkMiner = (server: string, ipaddress: string, wallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
-	if (!isPublic(ipaddress)) {
-		logger(Colors.grey(`checkMiner [${ipaddress}:${wallet}] has a Local IP address!`))
+const checkMiner = (clusterIPaddress: string, miningIpaddress: string, minerWallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
+	if (!isPublic(miningIpaddress)) {
+		logger(Colors.grey(`checkMiner [${miningIpaddress}:${minerWallet}] has a Local IP address!`))
 		return resolve (false)
 	}
-	const obj = {ipAddress: ipaddress, walletAddress: nodeWallet, walletAddress1: wallet}
+	const obj = {ipAddress: miningIpaddress, walletAddress: nodeWallet, walletAddress1: minerWallet}
 	logger(inspect(obj, false, 3, true))
 	const message =JSON.stringify(obj)
 
@@ -322,7 +322,7 @@ const checkMiner = (server: string, ipaddress: string, wallet: string, livenessL
 		message, signMessage
 	}
 
-	return sendMesageToCluster(server, '/api/minerCheck', sendData, livenessListeningPool, async (err, data) => {
+	return sendMesageToCluster(clusterIPaddress, '/api/minerCheck', sendData, livenessListeningPool, async (err, data) => {
 		if (err) {
 			
 			return resolve (err)

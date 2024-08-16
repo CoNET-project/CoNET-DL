@@ -443,6 +443,26 @@ export const conet_lotte = (wallet: string, winlotte: number) => new Promise(asy
 	resolve(true)
 })
 
+export const cleanupData = () => {
+	const cassClient = new Client (option)
+	const timeNow = new Date().getTime()
+	const basetime = moment.utc()
+	basetime.hour(0).minute(0).second(0).millisecond(0)			//		RESET TO 0 am 
+	const weeklyTime = moment.utc(basetime).day(0)
+	const monthlyTime = moment.utc(basetime).date(0)
+	const cmdPool = []
+	cmdPool.push(`DELETE from conet_lotte_new_total WHERE kinds ='weekly' and timestamp = '${weeklyTime.format('x')}'`)
+	cmdPool.push(`DELETE from conet_lotte_new_total WHERE kinds ='daliy' and timestamp = '${basetime.format('x')}'`)
+	cmdPool.push(`DELETE from conet_lotte_new_total WHERE kinds ='monthly' and timestamp = '${monthlyTime.format('x')}'`)
+	mapLimit(cmdPool, 1, async (n, next) => {
+		await cassClient.execute (n)
+
+	}, async err => {
+		logger(err)
+		await cassClient.shutdown()
+	})
+}
+
 export const conet_lotte_new = (wallet: string, winlotte: number) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
 	const timeNow = new Date().getTime()
@@ -833,6 +853,8 @@ export const getAllMinerNodes = async () => {
 		return logger(Color.red(`getAllMinerNodes ${cmd} Error ${ex.message}`))
 	}
 }
+
+
 
 
 

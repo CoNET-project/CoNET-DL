@@ -220,6 +220,7 @@ interface minerObj {
 	data?: any
 	allWallets?: string[]
 	bio?: string
+	serverIPAddress: string
 }
 
 interface nodeType {
