@@ -37,12 +37,13 @@ const test = async (_wallet: string) => {
 
 
 const testLottle = async (_wallet: string) => {
-	// const kk = await conet_lotte_new ('0xe2c2212b2f32a926b6465e06a5ec382cf617c817', 5)
+	const kk = await conet_lotte_new ('0x3d82ce8fb7ace854547cfa07c992c3c1d9ef8fc4', 5)
 	// const kk = await conet_lotte_new ('0xe2c2212b2f32a926b6465e06a5ec382cf617c817', 1)
 	//const kk = await conet_lotte_bio('0x7728aa515d635e44dfcad7af903d177b35b8525a', '')
 	// const kk = await restoreAllOld_lotte ()
 	// const kk = await listAllLotte()
-	const kk = await getAllMinerNodes ()
+	// conet_lotte_new()
+	// const kk = await getAllMinerNodes ()
 	// logger(inspect(kk, false, 3, true))
 	// const kk = await faucet_call(_wallet, '192.168.0.2')
 	logger(inspect(kk, false, 3, true))
