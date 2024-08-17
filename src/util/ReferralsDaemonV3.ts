@@ -22,7 +22,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const startDaemonProcess = async (block: number) => {
-	doWorker((block -5).toString())
+	doWorker((block -2).toString())
 }
 
 const doWorkerCom: (command: string) => Promise<boolean> = (command: string) => new Promise(resolve => {

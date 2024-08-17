@@ -2,12 +2,15 @@ import {ethers} from 'ethers'
 
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {masterSetup, storageIPFS, getIPFSfile} from './util'
+import {masterSetup, storageIPFS} from './util'
 import Color from 'colors/safe'
 import { mapLimit} from 'async'
 import { logger } from './logger'
 import { Client, auth, types } from 'cassandra-driver'
 import type { TLSSocketOptions } from 'node:tls'
+import {homedir} from 'node:os'
+import { join } from 'node:path'
+import {readFile} from 'node:fs'
 
 interface leaderboard {
 	wallet: string
@@ -239,12 +242,25 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 	
 }
 
+const localIPFS_path = join(homedir(), '.data')
 
+const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new Promise(resolve => {
+	const path = join(localIPFS_path, `free_wallets_${block}`)
+
+	return readFile(path, 'utf-8', (err, data) => {
+		if (err) {
+			return resolve ('')
+		}
+		return resolve(data.toString())
+	})
+})	
 
 const stratFreeMinerReferrals = async (block: string) => {
 
 	//	free_wallets_${block}
-	const data = await getIPFSfile (`free_wallets_${block}`)
+	// const data = await getIPFSfile (`free_wallets_${block}`)
+
+	const data = await getLocalIPFS (`free_wallets_${block}`)
 	
 	if (!data) {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
