@@ -13,6 +13,7 @@ import {getAllMinerNodes, getIpAddressFromForwardHeader} from './help-database'
 import { masterSetup, storageIPFS} from '../util/util'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
+import { writeFile} from 'node:fs'
 import {v4} from 'uuid'
 import epochRateABI from '../util/epochRate.json'
 import rateABI from './conet-rate.json'
@@ -164,6 +165,19 @@ const cleanupNode = (nodeWallet: string, v3: v3_master) => {
 	v3.nodeIpaddressWallets.delete(nodeWallet)
 }
 
+const storageLocalIPFS = async (obj: {hash: string, data: string}) => new Promise(resolve => {
+	return writeFile(`~/.data/${obj.hash}`, obj.data, 'utf-8', err => {
+		if (err) {
+			resolve (false)
+			return logger(`storageLocalIPFS ${obj.hash} got Error!`, err.message)
+		}
+		resolve (true)
+		return logger(`storageLocalIPFS ${obj.hash} Success!`)
+	})
+})
+	
+
+
 const storageMinerData = async (block: number, WalletIpaddress: Map<string, string>) => {
 	//	obj: {hash?: string, data?: string}
 	const walletsArray: string[] = []
@@ -176,7 +190,11 @@ const storageMinerData = async (block: number, WalletIpaddress: Map<string, stri
 		data: JSON.stringify(walletsArray)
 	}
 
-	await storageIPFS(obj, masterSetup.conetFaucetAdmin[0])
+	await Promise.all([
+		storageIPFS(obj, masterSetup.conetFaucetAdmin[0]),
+		storageLocalIPFS (obj)
+	])
+
 	return logger(Colors.red(`storage [free_wallets_${block}] Miner wallets [${ walletsArray.length }]to Wasabi success! `))
 }
 

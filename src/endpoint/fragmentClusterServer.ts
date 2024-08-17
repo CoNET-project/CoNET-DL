@@ -164,3 +164,6 @@ class server {
 }
 
 export default server
+
+
+//	curl -v https://ipfs.conet.network/api/getFragment/free_wallets_53152

@@ -385,6 +385,7 @@ export const getIPFSfile: (fileName: string) => Promise<string> = async (fileNam
 			logger(colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
 			return resolve('')
 		}
+		
 		res.once('error', err => {
 			logger(colors.red(`getWasabiFile ${fileName} res Error [${err.message}]`))
 			return resolve('')
