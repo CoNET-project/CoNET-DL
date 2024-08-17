@@ -445,6 +445,7 @@ export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(a
 	return resolve (true)
 })
 
+let block = 0
 class conet_dl_server {
 
 	private PORT = 8001
@@ -455,9 +456,16 @@ class conet_dl_server {
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
-		provideCONET.on ('block', async block => {
-			return stratlivenessV2(block.toString(), this)
+		block = await provideCONET.getBlockNumber()
+
+		provideCONET.on ('block', async _block => {
+			if (_block === block + 1 ) {
+				block++
+				return stratlivenessV2(_block, this)
+			}
+			
 		})
+
 		this.startServer()
 	}
 
