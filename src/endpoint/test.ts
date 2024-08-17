@@ -35,7 +35,7 @@ const test = async (_wallet: string) => {
 	logger(kkk)
 }
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
-const provider1 = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+const provider1 = new ethers.JsonRpcProvider('http://74.208.39.153:8000')
 
 const listenEPOCH1 = async () => {
 	const epoch = await provider.getBlockNumber()

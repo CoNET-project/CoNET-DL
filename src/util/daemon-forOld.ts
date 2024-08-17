@@ -5,7 +5,7 @@ import {masterSetup} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import P from 'phin'
 
-const conet_Holesky_rpc = 'https://rpc1.conet.network'
+const conet_Holesky_rpc = 'http://74.208.39.153:8000'
 
 import {transferPool, startTransfer} from './transferManager'
 

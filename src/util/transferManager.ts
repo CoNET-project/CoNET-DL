@@ -14,7 +14,7 @@ export const transferPool: transferObj[] = []
 let startTransfering = false
 let marginPooling = false
 
-const conet_Holesky_rpc = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+const conet_Holesky_rpc = new ethers.JsonRpcProvider('http://74.208.39.153:8000')
 const marginPool = () => {
 	if (marginPooling) {
 		return logger(Color.red(`marginPool stoped because other marginPool is processing!`))
