@@ -55,8 +55,9 @@ const listenRateChange = async (block: number, rateBack: (rate: number) => void)
 	])
 }
 
-export const listeningRate = async (rateBack: (rate: number) => void) => {
 
+export const listeningRate = async (rateBack: (rate: number) => void) => {
+	
 	const rateSC = new ethers.Contract(rateAddr, rateABI, conetProvider)
 	conetProvider.on('block', async block => {
 		listenRateChange(block, rateBack)
