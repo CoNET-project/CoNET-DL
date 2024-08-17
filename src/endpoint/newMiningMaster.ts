@@ -208,6 +208,18 @@ class conet_dl_v3_server {
 			return postLocalhost('/api/minerCheck', obj, res)
 		})
 
+		router.post('/getTotalMiners',  async (req, res) => {
+
+			const obj = await checkNode(req, this.regiestNodes)
+
+			if (!obj) {
+				res.status(404).end()
+				return logger(Colors.red(`/getTotalMiners checkNode error!`))
+			}
+
+			return postLocalhost('/api/getTotalMiners', obj, res)
+		})
+
 		router.post('/deleteMiner',  async (req, res) =>{
 			const obj = await checkNode(req, this.regiestNodes)
 

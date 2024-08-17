@@ -30,7 +30,7 @@ import {abi as claimableToken } from './claimableToken.json'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {abi as erc20TokenABI} from './erc20.json'
 
-
+import {Readable} from 'node:stream'
 
 export const conet_Holesky_rpc = 'https://rpc1.conet.network'
 const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
@@ -385,7 +385,7 @@ export const getIPFSfile: (fileName: string) => Promise<string> = async (fileNam
 			logger(colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
 			return resolve('')
 		}
-		
+
 		res.once('error', err => {
 			logger(colors.red(`getWasabiFile ${fileName} res Error [${err.message}]`))
 			return resolve('')
@@ -543,6 +543,7 @@ export const listedServerIpAddress: _nodeType[] = [
 const conetServerTimeout = 1000 * 60
 
 
+
 const requestUrl = (option: RequestOptions, postData: string) => {
 
 	return new Promise((resolve: any) => {
@@ -581,10 +582,11 @@ const requestUrl = (option: RequestOptions, postData: string) => {
 
 		req.on ('error', err => {
 			resolve (null)
-			return logger (` postToServer [${ option.hostname }] error`, err )
+			return logger (`postToServer [${ option.hostname }] error`, err )
 		})
 
 		if ( postData ) {
+
 			return req.write(postData, err => {
 				return req.end()
 			})

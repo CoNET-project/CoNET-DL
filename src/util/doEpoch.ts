@@ -186,6 +186,8 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 	})
 })
 
+
+
 const sendPaymentToPool = async (totalMiner: string, walletList: string[], payList: string[], callbak: (err?: Error)=> void) => {
 	const option: RequestOptions = {
 		hostname: 'localhost',
