@@ -10,7 +10,7 @@ import {checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transfe
 import rateABI from '../endpoint/conet-rate.json'
 
 
-const conet_Holesky_RPC = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'https://rpc1.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()

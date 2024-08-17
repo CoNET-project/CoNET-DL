@@ -460,10 +460,10 @@ class conet_dl_server {
 		logger(`conet_dl_server STARTED BLOCK`)
 
 		provideCONET.on ('block', async _block => {
-			if (_block === block + 1 ) {
+			// if (_block === block + 1 ) {
 				block++
 				return stratlivenessV2(_block, this)
-			}
+			// }
 			
 		})
 
@@ -597,3 +597,4 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+new conet_dl_server()

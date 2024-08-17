@@ -15,7 +15,7 @@ interface leaderboard {
 	cntpRate: string
 }
 
-const conet_Holesky_rpc = 'https://rpc.conet.network'
+const conet_Holesky_rpc = 'https://rpc1.conet.network'
 const nodeRferralsEachEPOCH = 16.742770167427702
 
 
