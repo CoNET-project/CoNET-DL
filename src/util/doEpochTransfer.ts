@@ -130,12 +130,18 @@ const stratFreeMinerTransfer = async () => {
 	waitingPayArray = merged.payList
 	stratFreeMinerTransfer ()
 }
-
+let EPOCH = 0
 
 const startListeningCONET_Holesky_EPOCH_v2 = async () => {
-	provider.on('block', async block => {
-		epoch.push(block-2)
-		stratFreeMinerTransfer()
+	EPOCH = await provider.getBlockNumber()
+
+	provider.on('block', async _block => {
+		if (_block === EPOCH + 1) {
+			epoch.push(_block-2)
+			stratFreeMinerTransfer()
+			EPOCH ++
+		}
+		
 	})
 }
 
