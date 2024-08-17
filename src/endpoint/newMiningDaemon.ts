@@ -15,11 +15,13 @@ import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import {logger} from '../util/logger'
 import { writeFile} from 'node:fs'
 import {v4} from 'uuid'
+import {homedir} from 'node:os'
+import { join } from 'node:path'
 import epochRateABI from '../util/epochRate.json'
 import rateABI from './conet-rate.json'
 
 const ReferralsMap: Map<string, string> = new Map()
-const conet_Holesky_RPC = 'https://rpc2.conet.network'
+const conet_Holesky_RPC = 'https://rpc1.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
@@ -164,9 +166,14 @@ const cleanupNode = (nodeWallet: string, v3: v3_master) => {
 	})
 	v3.nodeIpaddressWallets.delete(nodeWallet)
 }
+logger(`LOCAL PATH = ${homedir()}`)
+
+const localIPFS_path = join(homedir(), '.data')
 
 const storageLocalIPFS = async (obj: {hash: string, data: string}) => new Promise(resolve => {
-	return writeFile(`~/.data/${obj.hash}`, obj.data, 'utf-8', err => {
+	const savePath = join(localIPFS_path, obj.hash)
+	logger(savePath)
+	return writeFile(savePath, obj.data, 'utf-8', err => {
 		if (err) {
 			resolve (false)
 			return logger(`storageLocalIPFS ${obj.hash} got Error!`, err.message)
@@ -253,7 +260,7 @@ class v3_master {
 		server.listen(this.PORT, '127.0.0.1',() => {
 			
 			return console.table([
-                { 'newMiningCluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
+                { 'newMiningCluster': `startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
 		})
 	}
