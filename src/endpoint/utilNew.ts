@@ -62,7 +62,7 @@ export const listeningRate = async (rateBack: (rate: number) => void) => {
 
 	conetProvider.on('block', async block => {
 		if (block === EPOCH + 1) {
-
+			logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${EPOCH}] rate = [${ethers.formatEther(rate)}]!`))
 			listenRateChange(block, rateBack)
 			EPOCH ++
 		}
@@ -71,7 +71,7 @@ export const listeningRate = async (rateBack: (rate: number) => void) => {
 
 	const rate = await rateSC.rate()
 
-	logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${EPOCH}] rate = [${ethers.formatEther(rate)}]!`))
+	
 }
 
 
