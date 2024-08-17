@@ -2,6 +2,7 @@ import { transferCCNTP} from './transferManager'
 import {readFile} from 'node:fs'
 import { logger } from './logger'
 import {ethers} from 'ethers'
+import {masterSetup} from './util'
 
 
 const start = async (fileName: string) => {
@@ -12,14 +13,14 @@ const start = async (fileName: string) => {
 		const _wallets: string[] = data.toString().split('\n')
 		const wallets: string[] = []
 		_wallets.forEach(n => {
-			const rr = ethers.isAddress(n)
+			const rr = ethers.getAddress(n)
 			if (!rr) {
 				return logger(`Error Wallet => ${n}`)
 			}
-			wallets.push(n)
+			wallets.push(rr)
 		})
-		const pay = wallets.map(n => '100')
-		transferCCNTP('', wallets, pay, err => {
+		const pay = wallets.map(n => '20000')
+		transferCCNTP(masterSetup.conetCNTPAdmin[5], wallets, pay, err => {
 			if (err) {
 				return logger(err)
 			}

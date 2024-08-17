@@ -143,7 +143,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 
 	provider.on('block', async _block => {
 		if (_block === EPOCH + 1) {
-			epoch.push(_block-5)
+			epoch.push(_block-2)
 			stratFreeMinerTransfer()
 			EPOCH ++
 		}

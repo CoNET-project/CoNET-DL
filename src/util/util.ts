@@ -584,9 +584,10 @@ const requestUrl = (option: RequestOptions, postData: string) => {
 		})
 
 		if ( postData ) {
-			req.write(postData)
+			return req.write(postData, err => {
+				return req.end()
+			})
 		}
-		
 		return req.end()
 	})
 	
