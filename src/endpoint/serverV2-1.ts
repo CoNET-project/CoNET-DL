@@ -129,6 +129,7 @@ const stratlivenessV2 = async (server: string, block: number, livenessListeningP
 		status: 200,
 		epoch: block
 	}
+
 	logger(inspect(returnData, false, 3, true	))
 	livenessListeningPool.forEach(async (n, key) => {
 		const res = n.res
@@ -196,8 +197,11 @@ const startListeningCONET_Holesky_EPOCH = async (server: string, livenessListeni
 	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
 
 	provideCONET.on('block', async block => {
-		EPOCH = block
-		return stratlivenessV2(server, block.toString(), livenessListeningPool)
+		if (block === EPOCH + 1) {
+			EPOCH ++
+			return stratlivenessV2(server, block.toString(), livenessListeningPool)
+		}
+		
 	})
 
 	await regiestMiningNode()
