@@ -508,7 +508,7 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 		logger(`start master server!`)
-		
+
 		server.listen(this.PORT, '127.0.0.1', () => {
 			startEposhTransfer()
 			return console.table([
@@ -598,4 +598,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-new conet_dl_server()
