@@ -95,7 +95,7 @@ const stratFreeMinerTransfer = async () => {
 		return startTransferAll ()
 	}
 	const block = epoch.shift()
-	
+
 	if (!block) {
 		return 
 	}
@@ -104,7 +104,7 @@ const stratFreeMinerTransfer = async () => {
 	
 	if (!data) {
 		stratFreeMinerTransfer()
-		epoch.unshift(block)
+
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
 	
@@ -143,7 +143,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 
 	provider.on('block', async _block => {
 		if (_block === EPOCH + 1) {
-			epoch.push(_block-2)
+			epoch.push(_block-5)
 			stratFreeMinerTransfer()
 			EPOCH ++
 		}
