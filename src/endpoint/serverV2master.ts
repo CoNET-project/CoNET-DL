@@ -448,7 +448,7 @@ export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(a
 let block = 0
 class conet_dl_server {
 
-	private PORT = 8001
+	private PORT = 8002
 	private serverID = ''
 	private initSetupData = async () => {
 
