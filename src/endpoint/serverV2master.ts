@@ -457,6 +457,7 @@ class conet_dl_server {
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		block = await provideCONET.getBlockNumber()
+		logger(`conet_dl_server STARTED BLOCK`)
 
 		provideCONET.on ('block', async _block => {
 			if (_block === block + 1 ) {
@@ -598,3 +599,4 @@ class conet_dl_server {
 export default conet_dl_server
 
 
+new conet_dl_server ()

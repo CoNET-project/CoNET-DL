@@ -22,7 +22,7 @@ export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0]
 
 const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
 
-const conetProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
+const conetProvider = new ethers.JsonRpcProvider('https://rpc1.conet.network')
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
 
@@ -388,17 +388,24 @@ const startSendCNTPPool = async () => {
 	}, 1000)
 }
 
-export const startEposhTransfer = () => {
-	conetProvider.on('block', async block => {
-		startsendCONETPool()
-		startSendCNTPPool()
-		startSendCNTPv1Pool()
-		startRefferPool()
-		startUsdtPool()
-		startusdbPool()
-		startCGNPPool_no1_Process()
-		startCGNPPool_no2_Process()
-		logger(`start Eposh Init () ${block}`)
+let epoch = 0
+export const startEposhTransfer = async () => {
+	epoch = await conetProvider.getBlockNumber()
+	logger(`startEposhTransfer epoch = ${epoch}`)
+	conetProvider.on('block', async _block => {
+		if ( _block === epoch + 1) {
+			startsendCONETPool()
+			startSendCNTPPool()
+			startSendCNTPv1Pool()
+			startRefferPool()
+			startUsdtPool()
+			startusdbPool()
+			startCGNPPool_no1_Process()
+			startCGNPPool_no2_Process()
+			logger(`start Eposh Init () ${_block}`)
+			epoch++
+		}
+		
 	})
 }
 interface oldDatObj {
