@@ -189,15 +189,17 @@ const guardianMining = async (block: number) => {
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
+
 	transferEposh = EPOCH -3
 
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
-		if (block <= EPOCH) {
-			return logger(Color.red(`startListeningCONET_Holesky_EPOCH got Event ${block} < EPOCH ${EPOCH} Error! STOP!`))
+		if (block === EPOCH + 1) {
+			
+			EPOCH ++
+			return startDaemonProcess(parseInt(block))
 		}
-		EPOCH = block
-		return startDaemonProcess(parseInt(block.toString()))
+		
 	})
 	
 }
