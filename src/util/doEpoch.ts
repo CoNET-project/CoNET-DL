@@ -260,7 +260,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 	//	free_wallets_${block}
 	// const data = await getIPFSfile (`free_wallets_${block}`)
 
-	const data = await getLocalIPFS (`free_wallets_${block}`)
+	const data = await getLocalIPFS (block)
 	
 	if (!data) {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
