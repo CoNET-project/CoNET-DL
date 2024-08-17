@@ -8,9 +8,16 @@ import { inspect } from 'node:util'
 const conet_Holesky_rpc = 'https://rpc1.conet.network'
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
+let EPOCH = 0
 const startListeningCONET_Holesky_EPOCH = async () => {
-	provideCONET.on('block', async block => {
-		return startDaemonProcess(parseInt(block.toString()))
+	EPOCH = await provideCONET.getBlockNumber()
+
+	provideCONET.on('block', async _block => {
+		if (_block === EPOCH + 1) {
+			EPOCH++
+			return startDaemonProcess(parseInt(_block.toString()))
+		}
+		
 	})
 }
 
