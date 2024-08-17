@@ -10,7 +10,7 @@ if (Cluster.isPrimary) {
 		
 		let numCPUs = cpus().length
 
-		for (let i = 0; i < numCPUs/2; i ++){
+		for (let i = 0; i < numCPUs/4; i ++){
 			_forkWorker()
 		}
 	}
