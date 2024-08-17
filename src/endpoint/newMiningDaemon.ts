@@ -86,11 +86,13 @@ const startListeningCONET_Holesky_EPOCH_v2 = async (v3: v3_master) => {
 	
 	EPOCH = await provider.getBlockNumber()
 	await initdata(v3)
-	provider.on('block', async block => {
-		if (block === EPOCH + 1)
-		EPOCH++
-		logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${block}] fired!`))
-		await transferMiners(block, v3.WalletIpaddress, v3.ipaddressWallet)
+	provider.on('block', async _block => {
+		if (_block === EPOCH + 1) {
+			EPOCH++
+			logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${_block}] fired!`))
+			await transferMiners(_block, v3.WalletIpaddress, v3.ipaddressWallet)
+		}
+		
 	})
 
 	logger(Colors.grey(`Cluster startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
