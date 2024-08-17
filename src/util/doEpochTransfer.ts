@@ -95,10 +95,16 @@ const stratFreeMinerTransfer = async () => {
 		return startTransferAll ()
 	}
 	const block = epoch.shift()
+	
+	if (!block) {
+		return 
+	}
+
 	const data = await getIPFSfile (`free_wallets_${block}`)
 	
 	if (!data) {
 		stratFreeMinerTransfer()
+		epoch.unshift(block)
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
 	
