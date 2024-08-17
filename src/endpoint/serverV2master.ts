@@ -507,7 +507,8 @@ class conet_dl_server {
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
-
+		logger(`start master server!`)
+		
 		server.listen(this.PORT, '127.0.0.1', () => {
 			startEposhTransfer()
 			return console.table([
