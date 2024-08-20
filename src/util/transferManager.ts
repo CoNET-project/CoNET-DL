@@ -138,12 +138,12 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 	const payList = fixedPayList.map(n => ethers.parseEther(parseFloat(n).toFixed(10)))
 	
 	const send: any = async () => {
-		const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
-		const balance2 = await cCNTPContract.balanceOf(fixedWallet[0])
-		let balance3 = 0
-		if (index > -1) {
-			balance3 = await cCNTPContract.balanceOf(searchWallet)
-		}
+		// const index = __walletList.findIndex(n => n.toLowerCase() === searchWallet.toLowerCase())
+		// const balance2 = await cCNTPContract.balanceOf(fixedWallet[0])
+		// let balance3 = 0
+		// if (index > -1) {
+		// 	balance3 = await cCNTPContract.balanceOf(searchWallet)
+		// }
 		let tx
 		try {
 			
@@ -159,15 +159,15 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		
 		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}] success!`))
 		// logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
-		const balance1 = await cCNTPContract.balanceOf(fixedWallet[0])
-		logger(Color.red(`getBrance array[0] [$${fixedWallet[0]}] pay[${ethers.formatEther(payList[0])}] balance2 [${ethers.formatEther(balance2)}] ===>  ${ethers.formatEther(balance1)}`))
+		//const balance1 = await cCNTPContract.balanceOf(fixedWallet[0])
+		//logger(Color.red(`getBrance array[0] [$${fixedWallet[0]}] pay[${ethers.formatEther(payList[0])}] balance2 [${ethers.formatEther(balance2)}] ===>  ${ethers.formatEther(balance1)}`))
 		
 
-		if (index > -1) {
+		// if (index > -1) {
 			
-			const balance = await cCNTPContract.balanceOf(searchWallet)
-			logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${ethers.formatEther(payList[index])}] balance [${ethers.formatEther(balance3)}]  => [${ethers.formatEther(balance)}]!!! `))
-		}
+		// 	const balance = await cCNTPContract.balanceOf(searchWallet)
+		// 	logger(Color.red(`transferCCNTP wallet [${searchWallet}] pay [${ethers.formatEther(payList[index])}] balance [${ethers.formatEther(balance3)}]  => [${ethers.formatEther(balance)}]!!! `))
+		// }
 		
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
