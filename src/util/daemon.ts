@@ -6,18 +6,18 @@ import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
 
-const conet_Holesky_rpc = 'http://74.208.39.153:8000'
+const conet_Holesky_rpc = 'https://rpc1.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
 
 let EPOCH = 0
 let transferEposh = 0
-const GuardianNodes_ContractV3 = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
+const newGuardianNodes_ContractV4 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-const guardianSmartContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, CONETProvider)
+const guardianSmartContract = new ethers.Contract(newGuardianNodes_ContractV4, GuardianNodesV2ABI, CONETProvider)
 
 const guardianReferrals = async (block: number) => {
 
@@ -195,11 +195,9 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
 		if (block === EPOCH + 1) {
-			
 			EPOCH ++
 			return startDaemonProcess(parseInt(block))
 		}
-		
 	})
 	
 }
@@ -207,7 +205,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 const startDaemonProcess = async (block: number) => {
 	console.log('')
 	guardianMining(block)
-	guardianReferrals(block)
+	// guardianReferrals(block)
 	
 }
 
