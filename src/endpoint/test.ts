@@ -34,8 +34,8 @@ const test = async (_wallet: string) => {
 	const kkk = await initNewCONET(_wallet)
 	logger(kkk)
 }
-const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
-const provider1 = new ethers.JsonRpcProvider('http://74.208.39.153:8000')
+const provider = new ethers.JsonRpcProvider('http://207.90.195.80:8000')
+// const provider1 = new ethers.JsonRpcProvider('http://74.208.39.153:8000')
 
 const listenEPOCH1 = async () => {
 	const epoch = await provider.getBlockNumber()
@@ -45,13 +45,13 @@ const listenEPOCH1 = async () => {
 	})
 }
 
-const listenEPOCH2 = async () => {
-	const epoch = await provider1.getBlockNumber()
-	logger(`listenEPOCH2 got local epoch = ${epoch}`)
-	provider1.on('block', block => {
-		logger(`listenEPOCH2 new block ${block}`)
-	})
-}
+// const listenEPOCH2 = async () => {
+// 	const epoch = await provider1.getBlockNumber()
+// 	logger(`listenEPOCH2 got local epoch = ${epoch}`)
+// 	provider1.on('block', block => {
+// 		logger(`listenEPOCH2 new block ${block}`)
+// 	})
+// }
 
 const testLottle = async (_wallet: string) => {
 	const kk = await conet_lotte_new ('0x3d82ce8fb7ace854547cfa07c992c3c1d9ef8fc4', 5)
@@ -70,7 +70,7 @@ const wallet = process.argv[2]
 
 listenEPOCH1()
 
-listenEPOCH2()
+// listenEPOCH2()
 
 
 

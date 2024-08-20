@@ -14,7 +14,7 @@ export const transferPool: transferObj[] = []
 let startTransfering = false
 let marginPooling = false
 
-const conet_Holesky_rpc = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+const conet_Holesky_rpc = new ethers.JsonRpcProvider('http://207.90.195.80:8000')
 const marginPool = () => {
 	if (marginPooling) {
 		return logger(Color.red(`marginPool stoped because other marginPool is processing!`))
@@ -131,7 +131,6 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		fixedPayList.push(__PayList[i])
 	})
 
-
 	const wallet = new ethers.Wallet(privateKey, conet_Holesky_rpc)
 	const cCNTPContract = new ethers.Contract(newCNTP_v8, CONET_Point_ABI, wallet)
 	let amount = 0
@@ -175,5 +174,4 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 	}
 	send()
 	
-
 }
