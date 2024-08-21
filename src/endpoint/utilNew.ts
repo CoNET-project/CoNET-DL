@@ -24,7 +24,7 @@ import faucet_new_ABI from './new_faucet.ABI.json'
 
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
-const rateAddr = '0xe2A18B436BC32C7AbE6D238Bf1C4111000e93F76'.toLowerCase()
+const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 
 const veryold_ConetProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
 const old_2_ConetProvider = new ethers.JsonRpcProvider('http://74.208.39.153:8888')
