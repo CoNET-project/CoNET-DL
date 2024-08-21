@@ -153,6 +153,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	req.end()
 }
 
+const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
 
 	private PORT = 8080
@@ -200,7 +201,20 @@ class conet_dl_server {
 				res.status(404).end()
 				return res.socket?.end().destroy()
 			}
-			
+			const timeStamp = new Date().getTime()
+			const count = countAccessPool.get(ipaddress)
+			if (!count)	{
+				countAccessPool.set(ipaddress, [timeStamp])
+			} else {
+				count.push(timeStamp)
+				const _count = count.sort((a,b) => b-a).filter(v => v > timeStamp -1000)
+				if (_count.length > 5) {
+					res.status(503).end()
+					return res.socket?.end().destroy()
+				}
+			}
+			logger(`${ipaddress} => ${req.method}`)
+
 			if (/^post$/i.test(req.method)) {
 				
 				return Express.json({limit: '1mb'})(req, res, err => {
@@ -591,6 +605,7 @@ class conet_dl_server {
 
 
 		router.post ('/initV3',  async (req, res) => {
+
 			const _wallet: string = req.body.walletAddress
 			let wallet: string 
 			try {
@@ -598,7 +613,7 @@ class conet_dl_server {
 			} catch (ex) {
 				return res.status(403).end()
 			}
-
+			logger(`/initV3`)
 			return postLocalhost('/api/initV3', {wallet: wallet.toLowerCase()}, res)
 			
 		})
