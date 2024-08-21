@@ -26,7 +26,7 @@ const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const ReferralsV2Addr = '0x64Cab6D2217c665730e330a78be85a070e4706E7'.toLowerCase()
 const epochRateAddr = '0x9991cAA0a515F22386Ab53A5f471eeeD4eeFcbD0'
-const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
+const rateAddr = '0xe2A18B436BC32C7AbE6D238Bf1C4111000e93F76'.toLowerCase()
 const conet_Referral_contractV3 = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
 

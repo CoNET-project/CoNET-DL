@@ -15,19 +15,26 @@ import CGPNsV7ABI from './CGPNsV7.json'
 import initCONET_ABI from './initCONETABI.json'
 import newCNTP_v1_ABI from './CNTP_V1.ABI.json'
 import newUSDT_ABI from './newUSDT.ABI.json'
+import CGPNsV7_newABI from './CGPNv7New.json'
 import {mapLimit} from 'async'
 import {inspect} from 'node:util'
+import faucet_init_ABI from './faucet_abi.json'
+import faucet_new_ABI from './new_faucet.ABI.json'
+
 
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
-const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
+const rateAddr = '0xe2A18B436BC32C7AbE6D238Bf1C4111000e93F76'.toLowerCase()
 
-const conetProvider = new ethers.JsonRpcProvider('http://74.208.39.153:8000')
+const veryold_ConetProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
+const old_2_ConetProvider = new ethers.JsonRpcProvider('http://74.208.39.153:8888')
+
+const newCONETProvider = new ethers.JsonRpcProvider('http://207.90.195.80:8000')
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
 
-	const rateSC = new ethers.Contract(rateAddr, rateABI, conetProvider)
-	const transObj = await conetProvider.getTransaction(tx)
+	const rateSC = new ethers.Contract(rateAddr, rateABI, newCONETProvider)
+	const transObj = await newCONETProvider.getTransaction(tx)
 	const toAddr = transObj?.to?.toLowerCase()
 	if (!toAddr || toAddr !== rateAddr) {
 		return
@@ -41,7 +48,7 @@ const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
 
 const listenRateChange = async (block: number, rateBack: (rate: number) => void) => {
 
-	const blockInfo = await conetProvider.getBlock(block)
+	const blockInfo = await newCONETProvider.getBlock(block)
 	const transferArray = blockInfo?.transactions
 	if (! transferArray) {
 		return
@@ -57,10 +64,10 @@ const listenRateChange = async (block: number, rateBack: (rate: number) => void)
 
 let EPOCH = 0
 export const listeningRate = async (rateBack: (rate: number) => void) => {
-	EPOCH = await conetProvider.getBlockNumber()
-	const rateSC = new ethers.Contract(rateAddr, rateABI, conetProvider)
+	EPOCH = await newCONETProvider.getBlockNumber()
+	const rateSC = new ethers.Contract(rateAddr, rateABI, newCONETProvider)
 
-	conetProvider.on('block', async block => {
+	newCONETProvider.on('block', async block => {
 		if (block === EPOCH + 1) {
 			logger(Colors.grey(`startListeningCONET_Holesky_EPOCH_v2 epoch [${EPOCH}] rate = [${ethers.formatEther(rate)}]!`))
 			listenRateChange(block, rateBack)
@@ -76,26 +83,33 @@ export const listeningRate = async (rateBack: (rate: number) => void) => {
 
 
 const blastTestnet = new ethers.JsonRpcProvider('https://blast-sepolia.blockpi.network/v1/rpc/public')
-const conetOldRPC = 'http://212.227.243.233:8000'
+
 const initCONETContractAddr = '0xc78771Fc7C371b553188859023A14Ab3AbE08807'
 
-const oldrReferralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
+const very_old_ReferralsV3Addr ='0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 const old_cUSDTAddr = '0xfE75074C273b5e33Fe268B1d5AC700d5b715DA2f'
 const old_cBNBUsdtAddr = '0xAE752B49385812AF323240b26A49070bB839b10D'
 const old_cUSDBAddr = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'
 const oldGuardianAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 
-const newReffAddr= '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const oldReffAddr= '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
-const oldCNTPAddr='0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
+
+const oldCNTPAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
 const newGuardianAddr = '0xc3e210034868e8d739feE46ac5D1b1953895C87E'
-const new_cntp = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
+const CNTP_old_Addr = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 const initCONETAddr = '0xDAFD7bb588014a7D96501A50256aa74755953c18'
-const newCNTP_v1 = '0x38b1C16D6e69af20Aa5CC053fc3924ac82003596'
+
 const new_USDT_addr = '0xc1CaB2539BbB59d45D739720942E257fF52aa708'
 const new_BNBU_USDT_addr = '0xCc112a8Ec397808a4ffA0115Ad3d65ee0A8fab6c'
 const new_USDB_addr = '0x37A35FFfa9cD133bB08d7359Ae7d90A6550951AA'
+
+const new_CNTP_addr = '0xa4b389994A591735332A67f3561D60ce96409347'
+const new_Guardian_addr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
+const new_initCONET_faucet_addr = '0x9E70d462c434ca3f5aE567E9a406C08B2e25c066'
+const newReffAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const newCNTP_v1 = '0xb182d2c2338775B0aC3e177351D638b23D3Da4Ea'
 
 interface sendCONETObj {
 	wallet: string
@@ -103,24 +117,36 @@ interface sendCONETObj {
 }
 
 
+const old_2_watch = new ethers.Wallet(masterSetup.initManager[0], old_2_ConetProvider)
 
-const initmanagerW_0 = new ethers.Wallet(masterSetup.initManager[0], conetProvider)
-const initmanagerW_1 = new ethers.Wallet(masterSetup.initManager[1], conetProvider)
-const initmanagerW_2 = new ethers.Wallet(masterSetup.initManager[2], conetProvider)
-const initmanagerW_3 = new ethers.Wallet(masterSetup.initManager[3], conetProvider)
-const initmanagerW_4 = new ethers.Wallet(masterSetup.initManager[4], conetProvider)
-const initmanagerW_5 = new ethers.Wallet(masterSetup.initManager[5], conetProvider)
-const initmanagerW_6 = new ethers.Wallet(masterSetup.initManager[6], conetProvider)
-const initmanagerW_7 = new ethers.Wallet(masterSetup.initManager[7], conetProvider)
 
-const newReferralsContract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_1)
-const GuardianNFTV7Contract = new ethers.Contract(newGuardianAddr, CGPNsV7ABI, initmanagerW_2)
-const newCNTPContract = new ethers.Contract(new_cntp, cCNTPv7ABI, initmanagerW_3)
-const initCONETContract = new ethers.Contract(initCONETAddr, initCONET_ABI, initmanagerW_4)
+const initmanagerW_0 = new ethers.Wallet(masterSetup.initManager[0], newCONETProvider)
+const initmanagerW_1 = new ethers.Wallet(masterSetup.initManager[1], newCONETProvider)
+const initmanagerW_2 = new ethers.Wallet(masterSetup.initManager[2], newCONETProvider)
+const initmanagerW_3 = new ethers.Wallet(masterSetup.initManager[3], newCONETProvider)
+const initmanagerW_4 = new ethers.Wallet(masterSetup.initManager[4], newCONETProvider)
+const initmanagerW_5 = new ethers.Wallet(masterSetup.initManager[5], newCONETProvider)
+const initmanagerW_6 = new ethers.Wallet(masterSetup.initManager[6], newCONETProvider)
+const initmanagerW_7 = new ethers.Wallet(masterSetup.initManager[7], newCONETProvider)
+
+const oldReferralsContract = new ethers.Contract(oldReffAddr, ReferralsV3ABI, old_2_ConetProvider)
+const Guardian_Contract = new ethers.Contract(newGuardianAddr, CGPNsV7ABI, initmanagerW_2)
+
+const old_CNTPContract = new ethers.Contract(CNTP_old_Addr, cCNTPv7ABI, old_2_watch)
+
+const initCONETContract_old = new ethers.Contract(initCONETAddr, initCONET_ABI, old_2_watch)
+
 const newCNTP_V1 = new ethers.Contract(newCNTP_v1, newCNTP_v1_ABI, initmanagerW_5)
 const newUSDT = new ethers.Contract(new_USDT_addr, newUSDT_ABI, initmanagerW_0)
 const newUSDB = new ethers.Contract(new_BNBU_USDT_addr, newUSDT_ABI, initmanagerW_6)
 const new_BNB_USDT = new ethers.Contract(new_USDB_addr, newUSDT_ABI, initmanagerW_7)
+
+
+const newCNTPContract = new ethers.Contract(new_CNTP_addr, cCNTPv7ABI, initmanagerW_1)
+const new_Guardian_Contract = new ethers.Contract(new_Guardian_addr, CGPNsV7_newABI, initmanagerW_6)
+const new_CONET_Faucet_COntract = new ethers.Contract(new_initCONET_faucet_addr, faucet_new_ABI, initmanagerW_4)
+const newReff_Contract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_3)
+
 
 let sendCONETPool: sendCONETObj[] = []
 const sendCNTPPool: Map<string, string> = new Map()
@@ -149,11 +175,11 @@ const startCGNPPool_no1_Process = async () => {
 	})
 	let iii = 0
 	mapLimit(wallets, 1, async (n, next) => {
-		const [status] = await GuardianNFTV7Contract.getBUYER_Status(n)
+		const [status] = await new_Guardian_Contract.getBUYER_Status(n)
 
 		if (!status){
 			try {
-				const uuu = await GuardianNFTV7Contract.mintBUYER_NFT(n, amounts[iii])
+				const uuu = await new_Guardian_Contract.mintBUYER_NFT(n, amounts[iii])
 				logger(Colors.blue(`startCGNPPool_no1_Process added ${n} #1 NFT ${ amounts[iii]} success ${uuu.hash}`))
 			} catch (ex) {
 				logger(Colors.red(`startCGNPPool_no1_Process Error!`), ex)
@@ -186,10 +212,10 @@ const startCGNPPool_no2_Process = async () => {
 	})
 	let iii = 0
 	mapLimit(wallets, 1, async (n, next) => {
-		const status = await GuardianNFTV7Contract.getREFERRER_Status(n)
+		const status = await new_Guardian_Contract.getREFERRER_Status(n)
 		if (!status){
 			try {
-				const uuu = await GuardianNFTV7Contract.mintREFERRER_NFT(n, amounts[iii])
+				const uuu = await new_Guardian_Contract.mintREFERRER_NFT(n, amounts[iii])
 				logger(Colors.blue(`startCGNPPool_no2_Process added ${n} #2 NFT ${ amounts[iii]} success ${uuu.hash}`))
 			} catch (ex) {
 				logger(Colors.red(`startCGNPPool_no2_Process Error!`), ex)
@@ -289,8 +315,9 @@ const startRefferPool = async () => {
 	const [wallet] = refferPool.keys()
 	const referrer = refferPool.get(wallet)
 	try {
-		await newReferralsContract.initAddReferrer(referrer, wallet)
+		const tx = await newReff_Contract.initAddReferrer(referrer, wallet)
 		refferPool.delete(wallet)
+		logger(Colors.magenta(`startRefferPool added Reffer (${referrer}, ${wallet}) tx=${tx.hash}`))
 	} catch (ex) {
 		logger(`startRefferPool Error! `, ex)
 	}
@@ -304,6 +331,7 @@ const startRefferPool = async () => {
 }
 
 let startsendCONETPoolLock = false
+
 const startsendCONETPool = async () => {
 	if (startsendCONETPoolLock || !sendCONETPool.length ) {
 		return
@@ -318,14 +346,17 @@ const startsendCONETPool = async () => {
 
 	const wallets: string[] = []
 	const amounts: string[] =[]
-
+	let amount = 0
 	pool.forEach((v,k) => {
 		wallets.push(k)
 		amounts.push(v)
+		amount += parseFloat(ethers.formatEther(v))
 	})
+
 	try{
-		await initCONETContract.changeInit_batch(wallets, amounts)
+		const tx = await new_CONET_Faucet_COntract.changeInit_batch(wallets, amounts)
 		sendCONETPool = []
+		logger (Colors.blue(`startsendCONETPool transfer SUCCESS! total [${Colors.magenta(amount.toFixed(6))}] to total wallets [${Colors.magenta(wallets.length.toFixed(0))}]`))
 	} catch (ex) {
 		logger(`startsendCONETPool Error`, ex)
 		logger(inspect(wallets, false, 3, true))
@@ -343,7 +374,8 @@ const startSendCNTPv1Pool = async () => {
 	const [first] = sendCNTPv1Pool.keys()
 	const amount = sendCNTPv1Pool.get(first)
 	try {
-		await newCNTP_V1.initAccount(first, amount)
+		const tx = await newCNTP_V1.initAccount(first, amount)
+		logger(Colors.blue(`Init wallet ${first} CNTP1!`))
 		sendCNTPv1Pool.delete(first)
 	} catch (ex) {
 		logger(`startSendCNTP v1 Pool Error! [${first}] => ${amount}`, ex)
@@ -358,6 +390,7 @@ const startSendCNTPv1Pool = async () => {
 }
 
 let sendCNTPPoolLook = false
+
 const startSendCNTPPool = async () => {
 
 	if (sendCNTPPoolLook||!sendCNTPPool.size) {
@@ -367,6 +400,7 @@ const startSendCNTPPool = async () => {
 	sendCNTPPoolLook = true
 	const [first] = sendCNTPPool.keys()
 	const amount = sendCNTPPool.get(first)
+	
 	if (amount === undefined) {
 		logger(`startSendCNTPPool ${first} amount undefined Error!`)
 		return setTimeout(() => {
@@ -398,9 +432,9 @@ const startSendCNTPPool = async () => {
 
 let epoch = 0
 export const startEposhTransfer = async () => {
-	epoch = await conetProvider.getBlockNumber()
+	epoch = await newCONETProvider.getBlockNumber()
 	logger(`startEposhTransfer epoch = ${epoch}`)
-	conetProvider.on('block', async _block => {
+	newCONETProvider.on('block', async _block => {
 		// if ( _block === epoch + 1) {
 			startsendCONETPool()
 			startSendCNTPPool()
@@ -416,90 +450,181 @@ export const startEposhTransfer = async () => {
 		
 	})
 }
+
 interface oldDatObj {
-	conetOldB: BigInt
-	cntpOldB: BigInt
-	referrer: string
+	//		for CONET
+	CONET_very_old_Balance: BigInt
+	CONET_old_Balance: BigInt
+	CONET_new_initStats: boolean
+	CONET_old_initStats: boolean
+
+	//	for referrer
+	very_old_referrer: string
+	old_referrer: string
 	newReferrer: string
+
+	//	for CNTP
+	CNTP_very_old_Balance: BigInt
+	CNTP_old_Balance: BigInt
+	CNTP_old_initStats: boolean
+	CNTP_initStats: boolean
+
+
 	USDBoldB: BigInt
 	cBNBUoldB: BigInt
 	cUSDToldB: BigInt
-	cntpV1: BigInt 
+
+	//	for CNTP V1
+	CNTP_v1_Balance: BigInt
+	CNTP_v1_initStats: boolean
+
 	oldGuardianNFT1: BigInt
 	newGuardianNFT1_initSTatus: [boolean, BigInt], 
 	oldGuardianNFT2: BigInt
 	newGuardianNFT2_initSTatus: boolean
 	
-	cCNTP_initStats: boolean
+	
 
-	CONET_initStats: boolean
-	CNTP_v1_initStats: boolean
+	
 	newUSDT_depositTx: boolean
 	newUSDB_depositTx: boolean
 	new_BNB_USDT_depositTx: boolean
 	newCNTPBalance: BigInt
 }
+
 const initDataPool: Map<string, oldDatObj > = new Map()
+
 
 const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: string) => new Promise ( async resolve => {
 
-	const oldProvider = new ethers.JsonRpcProvider(conetOldRPC)
-	const oldCntpContract =new ethers.Contract(oldCNTPAddr, CONET_Point_ABI, oldProvider)
-	const oldReferralsContract = new ethers.Contract(oldrReferralsV3Addr, ReferralsV3ABI, oldProvider)
-	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, oldProvider)
-	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, oldProvider)
-	const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, oldProvider)
-	const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
-	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, oldProvider)
 
-	let conetOldB = BigInt(0), cntpOldB = BigInt(0), referrer ='0x0000000000000000000000000000000000000000', newReferrer ='0x0000000000000000000000000000000000000000', USDBoldB = BigInt(0),
-	cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), cntpV1 = BigInt(0), 
+	const oldCntpContract =new ethers.Contract(oldCNTPAddr, CONET_Point_ABI, veryold_ConetProvider)
+	const very_oldReferralsContract = new ethers.Contract(very_old_ReferralsV3Addr, ReferralsV3ABI, veryold_ConetProvider)
+	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, veryold_ConetProvider)
+	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, veryold_ConetProvider)
+	const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, veryold_ConetProvider)
+	const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
+	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, veryold_ConetProvider)
+
+	let CONET_very_old_Balance = BigInt(0), 
+	CONET_old_Balance = BigInt(0),
+	CNTP_very_old_Balance = BigInt(0), 
+	very_old_referrer ='0x0000000000000000000000000000000000000000', 
+	newReferrer ='0x0000000000000000000000000000000000000000', 
+	old_referrer='0x0000000000000000000000000000000000000000',
+	USDBoldB = BigInt(0),
+	cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), 
+	
+	CNTP_v1_Balance = BigInt(0), 
+
 	oldGuardianNFT1 = BigInt(0), newGuardianNFT1_initSTatus = [], 
 	oldGuardianNFT2 = BigInt(0), newGuardianNFT2_initSTatus = false, 
 	
-	cCNTP_initStats = false, 
-	CONET_initStats = false, CNTP_v1_initStats = false, newUSDT_depositTx = false, 
-	newUSDB_depositTx = false, new_BNB_USDT_depositTx = false,
+	CNTP_old_initStats = false,
+	CONET_old_initStats = false, 
+	CONET_new_initStats = false,
+	CNTP_initStats = false,
+	CNTP_old_Balance = BigInt(0), 
+
+	CNTP_v1_initStats = false, 
+	newUSDT_depositTx = false, 
+	newUSDB_depositTx = false, 
+	new_BNB_USDT_depositTx = false,
 	newCNTPBalance = BigInt(0)
-   	const walletID = ethers.id(wallet)
+   
 	try {
+		
 		[
-			conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1, 
+			//			for CONET
+			CONET_very_old_Balance, 
+			CONET_old_Balance,
+			CONET_old_initStats, 
+			CONET_new_initStats,
+
+			//			for referrer
+			very_old_referrer,
+			old_referrer,
+			newReferrer,
+
+
+			//			for CNTP
+			CNTP_very_old_Balance,
+			CNTP_old_initStats,
+			CNTP_old_Balance,
+			CNTP_initStats,
+			
+
+			USDBoldB, cBNBUoldB, cUSDToldB, 
+			
+			//			for old CNTP 
+			CNTP_v1_Balance,
+			CNTP_v1_initStats,
+
 			oldGuardianNFT1, newGuardianNFT1_initSTatus, 
 			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
-			cCNTP_initStats, 
-			newReferrer, 
-			CONET_initStats, CNTP_v1_initStats,
-			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx,
-			newCNTPBalance
+
+			 
+
+			
+
+
+
+			//CNTP_v1_initStats,
+			//newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx
 		] = await Promise.all([
-			oldProvider.getBalance(wallet),
-			oldCntpContract.balanceOf(wallet),
+			//			for CONET
+			veryold_ConetProvider.getBalance(wallet), 
+			old_2_ConetProvider.getBalance(wallet),
+			initCONETContract_old.checkInit(wallet), 
+			new_CONET_Faucet_COntract.checkInit(wallet),
+
+			//			for Referrals
+			very_oldReferralsContract.getReferrer(wallet),
 			oldReferralsContract.getReferrer(wallet),
-			old_cUSDB.balanceOf(wallet),
-			old_cBNBUsdt.balanceOf(wallet),
-			old_cUSDT.balanceOf(wallet),
-			oldCNTPv1.balanceOf(wallet),
-			oldGuardianContract.balanceOf(wallet, 1),
-			GuardianNFTV7Contract.getBUYER_Status(wallet),
-			oldGuardianContract.balanceOf(wallet, 2),
-			GuardianNFTV7Contract.getREFERRER_Status (wallet),
+			newReff_Contract.getReferrer(wallet),
+
+			//			for CNTP
+			oldCntpContract.balanceOf(wallet),  
+			old_CNTPContract.initV2(wallet), 
+			old_CNTPContract.balanceOf(wallet),
 			newCNTPContract.initV2(wallet),
-			newReferralsContract.getReferrer(wallet),
-			initCONETContract.checkInit(wallet),
-			newCNTP_V1.checkInit(wallet),
-			newUSDT.depositTx(walletID),
-			newUSDB.depositTx(walletID),
-			new_BNB_USDT.depositTx(walletID),
-			newCNTPContract.balanceOf(wallet),
+			
+
+			old_cUSDB.balanceOf(wallet), old_cBNBUsdt.balanceOf(wallet), old_cUSDT.balanceOf(wallet), 
+			
+			//			for CNTP v1
+			oldCNTPv1.balanceOf(wallet), newCNTP_V1.initV2(wallet),
+
+			//			for Guardian Plan
+
+			oldGuardianContract.balanceOf(wallet, 1), new_Guardian_Contract.getBUYER_Status(wallet),
+			oldGuardianContract.balanceOf(wallet, 2), new_Guardian_Contract.getREFERRER_Status (wallet),
+
+		
+
+			//newCNTP_V1.checkInit(wallet),
+
+
+
+			//newUSDT.depositTx(walletID),newUSDB.depositTx(walletID), new_BNB_USDT.depositTx(walletID),
+
 		])
+
 		const retObj: oldDatObj = {
-			conetOldB, cntpOldB, referrer, USDBoldB, cBNBUoldB, cUSDToldB, cntpV1,
+			CONET_very_old_Balance, 
+			CONET_old_Balance,
+			CNTP_very_old_Balance, very_old_referrer, USDBoldB, cBNBUoldB, cUSDToldB, 
+			CNTP_v1_Balance,
 			oldGuardianNFT1, newGuardianNFT1_initSTatus,
 			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
-			cCNTP_initStats, 
+			CNTP_old_initStats, CNTP_old_Balance,
 			newReferrer, 
-			CONET_initStats, CNTP_v1_initStats,
+			CNTP_initStats,
+			old_referrer,
+			CONET_old_initStats, 
+			CONET_new_initStats,
+			CNTP_v1_initStats,
+
 			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx,
 			newCNTPBalance
 		}
@@ -519,50 +644,71 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 		if (_obj === false) {
 			return resolve (true)
 		}
-
 		initDataPool.set(wallet, obj = _obj)
 	}
 	
 
-	logger(Colors.blue(`cCNTP_initStats ${wallet} CNTP old [${ethers.formatEther(obj.cntpOldB.toString())}] new [${ethers.formatEther(obj.newCNTPBalance.toString())}] [${obj.cCNTP_initStats}]`))
+	// logger(Colors.blue(`cCNTP_initStats ${wallet} CNTP old [${ethers.formatEther(obj.cntpOldB.toString())}] new [${ethers.formatEther(obj.newCNTPBalance.toString())}] [${obj.cCNTP_old_initStats}]`))
 
-	if (!obj.CONET_initStats && obj.conetOldB ) {
+	if ( ! obj.CONET_new_initStats ) {
+		let balance = obj.CONET_very_old_Balance > obj.CONET_old_Balance ? obj.CONET_very_old_Balance : obj.CONET_old_Balance
+		if (obj.CONET_old_initStats && balance < obj.CONET_very_old_Balance) {
+			balance = ethers.parseEther((parseFloat(ethers.formatEther(obj.CONET_very_old_Balance.toString())) +  parseFloat(ethers.formatEther(obj.CONET_old_Balance.toString()))).toFixed(6))
+		}
 
-		sendCONETPool.push({
-			wallet,
-			amount: obj.conetOldB.toString()
-		})
+		if (balance) {
+			const stats = `${obj.CONET_old_initStats}`
+			logger(Colors.magenta((`Init Wallet [${Colors.blue(wallet)}] old init stats is [${Colors.blue(stats)}] transfer CONET token ${Colors.blue(ethers.formatEther(balance.toString()))}`)))
+
+			sendCONETPool.push({
+				wallet,
+				amount:balance.toString()
+			})
+		}
+		
 	}
 
 
+	if (obj.newReferrer === '0x0000000000000000000000000000000000000000') {
+		const referrer = obj.old_referrer === '0x0000000000000000000000000000000000000000' ? obj.very_old_referrer: obj.old_referrer
+		if (referrer !== '0x0000000000000000000000000000000000000000') {
+			refferPool.set(wallet, referrer)
+		}
+	}
 
-	if (obj.referrer !== '0x0000000000000000000000000000000000000000' && obj.newReferrer !== obj.referrer) {
-		refferPool.set(wallet,obj.referrer)
+	if (!obj.CNTP_initStats) {
+		let CNTP_balance = obj.CNTP_very_old_Balance > obj.CNTP_old_Balance ? obj.CNTP_very_old_Balance : obj.CNTP_old_Balance
+		if (obj.CNTP_old_initStats && obj.CNTP_old_Balance < obj.CNTP_very_old_Balance) {
+			CNTP_balance = ethers.parseEther((parseFloat(ethers.formatEther(obj.CNTP_old_Balance.toString())) +  parseFloat(ethers.formatEther(obj.CNTP_very_old_Balance.toString()))).toFixed(6))
+		}
+		
+		if (CNTP_balance) {
+			sendCNTPPool.set(wallet, CNTP_balance.toString())
+		}
+	}
+
+	if (obj.CNTP_v1_Balance && !obj.CNTP_v1_initStats) {
+		logger(Colors.blue(`Wallet ${wallet} has CNTP balance ${ethers.formatEther(obj.CNTP_v1_Balance.toString())} INIT to new `))
+		sendCNTPv1Pool.set(wallet, obj.CNTP_v1_Balance.toString())
 	}
 	
-	if (obj.cntpOldB && !obj.cCNTP_initStats) {
-		sendCNTPPool.set(wallet, obj.cntpOldB.toString())
-	}
-	
-	if (obj.cntpV1 && !obj.CNTP_v1_initStats) {
-		sendCNTPv1Pool.set(wallet, obj.cntpV1.toString())
-	}
 
-	if (obj.cUSDToldB && !obj.newUSDT_depositTx) {
-		usdtPool.set(wallet,obj.cUSDToldB.toString())
-	}
 
-	if (obj.cBNBUoldB && !obj.new_BNB_USDT_depositTx) {
-		bnbUsdtPool.set(wallet, obj.cBNBUoldB.toString())
-	}
+	// if (obj.cUSDToldB && !obj.newUSDT_depositTx) {
+	// 	usdtPool.set(wallet,obj.cUSDToldB.toString())
+	// }
 
-	if (obj.USDBoldB && !obj.newUSDB_depositTx) {
-		usdbPool.set(wallet, obj.USDBoldB.toString())
-	}
+	// if (obj.cBNBUoldB && !obj.new_BNB_USDT_depositTx) {
+	// 	bnbUsdtPool.set(wallet, obj.cBNBUoldB.toString())
+	// }
+
+	// if (obj.USDBoldB && !obj.newUSDB_depositTx) {
+	// 	usdbPool.set(wallet, obj.USDBoldB.toString())
+	// }
 
 	const oldG1 = parseInt(obj.oldGuardianNFT1.toString())
 
-	if (oldG1 > 0) {
+	if (oldG1 > 0 && !obj.newGuardianNFT1_initSTatus ) {
 		logger(Colors.blue(`${wallet} has NFT #1 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT1_initSTatus[0]}`))
 		if (!obj.newGuardianNFT1_initSTatus[0]) {
 			CGNP_no1_Pool.set(wallet, obj.oldGuardianNFT1.toString())
@@ -570,16 +716,34 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	}
 
 	const oldG2 = parseInt(obj.oldGuardianNFT2.toString())
-	if (oldG2 > 0) {
+	if (oldG2 > 0 && !obj.newGuardianNFT2_initSTatus) {
 		logger(Colors.blue(`${wallet} has NFT #2 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT1_initSTatus[0]}`))
 		if (!obj.newGuardianNFT2_initSTatus) {
 			CGNP_no2_Pool.set(wallet, obj.oldGuardianNFT2.toString())
 		}
 	}
+
 	return resolve (true)
 })
 
+// const test = async () => {
+// 	const wallet = '0x8FCb191a4e40D0AFA37B2fa610377688992f057f'
+// 	await initNewCONET(wallet)
+// }
 
+
+// const test1 = async () => {
+// 	const [nodeAddressArray] = await new_Guardian_Contract.getAllIdOwnershipAndBooster()
+// 	let ii = 0
+// 	mapLimit(nodeAddressArray, 1, async (n: string, next ) => {
+// 		const result= await initNewCONET(n)
+// 		logger(Colors.grey (`[${ii++}] wallet ${n} success!`))
+// 	})
+	
+// }
+
+// test()
+// startEposhTransfer()
 // const testCGNPPoolProcess = async (wallet: string, _amounts: string) => {
 
 // 	await GuardianNFTV4Contract.mintNode_NFTBatch([wallet], [_amounts])

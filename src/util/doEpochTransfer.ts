@@ -13,7 +13,7 @@ import rateABI from '../endpoint/conet-rate.json'
 const conet_Holesky_RPC = 'http://74.208.39.153:8000'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
-const rateAddr = '0xFAF1f08b66CAA3fc1561f30b496890023ea70648'.toLowerCase()
+const rateAddr = '0xe2A18B436BC32C7AbE6D238Bf1C4111000e93F76'.toLowerCase()
 
 const splitLength = 900
 
