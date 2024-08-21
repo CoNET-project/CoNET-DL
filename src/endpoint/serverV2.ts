@@ -56,8 +56,6 @@ let guardians_referrals_rate_lists: rate_list[] = []
 let minerRate = ''
 let totalMiner = ''
 
-const conet_Holesky_RPC = 'http://74.208.39.153:8000'
-const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -309,7 +307,7 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
-			
+			return res.status(403).end()
 			const response = await claimeToekn (message, signMessage)
 			if (response) {
 				return res.status(200).json({}).end()
@@ -318,19 +316,19 @@ class conet_dl_server {
 
 		})
 
-		router.get ('/asset-prices', async ( req, res ) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
+		// router.get ('/asset-prices', async ( req, res ) =>{
+		// 	const ipaddress = getIpAddressFromForwardHeader(req)
 			
-			let kk
-			try {
-				kk = await getOraclePrice()
-			} catch (ex) {
-				logger(Colors.gray(`/asset-prices from ${ipaddress} Error!` ), ex)
-				return res.status(403).json({}).end()
-			}
-			logger(Colors.gray(`/asset-prices from ${ipaddress} success!` ), inspect(kk, false, 3, true))
-			return res.status(200).json(kk).end()
-		})
+		// 	let kk
+		// 	try {
+		// 		kk = await getOraclePrice()
+		// 	} catch (ex) {
+		// 		logger(Colors.gray(`/asset-prices from ${ipaddress} Error!` ), ex)
+		// 		return res.status(403).json({}).end()
+		// 	}
+		// 	logger(Colors.gray(`/asset-prices from ${ipaddress} success!` ), inspect(kk, false, 3, true))
+		// 	return res.status(200).json(kk).end()
+		// })
 
 		router.post ('/Purchase-Guardian', async (req,res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -347,7 +345,7 @@ class conet_dl_server {
 				return res.status(403).end()
 				
 			}
-			
+			return res.status(403).end()
 			if (!message||!signMessage) {
 				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
 				return  res.status(403).end()

@@ -21,7 +21,7 @@ import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucetABI from './faucet_abi.json'
 
-const CGPNsAddr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'.toLowerCase()
+const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -47,6 +47,7 @@ const detailTransfer = async (tx: string) => {
 		return await getAllOwnershipOfGuardianNodes()
 	}
 }
+
 const listeningGuardianNodes = async (block: number) => {
 
 	const blockDetail = await provideCONET.getBlock(block)
@@ -429,7 +430,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, test
 	}
 	soLottery (wallet, ipaddress, res, test)
 }
-const faucetAddr = `0x947643C25a39180d3603aE32949DEe8d221ddf74`
+const faucetAddr = `0x9E70d462c434ca3f5aE567E9a406C08B2e25c066`
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[4], provideCONET)
 const faucetContract = new ethers.Contract(faucetAddr, faucetABI, faucetWallet)
 export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(async resolve => {
@@ -553,7 +554,7 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
-			
+			return res.status(403).end()
 			const response = await claimeToekn (message, signMessage)
 			if (response) {
 				return res.status(200).json({}).end()
