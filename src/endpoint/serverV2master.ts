@@ -434,19 +434,28 @@ const faucetAddr = `0x9E70d462c434ca3f5aE567E9a406C08B2e25c066`
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[4], provideCONET)
 const faucetContract = new ethers.Contract(faucetAddr, faucetABI, faucetWallet)
 export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(async resolve => {
+	const obj = faucet_call_pool.get(wallet)
+	if (obj) {
+		return resolve (false)
+	}
 
 	try {
-		const gas = await faucetContract.getFaucet.estimateGas(wallet, IPaddress)
+		let _wallet = ethers.getAddress(wallet)
+		const gas = await faucetContract.getFaucet.estimateGas(_wallet, IPaddress)
 		const tx = await faucetContract.getFaucet(wallet, IPaddress)
 		logger(`faucet_call [${wallet}:${IPaddress}] Susess!`)
 	} catch (ex){
+		faucet_call_pool.set(wallet, true)
 		logger(`faucet_call [${wallet}:${IPaddress}] Error!`)
 		return resolve (false)
 	}
+	faucet_call_pool.set(wallet, true)
 	return resolve (true)
 })
 
 let block = 0
+
+const faucet_call_pool:Map<string, boolean> = new Map()
 class conet_dl_server {
 
 	private PORT = 8002
@@ -533,7 +542,7 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
-			const tx = await faucet_call(wallet, ipaddress)
+			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
 			if (tx) {
 				return res.status(200).json([]).end()
 			}
