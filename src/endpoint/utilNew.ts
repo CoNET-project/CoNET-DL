@@ -708,7 +708,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 
 	const oldG1 = parseInt(obj.oldGuardianNFT1.toString())
 
-	if (oldG1 > 0 && !obj.newGuardianNFT1_initSTatus ) {
+	if (oldG1 > 0 && !obj.newGuardianNFT1_initSTatus[0] ) {
 		logger(Colors.blue(`${wallet} has NFT #1 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT1_initSTatus[0]}`))
 		if (!obj.newGuardianNFT1_initSTatus[0]) {
 			CGNP_no1_Pool.set(wallet, obj.oldGuardianNFT1.toString())
@@ -727,7 +727,7 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 })
 
 // const test = async () => {
-// 	const wallet = '0x8FCb191a4e40D0AFA37B2fa610377688992f057f'
+// 	const wallet = '0xd8b12054612119e9e45d5deef40edca38d54d3b5'
 // 	await initNewCONET(wallet)
 // }
 
