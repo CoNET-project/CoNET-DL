@@ -5,7 +5,7 @@ import {exec} from 'node:child_process'
 import { inspect } from 'node:util'
 
 
-const conet_Holesky_rpc = 'http://74.208.39.153:8000'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 let EPOCH = 0

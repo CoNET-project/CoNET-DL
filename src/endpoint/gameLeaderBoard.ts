@@ -3,7 +3,7 @@ import {listAllLotte} from './help-database'
 import {writeFile} from 'node:fs'
 import {logger} from '../util/logger'
 import { inspect} from 'node:util'
-const conetRPC = new ethers.JsonRpcProvider('http://74.208.39.153:8000')
+const conetRPC = new ethers.JsonRpcProvider('https://rpc.conet.network')
 const startWriteReadboard = async (block:  number) => {
 	const list = await listAllLotte ()
 	await saveFragment('gaem_LeaderBoard', JSON.stringify(list))

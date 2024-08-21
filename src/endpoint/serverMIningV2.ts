@@ -18,7 +18,7 @@ import {transferPool, startTransfer} from '../util/transferManager'
 import type {Response, Request } from 'express'
 import { address, isPublic, isV4Format, isV6Format} from 'ip'
 
-const conet_Holesky_rpc = 'http://74.208.39.153:8000'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 
 
