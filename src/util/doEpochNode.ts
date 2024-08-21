@@ -72,7 +72,7 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 }
 
 
-const GuardianNodes_ContractV3 = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
+const GuardianNodes_ContractV3 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 
 const guardianReferrals = async (block: string) => {
 	const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
