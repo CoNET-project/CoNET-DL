@@ -29,7 +29,7 @@ const rateAddr = '0xe2A18B436BC32C7AbE6D238Bf1C4111000e93F76'.toLowerCase()
 const veryold_ConetProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
 const old_2_ConetProvider = new ethers.JsonRpcProvider('http://74.208.39.153:8888')
 
-const newCONETProvider = new ethers.JsonRpcProvider('http://207.90.195.80:8000')
+const newCONETProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
 const checkTransfer = async (tx: string, rateBack: (rate: number) => void) => {
 
