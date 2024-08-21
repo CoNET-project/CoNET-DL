@@ -6,7 +6,7 @@ import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
 
-const conet_Holesky_rpc = 'http://207.90.195.80:8000'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
 
