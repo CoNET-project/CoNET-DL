@@ -742,8 +742,8 @@ const test = async () => {
 	
 // }
 
-test()
-startEposhTransfer()
+// test()
+// startEposhTransfer()
 // const testCGNPPoolProcess = async (wallet: string, _amounts: string) => {
 
 // 	await GuardianNFTV4Contract.mintNode_NFTBatch([wallet], [_amounts])
