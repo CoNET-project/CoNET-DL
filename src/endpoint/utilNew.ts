@@ -435,7 +435,7 @@ export const startEposhTransfer = async () => {
 	epoch = await newCONETProvider.getBlockNumber()
 	logger(`startEposhTransfer epoch = ${epoch}`)
 	newCONETProvider.on('block', async _block => {
-		// if ( _block === epoch + 1) {
+		if ( _block === epoch + 1) {
 			startsendCONETPool()
 			startSendCNTPPool()
 			startSendCNTPv1Pool()
@@ -446,7 +446,7 @@ export const startEposhTransfer = async () => {
 			startCGNPPool_no2_Process()
 			logger(`start Eposh Init () ${_block}`)
 			epoch++
-		// }
+		}
 		
 	})
 }
