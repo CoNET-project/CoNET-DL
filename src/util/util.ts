@@ -32,7 +32,7 @@ import {abi as erc20TokenABI} from './erc20.json'
 
 import {Readable} from 'node:stream'
 
-export const conet_Holesky_rpc = 'http://88.218.76.121:8000'
+export const conet_Holesky_rpc = 'https://rpc.conet.network'
 const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
 const balstMainchainRPC = 'https://rpc.ankr.com/blast'
 

@@ -49,7 +49,7 @@ const detailTransfer = async (tx: string) => {
 }
 
 const listeningGuardianNodes = async (block: number) => {
-
+	logger(Colors.gray(`listeningGuardianNodes start at block ${block}`))
 	const blockDetail = await provideCONET.getBlock(block)
 	const transactions = blockDetail?.transactions
 	if (!transactions) {
