@@ -143,7 +143,7 @@ const new_BNB_USDT = new ethers.Contract(new_USDB_addr, newUSDT_ABI, initmanager
 
 
 const newCNTPContract = new ethers.Contract(new_CNTP_addr, cCNTPv7ABI, initmanagerW_1)
-const new_Guardian_Contract = new ethers.Contract(new_Guardian_addr, CGPNsV7_newABI, initmanagerW_6)
+const new_Guardian_Contract = new ethers.Contract(new_Guardian_addr, CGPNsV7_newABI, initmanagerW_5)
 const new_CONET_Faucet_COntract = new ethers.Contract(new_initCONET_faucet_addr, faucet_new_ABI, initmanagerW_4)
 const newReff_Contract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_3)
 
@@ -726,10 +726,10 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	return resolve (true)
 })
 
-// const test = async () => {
-// 	const wallet = '0xd8b12054612119e9e45d5deef40edca38d54d3b5'
-// 	await initNewCONET(wallet)
-// }
+const test = async () => {
+	const wallet = '0xfec7583160d24b2b77f51eafd9b024eacad8066a'
+	await initNewCONET(wallet)
+}
 
 
 // const test1 = async () => {
@@ -742,8 +742,8 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	
 // }
 
-// test()
-// startEposhTransfer()
+test()
+startEposhTransfer()
 // const testCGNPPoolProcess = async (wallet: string, _amounts: string) => {
 
 // 	await GuardianNFTV4Contract.mintNode_NFTBatch([wallet], [_amounts])
