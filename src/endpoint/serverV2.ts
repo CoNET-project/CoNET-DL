@@ -346,95 +346,95 @@ class conet_dl_server {
 				
 			}
 			return res.status(403).end()
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return  res.status(403).end()
+			// if (!message||!signMessage) {
+			// 	logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+			// 	return  res.status(403).end()
 				
-			}
+			// }
 			
-			const obj = checkSignObj (message, signMessage)
+			// const obj = checkSignObj (message, signMessage)
 
-			if (!obj||!obj?.data) {
-				logger (Colors.grey(`Router /Purchase-Guardian checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
+			// if (!obj||!obj?.data) {
+			// 	logger (Colors.grey(`Router /Purchase-Guardian checkSignObj obj Error!`), message, signMessage)
+			// 	return res.status(403).end()
+			// }
 
-			logger(Colors.magenta(`/Purchase-Guardian from ${ipaddress}`))
-			logger(inspect(obj, false, 3, true))
+			// logger(Colors.magenta(`/Purchase-Guardian from ${ipaddress}`))
+			// logger(inspect(obj, false, 3, true))
 
-			if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
-				logger(Colors.grey(`Router /Purchase-Guardian obj.data?.nodes !== obj.data?.publishKeys?.length Error!`), inspect(obj, false, 3, true))
-				return res.status(403).end()
-			}
+			// if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
+			// 	logger(Colors.grey(`Router /Purchase-Guardian obj.data?.nodes !== obj.data?.publishKeys?.length Error!`), inspect(obj, false, 3, true))
+			// 	return res.status(403).end()
+			// }
 
-			const txObj = await checkTx (obj.data.receiptTx, obj.data.tokenName)
+			// const txObj = await checkTx (obj.data.receiptTx, obj.data.tokenName)
 
-			if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
-				logger(Colors.grey(`Router /Purchase-Guardian txObj Error!`), inspect(txObj, false, 3, true))
-				return res.status(403).end()
-			}
+			// if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
+			// 	logger(Colors.grey(`Router /Purchase-Guardian txObj Error!`), inspect(txObj, false, 3, true))
+			// 	return res.status(403).end()
+			// }
 
-			if (txObj.tx1.from.toLowerCase()!== obj.walletAddress) {
-				logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
-				return res.status(403).end()
-			}
+			// if (txObj.tx1.from.toLowerCase()!== obj.walletAddress) {
+			// 	logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
+			// 	return res.status(403).end()
+			// }
 
-			const networkName = getNetworkName(obj.data.tokenName)
-			if (!networkName) {
-				logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
-				return res.status(403).end()
-			}
+			// const networkName = getNetworkName(obj.data.tokenName)
+			// if (!networkName) {
+			// 	logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
+			// 	return res.status(403).end()
+			// }
 
-			const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
+			// const CONET_receiveWallet = CONET_guardian_Address(obj.data.tokenName)
 			
-			const _checkTx = await txManager (obj.data.receiptTx, obj.data.tokenName, obj.walletAddress, obj.data.nodes, networkName, message, signMessage )
+			// const _checkTx = await txManager (obj.data.receiptTx, obj.data.tokenName, obj.walletAddress, obj.data.nodes, networkName, message, signMessage )
 
-			if (!_checkTx) {
-				logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
-				return res.status(403).end()
-			}
+			// if (!_checkTx) {
+			// 	logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
+			// 	return res.status(403).end()
+			// }
 
-			logger(Colors.blue(`${message}`))
-			logger(Colors.blue(`${signMessage}`))
+			// logger(Colors.blue(`${message}`))
+			// logger(Colors.blue(`${signMessage}`))
 			
-			if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
-				if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
-					logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
-					return res.status(403).end()
-				}
-				const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
-				if (erc20Result === false) {
-					logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
-					return res.status(403).end()
-				}
-				const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-				if (!kk) {
-					logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
-					return res.status(403).end()
-				}
-				const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-				const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys)
-				return res.status(200).json(ret).end()
-			}
+			// if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet) {
+			// 	if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+			// 		logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
+			// 		return res.status(403).end()
+			// 	}
+			// 	const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+			// 	if (erc20Result === false) {
+			// 		logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
+			// 		return res.status(403).end()
+			// 	}
+			// 	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+			// 	if (!kk) {
+			// 		logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
+			// 		return res.status(403).end()
+			// 	}
+			// 	const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+			// 	const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys)
+			// 	return res.status(200).json(ret).end()
+			// }
 			
 			
-			const value = txObj.tx1.value.toString()
-			if (obj.data.amount !== value) {
-				logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
-				return res.status(403).end()
-			}
+			// const value = txObj.tx1.value.toString()
+			// if (obj.data.amount !== value) {
+			// 	logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
+			// 	return res.status(403).end()
+			// }
 
 
 
 
-			const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-			if (!kk) {
-				logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
-				return res.status(403).end()
-			}
+			// const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+			// if (!kk) {
+			// 	logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
+			// 	return res.status(403).end()
+			// }
 
-			logger(Colors.red(`checkValueOfGuardianPlan non USDT obj.data.tokenName [${obj.data.tokenName}] Error! kk ${kk} ${value} ${inspect(txObj, false, 3, true)}`))
-			return res.status(403).end()
+			// logger(Colors.red(`checkValueOfGuardianPlan non USDT obj.data.tokenName [${obj.data.tokenName}] Error! kk ${kk} ${value} ${inspect(txObj, false, 3, true)}`))
+			// return res.status(403).end()
 			
 			// const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
 			// const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, obj.data.amount, masterSetup.claimableAdmin, obj.data.publishKeys)
