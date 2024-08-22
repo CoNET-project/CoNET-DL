@@ -208,7 +208,7 @@ class conet_dl_server {
 			} else {
 				count.push(timeStamp)
 				const _count = count.sort((a,b) => b-a).filter(v => v > timeStamp -1000)
-				if (_count.length > 5) {
+				if (_count.length > 1) {
 					logger(`${ipaddress} _count.length ${_count.length} > 5 => ${req.method} return 503!!!!!!!!`)
 					res.status(503).end()
 					return res.socket?.end().destroy()
