@@ -4,7 +4,9 @@ import {masterSetup, getIPFSfile, mergeTransfersv1} from './util'
 import Color from 'colors/safe'
 import { logger } from './logger'
 import {mapLimit} from 'async'
-
+import {homedir} from 'node:os'
+import { join } from 'node:path'
+import {readFile} from 'node:fs'
 import {checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transferManager'
 
 import rateABI from '../endpoint/conet-rate.json'
@@ -33,6 +35,17 @@ const startTransfer = (privateKey: string, wallets: string[], payList: string[])
 		return resolve (true)
 	})
 })
+const localIPFS_path = join(homedir(), '.data')
+const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new Promise(resolve => {
+	const path = join(localIPFS_path, `free_wallets_${block}`)
+
+	return readFile(path, 'utf-8', (err, data) => {
+		if (err) {
+			return resolve ('')
+		}
+		return resolve(data.toString())
+	})
+})	
 
 const startTransferAll = async () => {
 	if (waitingWalletArray.length == 0) {
@@ -100,7 +113,7 @@ const stratFreeMinerTransfer = async () => {
 		return 
 	}
 
-	const data = await getIPFSfile (`free_wallets_${block}`)
+	const data = await getLocalIPFS (block.toString())
 	
 	if (!data) {
 		stratFreeMinerTransfer()

@@ -20,7 +20,7 @@ const newCONETURL = 'http://207.90.195.48:8889'
 const newRPCPublic = 'http://88.218.76.121:8000'
 const newRPC = new ethers.JsonRpcProvider(newRPCPublic)
 const managerWallet = new ethers.Wallet(masterSetup.guardianBuyADMIN[0], newRPC)
-const CGPNsV5addr = '0x471DEbB6b3Fc0A21f91505296d64902Fb0C5e2E4'
+
 
 const CGPNsV8addr_old = '0xc3e210034868e8d739feE46ac5D1b1953895C87E'
 
