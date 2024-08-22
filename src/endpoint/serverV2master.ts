@@ -270,8 +270,10 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	}
 	startFaucetProcessStatus = true
 	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
+	logger(inspect(faucetWaitingPool, false, 3, true))
 	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
 	const wallet = faucetWaitingPool.map(n => n.wallet)
+
 	try {
 		const tx = await faucetContract.getFaucetBatch(wallet, ipAddress)
 		logger(`startFaucetProcess success tx = ${tx.hash}`)
