@@ -153,6 +153,8 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	req.end()
 }
 
+const MaxCount = 1
+
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
 
@@ -208,8 +210,8 @@ class conet_dl_server {
 			} else {
 				count.push(timeStamp)
 				const _count = count.sort((a,b) => b-a).filter(v => v > timeStamp -1000)
-				if (_count.length > 1) {
-					logger(`${ipaddress} _count.length ${_count.length} > 5 => ${req.method} return 503!!!!!!!!`)
+				if (_count.length > MaxCount) {
+					//logger(`${ipaddress} _count.length ${_count.length} > MaxCount ${MaxCount} => ${req.method} return 503!!!!!!!!`)
 					res.status(503).end()
 					return res.socket?.end().destroy()
 				}
