@@ -115,7 +115,7 @@ export const startTransfer = async () => {
 }
 
 const searchWallet = '0xA6827E09f6aC9Ff28beB0CF6aEB7EF05F1A73DF1'
-
+const watchWallets = ['0x454428d883521c8af9e88463e97e4d343c600914']
 export const transferCCNTP = (privateKey: string, __walletList: string[], __PayList: string[], callback: (err?: Error) => void) => {
 	if (__walletList.length < 1) {
 		return callback()
@@ -156,7 +156,15 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 			// 	return send()
 			// }, 1000)
 		}
-		
+		if (watchWallets.length) {
+			watchWallets.forEach(n => {
+				const index = fixedWallet.findIndex(nn => nn.toLowerCase() === n)
+				if (index > -1) {
+					logger(`Send CNTP [${payList[index]}] to watchWallets ${n} success!!!!!!!!!!`)
+				}
+				
+			})
+		}
 		logger (Color.magenta(`transferCCNTP Wallet = [${wallet.address}] [${fixedWallet.length}] amount[${amount}] tx = [${tx.hash}] success!`))
 		// logger(inspect(fixedWallet.slice(0, 2), false, 3, true), inspect(payList.slice(0, 2), false, 3, true))
 		//const balance1 = await cCNTPContract.balanceOf(fixedWallet[0])
