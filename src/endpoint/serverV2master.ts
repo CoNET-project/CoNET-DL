@@ -113,22 +113,6 @@ const addAttackToCluster = async (ipaddress: string) => {
 
 
 const guardianNodesList: string[] = []
- 
-const _unlockCNTP = async (wallet: string, privateKey: string, CallBack: (err?: any, data?: ethers.TransactionResponse) => void) => {
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const walletObj = new ethers.Wallet(privateKey, provider)
-	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CNTPAbi, walletObj)
-	let tx
-	try {
-		tx = await cCNTPContract.changeAddressInWhitelist(wallet, true)
-	} catch (ex: any) {
-		logger(Colors.red(`unlockCNTP error! ${ex.message}`))
-		return CallBack (ex.message)
-	}
-
-	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
-	return CallBack (null, tx)
-}
 
 let getAllOwnershipOfGuardianNodesProcessing = false
 
@@ -200,78 +184,6 @@ let transCONETLock = false
 let unlockCONETLock = false
 const unlockArray: conetData[] = []
 
-const unlockCNTP = (address: string, req: Response) => {
-	logger(Colors.blue(`unlockCNTP [${address}]`))
-	unlockArray.push ({
-		address, req
-	})
-	
-	const unlock: any = async () => {
-		if (unlockCONETLock) {
-			return
-		}
-		const data = unlockArray.shift()
-		if (!data) {
-			unlockCONETLock = false
-			return
-		}
-		unlockCONETLock = true
-		return _unlockCNTP(data.address, masterSetup.claimableAdmin, (err, tx) => {
-			unlockCONETLock = false
-			if (err) {
-				unlockArray.unshift(data)
-				return unlock ()
-			}
-			if (req.writable && !req.writableEnded) {
-				req.status(200).json({tx}).end()
-			}
-			
-			return unlock ()
-		})
-	}
-
-	if (unlockArray.length) {
-		unlock()
-	}
-	
-}
-
-const transCONET = (address: string, balance: BigInt, req: Response) => {
-	transCONETArray.push ({
-		address, balance, req
-	})
-	
-	const trySent: any = async () => {
-		if (transCONETLock) {
-			return
-		}
-		transCONETLock = true
-		const data = transCONETArray.shift()
-
-		if (!data) {
-			transCONETLock = false
-			return
-		}
-		
-
-		return sentData(data, (err, tx) => {
-			transCONETLock = false
-			if (err) {
-				return req.status(404).end()
-			}
-			if (req.writable && !req.writableEnded) {
-				req.status(200).json({tx}).end()
-			}
-			
-			return trySent ()
-		})
-	}
-
-	if (transCONETArray.length) {
-		trySent()
-	}
-	
-}
 
 interface clientRequestTimeControl {
 	lastTimestamp: number
@@ -351,10 +263,34 @@ const addToWinnerPool = (winnObj: winnerObj) => {
 	LotteryWinnerPool.set(winnObj.wallet, winnObj)
 }
 
-const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
-	if (transferPool.size === 0) {
-		return logger(Colors.grey(`stratlivenessV2 eposh = [${eposh}] transferPool has zero STOP!`))
+let startFaucetProcessStatus = false
+const startFaucetProcess = () => new Promise(async resolve => {
+	if (!faucetWaitingPool.length || startFaucetProcessStatus) {
+		return resolve (false)
 	}
+	startFaucetProcessStatus = true
+	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
+	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
+	const wallet = faucetWaitingPool.map(n => n.wallet)
+	try {
+		const tx = await faucetContract.getFaucetBatch(wallet, ipAddress)
+		logger(`startFaucetProcess success tx = ${tx.hash}`)
+	} catch (ex) {
+		logger(`startFaucetProcess Error!`, ex)
+	}
+	startFaucetProcessStatus = false
+	return resolve(true)
+})
+
+
+let stratlivenessV2_process = false
+const transferCNTP = () => new Promise(resolve => {
+	if (transferPool.size === 0 || stratlivenessV2_process) {
+		return resolve (false)
+	}
+
+	stratlivenessV2_process = true
+	logger(`Start transfer Lottery CNTP Wainging List length = ${transferPool.size}`)
 	const wallets: string[] = []
 	const pay: string[] = []
 
@@ -365,15 +301,25 @@ const stratlivenessV2 = (eposh: number, classData: conet_dl_server) => {
 	})
 
 	let iii = 0
-	transferCCNTP(masterSetup.newFaucetAdmin[5], wallets, pay, err => {
+
+	transferCCNTP ( masterSetup.newFaucetAdmin[5], wallets, pay, async err => {
 		mapLimit(wallets, 1, async (n, next) => {
 			await conet_lotte_new (n, parseInt(pay[iii]))
 			iii ++
 		}, err => {
 			logger(err)
+			stratlivenessV2_process = false
+			resolve (true)
 		})
-
 	})
+})
+
+const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
+	Promise.all([
+		await transferCNTP (),
+		await startFaucetProcess()
+	])
+	
 }
 
 const double = (wallet: string, ipAddress: string, test = false) => {
@@ -430,29 +376,31 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, test
 	}
 	soLottery (wallet, ipaddress, res, test)
 }
-const faucetAddr = `0x9E70d462c434ca3f5aE567E9a406C08B2e25c066`
+const faucetV2Addr = `0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4`
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[4], provideCONET)
-const faucetContract = new ethers.Contract(faucetAddr, faucetABI, faucetWallet)
-export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(async resolve => {
-	const obj = faucet_call_pool.get(wallet)
-	if (obj) {
-		return resolve (false)
+const faucetContract = new ethers.Contract(faucetV2Addr, faucetABI, faucetWallet)
+
+interface faucetRequest {
+	wallet: string
+	ipAddress: string
+}
+
+const faucetWaitingPool: faucetRequest[] = []
+export const faucet_call =  (wallet: string, ipAddress: string) => {
+	try {
+		let _wallet = ethers.getAddress(wallet).toLowerCase()
+		const obj = faucet_call_pool.get(_wallet)
+		if (obj) {
+			return false
+		}
+		faucetWaitingPool.push({wallet, ipAddress})
+		
+	} catch (ex) {
+		return false
 	}
 
-	try {
-		let _wallet = ethers.getAddress(wallet)
-		const gas = await faucetContract.getFaucet.estimateGas(_wallet, IPaddress)
-		const tx = await faucetContract.getFaucet(wallet, IPaddress)
-		logger(`faucet_call [${wallet}:${IPaddress}] Susess! ${inspect(tx, false, 1, true)}`)
-		faucet_call_pool.set(wallet, true)
-		return resolve (tx)
-	} catch (ex){
-		faucet_call_pool.set(wallet, true)
-		logger(`faucet_call [${wallet}:${IPaddress}] Error!`)
-		return resolve (false)
-	}
-	
-})
+	return true
+}
 
 let block = 0
 
@@ -471,10 +419,10 @@ class conet_dl_server {
 		logger(`conet_dl_server STARTED BLOCK`)
 
 		provideCONET.on ('block', async _block => {
-			// if (_block === block + 1 ) {
+			if (_block === block + 1 ) {
 				block++
 				return stratlivenessV2(_block, this)
-			// }
+			}
 			
 		})
 
