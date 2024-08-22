@@ -115,7 +115,7 @@ export const startTransfer = async () => {
 }
 
 const searchWallet = '0xA6827E09f6aC9Ff28beB0CF6aEB7EF05F1A73DF1'
-const watchWallets = ['0x454428d883521c8af9e88463e97e4d343c600914']
+const watchWallets = ['0x454428d883521c8af9e88463e97e4d343c600914','0x28b2ae27e135e89d9bcb40595f859b411bf4846c','0x9a748729704174d411fc646efbd458f4c0e4ea40']
 export const transferCCNTP = (privateKey: string, __walletList: string[], __PayList: string[], callback: (err?: Error) => void) => {
 	if (__walletList.length < 1) {
 		return callback()

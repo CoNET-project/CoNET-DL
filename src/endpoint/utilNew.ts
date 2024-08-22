@@ -726,10 +726,11 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	return resolve (true)
 })
 
-const test = async () => {
-	const wallet = '0xfec7583160d24b2b77f51eafd9b024eacad8066a'
-	await initNewCONET(wallet)
-}
+// const test = async () => {
+// 	startEposhTransfer()
+// 	const wallet = '0xE482da05cB82d2b996780Db17D8B916356E1323d'
+// 	await initNewCONET(wallet)
+// }
 
 
 // const test1 = async () => {
@@ -743,7 +744,7 @@ const test = async () => {
 // }
 
 // test()
-// startEposhTransfer()
+
 // const testCGNPPoolProcess = async (wallet: string, _amounts: string) => {
 
 // 	await GuardianNFTV4Contract.mintNode_NFTBatch([wallet], [_amounts])
