@@ -443,7 +443,7 @@ export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(a
 		let _wallet = ethers.getAddress(wallet)
 		const gas = await faucetContract.getFaucet.estimateGas(_wallet, IPaddress)
 		const tx = await faucetContract.getFaucet(wallet, IPaddress)
-		logger(`faucet_call [${wallet}:${IPaddress}] Susess! ${tx}`)
+		logger(`faucet_call [${wallet}:${IPaddress}] Susess! ${inspect(tx, false, 1, true)}`)
 		faucet_call_pool.set(wallet, true)
 		return resolve (tx)
 	} catch (ex){
