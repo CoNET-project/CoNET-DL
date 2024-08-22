@@ -545,7 +545,7 @@ class conet_dl_server {
 
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
 			if (tx) {
-				return res.status(200).json([tx.hash]).end()
+				return res.status(200).json(tx).end()
 			}
 			return res.status(403).end()
 
