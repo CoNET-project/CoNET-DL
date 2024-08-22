@@ -401,6 +401,9 @@ const startSendCNTPPool = async () => {
 	const [first] = sendCNTPPool.keys()
 	const amount = sendCNTPPool.get(first)
 	
+	sendCNTPPool.forEach((v,key) => {})
+
+
 	if (amount === undefined) {
 		logger(`startSendCNTPPool ${first} amount undefined Error!`)
 		return setTimeout(() => {
@@ -409,7 +412,6 @@ const startSendCNTPPool = async () => {
 		}, 1000)
 	}
 	
-
 	try {
 		const initStatus = await newCNTPContract.initV2(first) 
 		

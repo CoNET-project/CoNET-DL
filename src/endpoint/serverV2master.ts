@@ -444,13 +444,14 @@ export const faucet_call =  (wallet: string, IPaddress: string) => new Promise(a
 		const gas = await faucetContract.getFaucet.estimateGas(_wallet, IPaddress)
 		const tx = await faucetContract.getFaucet(wallet, IPaddress)
 		logger(`faucet_call [${wallet}:${IPaddress}] Susess!`)
+		faucet_call_pool.set(wallet, true)
+		return resolve (tx.hash)
 	} catch (ex){
 		faucet_call_pool.set(wallet, true)
 		logger(`faucet_call [${wallet}:${IPaddress}] Error!`)
 		return resolve (false)
 	}
-	faucet_call_pool.set(wallet, true)
-	return resolve (true)
+	
 })
 
 let block = 0
@@ -544,7 +545,7 @@ class conet_dl_server {
 
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
 			if (tx) {
-				return res.status(200).json([]).end()
+				return res.status(200).json([tx.hash]).end()
 			}
 			return res.status(403).end()
 
