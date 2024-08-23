@@ -163,7 +163,7 @@ const guardianMining = async (block: number) => {
 	let i = 0
 	dArray.forEach((n, index) => {
 		i ++
-		if (i > masterSetup.guardianAmin.length-2) {
+		if (i > masterSetup.guardianAmin.length-3) {
 			i = 0
 		}
 		
