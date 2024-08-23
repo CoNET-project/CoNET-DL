@@ -48,9 +48,11 @@ const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new 
 })	
 
 const startTransferAll = async () => {
+
 	if (waitingWalletArray.length == 0) {
 		return logger(`startTransferAll has waitingWalletArray is null to STOP`)
 	}
+
 	const feeData = await provider.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
 	const timeStamp = new Date().getTime()
@@ -64,25 +66,31 @@ const startTransferAll = async () => {
 	const kkk = waitingWalletArray.length
 	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
 	const splitBase =  Math.floor(kkk/splitTimes)
+
 	const dArray: string[][] = []
 	const pArray: string[][] = []
 
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
-		const a  = waitingWalletArray.slice(i, i+ splitBase)
-		const b  = waitingPayArray.slice(i, i+ splitBase)
+		const a  = waitingWalletArray.slice(i, i + splitBase)
+		const b  = waitingPayArray.slice(i, i + splitBase)
 		dArray[j] = a
 		pArray[j] = b
 	}
 
 	const transferPool: any[]= []
 	let i = 0
+
+	logger(`Total wallets [${waitingWalletArray.length}] split [${splitBase}] Groop Each has [${dArray.forEach(n => n.length)}] wallets`)
+	
 	dArray.forEach( (n, index) => {
 		const paymentList = pArray[index]
 		i ++
+
 		if (i > masterSetup.conetCNTPAdmin.length-1) {
 			i = 0
 		}
+
 		transferPool.push({
 			privateKey: masterSetup.conetCNTPAdmin[i],
 			walletList: n,
@@ -134,6 +142,7 @@ const stratFreeMinerTransfer = async () => {
 		stratFreeMinerTransfer()
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
+	
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
 	const rate = await rateSC.rate()
 	const minerRate =rate/BigInt(walletArray.length)

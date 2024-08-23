@@ -145,7 +145,7 @@ const guardianMining = async (block: number) => {
 
 	const kkk = nodesAddress.length
 	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
-	const splitBase =  Math.round(kkk/splitTimes)
+	const splitBase =  Math.floor(kkk/splitTimes)
 	const dArray: string[][] = []
 	const payArray: string[][] = []
 
@@ -173,7 +173,7 @@ const guardianMining = async (block: number) => {
 		})
 		ss ++
 	})
-
+	logger(`Total guardian nodes [${nodesAddress.length}] split [${splitBase}] Each Groop has [${dArray.forEach(n => n.length)}] wallets`)
 	// transferPool.push({
 	// 	privateKey: masterSetup.conetFaucetAdmin2,
 	// 	walletList: nodesAddress,

@@ -283,7 +283,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 	
 	const walletTotal : Map<string, walletCount> = new Map()
 
-	console.error(Color.blue(`daemon EPOCH = [${block}]  starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
 
 	mapLimit( walletArray, 2, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
