@@ -157,7 +157,7 @@ const guardianMining = async (block: number) => {
 		dArray[j] = a
 		payArray[j] = b
 	}
-	logger(Color.red(`Total Guardian nodes = [${kkk}] split [${dArray.length}] Each Groop has [${dArray.map(n => n.length)}] wallets`))
+	logger(Color.red(`Total Guardian nodes = [${kkk}] splitTimes = ${splitTimes} splitBase = ${splitBase} split [${dArray.length}] Each Groop has [${dArray.map(n => n.length)}] wallets`))
 	
 	let ss = 0
 	let i = 0
