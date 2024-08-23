@@ -4,8 +4,8 @@ import Color from 'colors/safe'
 import {masterSetup} from './util'
 import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
-
-
+import { initNewCONET, startEposhTransfer} from '../endpoint/utilNew'
+import {mapLimit} from 'async'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 import {transferPool, startTransfer} from './transferManager'
@@ -86,6 +86,18 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	return [retWalletAddr, retReferralsBoost]
 }
 
+let init = false
+
+const initNodes = (wallets: string[]) => {
+	startEposhTransfer()
+	let iii = 0
+	mapLimit(wallets, 3, async (n, next) => {
+		await initNewCONET(n)
+		logger(Color.blue(`initNodes [${++iii}] for wallet ${n}`))
+	}, err => {
+		logger(Color.blue(`initNodes success!`))
+	})
+}
 
 const guardianMining = async (block: number) => {
 	let nodes
@@ -101,6 +113,9 @@ const guardianMining = async (block: number) => {
 	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
 
 	let NFTAssets: number[]
+	if (!init) {
+		initNodes (_nodesAddress)
+	}
 	logger(Color.gray(`nodesAirdrop total nodes = [${_nodesAddress.length}]`))
 	try {
 		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
@@ -113,10 +128,8 @@ const guardianMining = async (block: number) => {
 	const nodesBoosts: number[] = []
 
 	NFTAssets.forEach((n, index) => {
-
-			nodesAddress.push(_nodesAddress[index])
-			nodesBoosts.push(_nodesBoosts[index])
-
+		nodesAddress.push(_nodesAddress[index])
+		nodesBoosts.push(_nodesBoosts[index])
 	})
 
 	logger(Color.gray(`nodesAirdrop total has NFT nodes = [${nodesAddress.length}] nodesBoosts = ${nodesBoosts.length} `))
@@ -149,6 +162,7 @@ const guardianMining = async (block: number) => {
 	const dArray: string[][] = []
 	const payArray: string[][] = []
 
+	
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
 		const a  = nodesAddress.slice(i, i+ splitBase)
@@ -156,7 +170,7 @@ const guardianMining = async (block: number) => {
 		dArray[j] = a
 		payArray[j] = b
 	}
-
+	logger(Color.red(`Total Guardian nodes = [${kkk}] split [${dArray.length}] Each Groop has [${dArray.forEach(n => n.length)}] wallets`))
 	
 	let ss = 0
 	let i = 0
@@ -173,7 +187,7 @@ const guardianMining = async (block: number) => {
 		})
 		ss ++
 	})
-	logger(`Total guardian nodes [${nodesAddress.length}] split [${splitBase}] Each Groop has [${dArray.forEach(n => n.length)}] wallets`)
+	
 	// transferPool.push({
 	// 	privateKey: masterSetup.conetFaucetAdmin2,
 	// 	walletList: nodesAddress,
