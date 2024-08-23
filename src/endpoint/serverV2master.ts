@@ -8,13 +8,13 @@ import { inspect } from 'node:util'
 import {claimeToekn, conet_lotte_new} from './help-database'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { newCNTP_Contract, masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
+import { masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
 import {logger} from '../util/logger'
 import {transferCCNTP} from '../util/transferManager'
 
 import CGPNsABI from '../util/CGPNs.json'
-import CNTPAbi from '../util/cCNTP.json'
-import {ethers} from 'ethers'
+
+import {ethers, FixedNumber} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
@@ -378,8 +378,9 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, test
 	}
 	soLottery (wallet, ipaddress, res, test)
 }
-const faucetV2Addr = `0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4`
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[4], provideCONET)
+const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
+const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[6], provideCONET)
 const faucetContract = new ethers.Contract(faucetV2Addr, faucetABI, faucetWallet)
 
 interface faucetRequest {
@@ -395,6 +396,7 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 		if (obj) {
 			return false
 		}
+		faucet_call_pool.set(wallet, true)
 		faucetWaitingPool.push({wallet, ipAddress})
 		
 	} catch (ex) {
@@ -559,3 +561,43 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+// const increaseGasLimit = (tx: BigInt) => {
+// 	const ret = FixedNumber.fromString(tx.toString())
+// 	return ret.mul(FixedNumber.fromValue(200)).div(FixedNumber.fromValue(100))
+// }
+
+// const test = async () => {
+// 	const f = [
+// 		{
+// 			wallet: '0x3c842be6a79994630b216703b69d514d00bb882a',
+// 			ipAddress: '105.113.12.245'
+// 		},
+// 		{
+// 			wallet: '0xd6fc8a99e91d8f1b47e6d1f8df9d3669c7c79309',
+// 			ipAddress: '105.120.128.58'
+// 		}
+// 	]
+// 	const ipAddress = f.map(n => n.ipAddress)
+// 	const wallet = f.map(n => n.wallet)
+// 	logger(`faucetWallet = ${faucetWallet.address}`)
+// 	try {
+// 		const tx = await faucetContract.getFaucetBatch.estimateGas(wallet, ipAddress)
+		
+// 		const gas = await provideCONET.getFeeData()
+		
+// 		console.log (inspect(tx, false, 3, true))
+// 		console.log (inspect(gas, false, 3, true))
+// 		const kk = increaseGasLimit(tx)
+// 		const fee = parseInt(kk.toString())
+// 		console.log (inspect(fee, false, 3, true))
+// 		//const txy =await faucetContract.getFaucet(f[0].wallet, f[0].ipAddress)
+// 		const txy =await faucetContract.getFaucetBatch(wallet, ipAddress)
+// 		console.log (inspect(txy, false, 3, true))
+// 		await txy.wait()
+// 	} catch (ex) {
+// 		logger(`startFaucetProcess Error!`, ex)
+// 	}
+// }
+
+// test()
