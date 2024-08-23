@@ -64,7 +64,7 @@ const startTransferAll = async () => {
 	}
 
 	const kkk = waitingWalletArray.length
-	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
+	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength+0.5)
 	const splitBase =  Math.floor(kkk/splitTimes)
 
 	const dArray: string[][] = []
@@ -81,8 +81,8 @@ const startTransferAll = async () => {
 	const transferPool: any[]= []
 	let i = 0
 
-	logger(`Total wallets [${waitingWalletArray.length}] split [${splitBase}] Groop Each has [${dArray.forEach(n => n.length)}] wallets`)
-	
+	logger(`Total wallets [${waitingWalletArray.length}] split [${splitBase}] Groop Each has [${dArray.map(n => n.length)}] wallets`)
+
 	dArray.forEach( (n, index) => {
 		const paymentList = pArray[index]
 		i ++

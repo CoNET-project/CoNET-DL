@@ -159,7 +159,7 @@ const guardianMining = async (block: number) => {
 	}
 	logger(Color.red(`Total Guardian nodes = [${kkk}] splitTimes = ${splitTimes} splitBase = ${splitBase} split [${dArray.length}] Each Groop has [${dArray.map(n => n.length)}] wallets`))
 	
-	let ss = 0
+
 	let i = 0
 	dArray.forEach((n, index) => {
 		i ++
@@ -170,9 +170,9 @@ const guardianMining = async (block: number) => {
 		transferPool.push({
 			privateKey: masterSetup.guardianAmin[i],
 			walletList: n,
-			payList: payArray[ss]
+			payList: payArray[index]
 		})
-		ss ++
+
 	})
 	
 	// transferPool.push({
