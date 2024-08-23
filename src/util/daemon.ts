@@ -114,6 +114,7 @@ const guardianMining = async (block: number) => {
 
 	let NFTAssets: number[]
 	if (!init) {
+		init = true
 		initNodes (_nodesAddress)
 	}
 	logger(Color.gray(`nodesAirdrop total nodes = [${_nodesAddress.length}]`))
