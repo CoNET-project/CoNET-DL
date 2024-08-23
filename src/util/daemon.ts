@@ -67,7 +67,7 @@ const guardianReferrals = async (block: number) => {
 	startTransfer()
 
 }
-const splitLength = 300
+const splitLength = 500
 
 const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 	const _retWalletAddr: Map<string, string> = new Map()
@@ -144,7 +144,7 @@ const guardianMining = async (block: number) => {
 
 
 	const kkk = nodesAddress.length
-	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength)
+	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength+0.5)
 	const splitBase =  Math.floor(kkk/splitTimes)
 	const dArray: string[][] = []
 	const payArray: string[][] = []
