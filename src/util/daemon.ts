@@ -152,8 +152,8 @@ const guardianMining = async (block: number) => {
 	
 
 	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
-		const a  = nodesAddress.slice(i, i+ splitBase)
-		const b = payNodes.slice(i, i+ splitBase)
+		const a  = nodesAddress.slice(i, i + splitBase)
+		const b = payNodes.slice(i, i + splitBase)
 		dArray[j] = a
 		payArray[j] = b
 	}
