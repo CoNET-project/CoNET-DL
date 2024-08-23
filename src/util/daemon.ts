@@ -91,7 +91,7 @@ let init = false
 const initNodes = (wallets: string[]) => {
 	startEposhTransfer()
 	let iii = 0
-	mapLimit(wallets, 3, async (n, next) => {
+	mapLimit(wallets, 1, async (n, next) => {
 		await initNewCONET(n)
 		logger(Color.blue(`initNodes [${++iii}] for wallet ${n}`))
 	}, err => {
