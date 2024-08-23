@@ -4,7 +4,7 @@ import Color from 'colors/safe'
 import {masterSetup} from './util'
 import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
-import { initNewCONET, startEposhTransfer} from '../endpoint/utilNew'
+
 import {mapLimit} from 'async'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
@@ -88,17 +88,6 @@ const mergeReferrals = (walletAddr: string[], referralsBoost: string[]) => {
 
 let init = false
 
-const initNodes = (wallets: string[]) => {
-	startEposhTransfer()
-	let iii = 0
-	mapLimit(wallets, 1, async (n, next) => {
-		await initNewCONET(n)
-		logger(Color.blue(`initNodes [${++iii}] for wallet ${n}`))
-	}, err => {
-		logger(Color.blue(`initNodes success!`))
-	})
-}
-
 const guardianMining = async (block: number) => {
 	let nodes
 	try {
@@ -113,10 +102,7 @@ const guardianMining = async (block: number) => {
 	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
 
 	let NFTAssets: number[]
-	if (!init) {
-		init = true
-		initNodes (_nodesAddress)
-	}
+
 	logger(Color.gray(`nodesAirdrop total nodes = [${_nodesAddress.length}]`))
 	// try {
 	// 	NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
