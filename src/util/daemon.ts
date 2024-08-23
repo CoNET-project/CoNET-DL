@@ -118,20 +118,20 @@ const guardianMining = async (block: number) => {
 		initNodes (_nodesAddress)
 	}
 	logger(Color.gray(`nodesAirdrop total nodes = [${_nodesAddress.length}]`))
-	try {
-		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
+	// try {
+	// 	NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
 
-	} catch (ex: any) {
-		return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
-	}
+	// } catch (ex: any) {
+	// 	return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
+	// }
 
-	const nodesAddress: string[] = []
-	const nodesBoosts: number[] = []
+	const nodesAddress: string[] = _nodesAddress
+	const nodesBoosts: number[] = _nodesBoosts
 
-	NFTAssets.forEach((n, index) => {
-		nodesAddress.push(_nodesAddress[index])
-		nodesBoosts.push(_nodesBoosts[index])
-	})
+	// NFTAssets.forEach((n, index) => {
+	// 	nodesAddress.push(_nodesAddress[index])
+	// 	nodesBoosts.push(_nodesBoosts[index])
+	// })
 
 	logger(Color.gray(`nodesAirdrop total has NFT nodes = [${nodesAddress.length}] nodesBoosts = ${nodesBoosts.length} `))
 	
@@ -171,7 +171,7 @@ const guardianMining = async (block: number) => {
 		dArray[j] = a
 		payArray[j] = b
 	}
-	logger(Color.red(`Total Guardian nodes = [${kkk}] split [${dArray.length}] Each Groop has [${dArray.forEach(n => n.length)}] wallets`))
+	logger(Color.red(`Total Guardian nodes = [${kkk}] split [${dArray.length}] Each Groop has [${dArray.map(n => n.length)}] wallets`))
 	
 	let ss = 0
 	let i = 0
