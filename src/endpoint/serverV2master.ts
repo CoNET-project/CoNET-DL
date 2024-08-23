@@ -277,6 +277,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	try {
 		const tx = await faucetContract.getFaucetBatch(wallet, ipAddress)
 		logger(`startFaucetProcess success tx = ${tx.hash}`)
+		faucetWaitingPool = []
 	} catch (ex) {
 		logger(`startFaucetProcess Error!`, ex)
 	}
@@ -388,7 +389,7 @@ interface faucetRequest {
 	ipAddress: string
 }
 
-const faucetWaitingPool: faucetRequest[] = []
+let faucetWaitingPool: faucetRequest[] = []
 export const faucet_call =  (wallet: string, ipAddress: string) => {
 	try {
 		let _wallet = ethers.getAddress(wallet).toLowerCase()
