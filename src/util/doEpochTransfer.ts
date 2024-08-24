@@ -52,7 +52,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
 	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
 	const minerRate = rate/walletArray.length
-	const payArray = walletArray.map (n => minerRate)
+	const payArray = walletArray.map (n => parseFloat(minerRate.toFixed(6)))
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${rate}] minerRate = [${ minerRate }]MinerWallets length = [${walletArray.length}]`))
 	CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
 	
