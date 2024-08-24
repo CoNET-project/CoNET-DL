@@ -85,6 +85,8 @@ export default class CNTP_Transfer_Manager {
 		let iii = 0, items = 0
 		const wallets: string[][] = []
 		const pay: number[][] = []
+		wallets[0] = []
+		pay[0] = []
 		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group Each group size = ${eachGroupLength}`))
 
 		this.pool.forEach((v, key) => {
