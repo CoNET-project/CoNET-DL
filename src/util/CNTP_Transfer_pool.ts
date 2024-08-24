@@ -93,7 +93,7 @@ export default class CNTP_Transfer_Manager {
 				return logger(Color.grey(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${this.pool.size}]`))
 			}
 		}
-
+		this.lastTransferTimeStamp = timeStamp
 		const splitGroupNumber = Math.round (this.pool.size / this.eachTransLength + 0.5)
 		const eachGroupLength = Math.floor(this.pool.size / splitGroupNumber)
 		let iii = 0, items = 0
