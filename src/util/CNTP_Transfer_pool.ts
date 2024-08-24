@@ -1,4 +1,4 @@
-import {ethers} from 'ethers'
+import {BlobLike, ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
 import {abi as CONET_Point_ABI} from './conet-point.json'
@@ -9,7 +9,7 @@ const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const transferTimeout = 1000 * 180			//	3 mins
 const checkGasPrice = 2000010007
 const longestWaitingTime = 1000 * 60 * 5	//	5 mins
-
+const MaxWaitingTimes = 10
 export default class CNTP_Transfer_Manager {
 
 	private pool: Map<string, number> = new Map()
@@ -27,24 +27,35 @@ export default class CNTP_Transfer_Manager {
 		pays.forEach(n => {
 			total += n
 		})
+		let transferCNTP_waitingProcess_times = 0
 
+		const transferCNTP_waitingProcess: (tx: ethers.TransactionResponse) => Promise<boolean> = (tx) => new Promise(async _resolve => {
+			logger(inspect(tx, false, 3, true ))
+
+			const time = setTimeout(() => {
+				logger(Color.red(`CNTP_Transfer_Manager transferCNTP Timeout Error! transferCNTP_waitingProcess_times = [${transferCNTP_waitingProcess_times}]`))
+				return _resolve(false)
+			}, transferTimeout)
+
+			const ks = await tx.wait (1)
+			clearTimeout(time)
+			if (!ks) {
+				logger(Color.red(`transferCNTP_waitingProcess Got await tx.wait (1) null return STOP waiting!`))
+				return _resolve (false)
+			}
+			//@ts-ignore
+			ks.data = ''
+			logger(Color.blue(`transferCNTP_waitingProcess SUCCESS! [${ks.hash}]`))
+			logger(inspect(ks, false, 3, true))
+			_resolve (true)
+		})
+		
 		try {
 			const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
 			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, hash = ${tx.hash}`))
 			tx.data = ''
-			logger(inspect(tx, false, 3, true ))
-			await tx.wait(1)
+			return resolve(await transferCNTP_waitingProcess (tx))
 
-			const time = setTimeout(() => {
-				logger(Color.red(`CNTP_Transfer_Manager transferCNTP Timeout Error!`))
-				return resolve (false)
-			}, transferTimeout)
-
-			clearTimeout(time)
-			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} waiting SUCCESS, hash = ${tx.hash}`))
-			tx.data = ''
-			logger(inspect(tx, false, 3, true ))
-			return resolve (true)
 		} catch (ex) {
 			logger(Color.red(`CNTP_Transfer_Manager transferCNTP Error!`), ex)
 			return resolve (false)
