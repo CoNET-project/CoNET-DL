@@ -31,6 +31,7 @@ export default class CNTP_Transfer_Manager {
 		try {
 			const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
 			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, hash = ${tx.hash}`))
+			tx.data = ''
 			logger(inspect(tx, false, 3, true ))
 			await tx.wait(1)
 
@@ -41,6 +42,7 @@ export default class CNTP_Transfer_Manager {
 
 			clearTimeout(time)
 			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} waiting SUCCESS, hash = ${tx.hash}`))
+			tx.data = ''
 			logger(inspect(tx, false, 3, true ))
 			return resolve (true)
 		} catch (ex) {
