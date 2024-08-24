@@ -124,7 +124,7 @@ export default class CNTP_Transfer_Manager {
 				}
 			}
 			if (typeof wallets[groupCount]?.push === 'undefined') {
-				logger(Color.red(`pool.forEach  wallets [${groupCount}]?.push === undefined`))
+				logger(Color.red(`pool.forEach  wallets [${groupCount}]?.push === undefined items = [${items}] eachGroupLength [${eachGroupLength}] groupSplit = ${groupSplit}`))
 			}
 			wallets[groupCount].push(key)
 			pay[groupCount].push(v)
