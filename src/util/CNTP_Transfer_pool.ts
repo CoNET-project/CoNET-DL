@@ -120,7 +120,7 @@ export default class CNTP_Transfer_Manager {
 
 		let iii_1 = 0
 
-		await mapLimit(wallets, this.privatePayArray.length, async (n, next) => {
+		await mapLimit(wallets, 2, async (n, next) => {
 			const waitTransfer = await this.transferCNTP(n, pay[iii_1], this.getPrivateWallet())
 			if (!waitTransfer) {
 				logger(Color.red(`transferCNTP got Error return transfer group [${ n.length }] to Pool, current Pool size = ${this.pool.size}! `))

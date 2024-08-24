@@ -63,6 +63,7 @@ const listenRateChange = async (block: number, rateBack: (rate: number) => void)
 }
 
 let EPOCH = 0
+
 export const listeningRate = async (rateBack: (rate: number) => void) => {
 	EPOCH = await newCONETProvider.getBlockNumber()
 	const rateSC = new ethers.Contract(rateAddr, rateABI, newCONETProvider)

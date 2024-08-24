@@ -10,7 +10,6 @@ import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import { masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
 import {logger} from '../util/logger'
-import {transferCCNTP} from '../util/transferManager'
 
 import CGPNsABI from '../util/CGPNs.json'
 
@@ -20,6 +19,8 @@ import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucetABI from './faucet_abi.json'
+
+import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -35,7 +36,7 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
-
+const CNTP_Transfer_manager = new CNTP_Transfer_class ([masterSetup.newFaucetAdmin[5]], 1000)
 
 
 const detailTransfer = async (tx: string) => {
@@ -212,7 +213,7 @@ interface winnerObj {
 	Daemon: NodeJS.Timeout|null
 }
 
-const transferPool: Map<string, number> = new Map()
+
 const LotteryWinnerPool: Map<string, winnerObj> = new Map()
 
 const randomLottery = (test = false) => {
@@ -248,15 +249,20 @@ const randomLottery = (test = false) => {
 
 process.on('unhandledRejection', (reason) => { throw reason; })
 
+const transferPool_new: Map<string, number> = new Map()
+
 const addToWinnerPool = (winnObj: winnerObj) => {
 	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
 	
 	
 	const setT = setTimeout(() => {
+
 		LotteryWinnerPool.delete (winnObj.wallet)
-		const send = transferPool.get(winnObj.wallet)||0
-		transferPool.set(winnObj.wallet, send + winnObj.bet)
+		const send = transferPool_new.get(winnObj.wallet)||0
+		transferPool_new.set(winnObj.wallet, send + winnObj.bet)
+		CNTP_Transfer_manager.addToPool([winnObj.wallet], [send + winnObj.bet])
 		logger(Colors.blue(`Move winner [${winnObj.wallet}:${winnObj.ipAddress}] Pay [${send + winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
+
 	}, doubleWinnerWaiting)
 
 	winnObj.Daemon = setT
@@ -287,34 +293,36 @@ const startFaucetProcess = () => new Promise(async resolve => {
 
 
 let stratlivenessV2_process = false
+
 const transferCNTP = () => new Promise(resolve => {
-	if (transferPool.size === 0 || stratlivenessV2_process) {
+	if (transferPool_new.size === 0 || stratlivenessV2_process) {
 		return resolve (false)
 	}
 
 	stratlivenessV2_process = true
-	logger(`Start transfer Lottery CNTP Wainging List length = ${transferPool.size}`)
+	logger(`Start transfer Lottery CNTP Wainging List length = ${transferPool_new.size}`)
 	const wallets: string[] = []
-	const pay: string[] = []
+	const pay: number[] = []
 
-	transferPool.forEach((v, key) => {
+	transferPool_new.forEach((v, key) => {
 		wallets.push(key)
-		pay.push(v.toFixed(10))
-		transferPool.delete(key)
+		pay.push(v)
 	})
+
+
 
 	let iii = 0
 
-	transferCCNTP ( masterSetup.newFaucetAdmin[5], wallets, pay, async err => {
-		mapLimit(wallets, 1, async (n, next) => {
-			await conet_lotte_new (n, parseInt(pay[iii]))
-			iii ++
-		}, err => {
-			logger(err)
-			stratlivenessV2_process = false
-			resolve (true)
-		})
+	
+	mapLimit(wallets, 1, async (n, next) => {
+		await conet_lotte_new (n, pay[iii])
+		iii ++
+	}, err => {
+		logger(err)
+		stratlivenessV2_process = false
+		resolve (true)
 	})
+	
 })
 
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
