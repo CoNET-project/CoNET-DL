@@ -57,6 +57,8 @@ export default class CNTP_Transfer_Manager {
 
 		} catch (ex) {
 			logger(Color.red(`CNTP_Transfer_Manager transferCNTP Error!`), ex)
+			console.log('\n\n',JSON.stringify(wallets), '\n\n')
+			console.log('\n\n',JSON.stringify(pays), '\n\n')
 			return resolve (false)
 		}
 		
