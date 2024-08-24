@@ -98,26 +98,27 @@ export default class CNTP_Transfer_Manager {
 		this.lastTransferTimeStamp = timeStamp
 		const splitGroupNumber = Math.round (this.pool.size / this.eachTransLength + 0.5)
 		const eachGroupLength = Math.floor(this.pool.size / splitGroupNumber)
-		let iii = 0, items = 0
+
 		const wallets: string[][] = []
 		const pay: number[][] = []
-		wallets[0] = []
-		pay[0] = []
 		
-
+		let groupCount = 0
+		let items = 0
 		this.pool.forEach((v, key) => {
 			if (v === 0) {
 				return this.pool.delete(key)
 			}
-			const groupSplit = iii % eachGroupLength
-			if (iii > 0 && !groupSplit ) {
-				
-				wallets[iii] = []
-				pay[iii] = []
+			const groupSplit = items % eachGroupLength
+
+			if (!groupSplit && items > 0) {
+				groupCount ++
+				wallets[groupCount] = []
+				pay[groupCount] = []
 			}
-			wallets[iii].push(key)
-			pay[iii].push(v)
-			iii++
+
+			wallets[groupCount].push(key)
+			pay[groupCount].push(v)
+			items ++
 			return this.pool.delete(key)
 		})
 
