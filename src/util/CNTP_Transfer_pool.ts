@@ -56,9 +56,9 @@ export default class CNTP_Transfer_Manager {
 			return resolve(await transferCNTP_waitingProcess (tx))
 
 		} catch (ex) {
-			logger(Color.red(`CNTP_Transfer_Manager wallets ${wallets.length} Data Langth ${JSON.stringify(wallets).length + JSON.stringify(pays).length} transferCNTP Error! `), ex)
+			logger(Color.red(`CNTP_Transfer_Manager wallets ${wallets.length} Data Langth ${JSON.stringify(wallets).length + JSON.stringify(fixedPay.map(n => n.toString())).length} transferCNTP Error! `), ex)
 			console.log('\n\n',JSON.stringify(wallets), '\n\n')
-			console.log('\n\n',JSON.stringify(fixedPay), '\n\n')
+			console.log('\n\n',JSON.stringify(fixedPay.map(n => n.toString())), '\n\n')
 			return resolve (false)
 		}
 		
