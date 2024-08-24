@@ -39,8 +39,6 @@ export default class CNTP_Transfer_Manager {
 		let transferCNTP_waitingProcess_times = 0
 
 		const transferCNTP_waitingProcess: (tx: ethers.TransactionResponse) => Promise<boolean> = (tx) => new Promise(async _resolve => {
-			logger(inspect(tx, false, 3, true ))
-
 			const time = setTimeout(() => {
 				logger(Color.red(`CNTP_Transfer_Manager transferCNTP Timeout Error! transferCNTP_waitingProcess_times = [${transferCNTP_waitingProcess_times}]`))
 				return _resolve(false)
@@ -52,8 +50,8 @@ export default class CNTP_Transfer_Manager {
 				logger(Color.red(`transferCNTP_waitingProcess Got await tx.wait (1) null return STOP waiting!`))
 				return _resolve (false)
 			}
-			
-			logger(Color.blue(`transferCNTP_waitingProcess SUCCESS! [${ks.hash}]`))
+			//@ts-ignore
+			ks.logsBloom = ''
 			logger(inspect(ks, false, 3, true))
 			_resolve (true)
 		})
