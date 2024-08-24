@@ -111,6 +111,7 @@ export default class CNTP_Transfer_Manager {
 
 		let wallets: string[] = []
 		let pays: number [] = []
+
 		this.pool.forEach((v, key) => {
 			if (v === 0) {
 				return this.pool.delete(key)
@@ -136,12 +137,19 @@ export default class CNTP_Transfer_Manager {
 			pays.push(v)
 			wallets.push(key)
 			items ++
+			
 			return this.pool.delete(key)
 		})
 
 		
-		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets group size = ${item.map(n => n.wallets.length)}`))
+		item[groupCount]={
+			wallets, pays
+		}
+		
+		
+		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets size = ${item.map(n => n.wallets.length)}`))
 		let iii_1 = 0
+
 		await mapLimit(item, this.privatePayArray.length/2, async (n, next) => {
 			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
 			const waitTransfer = await this.transferCNTP(n.wallets, n.pays, this.getPrivateWallet())
