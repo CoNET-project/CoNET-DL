@@ -36,7 +36,7 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
-const CNTP_Transfer_manager = new CNTP_Transfer_class ([masterSetup.newFaucetAdmin[5]], 1000)
+
 
 
 const detailTransfer = async (tx: string) => {
@@ -251,7 +251,7 @@ process.on('unhandledRejection', (reason) => { throw reason; })
 
 const transferPool_new: Map<string, number> = new Map()
 
-const addToWinnerPool = (winnObj: winnerObj) => {
+const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_Transfer_class) => {
 	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
 	
 	
@@ -333,7 +333,7 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	
 }
 
-const double = (wallet: string, ipAddress: string, test = false) => {
+const double = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_class, test = false) => {
 	const winner = LotteryWinnerPool.get (wallet)
 
 	if (!winner) {
@@ -341,7 +341,7 @@ const double = (wallet: string, ipAddress: string, test = false) => {
 		if (obj.lottery > 0){
 			addToWinnerPool ({
 				ipAddress, wallet, bet: obj.lottery, Daemon: null
-			})
+			}, CNYP_class)
 			
 		}
 		return obj
@@ -364,7 +364,7 @@ const double = (wallet: string, ipAddress: string, test = false) => {
 	
 	if (rand1) {
 		winner.bet *= 2
-		addToWinnerPool (winner)
+		addToWinnerPool (winner, CNYP_class)
 		logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] Winner ${winner.bet} WIN Double! `))
 		return {lottery: winner.bet}
 	}
@@ -373,19 +373,19 @@ const double = (wallet: string, ipAddress: string, test = false) => {
 	return {lottery: 0}
 }
 
-const soLottery = (wallet: string, ipaddress: string, res: Response, test = false) => {
-	const obj = double (wallet, ipaddress, test)
+const soLottery = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
+	const obj = double (wallet, ipaddress,CNYP_class, test)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
 
 }
 
-const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, test = false) => {
+const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
 	const lastAccess = walletPool.get(wallet)
 	if (lastAccess) {
 		return res.status(301).end()
 	}
-	soLottery (wallet, ipaddress, res, test)
+	soLottery (wallet, ipaddress, res, CNYP_class, test)
 }
 const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
 const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
@@ -422,6 +422,7 @@ class conet_dl_server {
 
 	private PORT = 8002
 	private serverID = ''
+	public CNTP_manager = new CNTP_Transfer_class ([masterSetup.newFaucetAdmin[5]], 1000)
 	private initSetupData = async () => {
 
 
@@ -539,7 +540,7 @@ class conet_dl_server {
 			logger(inspect(req.body, false, 3, true))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
-			return checkTimeLimited(wallet, ipaddress, res)
+			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
 		})
 
 		router.post ('/lottery_test', async ( req, res ) => {
@@ -547,7 +548,7 @@ class conet_dl_server {
 			logger(inspect(req.body, false, 3, true))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
-			return checkTimeLimited(wallet, ipaddress, res, true)
+			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager, true)
 		})
 
 		router.post ('/initV3',  async (req, res) => {
