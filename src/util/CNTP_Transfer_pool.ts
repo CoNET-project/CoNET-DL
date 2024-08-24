@@ -111,12 +111,13 @@ export default class CNTP_Transfer_Manager {
 			}
 			const groupSplit = iii % eachGroupLength
 			if (iii > 0 && !groupSplit ) {
-				iii++
+				
 				wallets[iii] = []
 				pay[iii] = []
 			}
 			wallets[iii].push(key)
 			pay[iii].push(v)
+			iii++
 			return this.pool.delete(key)
 		})
 
