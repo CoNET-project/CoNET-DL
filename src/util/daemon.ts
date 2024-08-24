@@ -57,7 +57,7 @@ const guardianReferrals = async (block: number) => {
 
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
-	CNTP_Transfer_guardianReferrals.addToPool(referralsAddress, referralsBoosts)
+	CNTP_Transfer_guardianReferrals.addToPool(_referralsAddress, referralsBoosts)
 
 
 }
