@@ -3,9 +3,10 @@ import Cluster from 'node:cluster'
 import { cpus } from 'node:os'
 import {logger} from '../util/logger'
 import Colors from 'colors/safe'
-import masterServer from './serverV2master'
+
 
 if (Cluster.isPrimary) {
+	const masterServer = require ('./serverV2master')
 	const forkWorker = () => {
 		
 		let numCPUs = cpus().length
