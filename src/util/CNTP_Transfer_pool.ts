@@ -21,6 +21,10 @@ export default class CNTP_Transfer_Manager {
 	private lastTransferTimeStamp = new Date().getTime()
 
 	private transferCNTP: (wallets: string[], pays: number[], wallet: ethers.Wallet) => Promise<boolean> =  (wallets, pays, wallet: ethers.Wallet) => new Promise(async resolve => {
+		if (wallets.length !== pays.length) {
+			logger(Color.red(`transferCNTP wallets.length = ${wallets.length} !== pays length ${pays.length}`))
+			return resolve (false)
+		}
 		const CNTP_Contract = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
 		let total = 0
 		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
@@ -56,7 +60,7 @@ export default class CNTP_Transfer_Manager {
 			return resolve(await transferCNTP_waitingProcess (tx))
 
 		} catch (ex) {
-			logger(Color.red(`CNTP_Transfer_Manager wallets ${wallets.length} Data Langth ${JSON.stringify(wallets).length + JSON.stringify(fixedPay.map(n => n.toString())).length} transferCNTP Error! `), ex)
+			logger(Color.red(`CNTP_Transfer_Manager wallets ${wallets.length} pays [${pays.length }] Data Langth ${JSON.stringify(wallets).length + JSON.stringify(fixedPay.map(n => n.toString())).length} transferCNTP Error! `), ex)
 			console.log('\n\n',JSON.stringify(wallets), '\n\n')
 			console.log('\n\n',JSON.stringify(fixedPay.map(n => n.toString())), '\n\n')
 			return resolve (false)
@@ -138,7 +142,7 @@ export default class CNTP_Transfer_Manager {
 			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.length} `))
 			const waitTransfer = await this.transferCNTP(n, pay[iii_1], this.getPrivateWallet())
 			if (!waitTransfer) {
-				logger(Color.red(`transferCNTP got Error return transfer group [${ n.length }] to Pool, current Pool size = ${this.pool.size}! `))
+				logger(Color.red(`transferCNTP got Error return transfer group wallet length [${ n.length }] pay length [${pay.length }]to Pool, current Pool size = ${this.pool.size}! `))
 				this.addToPool (n, pay[iii_1])
 			}
 			iii_1 ++
