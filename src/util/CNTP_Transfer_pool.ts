@@ -104,14 +104,18 @@ export default class CNTP_Transfer_Manager {
 		
 		let groupCount = 0
 		let items = 0
+
+		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets group size = ${wallets.map(n => n.length)}`))
+
 		this.pool.forEach((v, key) => {
 			if (v === 0) {
 				return this.pool.delete(key)
 			}
+
 			const groupSplit = items % eachGroupLength
 
 			if (!groupSplit) {
-				
+
 				wallets[groupCount] = []
 				pay[groupCount] = []
 
@@ -119,7 +123,9 @@ export default class CNTP_Transfer_Manager {
 					groupCount ++
 				}
 			}
-
+			if (typeof wallets[groupCount]?.push === 'undefined') {
+				logger(Color.red(`pool.forEach  wallets [${groupCount}]?.push === undefined`))
+			}
 			wallets[groupCount].push(key)
 			pay[groupCount].push(v)
 			items ++
