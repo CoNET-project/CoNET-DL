@@ -31,7 +31,9 @@ if (Cluster.isPrimary) {
 		forkWorker()
 	}, 5000)
 	
-	new masterServer()
+	new masterServer.conet_dl_server()
 } else {
+
+
 	new server()
 }
