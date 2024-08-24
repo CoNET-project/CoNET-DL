@@ -95,7 +95,7 @@ export default class CNTP_Transfer_Manager {
 		}
 
 		const splitGroupNumber = Math.round (this.pool.size / this.eachTransLength + 0.5)
-		const eachGroupLength = this.pool.size / splitGroupNumber
+		const eachGroupLength = Math.floor(this.pool.size / splitGroupNumber)
 		let iii = 0, items = 0
 		const wallets: string[][] = []
 		const pay: number[][] = []
