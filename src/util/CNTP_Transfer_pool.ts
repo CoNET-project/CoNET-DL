@@ -23,7 +23,7 @@ export default class CNTP_Transfer_Manager {
 	private transferCNTP: (wallets: string[], pays: number[], wallet: ethers.Wallet) => Promise<boolean> =  (wallets, pays, wallet: ethers.Wallet) => new Promise(async resolve => {
 		const CNTP_Contract = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
 		let total = 0
-		const fixedPay = pays.map(n => ethers.parseEther(n.toString()))
+		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
 		pays.forEach(n => {
 			total += n
 		})
