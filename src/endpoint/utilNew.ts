@@ -323,7 +323,6 @@ const startRefferPool = async () => {
 		logger(`startRefferPool Error! `, ex)
 	}
 
-	
 
 	setTimeout(() => {
 		startRefferPoolLock = false
