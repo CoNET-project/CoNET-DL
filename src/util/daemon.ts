@@ -5,14 +5,12 @@ import {masterSetup} from './util'
 import {inspect} from 'node:util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 
-import {mapLimit} from 'async'
-const conet_Holesky_rpc = 'https://rpc.conet.network'
-
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 
 let EPOCH = 0
 let transferEposh = 0
 const newGuardianNodes_ContractV4 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
+const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 const nodesEachEPOCH = 304.41400304414003 * 5
 const nodeRferralsEachEPOCH = 16.742770167427702 * 5
@@ -149,7 +147,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 }
 
 const startDaemonProcess = async (block: number) => {
-	console.log('')
+	console.log('\n\n')
 	guardianMining(block)
 	guardianReferrals(block)
 	

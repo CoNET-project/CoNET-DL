@@ -7,34 +7,15 @@ import {mapLimit} from 'async'
 import {homedir} from 'node:os'
 import { join } from 'node:path'
 import {readFile} from 'node:fs'
-import {checkGasPrice, longestWaitingTime, transferCCNTP } from '../util/transferManager'
+import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 
 import rateABI from '../endpoint/conet-rate.json'
 
-
 const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
-
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 
-const splitLength = 900
 
-let waitingWalletArray: string[] = []
-let waitingPayArray: string[] = []
-let lastTransferTimeStamp = new Date().getTime()
-
-const epoch: number[] = []
-
-const startTransfer = (privateKey: string, wallets: string[], payList: string[]) => new Promise(resolve => {
-	return transferCCNTP (privateKey, wallets, payList, async err => {
-		if (err) {
-			return setTimeout(async () => {
-				resolve (await startTransfer (privateKey, wallets, payList))
-			}, 1000)
-		}
-		return resolve (true)
-	})
-})
 const localIPFS_path = join(homedir(), '.data')
 const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new Promise(resolve => {
 	const path = join(localIPFS_path, `free_wallets_${block}`)
@@ -47,85 +28,12 @@ const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new 
 	})
 })	
 
-const startTransferAll = async () => {
 
-	if (waitingWalletArray.length == 0) {
-		return logger(`startTransferAll has waitingWalletArray is null to STOP`)
-	}
-
-	const feeData = await provider.getFeeData()
-	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
-	const timeStamp = new Date().getTime()
-
-	if ((gasPrice > checkGasPrice || !gasPrice )) {
-		if (timeStamp - lastTransferTimeStamp < longestWaitingTime) {
-			return logger(Color.red(`startTransfer GAS [${gasPrice}] > ${checkGasPrice}`))
-		}
-	}
-
-	const kkk = waitingWalletArray.length
-	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength+0.5)
-	const splitBase =  Math.floor(kkk/splitTimes)
-
-	const dArray: string[][] = []
-	const pArray: string[][] = []
-
-
-	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
-		const a  = waitingWalletArray.slice(i, i + splitBase)
-		const b  = waitingPayArray.slice(i, i + splitBase)
-		dArray[j] = a
-		pArray[j] = b
-	}
-
-	const transferPool: any[]= []
-	let i = 0
-
-	logger(`Total wallets [${waitingWalletArray.length}] split [${splitBase}] Groop Each has [${dArray.map(n => n.length)}] wallets`)
-
-	dArray.forEach( (n, index) => {
-		const paymentList = pArray[index]
-		i ++
-
-		if (i > masterSetup.conetCNTPAdmin.length-1) {
-			i = 0
-		}
-
-		transferPool.push({
-			privateKey: masterSetup.conetCNTPAdmin[i],
-			walletList: n,
-			payList: paymentList
-		})
-	})
-	
-	logger(Color.blue(`transferPool.length = ${transferPool.length}`))
-
-	await mapLimit(transferPool, 1, async ( n, next) => {
-		await startTransfer (n.privateKey, n.walletList, n.payList)
-	})
-
-	logger (`stratFreeMinerTransfer success! `)
-	waitingWalletArray = waitingPayArray = []
-	lastTransferTimeStamp = new Date().getTime()
-	stratFreeMinerTransfer ()
-}
-
-const stratFreeMinerTransfer = async () => {
-
-	if (epoch.length === 0) {
-		return startTransferAll ()
-	}
-	const block = epoch.shift()
-
-	if (!block) {
-		return 
-	}
+const stratFreeMinerTransfer = async (block: number) => {
 
 	const data = await getLocalIPFS (block.toString())
 	
 	if (!data) {
-		stratFreeMinerTransfer()
-
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
 	}
 	
@@ -134,43 +42,33 @@ const stratFreeMinerTransfer = async () => {
 	try{
 		walletArray = JSON.parse(data)
 	} catch (ex) {
-		stratFreeMinerTransfer()
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
 	
-	if (!walletArray.length) {
-		stratFreeMinerTransfer()
+	if (!walletArray?.length) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 	
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-	const rate = await rateSC.rate()
-	const minerRate =rate/BigInt(walletArray.length)
-	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${ethers.formatEther(rate)}] minerRate = [${ ethers.formatEther(minerRate) }] waitingWalletArray = ${waitingWalletArray.length} waitingPayArray = ${waitingPayArray.length} MinerWallets length = [${walletArray.length}]`))
-
-	waitingWalletArray = [...waitingWalletArray, ...walletArray]
-	waitingPayArray = [...waitingPayArray, ...walletArray.map(n => ethers.formatEther(minerRate))]
-
-	logger(`walletArray.forEach success! waitingWalletArray === ${waitingWalletArray.length}, waitingPayArray = ${waitingPayArray.slice(0,5)} waitingWalletArray = ${waitingWalletArray.slice(0,5)}`)
-
-	const merged = mergeTransfersv1 (waitingWalletArray, waitingPayArray)
-	waitingWalletArray = merged.walletList
-	waitingPayArray = merged.payList
-	stratFreeMinerTransfer ()
+	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
+	const minerRate = rate/walletArray.length
+	const payArray = walletArray.map (n => minerRate)
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${rate}] minerRate = [${ minerRate }]MinerWallets length = [${walletArray.length}]`))
+	CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
+	
 }
+
 let EPOCH = 0
 
 const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
 
-	provider.on('block', async _block => {
+	provider.on('block', async (_block: number) => {
 		if (_block === EPOCH + 1) {
-			epoch.push(_block-2)
-			stratFreeMinerTransfer()
+			stratFreeMinerTransfer(_block - 2)
 			EPOCH ++
 		}
-		
 	})
 }
-
+const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager(masterSetup.conetCNTPAdmin, 1000)
 startListeningCONET_Holesky_EPOCH_v2()
