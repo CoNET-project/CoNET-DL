@@ -50,8 +50,6 @@ export default class CNTP_Transfer_Manager {
 				logger(Color.red(`transferCNTP_waitingProcess Got await tx.wait (1) null return STOP waiting!`))
 				return _resolve (false)
 			}
-			//@ts-ignore
-			ks.logsBloom = ''
 			logger(inspect(ks, false, 3, true))
 			_resolve (true)
 		})
