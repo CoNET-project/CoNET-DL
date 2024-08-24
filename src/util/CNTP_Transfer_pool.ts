@@ -115,13 +115,13 @@ export default class CNTP_Transfer_Manager {
 			const groupSplit = items % eachGroupLength
 
 			if (!groupSplit) {
-
-				wallets[groupCount] = []
-				pay[groupCount] = []
-
 				if (items > 0) {
 					groupCount ++
 				}
+				wallets[groupCount] = []
+				pay[groupCount] = []
+
+				
 			}
 			if (typeof wallets[groupCount]?.push === 'undefined') {
 				logger(Color.red(`pool.forEach  wallets [${groupCount}]?.push === undefined items = [${items}] eachGroupLength [${eachGroupLength}] groupSplit = ${groupSplit}`))
