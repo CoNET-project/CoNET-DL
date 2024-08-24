@@ -5,11 +5,13 @@ import {newCNTP_v8, mergeTransfersv1} from './util'
 import {ethers} from 'ethers'
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import { inspect } from 'node:util'
+
 interface transferObj {
 	privateKey: string
 	walletList: string[]
 	payList: string []
 }
+
 export const transferPool: transferObj[] = []
 let startTransfering = false
 let marginPooling = false

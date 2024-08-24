@@ -8,7 +8,7 @@ import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import {mapLimit} from 'async'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
-import {transferPool, startTransfer} from './transferManager'
+import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 
 let EPOCH = 0
 let transferEposh = 0
@@ -57,14 +57,8 @@ const guardianReferrals = async (block: number) => {
 
 	logger(Color.grey(`nodesReferrals total wallet [${_referralsAddress.length}] total nodes array length [${_referralsNodes.length}] total Piece = [${totalBoostPiece}] total nodes = [${totalNodes}] eachBoostToken [nodeRferralsEachEPOCH ${nodeRferralsEachEPOCH}/(totalBoostPiece ${totalBoostPiece} * totalNodes ${totalNodes})] = [${eachBoostToken}] total payment = ${total}`))
 
-	const a = {
-		privateKey: masterSetup.guardianAmin[masterSetup.guardianAmin.length - 1],
-		walletList: _referralsAddress,
-		payList: referralsBoosts.map(n =>n.toFixed(10))
-	}
-	transferPool.push(a)
+	CNTP_Transfer_guardianReferrals.addToPool(referralsAddress, referralsBoosts)
 
-	startTransfer()
 
 }
 const splitLength = 500
@@ -126,67 +120,18 @@ const guardianMining = async (block: number) => {
 	const eachBoostToken = nodesEachEPOCH/totalBoosts
 	logger(Color.grey(`nodesAirdrop total boost [${totalBoosts}] eachBoostToken = ${eachBoostToken}`))
 
-	const payNodes: string[] = nodesBoosts.map (n => (n*eachBoostToken).toFixed(10))
+	const payNodes: number[] = nodesBoosts.map (n =>n*eachBoostToken)
 	let total = 0
-	payNodes.forEach(n => total += parseFloat(n))
+	payNodes.forEach(n => total += n)
 
 	logger(Color.grey(`total pay ${total} nodesAddress.length [${nodesAddress.length}] payNodes.legth [${payNodes.length}] `))
 
-	const yyy: Map<number, number> = new Map()
-	nodesBoosts.forEach (n => {
-		const kk = yyy.get(n)
-		if (!kk ) {
-			yyy.set (n, 1)
-		} else {
-			yyy.set (n, kk + 1)
-		}
-	})
+	CNTP_Transfer_guardianMining.addToPool(nodesAddress, payNodes)
 
-
-	const kkk = nodesAddress.length
-	const splitTimes = kkk < splitLength ? 1 : Math.round(kkk/splitLength+0.5)
-	const splitBase =  Math.floor(kkk/splitTimes)
-	const dArray: string[][] = []
-	const payArray: string[][] = []
-
-	
-
-	for (let i = 0, j = 0; i < kkk; i += splitBase, j ++) {
-		const a  = nodesAddress.slice(i, i + splitBase)
-		const b = payNodes.slice(i, i + splitBase)
-		dArray[j] = a
-		payArray[j] = b
-	}
-	logger(Color.red(`Total Guardian nodes = [${kkk}] splitTimes = ${splitTimes} splitBase = ${splitBase} split [${dArray.length}] Each Groop has [${dArray.map(n => n.length)}] wallets`))
-	
-
-	let i = 0
-	dArray.forEach((n, index) => {
-		i ++
-		if (i > masterSetup.guardianAmin.length-3) {
-			i = 0
-		}
-		
-		transferPool.push({
-			privateKey: masterSetup.guardianAmin[i],
-			walletList: n,
-			payList: payArray[index]
-		})
-
-	})
-	
-	// transferPool.push({
-	// 	privateKey: masterSetup.conetFaucetAdmin2,
-	// 	walletList: nodesAddress,
-	// 	payList: payNodes
-	// })
-	
-	startTransfer()
-	
 }
 
-
-
+const CNTP_Transfer_guardianMining = new CNTP_Transfer_Manager(masterSetup.guardianAmin, 1000)
+const CNTP_Transfer_guardianReferrals = new CNTP_Transfer_Manager(masterSetup.guardianReferralAdmin, 1000)
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
