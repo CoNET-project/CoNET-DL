@@ -10,6 +10,11 @@ const transferTimeout = 1000 * 180			//	3 mins
 const checkGasPrice = 2000010007
 const longestWaitingTime = 1000 * 60 * 5	//	5 mins
 const MaxWaitingTimes = 10
+
+interface paymentItem {
+	wallets: string[]
+	pays: number[]
+}
 export default class CNTP_Transfer_Manager {
 
 	private pool: Map<string, number> = new Map()
@@ -103,14 +108,14 @@ export default class CNTP_Transfer_Manager {
 		const splitGroupNumber = Math.round (this.pool.size / this.eachTransLength + 0.5)
 		const eachGroupLength = Math.floor(this.pool.size / splitGroupNumber)
 
-		const wallets: string[][] = []
-		const pay: number[][] = []
+		const item: paymentItem[] = []
 		
 		let groupCount = 0
 		let items = 0
 
 		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets group size = ${wallets.map(n => n.length)}`))
-
+		let wallets: string[] = []
+		let pays: number [] = []
 		this.pool.forEach((v, key) => {
 			if (v === 0) {
 				return this.pool.delete(key)
@@ -119,30 +124,39 @@ export default class CNTP_Transfer_Manager {
 			const groupSplit = items % eachGroupLength
 
 			if (!groupSplit) {
+				item[groupCount] = {
+					wallets,
+					pays
+				}
+
 				if (items > 0) {
 					groupCount ++
 				}
-				wallets[groupCount] = []
-				pay[groupCount] = []
-
+				
+				wallets = []
+				pays = []
 			}
 			
-			wallets[groupCount].push(key)
-			pay[groupCount].push(v)
+			
+			pays.push(v)
+			wallets.push(key)
 			items ++
 			return this.pool.delete(key)
 		})
 
-		let iii_1 = 0
+		
 		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets group size = ${wallets.map(n => n.length)}`))
-		await mapLimit(wallets, this.privatePayArray.length/2, async (n, next) => {
-			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.length} pays length = ${pay[iii_1].length}`))
-			const waitTransfer = await this.transferCNTP(n, pay[iii_1], this.getPrivateWallet())
+		let iii_1 = 0
+		await mapLimit(item, this.privatePayArray.length/2, async (n, next) => {
+			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
+			const waitTransfer = await this.transferCNTP(n.wallets, n.pays, this.getPrivateWallet())
 			if (!waitTransfer) {
-				logger(Color.red(`transferCNTP got Error return transfer group wallet length [${ n.length }] pay length [${pay.length }]to Pool, current Pool size = ${this.pool.size}! `))
-				this.addToPool (n, pay[iii_1])
+				logger(Color.red(`transferCNTP [${iii_1}] got Error return transfer group wallet length [${ n.wallets.length }] pay length [${n.pays.length}]to Pool, current Pool size = ${this.pool.size}! `))
+				this.addToPool (n.wallets,n.pays)
+			} else {
+				logger(Color.blue(`transferProcess work number ${iii_1} finished by result ${waitTransfer} !`))
 			}
-			logger(Color.blue(`transferProcess work number ${iii_1} finished by result ${waitTransfer} !`))
+			
 			iii_1 ++
 			
 		})
