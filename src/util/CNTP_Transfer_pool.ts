@@ -125,11 +125,8 @@ export default class CNTP_Transfer_Manager {
 				wallets[groupCount] = []
 				pay[groupCount] = []
 
-				
 			}
-			if (typeof wallets[groupCount]?.push === 'undefined') {
-				logger(Color.red(`pool.forEach  wallets [${groupCount}]?.push === undefined items = [${items}] eachGroupLength [${eachGroupLength}] groupSplit = ${groupSplit}`))
-			}
+			
 			wallets[groupCount].push(key)
 			pay[groupCount].push(v)
 			items ++
@@ -138,15 +135,16 @@ export default class CNTP_Transfer_Manager {
 
 		let iii_1 = 0
 		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets group size = ${wallets.map(n => n.length)}`))
-		await mapLimit(wallets, this.privatePayArray.length, async (n, next) => {
+		await mapLimit(wallets, this.privatePayArray.length/2, async (n, next) => {
 			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.length} pays length = ${pay[iii_1].length}`))
 			const waitTransfer = await this.transferCNTP(n, pay[iii_1], this.getPrivateWallet())
 			if (!waitTransfer) {
 				logger(Color.red(`transferCNTP got Error return transfer group wallet length [${ n.length }] pay length [${pay.length }]to Pool, current Pool size = ${this.pool.size}! `))
 				this.addToPool (n, pay[iii_1])
 			}
-			iii_1 ++
 			logger(Color.blue(`transferProcess work number ${iii_1} finished by result ${waitTransfer} !`))
+			iii_1 ++
+			
 		})
 
 
