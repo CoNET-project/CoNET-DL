@@ -202,7 +202,7 @@ export default class CNTP_Transfer_Manager {
 			const wallet = n.toLowerCase()
 			const before = this.pool.get (wallet) || 0
 			const pay = before + payArray[index]
-			logger(Color.magenta(`added wallet ${wallet} before [${before}] + payArray = [${payArray}] = after [${pay}]`))
+			//logger(Color.magenta(`added wallet ${wallet} before [${before}] + payArray = [${payArray}] = after [${pay}]`))
 			this.pool.set(wallet, pay)
 		})
 
