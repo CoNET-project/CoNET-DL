@@ -286,45 +286,10 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	return resolve(true)
 })
 
-
-let stratlivenessV2_process = false
-
-const transferCNTP = () => new Promise(resolve => {
-	if (transferPool_new.size === 0 || stratlivenessV2_process) {
-		return resolve (false)
-	}
-
-	stratlivenessV2_process = true
-	logger(`Start transfer Lottery CNTP Wainging List length = ${transferPool_new.size}`)
-	const wallets: string[] = []
-	const pay: number[] = []
-
-	transferPool_new.forEach((v, key) => {
-		wallets.push(key)
-		pay.push(v)
-	})
-
-
-
-	let iii = 0
-
-	
-	mapLimit(wallets, 1, async (n, next) => {
-		await conet_lotte_new (n, pay[iii])
-		iii ++
-	}, err => {
-		logger(err)
-		stratlivenessV2_process = false
-		resolve (true)
-	})
-	
-})
-
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
-	Promise.all([
-		await transferCNTP (),
-		await startFaucetProcess()
-	])
+	
+	await startFaucetProcess()
+	
 	
 }
 
