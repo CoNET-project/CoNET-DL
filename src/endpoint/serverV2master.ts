@@ -267,6 +267,7 @@ const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_Transfe
 
 let startFaucetProcessStatus = false
 const MAX_TX_Waiting = 1000 * 60 * 3
+
 const startFaucetProcess = () => new Promise(async resolve => {
 	if (!faucetWaitingPool.length || startFaucetProcessStatus) {
 		return resolve (false)
@@ -279,15 +280,21 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
 	const wallet = faucetWaitingPool.map(n => n.wallet)
 	logger(inspect(wallet, false, 3, true))
+
 	try {
+		
 		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
 		logger(`start Faucet Process tx = ${tx.hash}`)
 		const timeout= setTimeout(() => {
 			logger(`startFaucetProcess waiting tx conform TIMEOUT error! return Faucet array`)
+			startFaucetProcessStatus = false
+			return resolve(false)
 		}, MAX_TX_Waiting)
 
 		const tx_conform = await tx.wait()
+
 		clearTimeout(timeout)
+
 		if (!tx_conform) {
 			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
 			startFaucetProcessStatus = false
@@ -297,10 +304,12 @@ const startFaucetProcess = () => new Promise(async resolve => {
 		logger(`startFaucetProcess `)
 		logger(inspect(tx_conform, false, 3, true))
 		faucetWaitingPool = []
+
 	} catch (ex) {
 		logger(`startFaucetProcess Error!`, ex)
 
 	}
+
 	startFaucetProcessStatus = false
 	return resolve(true)
 })
