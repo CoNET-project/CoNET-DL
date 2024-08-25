@@ -284,7 +284,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	try {
 		
 		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
-		logger(`start Faucet Process tx = ${tx.hash}`)
+		logger(`start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
 		const timeout= setTimeout(() => {
 			logger(`startFaucetProcess waiting tx conform TIMEOUT error! return Faucet array`)
 			startFaucetProcessStatus = false
@@ -378,7 +378,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
 const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[0], provideCONET)
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
 interface faucetRequest {
