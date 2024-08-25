@@ -133,12 +133,12 @@ export default class CNTP_Transfer_Manager {
 				pays = []
 			}
 			
-			
+			this.pool.delete(key)
 			pays.push(v)
 			wallets.push(key)
 			items ++
 			
-			return this.pool.set(key, 0)
+			return 
 		})
 
 		
@@ -200,7 +200,9 @@ export default class CNTP_Transfer_Manager {
 
 		wallets.forEach((n, index) => {
 			const wallet = n.toLowerCase()
-			const pay = (this.pool.get (wallet)|| 0) + payArray[index]
+			const before = this.pool.get (wallet) || 0
+			const pay = before + payArray[index]
+			logger(Color.magenta(`added wallet ${wallet} before [${before}] after [${pay}]`))
 			this.pool.set(wallet, pay)
 		})
 
