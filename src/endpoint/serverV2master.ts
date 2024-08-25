@@ -249,19 +249,14 @@ const randomLottery = (test = false) => {
 
 process.on('unhandledRejection', (reason) => { throw reason; })
 
-const transferPool_new: Map<string, number> = new Map()
 
 const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_Transfer_class) => {
 	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
 	
-	
 	const setT = setTimeout(() => {
-
 		LotteryWinnerPool.delete (winnObj.wallet)
-		const send = transferPool_new.get(winnObj.wallet)||0
-		transferPool_new.set(winnObj.wallet, send + winnObj.bet)
-		CNTP_Transfer_manager.addToPool([winnObj.wallet], [send + winnObj.bet])
-		logger(Colors.blue(`Move winner [${winnObj.wallet}:${winnObj.ipAddress}] Pay [${send + winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
+		CNTP_Transfer_manager.addToPool([winnObj.wallet], [winnObj.bet])
+		logger(Colors.blue(`Move winner [${winnObj.wallet}:${winnObj.ipAddress}] Pay [${winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
 
 	}, doubleWinnerWaiting)
 

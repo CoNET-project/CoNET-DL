@@ -33,7 +33,5 @@ if (Cluster.isPrimary) {
 	
 	new masterServer()
 } else {
-
-
 	new server()
 }
