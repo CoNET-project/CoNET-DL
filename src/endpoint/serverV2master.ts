@@ -389,7 +389,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 }
 const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
 const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
-const faucetWallet = new ethers.Wallet(masterSetup.gameCNTPAdmin[0], provideCONET)
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
 const faucetContract = new ethers.Contract(faucetV2Addr, faucetABI, faucetWallet)
 
 interface faucetRequest {
