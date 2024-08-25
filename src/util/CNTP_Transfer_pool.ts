@@ -114,7 +114,7 @@ export default class CNTP_Transfer_Manager {
 
 		this.pool.forEach((v, key) => {
 			if (v === 0) {
-				return this.pool.delete(key)
+				return
 			}
 
 			const groupSplit = items % eachGroupLength
@@ -138,7 +138,7 @@ export default class CNTP_Transfer_Manager {
 			wallets.push(key)
 			items ++
 			
-			return this.pool.delete(key)
+			return this.pool.set(key, 0)
 		})
 
 		
