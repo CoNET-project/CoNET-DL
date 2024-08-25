@@ -64,7 +64,7 @@ export const longestWaitingTime = 1000 * 60 * 10
 let transferWithoutGasFee = false
 let transferWithoutGasFeeLoopLength = 0
 
-export const startTransfer = async () => {
+const startTransfer = async () => {
 
 	if (startTransfering) {
 		return

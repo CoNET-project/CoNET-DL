@@ -86,6 +86,7 @@ export default class CNTP_Transfer_Manager {
 		const timeStamp = new Date().getTime()
 		const feeData = await this.rpcProvider.getFeeData()
 		logger(inspect(feeData, false, 3, true))
+
 		if (!feeData.gasPrice) {
 			this.transferProcessStatus = false
 			return logger(Color.red(`transferProcess start with GAS NULL ERROR`))
@@ -149,8 +150,10 @@ export default class CNTP_Transfer_Manager {
 		logger(Color.magenta(`transferProcess pool size = ${this.pool.size} Max length = ${this.eachTransLength} split ${splitGroupNumber} Group wallets size = ${item.map(n => n.wallets.length)}`))
 		let iii_1 = 0
 
-		await mapLimit(item, this.privatePayArray.length/2, async (n, next) => {
+		await mapLimit(item, this.privatePayArray.length, async (n, next) => {
 			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
+			logger(inspect(n.wallets, false, 3, true))
+			logger(inspect(n.pays, false, 3, true))
 			const waitTransfer = await this.transferCNTP(n.wallets, n.pays, this.getPrivateWallet())
 			if (!waitTransfer) {
 				logger(Color.red(`transferCNTP [${iii_1}] got Error return transfer group wallet length [${ n.wallets.length }] pay length [${n.pays.length}]to Pool, current Pool size = ${this.pool.size}! `))
@@ -194,6 +197,7 @@ export default class CNTP_Transfer_Manager {
 		if (wallets.length !== payArray.length) {
 			return logger(Color.red(`CNTP_Transfer_Manager addToPool wallets[${wallets.length}] !== payArray [${payArray.length}] Error!`))
 		}
+
 		wallets.forEach((n, index) => {
 			const wallet = n.toLowerCase()
 			const pay = (this.pool.get (wallet)|| 0) + payArray[index]

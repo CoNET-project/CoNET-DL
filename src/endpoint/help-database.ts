@@ -53,6 +53,7 @@ const option: ClientOptions = {
 	keyspace: masterSetup.Cassandra.keyspace,
 	protocolOptions: { maxVersion: types.protocolVersion.v4, maxSchemaAgreementWaitSeconds: 360 },
 	prepareOnAllHosts: true,
+	
 	pooling: {maxRequestsPerConnection: 128}
 }
 
