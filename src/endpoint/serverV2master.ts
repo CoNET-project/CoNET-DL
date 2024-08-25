@@ -19,6 +19,7 @@ import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucetABI from './faucet_abi.json'
+import faucet_v3_ABI from './faucet_v3.abi.json'
 
 import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
 
@@ -265,22 +266,40 @@ const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_Transfe
 }
 
 let startFaucetProcessStatus = false
+const MAX_TX_Waiting = 1000 * 60 * 3
 const startFaucetProcess = () => new Promise(async resolve => {
 	if (!faucetWaitingPool.length || startFaucetProcessStatus) {
 		return resolve (false)
 	}
+
 	startFaucetProcessStatus = true
 	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
+
 	logger(inspect(faucetWaitingPool, false, 3, true))
 	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
 	const wallet = faucetWaitingPool.map(n => n.wallet)
 
 	try {
-		const tx = await faucetContract.getFaucetBatch(wallet, ipAddress)
-		logger(`startFaucetProcess success tx = ${tx.hash}`)
+		const tx = await faucet_v3_Contract.getFaucetBatch(wallet, ipAddress)
+		logger(`start Faucet Process tx = ${tx.hash}`)
+		const timeout= setTimeout(() => {
+			logger(`startFaucetProcess waiting tx conform TIMEOUT error! return Faucet array`)
+		}, MAX_TX_Waiting)
+
+		const tx_conform = await tx.wait()
+		clearTimeout(timeout)
+		if (!tx_conform) {
+			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
+			startFaucetProcessStatus = false
+			return resolve(false)
+		}
+
+		logger(`startFaucetProcess `)
+		logger(inspect(tx_conform, false, 3, true))
 		faucetWaitingPool = []
 	} catch (ex) {
 		logger(`startFaucetProcess Error!`, ex)
+
 	}
 	startFaucetProcessStatus = false
 	return resolve(true)
@@ -349,8 +368,9 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 }
 const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
 const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
-const faucetContract = new ethers.Contract(faucetV2Addr, faucetABI, faucetWallet)
+const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[0], provideCONET)
+const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
 interface faucetRequest {
 	wallet: string
