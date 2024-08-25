@@ -278,7 +278,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	logger(inspect(faucetWaitingPool, false, 3, true))
 	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
 	const wallet = faucetWaitingPool.map(n => n.wallet)
-
+	logger(inspect(wallet, false, 3, true))
 	try {
 		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
 		logger(`start Faucet Process tx = ${tx.hash}`)
