@@ -12,7 +12,7 @@ import { masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '
 import {logger} from '../util/logger'
 
 import CGPNsABI from '../util/CGPNs.json'
-
+import devplopABI from './develop.ABI.json'
 import {ethers, FixedNumber} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
@@ -23,11 +23,13 @@ import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
 
+
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
 	import {createServer} from 'node:http'
+import { yarn } from 'global-dirs'
 
 //	for debug
 	// import {createServer as createServerForDebug} from 'node:http'
@@ -316,13 +318,57 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	startFaucetProcessStatus = false
 	return resolve(true)
 })
+const scAddr = '0x81Ee2693b21d7B1D3304136923cFaF481CA485A8'.toLowerCase()
+const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
+const developWalletPool: Map<string, boolean> = new Map()
+
+const searchdevelopWallet = async (startBlock: number, currentBlock: number) => {
+	const blocks: number[] = []
+	for (let i = startBlock; i < currentBlock; i ++) {
+		blocks.push(i)
+	}
+
+	await mapLimit(blocks, 4, async (n, next) => {
+		logger(Colors.gray(`Search block ${n}`))
+		await developWalletListening (n)
+	})
+}
+
+const developWalletListening = async (block: number) => {
+	
+	const blockTs = await provideCONET.getBlock(block)
+
+	if (!blockTs?.transactions) {
+        return 
+    }
+
+	for (let tx of blockTs.transactions) {
+
+		const event = await provideCONET.getTransaction(tx)
+		
+		if ( event?.to?.toLowerCase() === scAddr) {
+			logger(Colors.blue(`event?.to [${ event.to}] === scAddr[${scAddr}]`))
+			if ( event?.data) {
+				const kk = sc.interface.parseTransaction(event)
+				if (kk?.args) {
+					const wallet = kk.args[0].toLowerCase()
+					const admin: boolean = kk.args[1]
+					developWalletPool.set(wallet, admin)
+					logger(Colors.blue(`Develop Wallet Listening set [${wallet}] [${admin}]`))
+				}
+			}
+		}
+		
+	}
+}
 
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	await Promise.all([
 		ticketPoolProcess(eposh),
-		startFaucetProcess()
+		startFaucetProcess(),
+		developWalletListening(eposh)
+
 	])
-	
 }
 
 const double = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_class, test = false) => {
@@ -369,7 +415,6 @@ const soLottery = (wallet: string, ipaddress: string, res: Response, CNYP_class:
 	const obj = double (wallet, ipaddress,CNYP_class, test)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
-
 }
 
 const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
@@ -399,6 +444,12 @@ interface faucetRequest {
 const ticketPool: Map<string, number> = new Map()
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
+	const develop = developWalletPool.get (wallet)
+	if (develop) {
+		const _ticket = (ticketPool.get (wallet)||0) + 1
+		ticketPool.set(wallet, _ticket)
+		return res.status(200).json({ticket:1}).end()
+	}
 	const rand = !(Math.floor(Math.random()*4))
 	if (rand) {
 		return res.status(200).json({}).end()
@@ -467,11 +518,14 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 let block = 0
 
 const faucet_call_pool:Map<string, boolean> = new Map()
+
 class conet_dl_server {
 
 	private PORT = 8002
 	private serverID = ''
+
 	public CNTP_manager = new CNTP_Transfer_class ([masterSetup.gameCNTPAdmin[0]], 1000)
+
 	private initSetupData = async () => {
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
@@ -484,9 +538,9 @@ class conet_dl_server {
 				block++
 				return stratlivenessV2(_block, this)
 			}
-			
 		})
-
+		
+		searchdevelopWallet (65784, block)
 		this.startServer()
 	}
 
@@ -598,11 +652,12 @@ class conet_dl_server {
 		})
 
 		router.post ('/lottery_test', async ( req, res ) => {
-			logger(Colors.blue(`Cluster Master got: /lottery_test`))
-			logger(inspect(req.body, false, 3, true))
-			const wallet = req.body.obj.walletAddress
-			const ipaddress = req.body.obj.ipAddress
-			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager, true)
+			return res.status(403).end()
+			// logger(Colors.blue(`Cluster Master got: /lottery_test`))
+			// logger(inspect(req.body, false, 3, true))
+			// const wallet = req.body.obj.walletAddress
+			// const ipaddress = req.body.obj.ipAddress
+			// return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager, true)
 		})
 
 		router.post ('/initV3',  async (req, res) => {
@@ -625,43 +680,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-
-// const increaseGasLimit = (tx: BigInt) => {
-// 	const ret = FixedNumber.fromString(tx.toString())
-// 	return ret.mul(FixedNumber.fromValue(200)).div(FixedNumber.fromValue(100))
-// }
-
-// const test = async () => {
-// 	const f = [
-// 		{
-// 			wallet: '0x3c842be6a79994630b216703b69d514d00bb882a',
-// 			ipAddress: '105.113.12.245'
-// 		},
-// 		{
-// 			wallet: '0xd6fc8a99e91d8f1b47e6d1f8df9d3669c7c79309',
-// 			ipAddress: '105.120.128.58'
-// 		}
-// 	]
-// 	const ipAddress = f.map(n => n.ipAddress)
-// 	const wallet = f.map(n => n.wallet)
-// 	logger(`faucetWallet = ${faucetWallet.address}`)
-// 	try {
-// 		const tx = await faucetContract.getFaucetBatch.estimateGas(wallet, ipAddress)
-		
-// 		const gas = await provideCONET.getFeeData()
-		
-// 		console.log (inspect(tx, false, 3, true))
-// 		console.log (inspect(gas, false, 3, true))
-// 		const kk = increaseGasLimit(tx)
-// 		const fee = parseInt(kk.toString())
-// 		console.log (inspect(fee, false, 3, true))
-// 		//const txy =await faucetContract.getFaucet(f[0].wallet, f[0].ipAddress)
-// 		const txy =await faucetContract.getFaucetBatch(wallet, ipAddress)
-// 		console.log (inspect(txy, false, 3, true))
-// 		await txy.wait()
-// 	} catch (ex) {
-// 		logger(`startFaucetProcess Error!`, ex)
-// 	}
-// }
-
-// test()
