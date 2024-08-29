@@ -224,7 +224,7 @@ const LotteryWinnerPool: Map<string, winnerObj> = new Map()
 
 const randomLottery = (test = false) => {
 	
-	const rand1 = !(Math.floor(Math.random()))
+	const rand1 = !(Math.floor(Math.random()*2))
 
 	if (rand1) {
 		const rand2 = !(Math.floor(Math.random()*3))
