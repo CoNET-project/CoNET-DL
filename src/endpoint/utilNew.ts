@@ -1,4 +1,4 @@
-import {ethers} from 'ethers'
+import {ethers, TransactionResponse} from 'ethers'
 import { logger, newCNTP_Contract, masterSetup } from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'

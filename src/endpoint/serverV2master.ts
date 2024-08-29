@@ -20,7 +20,7 @@ import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucetABI from './faucet_abi.json'
 import faucet_v3_ABI from './faucet_v3.abi.json'
-
+import Ticket_ABI from './ticket.abi.json'
 import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
@@ -63,11 +63,14 @@ const listeningGuardianNodes = async (block: number) => {
 	})
 }
 
+
+
 const startListeningCONET_Holesky_EPOCH = async () => {
 	
 	getAllOwnershipOfGuardianNodes()
 	provideCONET.on ('block', async block => {
 		listeningGuardianNodes (block)
+
 	})
 }
 
@@ -315,9 +318,10 @@ const startFaucetProcess = () => new Promise(async resolve => {
 })
 
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
-	
-	await startFaucetProcess()
-	
+	await Promise.all([
+		ticketPoolProcess(eposh),
+		startFaucetProcess()
+	])
 	
 }
 
@@ -375,15 +379,71 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 	}
 	soLottery (wallet, ipaddress, res, CNYP_class, test)
 }
+
 const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
 const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
+
+const ticketAddr = '0x3933C2e84f7d90B60B00f9FeF8F640194C95A86c'
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
+
+const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
+const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
 interface faucetRequest {
 	wallet: string
 	ipAddress: string
+}
+
+const ticketPool: Map<string, number> = new Map()
+
+const ticket = (wallet: string, res: Response, ipAddress: string) => {
+	const rand = !(Math.floor(Math.random()*4))
+	if (rand) {
+		return res.status(200).json({}).end()
+	}
+	const _ticket = (ticketPool.get (wallet)||0) + 1
+	ticketPool.set(wallet, _ticket)
+	res.status(200).json({ticket:1}).end()
+}
+
+let ticketPoolProcesing = false
+
+const returnArrayToTicketPoolProcess = (wallet: string[], tickets: number[]) => {
+	wallet.forEach((n, index) => {
+		const ticket = (ticketPool.get (n)||0) + tickets[index]
+		ticketPool.set(n, ticket)
+	})
+}
+
+const ticketPoolProcess = async (block: number) => {
+	if (ticketPoolProcesing || !ticketPool.size ){
+		return
+	}
+	ticketPoolProcesing = true
+	const wallet: string[] = []
+	const tickets: number[] = []
+	
+	ticketPool.forEach((v,key) => {
+		wallet.push(key)
+		tickets.push(v)
+
+		ticketPool.set(key, 0)
+	})
+	const ids: number[] = wallet.map(n => 1)
+
+	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
+	try {
+		const tx = await ticket_contract.mintBatch(wallet, ids, tickets)
+		const tr = await tx.wait()
+		logger(Colors.magenta(`ticketPoolProcess success!`))
+		logger(inspect(tr, false, 3, true))
+	} catch (ex) {
+		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
+		return returnArrayToTicketPoolProcess (wallet, tickets)
+	}
+
 }
 
 let faucetWaitingPool: faucetRequest[] = []
@@ -413,8 +473,6 @@ class conet_dl_server {
 	private serverID = ''
 	public CNTP_manager = new CNTP_Transfer_class ([masterSetup.gameCNTPAdmin[0]], 1000)
 	private initSetupData = async () => {
-
-
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
@@ -522,6 +580,13 @@ class conet_dl_server {
 			}
 			return res.status(403).end()
 
+		})
+
+		router.post ('/ticket', async ( req, res ) => {
+			logger(Colors.blue(`Cluster Master got: /ticket`))
+			const wallet = req.body.obj.walletAddress
+
+			return ticket(wallet, res, req.body.obj.ipAddress)
 		})
 
 		router.post ('/lottery', async ( req, res ) => {
