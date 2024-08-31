@@ -130,6 +130,7 @@ const guardianMining = async (block: number) => {
 
 const CNTP_Transfer_guardianMining = new CNTP_Transfer_Manager([masterSetup.guardianAmin[3]], 1000)
 const CNTP_Transfer_guardianReferrals = new CNTP_Transfer_Manager(masterSetup.guardianReferralAdmin, 1000)
+
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()

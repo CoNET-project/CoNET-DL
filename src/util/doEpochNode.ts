@@ -84,28 +84,28 @@ const guardianReferrals = async (block: string) => {
 		return console.error(Color.red(`guardianReferrals guardianSmartContract.getAllIdOwnershipAndBooster() Error!`), ex.mesage)
 	}
 	
-	const _nodesAddress: string[] = nodes[0].map((n: string) => n)
+	const nodesAddress: string[] = nodes[0].map((n: string) => n)
 	const referralsAddress: string[] = nodes[2].map((n: string) => n)
 	const referralsBoost: string []= nodes[3].map((n: string) => n.toString())
 	
 	const [_referralsAddress, _referralsNodes] = mergeReferrals(referralsAddress, referralsBoost)
 
-	let NFTAssets: number[]
-	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
-	try {
-		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
+	// let NFTAssets: number[]
+	// const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
+	// try {
+	// 	NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
 
-	} catch (ex: any) {
-		return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
-	}
-	const nodesAddress: string[] = []
-	NFTAssets.forEach((n, index) => {
-		if (n) {
-			nodesAddress.push(_nodesAddress[index])
-		} else {
-			//logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))
-		}
-	})
+	// } catch (ex: any) {
+	// 	return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
+	// }
+	// const nodesAddress: string[] = _nodesAddress
+	// NFTAssets.forEach((n, index) => {
+	// 	if (n) {
+	// 		nodesAddress.push(_nodesAddress[index])
+	// 	} else {
+	// 		//logger(Color.red(`nodesAddress [${_nodesAddress[index]}] has no NFT ${NFTIds[index]}`))
+	// 	}
+	// })
 
 	const payReferralsBoost: number[] = _referralsNodes.map(n => {
 		const nodes = parseInt(n)

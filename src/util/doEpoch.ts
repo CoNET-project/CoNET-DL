@@ -2,7 +2,7 @@ import {ethers} from 'ethers'
 
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {masterSetup, storageIPFS} from './util'
+import {masterSetup, storageIPFS, storageIPFS1} from './util'
 import Color from 'colors/safe'
 import { mapLimit} from 'async'
 import { logger } from './logger'
@@ -32,7 +32,11 @@ const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals:
 		data: JSON.stringify(data),
 		hash: `${epoch}_free`
 	}
-	await storageIPFS(obj, masterSetup.conetFaucetAdmin[0])
+	await Promise.all([
+		storageIPFS(obj, masterSetup.conetFaucetAdmin[0]),
+		storageIPFS1(obj, masterSetup.conetFaucetAdmin[0])
+	])
+	
 }
 
 

@@ -1368,6 +1368,45 @@ export const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 // 	})
 // }
 
+
+export const storageIPFS1 = async (obj: {hash: string, data: any}, privateKey: string ) => {
+
+	if (!obj?.hash || !obj?.data) {
+		logger(colors.red(`storageIPFS Format no hash || no data Error!`))
+		return false
+	}
+
+	const test = await getIPFSfile (obj.hash)
+
+	if (test) {
+		return true
+	}
+
+
+	logger(colors.blue(`storageIPFS start post [${obj.hash}] to ipfs.conet.network data length = ${obj.data.length}`))
+	const wallet = new ethers.Wallet(privateKey)
+	const message =JSON.stringify({walletAddress: wallet.address, data: obj.data, hash: obj.hash})
+	const messageHash = ethers.id(message)
+	const signMessage = sign(privateKey, messageHash)
+	const sendData = {
+		message, signMessage
+	}
+
+	const option: RequestOptions = {
+		hostname: 'ipfs1.conet.network',
+		path: `/api/storageFragment`,
+		port: 443,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+
+	return await requestUrl(option, JSON.stringify(sendData))
+	
+
+}
+
 export const storageIPFS = async (obj: {hash: string, data: any}, privateKey: string ) => {
 
 		if (!obj?.hash || !obj?.data) {
