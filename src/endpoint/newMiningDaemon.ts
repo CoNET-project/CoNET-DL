@@ -220,7 +220,6 @@ class v3_master {
 	public regiestNodes: Map<string, string> = new Map()
 	public nodeIpaddressWallets: Map<string, Map<string, string>> = new Map()
 	constructor () {
-		
 		this.startServer()
     }
 

@@ -115,6 +115,8 @@ interface ICoNET_DL_masterSetup {
 	}
 	passwd: string
 	PORT: number
+
+	storagePATH: string[]
 }
 
 interface ICoNET_IP_API_Result {
@@ -303,4 +305,13 @@ interface leaderboard {
 	wallet: string
 	referrals: string
 	cntpRate: string
+}
+
+interface nodeInfo {
+	ipaddress: string
+	regionName: string
+	pgpArmored: string
+	pgpKeyID: string
+	wallet: string
+	nodeID: number
 }

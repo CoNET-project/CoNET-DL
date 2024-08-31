@@ -6,13 +6,15 @@ import {createServer} from 'node:http'
 import { readFile, createReadStream, stat} from 'node:fs'
 import {getIpAddressFromForwardHeader} from './help-database'
 import { inspect } from 'node:util'
-import { checkSignObj} from '../util/util'
+import { checkSignObj, masterSetup} from '../util/util'
 import type { RequestOptions,ServerResponse } from 'node:http'
 import {request} from 'node:http'
 import Cluster from 'node:cluster'
 import {writeFile} from 'node:fs'
 
-const storagePath = ['/home/peter/FragmentIPFS/FragmentIPFS1', '/home/peter/FragmentIPFS/FragmentIPFS2', '/home/peter/FragmentIPFS/FragmentIPFS3']
+
+const storagePATH = masterSetup.storagePATH
+
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -20,7 +22,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 	const lastChar = hashName[hashName.length-1]
 	const n = parseInt(`0x${lastChar}`, 16)
-	const path = storagePath[n%storagePath.length]
+	const path = storagePATH[n%storagePATH.length]
 	const fileName = `${path}/${hashName}`
 	logger(`saveFragment [${fileName}] data length = ${data.length}`)
 
@@ -37,7 +39,7 @@ const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 const getFragment = async (hashName: string, res: Response) => {
 	const lastChar = hashName[hashName.length-1]
 	const n = parseInt(`0x${lastChar}`, 16)
-	const path = storagePath[n%storagePath.length]
+	const path = storagePATH[n%storagePATH.length]
 	const filename = `${path}/${hashName}`
 	return stat(filename, err => {
 		if (err) {
