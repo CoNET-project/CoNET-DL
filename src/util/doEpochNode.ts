@@ -1,6 +1,6 @@
 import {ethers} from 'ethers'
 import {inspect} from 'node:util'
-import {masterSetup, storageIPFS} from './util'
+import {masterSetup, storageIPFS, storageIPFS1} from './util'
 import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
 import Color from 'colors/safe'
 import type { RequestOptions } from 'node:http'
@@ -25,7 +25,11 @@ const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals:
 		data: JSON.stringify(data),
 		hash: `${epoch}_node`
 	}
-	await storageIPFS(obj, masterSetup.conetFaucetAdmin[0])
+	await Promise.all([
+		storageIPFS(obj, masterSetup.conetFaucetAdmin[0]),
+		storageIPFS1(obj, masterSetup.conetFaucetAdmin[0])
+	])
+	
 }
 
 const getNodesReferralsData = async (block: string, totalNodes: string, wallets: string[], nodes: string[], payList: string[]) => {

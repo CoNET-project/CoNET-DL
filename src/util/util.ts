@@ -1383,7 +1383,7 @@ export const storageIPFS1 = async (obj: {hash: string, data: any}, privateKey: s
 	}
 
 
-	logger(colors.blue(`storageIPFS start post [${obj.hash}] to ipfs.conet.network data length = ${obj.data.length}`))
+	logger(colors.blue(`storageIPFS1 start post [${obj.hash}] to ipfs.conet.network data length = ${obj.data.length}`))
 	const wallet = new ethers.Wallet(privateKey)
 	const message =JSON.stringify({walletAddress: wallet.address, data: obj.data, hash: obj.hash})
 	const messageHash = ethers.id(message)
