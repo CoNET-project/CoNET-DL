@@ -25,6 +25,7 @@ const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals:
 		data: JSON.stringify(data),
 		hash: `${epoch}_node`
 	}
+	logger(inspect(data, false,1, true ))
 	await Promise.all([
 		storageIPFS(obj, masterSetup.conetFaucetAdmin[0]),
 		storageIPFS1(obj, masterSetup.conetFaucetAdmin[0])

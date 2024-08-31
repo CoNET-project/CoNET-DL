@@ -376,10 +376,40 @@ const wasabiObj = {
 }
 
 const IPFSEndpoint = `https://ipfs.conet.network/api/getFragment/`
-
+const IPFSEndpoint1 = `https://ipfs1.conet.network/api/getFragment/`
 export const getIPFSfile: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
 
 	const cloudStorageEndpointUrl = `${IPFSEndpoint}${fileName}`
+	HttpsGet(cloudStorageEndpointUrl, res => {
+
+		if (res.statusCode !== 200) {
+			logger(colors.red(`getWasabiFile ${fileName} got response status [${res.statusCode}] Error! `))
+			return resolve('')
+		}
+
+		res.once('error', err => {
+			logger(colors.red(`getWasabiFile ${fileName} res Error [${err.message}]`))
+			return resolve('')
+		})
+		let data = ''
+		res.on('data', _data => {
+			data+=_data
+		})
+		res.once ('end', () => {
+			return resolve (data)
+		})
+
+	}).once('error', err => {
+		logger(colors.red(`getWasabiFile HttpsRequest ${fileName} Error [${err.message}]`), err)
+		return resolve('')
+	})
+	
+})
+
+export const getIPFSfile1: (fileName: string) => Promise<string> = async (fileName: string) => new Promise(resolve=> {
+
+	const cloudStorageEndpointUrl = `${IPFSEndpoint1}${fileName}`
+	logger(`getIPFSfile1 ${cloudStorageEndpointUrl}`)
 	HttpsGet(cloudStorageEndpointUrl, res => {
 
 		if (res.statusCode !== 200) {
@@ -1370,15 +1400,16 @@ export const masterSetup: ICoNET_DL_masterSetup = require ( setupFile )
 
 
 export const storageIPFS1 = async (obj: {hash: string, data: any}, privateKey: string ) => {
-
+	
 	if (!obj?.hash || !obj?.data) {
 		logger(colors.red(`storageIPFS Format no hash || no data Error!`))
 		return false
 	}
 
-	const test = await getIPFSfile (obj.hash)
+	const test = await getIPFSfile1 (obj.hash)
 
 	if (test) {
+		logger(`storageIPFS1 file already exits STOP update!`)
 		return true
 	}
 
