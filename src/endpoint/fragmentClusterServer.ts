@@ -104,7 +104,7 @@ class server {
 			return res.socket?.end().destroy()
 		})
 
-		server.listen(this.PORT, 'localhost', () => {
+		server.listen(this.PORT, () => {
 			return console.table([
                 { 'Cluster': ` startup success ${ this.PORT } Work [${workerNumber}]` }
             ])
