@@ -817,12 +817,12 @@ let transferEposh = 0
 
 
 
-const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-const privateKey = masterSetup.conetFaucetAdmin[0]
-export const nodeWallet = new ethers.Wallet(privateKey, _provider).address.toLowerCase()
+
 
 export const regiestMiningNode = async () => {
-	
+	const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const privateKey = masterSetup.conetFaucetAdmin[0]
+	const nodeWallet = new ethers.Wallet(privateKey, _provider).address.toLowerCase()
 	const ipaddress = getServerIPV4Address(true)[0]
 	if (!ipaddress) {
 		return logger(Color.red(`regiestMiningNode Mining Server only has local IP address Error!`))
@@ -922,23 +922,6 @@ export const checkIpAddress = async (ipaddress: string) => {
 }
 
 
-export const regiestApiNode1: () => Promise<boolean> = async () => new Promise(async resolve=> {
-
-	const cassClient = new Client (option)
-	const ipaddress = getServerIPV4Address(false)
-	const wallet = new ethers.Wallet(privateKey)
-
-	const cmd1 = `INSERT INTO conet_api_node (wallet, ipaddress) VALUES ('${wallet.address}', '${ipaddress[0]}')`
-	try {
-		cassClient.execute (cmd1)
-		await cassClient.shutdown()
-		logger(Color.blue(`regiestApiNode1 [`+Color.yellow(`${ipaddress}:#{}`)+`] success!`))
-		return resolve(true)
-	} catch(ex) {
-		await cassClient.shutdown()
-		return resolve (false)
-	}
-})
 
 export const storeLeaderboardGuardians_referralsv2 = (epoch: string, guardians_referrals: string, guardians_cntp: string, guardians_referrals_rate_list: string) => new Promise(async resolve=> {
 	const cassClient = new Client (option)
