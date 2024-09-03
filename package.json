@@ -59,9 +59,10 @@
 		"jsbi": "^4.3.0",
 		"openpgp": "^5.11.2",
 		"uuid": "^10.0.0",
-		"web3": "^4.11.1",
+		"web3": "^4.12.1",
 		"phin": "^3.7.1",
-		"moment": "^2.30.1"
+		"moment": "^2.30.1",
+		"coinmarketcap-api": "^3.1.1"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.1",

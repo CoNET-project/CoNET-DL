@@ -807,7 +807,13 @@ export const txManager: (tx: string, tokenName: string, payment_address: string,
 })
 
 
+const getAllTx = async () => {
+	const cmd = `SELECT * from conet_guardian_receipt`
+	const cassClient = new Client (option)
+	const data = await cassClient.execute (cmd)
+	logger(inspect(data.rows, false, 3, true))
 
+}
 
 let EPOCH: number
 export let totalminerOnline = 0

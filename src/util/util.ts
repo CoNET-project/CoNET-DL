@@ -42,6 +42,7 @@ let provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 let blast_current = 0
 const blast_EndPoints = ['https://wispy-greatest-telescope.blast-sepolia.quiknode.pro/eed482657dac9ab72cc8e710fa88ab4d6462cb98/', 'https://rpc.ankr.com/blast_testnet_sepolia','https://rpc.ankr.com/blast_testnet_sepolia/5e384380ae112067a637c50b7d8f2a3050e08db459e0a40a4e56950c7a27fc76','https://divine-lingering-water.blast-sepolia.quiknode.pro/be6893e1b1f57bac9a6e1e280f5ad46fddd6c146/']
 
+const provideArbOne = 'https://arb1.arbitrum.io/rpc'
 const getProvider_Blast = () => {
 	if (++blast_current > blast_EndPoints.length - 1) {
 		blast_current = 0
@@ -923,6 +924,10 @@ export const checkSignObj = (message: string, signMess: string) => {
 	
 }
 
+
+
+
+
 export const _nodes = [
 	'0x8b02ec615B7a2d5B82F746F990062459DF996c48',
 	'0x7Bc3FEA6Fc415CD1c36cf5CCA31786Cb3823A4b2',
@@ -1013,23 +1018,32 @@ export const sendTokenToMiner = async (walletList: string[], payList: string[], 
 	
 }
 
-export const checkSign = (message: string, signMess: string, publicAddress: string) => {
-	let digest, recoverPublicKey, obj: minerObj
+export const checkSign = (message: string, signMess: string) => {
+	let digest, recoverPublicKey, verifyMessage, obj: minerObj
+	let wallet = ''
 	try {
 		obj = JSON.parse(message)
+		wallet = obj.walletAddress
 		digest = ethers.id(message)
 		recoverPublicKey = ethers.recoverAddress(digest, signMess)
+		verifyMessage = ethers.verifyMessage(message, signMess)
+
 	} catch (ex) {
 		logger (colors.red(`checkSignObj recoverPublicKey ERROR`), ex)
 		logger (`digest = ${digest} signMess = ${signMess}`)
 		return null
 	}
-	if (recoverPublicKey.toUpperCase() !== publicAddress.toUpperCase()) {
-		logger (colors.red(`checkSignObj recoveredAddress.toUpperCase(${recoverPublicKey.toUpperCase()}) !== obj.walletAddress.toUpperCase(${publicAddress.toUpperCase()})`))
-		return null
+	
+
+	if (wallet && (verifyMessage.toLowerCase() === wallet.toLowerCase() || recoverPublicKey.toLowerCase() === wallet.toLowerCase())) {
+		obj.walletAddress = wallet.toLowerCase()
+		return obj
+		
 	}
-	obj.walletAddress = publicAddress
-	return obj
+	
+	logger (colors.red(`checkSignObj recoveredAddress (${verifyMessage.toLowerCase()}) or recoverPublicKey ${recoverPublicKey.toLowerCase()} !== wallet (${wallet.toLowerCase()})`))
+	return null
+	
 }
 
 export const checkReferralSign: (referee: string, referrer: string, ReferralsMap: Map<string, string>, _privateKey: string, nonceLock: nonceLock)=> Promise<string|boolean> =
@@ -1614,6 +1628,10 @@ const getNetwork = (networkName: string) => {
 			return ethMainchainRPC
 		}
 
+		case 'arb_usdt': {
+			return provideArbOne
+		}
+
 		case 'wusdt':{
 			return bscMainchainRPC
 		}
@@ -1649,23 +1667,21 @@ export const CONET_guardian_Address = (networkName: string) => {
 	switch (networkName) {
 		
 		case 'usdt':
-		//case 'eth':
+		case 'eth':
 			{
-				return '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'.toLowerCase()
+				return '0x4875bbae10b74F9D824d75281B5A4B5802b147f5'.toLowerCase()
 			}
 		case 'wusdt': 
-		//case 'wbnb': 
+		case 'bnb': 
 			{
 				return '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'.toLowerCase()
 			}
-		//		CONET holesky
-		// case 'dWETH':
-		// case 'dWBNB':
-		// case 'dUSDT':
-		// case '':
-		//		blast mainnet
+		case 'arb_eth':
+		case 'arb_usdt':
+		{
+			return '0x97E96Cc8Ee4f6373e87C77E98fAF1A6FfA8548f2'.toLowerCase()
+		}
 		case 'usdb':
-		// case 'blastETH':
 		{
 			return `0x4A8E5dF9F1B2014F7068711D32BA72bEb3482686`.toLowerCase()
 		}
@@ -1723,10 +1739,10 @@ const parseEther = (ether: string, tokenName: string ) => {
 
 
 export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string, nodes: number, assetName: string) => {
-	const total = parseEther((nodes * 1250).toString(), assetName).toString()
-	if (total !== value) {
-		return false
-	}
+	// const total = parseEther((nodes * 1250).toString(), assetName).toString()
+	// if (total !== value) {
+	// 	return false
+	// }
 	const txLogs = tx.logs[0]
 	if (!txLogs) {
 		logger(colors.red(`checkErc20Tx txLogs empty Error!`))
@@ -1850,6 +1866,10 @@ export const getNetworkName = (tokenName: string) => {
 		case 'bnb': {
 			return 'BNB'
 		}
+		case 'arb_usdt': {
+			return 'arb'
+		}
+
 
 		default : {
 			return ''

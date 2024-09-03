@@ -1,5 +1,5 @@
 import {ethers, TransactionResponse} from 'ethers'
-import { logger, newCNTP_Contract, masterSetup } from '../util/util'
+import { logger, newCNTP_Contract, masterSetup, checkSignObj, checkTx, getNetworkName, CONET_guardian_Address, getAssetERC20Address, checkErc20Tx, checkValueOfGuardianPlan, checkReferralsV2_OnCONET_Holesky, returnGuardianPlanReferral} from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 
@@ -728,28 +728,15 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 	return resolve (true)
 })
 
-// const test = async () => {
-// 	startEposhTransfer()
-// 	const wallet = '0xE482da05cB82d2b996780Db17D8B916356E1323d'
-// 	await initNewCONET(wallet)
-// }
+export const checkUsedTx = async (tx: string) => {
+	const txSC = new ethers.Contract(new_CNTP_addr, cCNTPv7ABI, newCONETProvider)
+	try {
+		const usedTx = await txSC.credentialTx(tx)
+		return usedTx
+	} catch (ex) {
+		return true
+	}
+
+}
 
 
-// const test1 = async () => {
-// 	const [nodeAddressArray] = await new_Guardian_Contract.getAllIdOwnershipAndBooster()
-// 	let ii = 0
-// 	mapLimit(nodeAddressArray, 1, async (n: string, next ) => {
-// 		const result= await initNewCONET(n)
-// 		logger(Colors.grey (`[${ii++}] wallet ${n} success!`))
-// 	})
-	
-// }
-
-// test()
-
-// const testCGNPPoolProcess = async (wallet: string, _amounts: string) => {
-
-// 	await GuardianNFTV4Contract.mintNode_NFTBatch([wallet], [_amounts])
-// }
-
-// testCGNPPoolProcess('0x609A656EAB159f808dE6DCf1FDB83b32e479da5e', '1')

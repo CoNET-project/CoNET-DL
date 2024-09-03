@@ -56,6 +56,7 @@ interface ICoNET_DL_masterSetup {
 
 
 	//			new Admin	
+	oracleManager: string
 	conetNodeAdmin: string[]
 	conetCNTPAdmin: string[]
 	guardianAmin: string[]
@@ -115,7 +116,7 @@ interface ICoNET_DL_masterSetup {
 	}
 	passwd: string
 	PORT: number
-
+	CoinMarketCapAPIKey: string
 	storagePATH: string[]
 }
 
