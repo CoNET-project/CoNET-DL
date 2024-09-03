@@ -26,7 +26,7 @@ interface quote {
 
 const provide = new ethers.JsonRpcProvider('https://rpc.conet.network')
 const apiKey = masterSetup.CoinMarketCapAPIKey
-const oracleSC_addr = '0x3157718654ca6551C3f1412D27dCFdada217F135'
+const oracleSC_addr = '0x8A7FD0B01B9CAb2Ef1FdcEe4134e32D066895e0c'
 const managerWallet = new ethers.Wallet(masterSetup.oracleManager, provide)
 const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerWallet)
 const client = new CoinMarketCap(apiKey)
