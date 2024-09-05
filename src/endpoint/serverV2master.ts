@@ -318,21 +318,24 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	startFaucetProcessStatus = false
 	return resolve(true)
 })
-const scAddr = '0x81Ee2693b21d7B1D3304136923cFaF481CA485A8'.toLowerCase()
+const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
 const developWalletPool: Map<string, boolean> = new Map()
 
-const searchdevelopWallet = async (startBlock: number, currentBlock: number) => {
-	const blocks: number[] = []
-	for (let i = startBlock; i < currentBlock; i ++) {
-		blocks.push(i)
+const getAllDevelopAddress = async () => {
+	let ret: any []
+	try {
+		ret = await sc.getAllDevelopWallets()
+		
+	} catch (ex: any) {
+		return logger(Colors.red(`getAllDevelopAddress call error!`), ex.message)
 	}
 
-	await mapLimit(blocks, 4, async (n, next) => {
-		logger(Colors.gray(`Search block ${n}`))
-		await developWalletListening (n)
-	})
+	for (let i = 0; i < ret.length; i ++){
+		developWalletPool.set (ret[i][0], ret[i][1])
+	}
 }
+
 
 const developWalletListening = async (block: number) => {
 	
@@ -347,16 +350,7 @@ const developWalletListening = async (block: number) => {
 		const event = await provideCONET.getTransaction(tx)
 		
 		if ( event?.to?.toLowerCase() === scAddr) {
-			logger(Colors.blue(`event?.to [${ event.to}] === scAddr[${scAddr}]`))
-			if ( event?.data) {
-				const kk = sc.interface.parseTransaction(event)
-				if (kk?.args) {
-					const wallet = kk.args[0].toLowerCase()
-					const admin: boolean = kk.args[1]
-					developWalletPool.set(wallet, admin)
-					logger(Colors.blue(`Develop Wallet Listening set [${wallet}] [${admin}]`))
-				}
-			}
+			await getAllDevelopAddress()
 		}
 		
 	}
@@ -531,15 +525,14 @@ class conet_dl_server {
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		block = await provideCONET.getBlockNumber()
 		logger(`conet_dl_server STARTED BLOCK`)
-
+		
 		provideCONET.on ('block', async _block => {
 			if (_block === block + 1 ) {
 				block++
 				return stratlivenessV2(_block, this)
 			}
 		})
-
-		searchdevelopWallet (65784, block)
+		await getAllDevelopAddress()
 		this.startServer()
 	}
 
@@ -677,3 +670,6 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+
+getAllDevelopAddress()
