@@ -1,7 +1,7 @@
 import {ethers} from 'ethers'
 import {inspect} from 'node:util'
 import {masterSetup, storageIPFS, storageIPFS1} from './util'
-import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import GuardianNodesV2ABI from './GuardianNodesV2.json'
 import Color from 'colors/safe'
 import type { RequestOptions } from 'node:http'
 import { logger } from './logger'

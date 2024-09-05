@@ -11,7 +11,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger,CONET_guardian_Address,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
+import { logger,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
 } from '../util/util'
 import {transferPool, startTransfer} from '../util/transferManager'
 import CGPNsABI from '../util/CGPNs.json'

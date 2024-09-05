@@ -45,6 +45,7 @@ const testData1 = [
 const linten = 1000 * 60 *10
 const updateOracle = async (tokenNames: string[], price: number[]) => {
 	const priceArray = price.map(n => ethers.parseEther(n.toString()))
+
 	logger(inspect(tokenNames, false, 3, true))
 	logger(inspect(price, false, 3, true))
 	logger(inspect(priceArray, false, 3, true))

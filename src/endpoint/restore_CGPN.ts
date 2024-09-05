@@ -26,7 +26,7 @@ const CGPNsV8addr_old = '0xc3e210034868e8d739feE46ac5D1b1953895C87E'
 
 const newGuardianNodes = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 
-const cCNTPAddr = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
+const cCNTPAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const cCNTPOldAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 
 const oldCntpContract =new ethers.Contract(cCNTPOldAddr, CONET_Point_ABI, oldProvider)

@@ -316,3 +316,15 @@ interface nodeInfo {
 	wallet: string
 	nodeID: number
 }
+
+interface assetPrice {
+	name: string
+	price: number
+}
+
+
+interface assetOracle {
+	lastUpdate: number
+	assets: assetPrice[]
+}
+

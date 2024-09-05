@@ -425,8 +425,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 	soLottery (wallet, ipaddress, res, CNYP_class, test)
 }
 
-const faucetV3Addr = `0x91DB3507Fe71DFBa7ccF0634018aBa25cac69900`
-const faucetV2Addr ='0x52F98C5cD2201B1EdFee746fE3e8dD56c10749f4'
+
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 
 const ticketAddr = '0x3933C2e84f7d90B60B00f9FeF8F640194C95A86c'
@@ -595,10 +594,8 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 
-
 		//********************			V2    		****** */				
 		router.post ('/conet-faucet', async (req, res ) => {
-			
 			const wallet = req.body.walletAddress
 			const ipaddress = req.body.ipaddress
 			if (!wallet) {

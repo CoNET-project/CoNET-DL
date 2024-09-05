@@ -3,7 +3,7 @@ import {logger} from './logger'
 import Color from 'colors/safe'
 import {masterSetup} from './util'
 import {inspect} from 'node:util'
-import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import GuardianNodesV2ABI from './GuardianNodesV2.json'
 
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 

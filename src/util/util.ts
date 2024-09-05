@@ -27,7 +27,7 @@ import {abi as CONET_Referral_blast_v2} from './conet-referral-v2.json'
 import {abi as CONET_Point_blast_v1} from './const-point-v1-blast.json'
 import {abi as claimableToken } from './claimableToken.json'
 
-import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import GuardianPlan_new_ABI from './GuardianNodesV2.json'
 import {abi as erc20TokenABI} from './erc20.json'
 
 import {Readable} from 'node:stream'
@@ -76,6 +76,7 @@ const CONET_bnb_safeWallet = '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'
 const CONET_ETH_safeWallet = '0x1C9f72188B461A1Bd6125D38A3E04CF238f6478f'
 
 const bnb_usdt_contract = '0x55d398326f99059fF775485246999027B3197955'
+const Arbitrum_USDT = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'
 const blast_usdb_contract = '0x4300000000000000000000000000000000000003'
 const conet_dWETH = '0x84b6d6A6675F830c8385f022Aefc9e3846A89D3B'
 const conet_dUSDT = '0x0eD55798a8b9647f7908c72a0Ce844ad47274422'
@@ -84,12 +85,12 @@ const CNTPMasterWallet = '0x44d1FCCce6BAF388617ee972A6FB898b6b5629B1'
 const CNTPReferralWallet = '0x63377154F972f6FC1319e382535EC9691754bd18'
 
 export const GuardianNodes_ContractV21 = '0x5e4aE81285b86f35e3370B3EF72df1363DD05286'
-const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
+const GuardianNodes_Contract_new = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 
 const conet_point_contract_blast = `0x0E75599668A157B00419b58Ff3711913d2a716e0`
 
 export const oldCNTP_Contract = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
-export const newCNTP_Contract = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
+export const newCNTP_Contract = '0xa4b389994A591735332A67f3561D60ce96409347'
 export const newCNTP_v8 = '0xa4b389994A591735332A67f3561D60ce96409347'
 
 const workerNumber = Cluster?.worker?.id ? colors.grey(`worker : ${Cluster.worker.id} `) : `${ Cluster?.isPrimary ? colors.grey('Cluster Master'): colors.bgCyan('Cluster unknow')}`
@@ -1612,7 +1613,8 @@ const getClaimableCNTPTransfer = (wallet: string, from: string) => new Promise(r
 
 const getNetwork = (networkName: string) => {
 	switch (networkName) {
-		case 'CNTP':
+		// case 'CNTP':
+		
 		case 'usdb': {
 			return balstMainchainRPC
 		}
@@ -1624,14 +1626,16 @@ const getNetwork = (networkName: string) => {
 		// case 'cntpb': {
 		// 	return conet_Holesky_rpc
 		// }
+		
+		case 'eth':
 		case 'usdt': {
 			return ethMainchainRPC
 		}
-
+		case 'arb_eth':
 		case 'arb_usdt': {
 			return provideArbOne
 		}
-
+		case 'bnb':
 		case 'wusdt':{
 			return bscMainchainRPC
 		}
@@ -1663,7 +1667,7 @@ export const checkTx =  async (txHash: string, tokenName: string) => {
 	
 }
 
-export const CONET_guardian_Address = (networkName: string) => {
+export const CONET_guardian_purchase_Receiving_Address = (networkName: string) => {
 	switch (networkName) {
 		
 		case 'usdt':
@@ -1674,7 +1678,7 @@ export const CONET_guardian_Address = (networkName: string) => {
 		case 'wusdt': 
 		case 'bnb': 
 			{
-				return '0xeabF22542500f650A9ADd2ea1DC53f158b1fFf73'.toLowerCase()
+				return '0xaFFb573f6a5F0C9b491775FD3F932b52ccf4eAfF'.toLowerCase()
 			}
 		case 'arb_eth':
 		case 'arb_usdt':
@@ -1700,13 +1704,18 @@ export const getAssetERC20Address = (assetName: string) => {
 		case 'wusdt':{
 			return bnb_usdt_contract.toLowerCase()
 		}
-		case 'usdb': {
-			return blast_usdb_contract.toLowerCase()
+
+		case 'arb_usdt': {
+			return Arbitrum_USDT.toLowerCase()
 		}
 
-		case 'CNTP': {
-			return CNTPV2_Contract_Blast
-		}
+		// case 'usdb': {
+		// 	return blast_usdb_contract.toLowerCase()
+		// }
+
+		// case 'CNTP': {
+		// 	return CNTPV2_Contract_Blast
+		// }
 
 		// case 'dWBNB': {
 		// 	return conet_dWBNB.toLowerCase()
@@ -1739,10 +1748,7 @@ const parseEther = (ether: string, tokenName: string ) => {
 
 
 export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string, nodes: number, assetName: string) => {
-	// const total = parseEther((nodes * 1250).toString(), assetName).toString()
-	// if (total !== value) {
-	// 	return false
-	// }
+
 	const txLogs = tx.logs[0]
 	if (!txLogs) {
 		logger(colors.red(`checkErc20Tx txLogs empty Error!`))
@@ -1795,6 +1801,7 @@ const getAmountOfNodes: (nodes: number, assetName: string) => Promise<number> = 
 	return resolve (totalUsdt/rate)
 })
 
+
 export const checkValueOfGuardianPlan = async (nodes: number, tokenName: string, paymentValue: string) => {
 
 	const totalAmount = await getAmountOfNodes(nodes, tokenName)
@@ -1836,11 +1843,13 @@ const Claimable_BNBUSDT_old = '0xC06D98B3185D3de0dF02b8a7AfD1fF9cB3c9399a'.toLow
 const Claimable_BlastUSDB_old = '0x53Aee1f4c9b0ff76781eFAC6e20eAe4561e29E8A'.toLowerCase()
 
 
-const Claimable_ETHUSDT_v3 = '0xc1CaB2539BbB59d45D739720942E257fF52aa708'.toLowerCase()
-const Claimable_BNBUSDT_v3 = '0xAE752B49385812AF323240b26A49070bB839b10D'.toLowerCase()
-const Claimable_BlastUSDB_v3 = '0x3258e9631ca4992F6674b114bd17c83CA30F734B'.toLowerCase()
+const Claimable_ETHUSDT_new = '0x7D9F0564554325Cd114010fCDEc34Aee8ca7e22A'.toLowerCase()
+const Claimable_BNBUSDT_new = '0x49d1E11A25E99015cAaE3e032a7ED23D4399F3f9'.toLowerCase()
 
-const CNTPV2_Contract_Blast = '0x0f43685B2cB08b9FB8Ca1D981fF078C22Fec84c5'
+const Claimable_BNB_new = '0xBE8184294613a6f2531A7EA996deD57cb8CAeB0B'.toLowerCase()
+const Claimable_ETH_new = '0xAD7dEC79BC005F699Ef80EB53fF1a7E21E24A456'.toLowerCase()
+const Claimable_Arb_ETH_new = '0xF406385E1A0389Ae35684D27c3Ef2799E88E2c4A'.toLowerCase()
+const Claimable_Arb_USDT_new = '0xF40A8EFc8Dd47929ba8Ee9d5B3f1534239E930Fe'.toLowerCase()
 
 
 export const getNetworkName = (tokenName: string) => {
@@ -1866,11 +1875,10 @@ export const getNetworkName = (tokenName: string) => {
 		case 'bnb': {
 			return 'BNB'
 		}
+		case 'arb_eth':
 		case 'arb_usdt': {
 			return 'arb'
 		}
-
-
 		default : {
 			return ''
 		}
@@ -1881,14 +1889,26 @@ export const realToClaimableContractAddress = (tokenName: string) => {
 	switch(tokenName) {
 		//case 'dUSDT':
 		case 'usdt':{
-			return Claimable_ETHUSDT_v3
+			return Claimable_ETHUSDT_new
+		}
+		case 'eth': {
+			return Claimable_ETH_new
+		}
+		case 'bnb': {
+			return Claimable_BNB_new
 		}
 		case 'wusdt':{
-			return Claimable_BNBUSDT_v3
+			return Claimable_BNBUSDT_new
 		}
-		case 'usdb': {
-			return Claimable_BlastUSDB_v3
+		case 'arb_usdt' : {
+			return Claimable_Arb_USDT_new
 		}
+		case 'arb_eth': {
+			return Claimable_Arb_ETH_new
+		}
+		// case 'usdb': {
+		// 	return Claimable_BlastUSDB_v3
+		// }
 		
 		
 		// case 'blastETH': {
@@ -1896,13 +1916,9 @@ export const realToClaimableContractAddress = (tokenName: string) => {
 		// }
 		// case 'conet':
 		// case 'dWETH':
-		// case 'eth': {
-		// 	return Claimable_ETH.toLowerCase()
-		// }
+		
 		// case 'dWBNB':
-		// case 'bnb': {
-		// 	return Claimable_BNB.toLowerCase()
-		// }
+		
 
 		default : {
 			return ''
@@ -1938,15 +1954,28 @@ const getCONETHoleskyClaimableContractAddress = (tokenName: string) => {
 		// case 'cCNTP':{
 		// 	return cCNTP_Contract
 		// }
-		case 'cUSDB':{
-			return Claimable_BlastUSDB_v3
-		}
-		case 'cUSDT': {
-			return Claimable_ETHUSDT_v3
+		// case 'cUSDB':{
+		// 	return Claimable_
+		// }
+		case 'cBNB': {
+			return Claimable_BNB_new
 		}
 		case 'cBNBUSDT': {
-			return Claimable_BNBUSDT_v3
+			return Claimable_BNBUSDT_new
 		}
+		case 'cETH': {
+			return Claimable_ETH_new
+		}
+		case 'cUSDT': {
+			return Claimable_ETHUSDT_new
+		}
+		case 'cArbETH': {
+			return Claimable_Arb_ETH_new
+		}
+		case 'cArbUSDT': {
+			return Claimable_Arb_USDT_new
+		}
+		
 		default : {
 			return ''
 		}
@@ -1986,28 +2015,26 @@ const getReferralNode = async (contract: ethers.Contract, referrerAddr: string, 
 	return nodes
 }
 
-const sendGuardianNodesContract = async (privateKey: string, nodeAddr: string[], paymentWallet: string) => new Promise(async resolve =>{
-	const tryConnect = async () => {
-		const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-		const wallet = new ethers.Wallet(privateKey, provider)
-		const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
-		
-		try{
-			const tx = await GuardianNodesContract.mint(nodeAddr, paymentWallet)
-			resolve (tx)
-		} catch (ex) {
-			logger(colors.red(`returnGuardianPlanReferral call GuardianNodesContract.mint Error! Try Again`))
-			setTimeout(async () => {
-				return await tryConnect()
-			}, 5000)
-		}
-		
+export const sendGuardianNodesContract = async (privateKey: string, nodeAddr: string[], paymentWallet: string, _tx: string) => new Promise(async resolve =>{
+	
+	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const wallet = new ethers.Wallet(privateKey, provider)
+	const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract_new, GuardianPlan_new_ABI, wallet)
+	
+	try{
+		const tx = await GuardianNodesContract.mint(nodeAddr, paymentWallet, _tx)
+		const ts = await tx.wait()
+		const tx1 = await GuardianNodesContract.addCredentialTx(_tx)
+		await tx1.wait()
+		resolve (ts)
+	} catch (ex) {
+		logger(colors.red(`returnGuardianPlanReferral call GuardianNodesContract.mint Error! Try Again`))
+		resolve (false)
 	}
-	tryConnect()
 	
 })
 
-export const returnGuardianPlanReferral = async (nodes: number, referrerAddress: string, paymentWallet: string, tokenName: string, privateKey: string, nodeAddr: string[]) => {
+export const returnGuardianPlanReferral = async (nodes: number, referrerAddress: string, paymentWallet: string, tokenName: string, privateKey: string, nodeAddr: string[], amountEthformat: string, tx_hash: string) => {
 	const retClaimableContractAddress = realToClaimableContractAddress(tokenName)
 	
 	if (!retClaimableContractAddress) {
@@ -2017,14 +2044,14 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	const wallet = new ethers.Wallet(privateKey, provider)
-	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
+	const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract_new, GuardianPlan_new_ABI, wallet)
 
 	const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
 		getReferralNode (GuardianNodesContract, paymentWallet, 1),
 		getReferralNode (GuardianNodesContract, referrerAddress, 1)
 	])
 
-	const _amount = nodes * 1250 * 0.1
+	const _amount = parseFloat(amountEthformat) * 0.1
 	const eachNodeReferral = _amount/nodes
 
 	const referrerReturn = bayerOwnNodes > 0 ? 0 : referrerHasNodes ? eachNodeReferral : 0
@@ -2043,7 +2070,7 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 		ret.claimableAssetTx = await sendClaimableAsset (privateKey, retClaimableContractAddress, paymentWallet, paymentReferrerReturn.toFixed(8))
 	}
 	
-	ret.guardianNodesTx = await sendGuardianNodesContract(privateKey, nodeAddr, paymentWallet)
+	ret.guardianNodesTx = await sendGuardianNodesContract(privateKey, nodeAddr, paymentWallet, tx_hash)
 
 	transferCCNTP(nodeAddr, '20000', () => {
 		return logger(colors.blue(`transferCCNTP GuardianNodes ${inspect(nodeAddr, false, 3, true)} each 20000 success!`))

@@ -2,7 +2,7 @@ import {ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
 import {masterSetup} from './util'
-import {abi as GuardianNodesV2ABI} from './GuardianNodesV2.json'
+import GuardianNodesV2ABI from './GuardianNodesV2.json'
 import P from 'phin'
 
 const conet_Holesky_rpc = 'https://rpc.conet.network'
@@ -11,7 +11,7 @@ import {transferPool, startTransfer} from './transferManager'
 
 let EPOCH = 0
 let transferEposh = 0
-const GuardianNodes_ContractV3 = '0xF34798C87B8Dd74A83848469ADDfD2E50d656805'
+const GuardianNodes_ContractV3 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
