@@ -440,7 +440,7 @@ const ticket = (wallet: string, res: Response, ipAddress: string) => {
 	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}]`))
 	const develop = developWalletPool.get (wallet)
 	logger(Colors.magenta(`ticket developWalletPool.get develop = ${develop}`))
-	logger(inspect(develop, false, 3, true))
+	logger(inspect(developWalletPool, false, 3, true))
 	if (develop) {
 		const _ticket = ( ticketPool.get (wallet) || 0 ) + 1
 		ticketPool.set( wallet, _ticket )
