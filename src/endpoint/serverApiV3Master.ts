@@ -659,11 +659,6 @@ class conet_dl_server {
 			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
 		})
 
-		router.post ('/lottery-ticket', async ( req, res ) => {
-			res.status(200).json({}).end()
-		
-		})
-
 
 		router.post ('/lottery_test', async ( req, res ) => {
 			return res.status(403).end()
