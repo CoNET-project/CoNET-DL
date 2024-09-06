@@ -512,7 +512,7 @@ const ticketPoolProcess = async (block: number) => {
 			logger(inspect(tr, false, 3, true))
 		}
 		if (walletBrun.length) {
-			const tx = await ticket_contract.burnBatch(walletBrun, ids1, brunNumber)
+			const tx = await ticket_contract.BurnBatch(walletBrun, ids1, brunNumber)
 			const tr = await tx.wait()
 			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
 			logger(inspect(tr, false, 3, true))
@@ -714,20 +714,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-
-const test = async () => {
-	const walletBrun = ['0x454428d883521c8af9e88463e97e4d343c600914']
-	const ids1 = ['1']
-	const brunNumber = ['1']
-	try {
-		const tx = await ticket_contract.burnBatch(walletBrun, ids1, brunNumber)
-		const ts = await tx.wait()
-		logger(ts)
-	} catch (ex) {
-		logger(ex)
-	}
-	
-
-}
-
-test()
