@@ -522,6 +522,9 @@ const ticketPoolProcess = async (block: number) => {
 		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
 		ticketPoolProcesing = false
 		logger(ex)
+		logger(inspect(walletBrun, false, 3, true))
+		logger(inspect(ids1, false, 3, true))
+		logger(inspect(brunNumber, false, 3, true))
 		return returnArrayToTicketPoolProcess (wallet, tickets)
 	}
 	ticketPoolProcesing = false
