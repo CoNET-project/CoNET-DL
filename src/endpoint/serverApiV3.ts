@@ -150,7 +150,7 @@ const MaxCount = 1
 
 const checkTicket = async (wallet: string) => {
 	const [isApproved, balance ] = await Promise.all([
-		ticket_contract.isApprovedForAll(wallet),
+		ticket_contract.isApprovedForAll(wallet, '0x068759bCfd929fb17258aF372c30eE6CD277B872'),
 		ticket_contract.balanceOf(wallet, 1)
 	])
 	logger(Colors.blue (`checkTicket account ${wallet} isApproved = ${isApproved} balance = ${balance}`))
