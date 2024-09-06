@@ -10,8 +10,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, newCNTP_Contract,
-	returnGuardianPlanReferral,checkSignObj, getNetworkName, getServerIPV4Address, conet_Holesky_rpc
+import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc
 } from '../util/util'
 
 import CNTPAbi from '../util/cCNTP.json'
@@ -348,13 +347,13 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
-			const obj = checkSignObj (message, signMessage)
+			const obj = checkSign (message, signMessage)
 
 			if (!obj) {
 				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
 				return res.status(403).end()
 			}
-			
+
 			obj.ipAddress = ipaddress
 			return postLocalhost('/api/ticket', {obj}, res)
 		})
