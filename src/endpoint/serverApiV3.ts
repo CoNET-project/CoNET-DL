@@ -12,7 +12,7 @@ import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc
 } from '../util/util'
-
+import {ticket_contract} from './serverApiV3Master'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions, get } from 'node:http'
@@ -147,6 +147,18 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 }
 
 const MaxCount = 1
+
+const checkTicket = async (wallet: string) => {
+	const [isApproved, balance ] = await Promise.all([
+		ticket_contract.isApprovedForAll(wallet),
+		ticket_contract.balanceOf(wallet, 1)
+	])
+	logger(Colors.blue (`checkTicket account ${wallet} isApproved = ${isApproved} balance = ${balance}`))
+	if (!isApproved || balance.toString() < '1') {
+		return false
+	}
+	return true
+}
 
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
@@ -357,6 +369,43 @@ class conet_dl_server {
 
 			obj.ipAddress = ipaddress
 			return postLocalhost('/api/ticket', {obj}, res)
+		})
+
+		router.post ('/ticket-lottery', async ( req, res ) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			if (!ipaddress) {
+				return res.status(404).end()
+			}
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+
+			obj.ipAddress = ipaddress
+			const check = await checkTicket(obj.walletAddress)
+
+			if (!check) {
+				return res.status(403).end()
+			}
+
+			return postLocalhost('/api/ticket-lottery', {obj}, res)
 		})
 
 

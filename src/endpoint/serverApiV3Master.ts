@@ -423,11 +423,12 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 
 const ticketAddr = '0x58BF52BeF7d52461AB4A0a7Bb5EB80955eE00bF8'
+
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
-const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
+export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
 interface faucetRequest {
 	wallet: string
@@ -641,6 +642,13 @@ class conet_dl_server {
 			logger(Colors.blue(`Cluster Master got: /ticket`))
 			const wallet = req.body.obj.walletAddress
 			return ticket(wallet, res, req.body.obj.ipAddress)
+		})
+
+		router.post ('/ticket-lottery', async ( req, res ) => {
+			logger(Colors.blue(`Cluster Master got: /ticket-lottery`))
+			const wallet = req.body.obj.walletAddress
+
+			return res.status(200).json({}).end()
 		})
 
 		router.post ('/lottery', async ( req, res ) => {
