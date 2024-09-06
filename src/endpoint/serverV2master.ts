@@ -419,7 +419,6 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 	soLottery (wallet, ipaddress, res, CNYP_class, test)
 }
 
-
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 
 const ticketAddr = '0x3933C2e84f7d90B60B00f9FeF8F640194C95A86c'
@@ -438,15 +437,19 @@ const ticketPool: Map<string, number> = new Map()
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
 	const develop = developWalletPool.get (wallet)
+
 	if (develop) {
-		const _ticket = (ticketPool.get (wallet)||0) + 1
-		ticketPool.set(wallet, _ticket)
+		const _ticket = ( ticketPool.get (wallet) || 0 ) + 1
+		ticketPool.set( wallet, _ticket )
 		return res.status(200).json({ticket:1}).end()
 	}
-	const rand = !(Math.floor(Math.random()*4))
+
+	const rand = !(Math.floor(Math.random() * 4 ))
+
 	if (rand) {
 		return res.status(200).json({}).end()
 	}
+
 	const _ticket = (ticketPool.get (wallet)||0) + 1
 	ticketPool.set(wallet, _ticket)
 	res.status(200).json({ticket:1}).end()
@@ -573,6 +576,7 @@ class conet_dl_server {
 			res.status(404).end ()
 			return res.socket?.end().destroy()
 		})
+
 		logger(`start master server!`)
 
 		server.listen(this.PORT, '127.0.0.1', () => {
@@ -600,6 +604,7 @@ class conet_dl_server {
 			if (tx) {
 				return res.status(200).json(tx).end()
 			}
+
 			return res.status(403).end()
 
 		})
@@ -629,7 +634,6 @@ class conet_dl_server {
 		router.post ('/ticket', async ( req, res ) => {
 			logger(Colors.blue(`Cluster Master got: /ticket`))
 			const wallet = req.body.obj.walletAddress
-
 			return ticket(wallet, res, req.body.obj.ipAddress)
 		})
 
@@ -640,6 +644,12 @@ class conet_dl_server {
 			const ipaddress = req.body.obj.ipAddress
 			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
 		})
+
+		router.post ('/lottery-ticket', async ( req, res ) => {
+			res.status(200).json({}).end()
+		
+		})
+
 
 		router.post ('/lottery_test', async ( req, res ) => {
 			return res.status(403).end()
