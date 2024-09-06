@@ -501,6 +501,7 @@ const ticketPoolProcess = async (block: number) => {
 
 
 	const ids: number[] = wallet.map(n => 1)
+	const ids1: number[] = walletBrun.map(n => 1)
 
 	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
 	try {
@@ -511,7 +512,7 @@ const ticketPoolProcess = async (block: number) => {
 			logger(inspect(tr, false, 3, true))
 		}
 		if (walletBrun.length) {
-			const tx = await ticket_contract.burnBatch(walletBrun, ids, brunNumber)
+			const tx = await ticket_contract.burnBatch(walletBrun, ids1, brunNumber)
 			const tr = await tx.wait()
 			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
 			logger(inspect(tr, false, 3, true))
@@ -520,6 +521,7 @@ const ticketPoolProcess = async (block: number) => {
 	} catch (ex) {
 		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
 		ticketPoolProcesing = false
+		logger(ex)
 		return returnArrayToTicketPoolProcess (wallet, tickets)
 	}
 	ticketPoolProcesing = false
