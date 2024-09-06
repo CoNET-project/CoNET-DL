@@ -448,7 +448,7 @@ const ticket = (wallet: string, res: Response, ipAddress: string) => {
 
 	const rand = !(Math.floor(Math.random() * 4 ))
 
-	if (rand) {
+	if (!rand) {
 		logger(Colors.magenta(`ticket [${wallet}:${ipAddress}] lose`))
 		return res.status(200).json({}).end()
 	}
