@@ -7,6 +7,6 @@ import assetOracle_ABI from '../endpoint/oracleAsset.ABI.json'
 
 
 const wusdt = {
-    "message": "{\"walletAddress\":\"0x5C809C34112911199e748B0d70173Acb18E5533a\",\"data\":{\"receiptTx\":\"0x9d8bb248e5935535e067aaa955409000bf5c0db468f3cd01c42b09cfe55f163d\",\"publishKeys\":[\"0x94C2c5Ec60bC5192E8dC8f2466f919668D34B456\"],\"nodes\":1,\"tokenName\":\"wusdt\",\"network\":\"\",\"amount\":\"1250000000000000000000\"}}",
-    "signMessage": "0x17181c23881c4bd674c70688c80006c1287481eab7dbcc11ae895dedb8db68dc73730275267c7fc38d656b6d3d9250a656a5455e7179c92ef7a4308830e302081b"
+    "message": "{\"walletAddress\":\"0x5C809C34112911199e748B0d70173Acb18E5533a\",\"data\":{\"receiptTx\":\"0x9eeb42a939737594d9947b7d2496c6f76f10eb1ccf156598ac0e1975e36070a0\",\"publishKeys\":[\"0xBEDbA14A87C60263e8b643D8604a3bea31285f4d\"],\"nodes\":1,\"tokenName\":\"wusdt\",\"network\":\"BSC\",\"amount\":\"1250000000000000000000\"}}",
+    "signMessage": "0x127ee9f8c51deae07cf722babdb3faf15673162a2ce217c83bf5320054df869665bf57fad0d4f13d0dd2090e1f382c9e078a05031b63c70f3f6554ee6504c5d21c"
 }

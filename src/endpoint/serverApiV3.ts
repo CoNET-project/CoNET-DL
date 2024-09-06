@@ -328,6 +328,36 @@ class conet_dl_server {
 			GuardianPurchase()
 		})
 
+		router.post ('/ticket', async ( req, res ) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			if (!ipaddress) {
+				return res.status(404).end()
+			}
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSignObj (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+			
+			obj.ipAddress = ipaddress
+			return postLocalhost('/api/ticket', {obj}, res)
+		})
 
 
 		router.post ('/unlockCONET', (req, res) => {
