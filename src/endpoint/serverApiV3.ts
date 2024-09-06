@@ -152,12 +152,9 @@ const MaxCount = 1
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
 
-	private PORT = 8080
+	private PORT = 80
 	private appsPath = ''
 	private serverID = ''
-
-	private si_pool: nodeType[] = []
-	private masterBalance: CNTPMasterBalance|null = null
 
 	private initSetupData = async () => {
 
@@ -273,7 +270,8 @@ class conet_dl_server {
 
 		})
 
-		//********************			V2    		****** */				
+		//********************			V2    		****** */		
+
 		router.post ('/conet-faucet', async (req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
@@ -302,33 +300,6 @@ class conet_dl_server {
 
 		})
 
-		router.get ('/conet-nodes', async ( req, res ) => {
-			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
-		})
-
-
-		router.post ('/claimToken', async ( req, res ) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			return res.status(403).end()
-			const response = await claimeToekn (message, signMessage)
-			if (response) {
-				return res.status(200).json({}).end()
-			}
-			return res.status(403).end()
-
-		})
-
 		router.post ('/Purchase-Guardian', async (req,res) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -353,208 +324,7 @@ class conet_dl_server {
 			GuardianPurchase()
 		})
 
-		router.post ('/leaderboardData',  async (req, res) =>{
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let wallet: string
-			try {
-				wallet = req.body.wallet
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /leaderboardData req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			if (!leaderboardData.epoch||!free_referrals_rate_lists||!guardians_referrals_rate_lists) {
 
-				return res.status(502).json({}).end()
-			}
-
-			const ret = {
-				leaderboardData,
-				free_referrals_rate: wallet ? free_referrals_rate_lists?.filter ? free_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': '',
-				guardians_referrals_rate: wallet ? guardians_referrals_rate_lists?.filter ? guardians_referrals_rate_lists.filter(n => n.wallet.toLowerCase() === wallet.toLowerCase())[0]: '': '',
-				totalMiner, minerRate
-			}
-			//logger(Colors.grey(` ${ipaddress} GET /leaderboardData wallet [${wallet}] free_referrals_rate = [${ret.free_referrals_rate}] guardians_referrals_rate = [${ret.guardians_referrals_rate}]`))
-
-			return res.status(200).json(ret).end()
-		})
-
-		router.post ('/lottery_leaderBoardBio', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				return res.status(404).end()
-			}
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj || !obj.bio ) {
-				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-
-			await conet_lotte_bio(obj.walletAddress, obj.bio)
-			return res.status(200).json({}).end()
-		})
-
-		router.post ('/lottery_test', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				return res.status(404).end()
-			}
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj) {
-				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-			obj.ipAddress = ipaddress
-
-			
-			return postLocalhost('/api/lottery_test', {obj}, res)
-		})
-
-		router.post ('/lottery', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				return res.status(404).end()
-			}
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj) {
-				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-			obj.ipAddress = ipaddress
-			return postLocalhost('/api/lottery', {obj}, res)
-		})
-
-		router.post ('/ticket', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				return res.status(404).end()
-			}
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj) {
-				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-			obj.ipAddress = ipaddress
-			return postLocalhost('/api/ticket', {obj}, res)
-		})
-
-		router.post ('/lottery-ticket', async ( req, res ) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			if (!ipaddress) {
-				return res.status(404).end()
-			}
-
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj) {
-				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-			obj.ipAddress = ipaddress
-			return postLocalhost('/api/ticket-ticket', {obj}, res)
-		})
-
-		router.post ('/checkAccount',  async (req, res) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /checkAccount req.body ERROR!`), inspect(req.body))
-				return res.status(403).end()
-			}
-			
-
-			const obj = checkSignObj (message, signMessage)
-			if (!obj) {
-				logger (Colors.grey(`Router /checkAccount !obj or this.saPass Error! ${ipaddress}`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const address = obj?.walletAddress1||[]
-			if (!obj.walletAddress || !address ) {
-				logger (Colors.grey(`Router /checkAccount !obj or this.saPass Error! ${ipaddress} `), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-			
-			
-			return res.status(403).json({ublock: true}).end()
-		})
 
 		router.post ('/unlockCONET', (req, res) => {
 			return res.status(200).json({}).end()
