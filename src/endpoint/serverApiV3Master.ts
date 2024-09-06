@@ -332,6 +332,7 @@ const getAllDevelopAddress = async () => {
 	}
 
 	for (let i = 0; i < ret.length; i ++){
+		logger(Colors.blue(`getAllDevelopAddress added ${(ret[i][0])} to developWalletPool`))
 		developWalletPool.set (ret[i][0], ret[i][1])
 	}
 }
