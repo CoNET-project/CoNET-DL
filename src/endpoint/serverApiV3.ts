@@ -191,7 +191,8 @@ class conet_dl_server {
 			const head = req.headers['host']
 			
 			if (!head || !/apiv3\.conet\.network/i.test(head)) {
-				logger(Colors.magenta(`!/apiv3\.conet\.network/i.test(head) Error head = ${head}`))
+				logger(Colors.magenta(`!/apiv3\.conet\.network/i.test(head) Error`))
+				logger(inspect(req.headers, false, 3, true))
 				res.status(404).end()
 				return res.socket?.end().destroy()
 			}
