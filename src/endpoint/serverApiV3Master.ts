@@ -436,6 +436,9 @@ interface faucetRequest {
 }
 
 const ticketPool: Map<string, number> = new Map()
+const ticketBrunPool: Map<string, number> = new Map()
+
+
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
 	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}]`))
@@ -478,27 +481,50 @@ const ticketPoolProcess = async (block: number) => {
 	ticketPoolProcesing = true
 	const wallet: string[] = []
 	const tickets: number[] = []
-	
-	ticketPool.forEach((v,key) => {
-		wallet.push(key)
-		tickets.push(v)
-
+	const walletBrun: string[] = []
+	const brunNumber: number[] = []
+	ticketPool.forEach((v, key) => {
+		if (v > 0) {
+			wallet.push(key)
+			tickets.push(v)
+		}
 		ticketPool.set(key, 0)
 	})
+
+	ticketBrunPool.forEach((v, key) => {
+		if (v > 0) {
+			walletBrun.push(key)
+			brunNumber.push(v)
+		}
+		ticketBrunPool.set(key, 0)
+	})
+
+
 	const ids: number[] = wallet.map(n => 1)
 
 	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
 	try {
-		const tx = await ticket_contract.mintBatch(wallet, ids, tickets)
-		const tr = await tx.wait()
-		logger(Colors.magenta(`ticketPoolProcess success!`))
-		logger(inspect(tr, false, 3, true))
+		if (wallet.length) {
+			const tx = await ticket_contract.mintBatch(wallet, ids, tickets)
+			const tr = await tx.wait()
+			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
+			logger(inspect(tr, false, 3, true))
+		}
+		if (walletBrun.length) {
+			const tx = await ticket_contract.burnBatch(walletBrun, ids, brunNumber)
+			const tr = await tx.wait()
+			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
+			logger(inspect(tr, false, 3, true))
+		}
+		
 	} catch (ex) {
 		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
 		return returnArrayToTicketPoolProcess (wallet, tickets)
 	}
 
 }
+
+
 
 let faucetWaitingPool: faucetRequest[] = []
 export const faucet_call =  (wallet: string, ipAddress: string) => {
@@ -647,8 +673,11 @@ class conet_dl_server {
 		router.post ('/ticket-lottery', async ( req, res ) => {
 			logger(Colors.blue(`Cluster Master got: /ticket-lottery`))
 			const wallet = req.body.obj.walletAddress
+			const ipaddress = req.body.obj.ipAddress
+			const brun = ticketBrunPool.get (wallet)||0
+			ticketBrunPool.set (wallet, brun + 1)
 
-			return res.status(200).json({}).end()
+			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
 		})
 
 		router.post ('/lottery', async ( req, res ) => {
@@ -657,16 +686,6 @@ class conet_dl_server {
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
 			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
-		})
-
-
-		router.post ('/lottery_test', async ( req, res ) => {
-			return res.status(403).end()
-			// logger(Colors.blue(`Cluster Master got: /lottery_test`))
-			// logger(inspect(req.body, false, 3, true))
-			// const wallet = req.body.obj.walletAddress
-			// const ipaddress = req.body.obj.ipAddress
-			// return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager, true)
 		})
 
 		router.post ('/initV3',  async (req, res) => {
