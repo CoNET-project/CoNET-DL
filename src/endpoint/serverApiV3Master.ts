@@ -422,7 +422,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 
-const ticketAddr = '0x58BF52BeF7d52461AB4A0a7Bb5EB80955eE00bF8'
+const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
@@ -715,4 +715,19 @@ class conet_dl_server {
 
 export default conet_dl_server
 
-getAllDevelopAddress()
+const test = async () => {
+	const walletBrun = ['0x454428d883521c8af9e88463e97e4d343c600914']
+	const ids1 = ['1']
+	const brunNumber = ['1']
+	try {
+		const tx = await ticket_contract.burnBatch(walletBrun, ids1, brunNumber)
+		const ts = await tx.wait()
+		logger(ts)
+	} catch (ex) {
+		logger(ex)
+	}
+	
+
+}
+
+test()
