@@ -439,7 +439,7 @@ const ticketPool: Map<string, number> = new Map()
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
 	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}]`))
 	const develop = developWalletPool.get (wallet)
-
+	logger(Colors.magenta(`ticket developWalletPool.get develop = ${develop}`))
 	if (develop) {
 		const _ticket = ( ticketPool.get (wallet) || 0 ) + 1
 		ticketPool.set( wallet, _ticket )
