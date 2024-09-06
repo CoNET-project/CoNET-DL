@@ -421,7 +421,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 
-const ticketAddr = '0x3933C2e84f7d90B60B00f9FeF8F640194C95A86c'
+const ticketAddr = '0x58BF52BeF7d52461AB4A0a7Bb5EB80955eE00bF8'
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
