@@ -436,22 +436,26 @@ interface faucetRequest {
 const ticketPool: Map<string, number> = new Map()
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
+	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}]`))
 	const develop = developWalletPool.get (wallet)
 
 	if (develop) {
 		const _ticket = ( ticketPool.get (wallet) || 0 ) + 1
 		ticketPool.set( wallet, _ticket )
+		logger(Colors.magenta(`ticket for develop [${wallet}:${ipAddress}]`))
 		return res.status(200).json({ticket:1}).end()
 	}
 
 	const rand = !(Math.floor(Math.random() * 4 ))
 
 	if (rand) {
+		logger(Colors.magenta(`ticket [${wallet}:${ipAddress}] lose`))
 		return res.status(200).json({}).end()
 	}
 
 	const _ticket = (ticketPool.get (wallet)||0) + 1
 	ticketPool.set(wallet, _ticket)
+	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}] win 1 !`))
 	res.status(200).json({ticket:1}).end()
 }
 
