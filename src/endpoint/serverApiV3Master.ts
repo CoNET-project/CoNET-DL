@@ -475,7 +475,7 @@ const returnArrayToTicketPoolProcess = (wallet: string[], tickets: number[]) => 
 }
 
 const ticketPoolProcess = async (block: number) => {
-	if (ticketPoolProcesing || !ticketPool.size ){
+	if (ticketPoolProcesing){
 		return
 	}
 	ticketPoolProcesing = true
@@ -519,9 +519,10 @@ const ticketPoolProcess = async (block: number) => {
 		
 	} catch (ex) {
 		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
+		ticketPoolProcesing = false
 		return returnArrayToTicketPoolProcess (wallet, tickets)
 	}
-
+	ticketPoolProcesing = false
 }
 
 
