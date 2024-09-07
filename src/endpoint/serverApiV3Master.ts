@@ -8,17 +8,16 @@ import { inspect } from 'node:util'
 import {claimeToekn, conet_lotte_new} from './help-database'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
+import { masterSetup, getServerIPV4Address, conet_Holesky_rpc} from '../util/util'
 import {logger} from '../util/logger'
 
 import CGPNsABI from '../util/CGPNs.json'
 import devplopABI from './develop.ABI.json'
-import {ethers, FixedNumber} from 'ethers'
+import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
-import faucetABI from './faucet_abi.json'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
@@ -29,7 +28,6 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 
 //	for production
 	import {createServer} from 'node:http'
-import { yarn } from 'global-dirs'
 
 //	for debug
 	// import {createServer as createServerForDebug} from 'node:http'
@@ -185,12 +183,6 @@ const sentData = async (data: conetData, callback: (err?: any, data?: ethers.Tra
 	}
 	return callback (null, tx)
 }
-
-const transCONETArray: conetData[] = []
-let transCONETLock = false
-let unlockCONETLock = false
-const unlockArray: conetData[] = []
-
 
 interface clientRequestTimeControl {
 	lastTimestamp: number
@@ -530,8 +522,6 @@ const ticketPoolProcess = async (block: number) => {
 	ticketPoolProcesing = false
 }
 
-
-
 let faucetWaitingPool: faucetRequest[] = []
 export const faucet_call =  (wallet: string, ipAddress: string) => {
 	try {
@@ -680,6 +670,7 @@ class conet_dl_server {
 			logger(Colors.blue(`Cluster Master got: /ticket-lottery`))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
+
 			const brun = ticketBrunPool.get (wallet)||0
 			ticketBrunPool.set (wallet, brun + 1)
 

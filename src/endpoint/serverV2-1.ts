@@ -34,7 +34,7 @@ const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipa
 			return res.write( JSON.stringify(returnData)+'\r\n\r\n', async err => {
 				if (err) {
 					await deleteAMiner(server, ipaddress, wallet, livenessListeningPool)
-					logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
+					logger(Colors.grey (`stratliveness res.write return Error! ${ err.message } delete ${wallet} `))
 					livenessListeningPool.delete(wallet)
 				}
 				return resolve (true)
@@ -43,7 +43,7 @@ const testMinerCOnnecting = (res: Response, returnData: any, wallet: string, ipa
 		}
 		await deleteAMiner(server, ipaddress, wallet, livenessListeningPool)
 		livenessListeningPool.delete(wallet)
-		logger(Colors.grey (`stratliveness write Error! delete ${wallet}`))
+		logger(Colors.grey (`stratliveness res.writable = ${res.writable} res.closed = ${res.closed} Error! delete ${wallet}`))
 		return resolve (true)
 	})
 

@@ -194,6 +194,7 @@ class conet_dl_server {
 		app.use (async (req, res, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
+			
 			if (!ipaddress) {
 				logger(Colors.red(`clinet has not IP address error!`))
 				res.status(404).end()

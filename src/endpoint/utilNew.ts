@@ -1,5 +1,5 @@
 import {ethers, TransactionResponse} from 'ethers'
-import { logger, newCNTP_Contract, masterSetup, checkSign, checkTx, getNetworkName, getAssetERC20Address, checkErc20Tx, CONET_guardian_purchase_Receiving_Address, checkReferralsV2_OnCONET_Holesky, returnGuardianPlanReferral} from '../util/util'
+import { logger, sendGuardianNodesContract, masterSetup, checkSign, checkTx, getNetworkName, getAssetERC20Address, checkErc20Tx, CONET_guardian_purchase_Receiving_Address, checkReferralsV2_OnCONET_Holesky, returnGuardianPlanReferral} from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 
@@ -850,6 +850,99 @@ const GuardianPurchaseReturn403Error = (res: Response) => {
 	GuardianPurchaseLocked
 	res.status(403).end()
 	return GuardianPurchase()
+}
+
+const _GuardianPurchase = async (obj: minerObj) => {
+
+	
+	if (obj.data?.nodes !== obj.data?.publishKeys?.length) {
+		logger(Colors.grey(`Router /Purchase-Guardian obj.data?.nodes !== obj.data?.publishKeys?.length Error!`), inspect(obj, false, 3, true))
+		
+		return false
+	}
+
+	const txObj = await checkTx (obj.data.receiptTx, obj.data.tokenName)
+
+	if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
+		logger(Colors.grey(`Router /Purchase-Guardian txObj Error!`), inspect(txObj, false, 3, true))
+		return false
+	}
+
+	if (txObj.tx1.from.toLowerCase() !== obj.walletAddress) {
+		logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
+		
+		return false
+	}
+
+	const networkName = getNetworkName(obj.data.tokenName)
+
+	if (!networkName) {
+		logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
+		
+		return false
+	}
+
+	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(obj.data.tokenName)
+	
+	const _checkTx = await checkUsedTx (obj.data.receiptTx )
+
+	if (_checkTx) {
+		logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
+		
+		return false
+	}
+
+
+	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet ) {
+		//		check tokenName matched smart contract address
+		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+			logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
+			
+			return false
+		}
+
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+		if (erc20Result === false) {
+			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
+			
+			return false
+		}
+
+		const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+		if (!kk) {
+			logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
+			
+			return false
+		}
+
+		const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
+		
+		
+		return true
+		
+	}
+	
+	
+	const value = txObj.tx1.value.toString()
+	if (obj.data.amount !== value) {
+		logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
+		
+		return false
+	}
+
+	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+
+	if (!kk) {
+		logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
+		
+		return false
+	}
+
+	const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+	await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
+	
+	return true
 }
 
 export const GuardianPurchase = async () => {
