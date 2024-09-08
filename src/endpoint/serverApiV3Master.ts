@@ -693,6 +693,15 @@ class conet_dl_server {
 			
 		})
 
+		router.post ('/maining-update',  async (req, res) => {
+			const obj:minerObj = req.body.obj
+			logger(Colors.blue(`/maining-update`))
+			logger(inspect(obj, false, 3, true))
+			res.status(200).json({}).end()
+			
+		})
+
+
 		
 
 		router.all ('*', (req, res ) =>{

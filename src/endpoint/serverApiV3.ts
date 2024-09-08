@@ -22,10 +22,6 @@ import {createServer} from 'node:http'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
-
-
-
-
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
@@ -159,6 +155,7 @@ const checkTicket = async (wallet: string) => {
 	}
 	return true
 }
+
 
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
@@ -409,9 +406,35 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket-lottery', {obj}, res)
 		})
 
+		router.post ('/maining-update', (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			if (!ipaddress) {
+				return res.status(404).end()
+			}
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
 
-		router.post ('/unlockCONET', (req, res) => {
-			return res.status(200).json({}).end()
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /Purchase-Guardian !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+
+			obj.ipAddress = ipaddress
+			return postLocalhost('/api/maining-update', obj, res)
 		})
 
 
