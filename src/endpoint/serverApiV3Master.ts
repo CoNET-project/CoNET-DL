@@ -767,21 +767,27 @@ class conet_dl_server {
 			logger(Colors.blue(`/twitter-callback`))
 			
 			res.status(200).json({}).end()
-			if (!obj.uuid || !obj.data) {
+			if (!obj|| !obj.data) {
 				logger(inspect(obj, false, 3, true))
 				return logger(Colors.red(`/twitter-callback got obj format Error`))
 			}
+			const _obj: minerObj = obj.data
 
-			const _res = TwttterPool.get(obj.uuid)
+			if (!_obj||!_obj.uuid ) {
+				return logger(Colors.red(`/twitter-callback got obj data format Error`))
+			}
+
+			const _res = TwttterPool.get(_obj.uuid)
 
 			if (!_res) {
 				return logger(Colors.red(`/twitter-callback has no ${obj.uuid} RES from waiting !`))
 			}
 
-			TwttterPool.delete(obj.uuid)
+			TwttterPool.delete(_obj.uuid)
 			if (_res.writable) {
-				_res.status(200).json(obj.data).end()
+				_res.status(200).json(_obj).end()
 			}
+
 			logger(Colors.magenta(`/twitter-callback return ${inspect(obj.data, false, 3, true)} success!`))
 		})
 
