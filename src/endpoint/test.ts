@@ -10,6 +10,7 @@ import {conet_lotte, listAllLotte, conet_lotte_bio, restoreAllOld_lotte, conet_l
 import Colors from 'colors/safe'
 import {faucet_call} from './serverV2master'
 import { forEach } from 'async'
+import Phin from 'phin'
 import rateABI from './conet-rate.json'
 // const test = async () => {
 // 	// await testInsert()
@@ -39,6 +40,7 @@ const provider = new ethers.JsonRpcProvider('http://207.90.195.80:8000')
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'//'0xFAF1f08b66CAA3fc1561f30b496890023ea70648'//'0x467c9F646Da6669C909C72014C20d85fc0A9636A'//`0xe2A18B436BC32C7AbE6D238Bf1C4111000e93F76`
 const newCONETProviderOld = new ethers.JsonRpcProvider('http://74.208.39.153:8888')
 const newCONETProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
+
 const checkTransfer = async (rateBack: (rate: number) => void) => {
 
 	const rateSC = new ethers.Contract(rateAddr, rateABI, newCONETProvider)
@@ -53,6 +55,7 @@ const checkTransfer = async (rateBack: (rate: number) => void) => {
 	return rateBack (rate)
 
 }
+
 const listenEPOCH1 = async () => {
 	const epoch = await provider.getBlockNumber()
 	logger(`listenEPOCH1 got local epoch = ${epoch}`)
@@ -60,6 +63,28 @@ const listenEPOCH1 = async () => {
 		logger(`listenEPOCH1 new block ${block}`)
 	})
 }
+
+
+const testTwitterAPI = async () => {
+	const acc = ethers.Wallet.createRandom()
+	const url = 'https://apiv3.conet.network/api/twitter-check-follow'
+	const checkTwitterAccount = 'ppc_canada3'
+	const messageObj: minerObj = {
+		walletAddress: acc.address.toLowerCase(),
+		data: [checkTwitterAccount]
+	}
+	const message = JSON.stringify(messageObj)
+	const signMessage = acc.signMessage(message)
+	const data = JSON.stringify({message, signMessage})
+	const req = await Phin({
+		url,
+		method: 'POST',
+		data
+	})
+
+	logger(req.body.toJSON())
+}
+
 
 // const listenEPOCH2 = async () => {
 // 	const epoch = await provider1.getBlockNumber()
@@ -86,10 +111,8 @@ const testLottle = async (_wallet: string) => {
 		logger(n)
 	})
 }
-testLottle('')
-const wallet = process.argv[2]
 
-
+testTwitterAPI()
 
 // listenEPOCH2()
 
