@@ -74,8 +74,8 @@ const testTwitterAPI = async () => {
 		data: [checkTwitterAccount]
 	}
 	const message = JSON.stringify(messageObj)
-	const signMessage = acc.signMessage(message)
-	const data = JSON.stringify({message, signMessage})
+	const signMessage = await acc.signMessage(message)
+	const data = {message, signMessage}
 	const req = await Phin({
 		url,
 		method: 'POST',

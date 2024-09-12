@@ -737,11 +737,15 @@ class conet_dl_server {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/twitter-check-follow`))
 			logger(inspect(obj, false, 3, true))
-			
+			if (!TwttterPool.size) {
+				logger(Colors.red(`/twitter-check-follow TwttterPool Empty Error!`))
+				return res.status(502).end()
+			}
+
 			obj.uuid = v4()
 			const post = JSON.stringify(obj) + '\r\n\r\n'
 
-			TwttterPool.forEach((n, key) => {
+			return TwttterPool.forEach((n, key) => {
 				if (n.writable) {
 					return n.write(post, err => {
 						if (err) {

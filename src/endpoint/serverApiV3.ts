@@ -488,19 +488,19 @@ class conet_dl_server {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /twitter-listen req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /twitter-check-follow req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
 
 			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /twitter-listen !message||!signMessage Error!`), inspect(req.body, false, 3, true))
+				logger (Colors.grey(`Router /twitter-check-follow !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
 				return res.status(403).end()
 			}
 
 			const obj = checkSign (message, signMessage)
 
 			if (!obj || !obj.data ) {
-				logger (Colors.grey(`Router /twitter-listen checkSignObj obj Error!`), message, signMessage)
+				logger (Colors.grey(`Router /twitter-check-follow checkSignObj obj Error!`), message, signMessage)
 				return res.status(403).end()
 			}
 			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-check-follow forward to master! `))
