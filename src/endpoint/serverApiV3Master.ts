@@ -545,7 +545,7 @@ let block = 0
 
 const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterPool: Map<string, Response> = new Map()
-
+const twitterWaitingCallbackPool: Map<string, Response> = new Map()
 
 class conet_dl_server {
 
@@ -744,6 +744,7 @@ class conet_dl_server {
 
 			obj.uuid = v4()
 			const post = JSON.stringify(obj) + '\r\n\r\n'
+			twitterWaitingCallbackPool.set(obj.uuid, res)
 
 			return TwttterPool.forEach((n, key) => {
 				if (n.writable) {
@@ -761,6 +762,28 @@ class conet_dl_server {
 			})
 		})
 		
+		router.post ('/twitter-callback',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/twitter-callback`))
+			
+			res.status(200).json({}).end()
+			if (!obj.uuid || !obj.data) {
+				logger(inspect(obj, false, 3, true))
+				return logger(Colors.red(`/twitter-callback got obj format Error`))
+			}
+
+			const _res = TwttterPool.get(obj.uuid)
+
+			if (!_res) {
+				return logger(Colors.red(`/twitter-callback has no ${obj.uuid} RES from waiting !`))
+			}
+
+			TwttterPool.delete(obj.uuid)
+			if (_res.writable) {
+				_res.status(200).json(obj.data).end()
+			}
+			logger(Colors.magenta(`/twitter-callback return ${inspect(obj.data, false, 3, true)} success!`))
+		})
 
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
