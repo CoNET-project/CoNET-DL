@@ -743,8 +743,11 @@ class conet_dl_server {
 			}
 
 			obj.uuid = v4()
-			const post = JSON.stringify(obj) + '\r\n\r\n'
 			twitterWaitingCallbackPool.set(obj.uuid, res)
+			logger(Colors.magenta(`/twitter-check-follow push ${obj.uuid} to twitterWaitingCallbackPool [${twitterWaitingCallbackPool.size}]`))
+
+			const post = JSON.stringify(obj) + '\r\n\r\n'
+			
 
 			return TwttterPool.forEach((n, key) => {
 				if (n.writable) {
@@ -778,14 +781,14 @@ class conet_dl_server {
 				return logger(Colors.red(`/twitter-callback got obj data format Error`))
 			}
 
-			const _res = TwttterPool.get(_obj.uuid)
+			const _res = twitterWaitingCallbackPool.get(_obj.uuid)
 
 			if (!_res) {
-
-				return logger(Colors.red(`/twitter-callback has no ${obj.uuid} RES from waiting !`))
+				return logger(Colors.red(`/twitter-callback has no ${obj.uuid} RES from twitterWaitingCallbackPool ${twitterWaitingCallbackPool.size} !`))
 			}
 
-			TwttterPool.delete(_obj.uuid)
+			twitterWaitingCallbackPool.delete(_obj.uuid)
+			
 			if (_res.writable) {
 				_res.status(200).json(_obj).end()
 			}
