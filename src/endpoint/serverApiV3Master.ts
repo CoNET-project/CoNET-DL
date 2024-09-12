@@ -765,7 +765,7 @@ class conet_dl_server {
 		router.post ('/twitter-callback',  async (req, res) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/twitter-callback`))
-			
+			logger(inspect(obj, false, 3, true))
 			res.status(200).json({}).end()
 			if (!obj|| !obj.data) {
 				logger(inspect(obj, false, 3, true))
@@ -774,12 +774,14 @@ class conet_dl_server {
 			const _obj: minerObj = obj.data
 
 			if (!_obj||!_obj.uuid ) {
+
 				return logger(Colors.red(`/twitter-callback got obj data format Error`))
 			}
 
 			const _res = TwttterPool.get(_obj.uuid)
 
 			if (!_res) {
+
 				return logger(Colors.red(`/twitter-callback has no ${obj.uuid} RES from waiting !`))
 			}
 
