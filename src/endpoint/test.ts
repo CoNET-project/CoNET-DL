@@ -81,8 +81,13 @@ const testTwitterAPI = async () => {
 		method: 'POST',
 		data
 	})
-
-	logger(req.body.toJSON())
+	try {
+		const result = JSON.parse(req.body.toString())
+		logger(inspect(result, false, 3, true))
+	} catch (ex) {
+		logger(Colors.red(`testTwitterAPI JSON parse ERROR`))
+		return logger(req.body.toString())
+	}
 }
 
 
