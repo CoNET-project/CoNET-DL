@@ -406,11 +406,26 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket-lottery', {obj}, res)
 		})
 
-		router.post ('/maining-update', (req, res) => {
+		router.post ('/initV3',  async (req, res) => {
+
+			const _wallet: string = req.body.walletAddress
+			let wallet: string 
+			try {
+				wallet = ethers.getAddress(_wallet)
+			} catch (ex) {
+				return res.status(403).end()
+			}
+			logger(`/initV3`)
+			return postLocalhost('/api/initV3', {wallet: wallet.toLowerCase()}, res)
+			
+		})
+		
+		router.post ('/ticket', async ( req, res ) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
 			}
+
 			let message, signMessage
 			try {
 				message = req.body.message
@@ -428,27 +443,40 @@ class conet_dl_server {
 
 			const obj = checkSign (message, signMessage)
 
-			if (!obj) {
+			if ( !obj ) {
 				logger (Colors.grey(`Router /lottery checkSignObj obj Error!`), message, signMessage)
 				return res.status(403).end()
 			}
 
 			obj.ipAddress = ipaddress
-			return postLocalhost('/api/maining-update', obj, res)
+			return postLocalhost('/api/ticket', {obj}, res)
 		})
 
-
-		router.post ('/initV3',  async (req, res) => {
-
-			const _wallet: string = req.body.walletAddress
-			let wallet: string 
+		router.post ('/twitter-listen',  async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
 			try {
-				wallet = ethers.getAddress(_wallet)
+				message = req.body.message
+				signMessage = req.body.signMessage
+
 			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /twitter-listen req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /twitter-listen !message||!signMessage Error!`), inspect(req.body, false, 3, true))
 				return res.status(403).end()
 			}
-			logger(`/initV3`)
-			return postLocalhost('/api/initV3', {wallet: wallet.toLowerCase()}, res)
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`Router /twitter-listen checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+
+			return postLocalhost('/api/twitter-listen', obj, res)
 			
 		})
 

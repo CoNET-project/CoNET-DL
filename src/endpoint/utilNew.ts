@@ -1061,3 +1061,5 @@ export const GuardianPurchase = async () => {
 	GuardianPurchase()
 	return 
 }
+
+initNewCONET('0xf8B8Ff960AA57d58a44fBb8Bd63F44D0594D8a2B')

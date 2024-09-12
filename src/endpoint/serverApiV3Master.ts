@@ -543,6 +543,8 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 let block = 0
 
 const faucet_call_pool:Map<string, boolean> = new Map()
+const TwttterPool: Map<string, Response> = new Map()
+
 
 class conet_dl_server {
 
@@ -701,7 +703,23 @@ class conet_dl_server {
 			
 		})
 
+		router.post ('/twitter-listen',  async (req, res) => {
+			const obj: minerObj = req.body.obj
 
+			logger(Colors.blue(`/twitter-listen`))
+			logger(inspect(obj, false, 3, true))
+			
+			res.status(200)
+			res.setHeader('Cache-Control', 'no-cache')
+            res.setHeader('Content-Type', 'text/event-stream')
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Connection', 'keep-alive')
+            res.flushHeaders() // flush the headers to establish SSE with client
+			const returnData = {status: 200}
+			res.write( JSON.stringify (returnData) + '\r\n\r\n')
+			TwttterPool.set(obj.walletAddress, res)
+			return logger(Colors.magenta(`/twitter-listen added ${obj.walletAddress} to TwttterPool ${TwttterPool.size}`))
+		})
 		
 
 		router.all ('*', (req, res ) =>{
