@@ -476,7 +476,7 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 
-			return postLocalhost('/api/twitter-listen', obj, res)
+			return postLocalhost('/api/twitter-listen', {obj}, res)
 			
 		})
 
