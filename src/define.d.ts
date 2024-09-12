@@ -229,6 +229,7 @@ interface minerObj {
 	data?: any
 	allWallets?: string[]
 	bio?: string
+	uuid?: string
 	serverIPAddress: string
 }
 

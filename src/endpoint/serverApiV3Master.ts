@@ -10,7 +10,7 @@ import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import { masterSetup, getServerIPV4Address, conet_Holesky_rpc} from '../util/util'
 import {logger} from '../util/logger'
-
+import {v4} from 'uuid'
 import CGPNsABI from '../util/CGPNs.json'
 import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
@@ -28,6 +28,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 
 //	for production
 	import {createServer} from 'node:http'
+
 
 //	for debug
 	// import {createServer as createServerForDebug} from 'node:http'
@@ -542,7 +543,7 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 
 let block = 0
 
-const faucet_call_pool:Map<string, boolean> = new Map()
+const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterPool: Map<string, Response> = new Map()
 
 
@@ -717,8 +718,43 @@ class conet_dl_server {
             res.flushHeaders() // flush the headers to establish SSE with client
 			const returnData = {status: 200}
 			res.write( JSON.stringify (returnData) + '\r\n\r\n')
+
+			res.once('error', err => {
+				TwttterPool.delete(obj.walletAddress)
+				return logger(Colors.red(`TwttterPool ${obj.walletAddress} res.on ERROR ${err.message} delete from pool!`))
+			})
+			res.once('end', () => {
+				TwttterPool.delete(obj.walletAddress)
+				return logger(Colors.red(`TwttterPool ${obj.walletAddress} res.on END! delete from pool!`))
+			})
+
 			TwttterPool.set(obj.walletAddress, res)
+
 			return logger(Colors.magenta(`/twitter-listen added ${obj.walletAddress} to TwttterPool ${TwttterPool.size}`))
+		})
+
+		router.post ('/twitter-check-follow',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/twitter-check-follow`))
+			logger(inspect(obj, false, 3, true))
+			
+			obj.uuid = v4()
+			const post = JSON.stringify(obj) + '\r\n\r\n'
+
+			TwttterPool.forEach((n, key) => {
+				if (n.writable) {
+					return n.write(post, err => {
+						if (err) {
+							TwttterPool.delete(key)
+							return logger(Colors.red(`TwttterPool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
+						}
+						return logger(Colors.red(`TwttterPool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
+					})
+				}
+
+				TwttterPool.delete(key)
+				return logger(Colors.red(`TwttterPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
+			})
 		})
 		
 
