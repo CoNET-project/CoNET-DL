@@ -152,7 +152,7 @@ const MaxCount = 1
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
 
-	private PORT = 8080
+	private PORT = 80
 	private appsPath = ''
 	private serverID = ''
 

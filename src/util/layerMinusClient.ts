@@ -20,6 +20,8 @@ type nodes_info = {
 	publicKeyObj?: Key
 	domain?: string
 }
+const conet_rpc = 'https://rpc.conet.network'
+const provoder = new ethers.JsonRpcProvider(conet_rpc)
 
 const startGossip = (url: string, POST: string, callback: (err?: string, data?: string) => void) => {
 	const Url = new URL(url)
@@ -112,6 +114,18 @@ const connectToGossipNode = async (privateKey: string, node: nodes_info ) => {
 	})
 }
 
+let currentEpoch = 0
+const listenEpoch = async () => {
+	currentEpoch = await provoder.getBlockNumber()
+
+	provoder.on('block', block => {
+		currentEpoch = block
+		logger(Colors.blue(`listenEpoch on [${currentEpoch}]`))
+	})
+	logger(Colors.blue(`listenEpoch start current = [${currentEpoch}]`))
+}
+
+
 const start = async () => {
 	const acc = ethers.Wallet.createRandom()
 	
@@ -141,6 +155,7 @@ const start = async () => {
 	}
 	connectToGossipNode(acc.signingKey.privateKey, node0)
 	connectToGossipNode(acc.signingKey.privateKey, node1)
+	listenEpoch()
 }
 
 start()
