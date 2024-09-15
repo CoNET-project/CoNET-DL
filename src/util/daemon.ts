@@ -87,8 +87,15 @@ const guardianMining = async (block: number) => {
 	} catch (ex: any) {
 		return logger(Color.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
 	}
-	const _nodesAddress: string[] = nodes[0].map((n: string) => n)
-	const __nodesBoosts: number[] = nodes[1].map((n: BigInt) => n !== BigInt(3) ? parseInt(n.toString()) : 300)
+	
+	const filterWallet = '0xa1A1F55591a3716f126571b9643d084731909DF6'.toLowerCase()
+	const node0: string[] = nodes[0].map((n: string) => n)
+	const node1: BigInt[] = nodes[1].map((n: BigInt) => n)
+	node0.splice(864,2)
+	node1.splice(864,2)
+	
+	const _nodesAddress: string[] = node0.map((n: string) => n)
+	const __nodesBoosts: number[] = node1.map((n: BigInt) => n !== BigInt(3) ? parseInt(n.toString()) : 300)
 	const _nodesBoosts: number[] = __nodesBoosts.map(n => n === 100 ? 100 : n <298 ? n + 2 : 300)
 
 	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
@@ -102,8 +109,7 @@ const guardianMining = async (block: number) => {
 	// } catch (ex: any) {
 	// 	return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
 	// }
-	const filterWallet = '0xa1A1F55591a3716f126571b9643d084731909DF6'.toLowerCase()
-	const nodesAddress: string[] = _nodesAddress.filter(n => n.toLowerCase()!== filterWallet)
+	const nodesAddress = _nodesAddress
 	const nodesBoosts: number[] = _nodesBoosts
 
 	// NFTAssets.forEach((n, index) => {
