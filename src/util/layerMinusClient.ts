@@ -6,6 +6,7 @@ import {logger} from './logger'
 import {inspect} from 'node:util'
 import {RequestOptions, request } from 'node:http'
 import {createMessage, encrypt, enums, readKey, Key} from 'openpgp'
+import GuardianNodesV2ABI from '../endpoint/CGPNsV7.json'
 
 type nodes_info = {
 	country?: string
@@ -20,7 +21,11 @@ type nodes_info = {
 	publicKeyObj?: Key
 	domain?: string
 }
+
 const conet_rpc = 'https://rpc.conet.network'
+const GuardianNFT = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
+const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
+
 const provoder = new ethers.JsonRpcProvider(conet_rpc)
 
 const startGossip = (url: string, POST: string, callback: (err?: string, data?: string) => void) => {
@@ -124,8 +129,17 @@ const listenEpoch = async () => {
 	})
 	logger(Colors.blue(`listenEpoch start current = [${currentEpoch}]`))
 }
+let getNodeInfoProssing = false
 
+const guardianSmartContract = new ethers.Contract(GuardianNFT, GuardianNodesV2ABI, provoder)//
+//const GuardianNodesInfoV3Contract = new ethers.Contract(GuardianNodesInfoV6, openPGPContractAbi, CONETProvider)
+const getAllNodes = () => {
+	if (getNodeInfoProssing) {
+		return logger(`initGuardianNodes already running!`)
+	}
+	getNodeInfoProssing = true
 
+}
 const start = async () => {
 	const acc = ethers.Wallet.createRandom()
 	

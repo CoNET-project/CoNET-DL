@@ -102,8 +102,8 @@ const guardianMining = async (block: number) => {
 	// } catch (ex: any) {
 	// 	return logger(Color.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
 	// }
-
-	const nodesAddress: string[] = _nodesAddress
+	const filterWallet = '0xa1A1F55591a3716f126571b9643d084731909DF6'.toLowerCase()
+	const nodesAddress: string[] = _nodesAddress.filter(n => n.toLowerCase()!== filterWallet)
 	const nodesBoosts: number[] = _nodesBoosts
 
 	// NFTAssets.forEach((n, index) => {
