@@ -91,8 +91,12 @@ const guardianMining = async (block: number) => {
 	const filterWallet = '0xa1A1F55591a3716f126571b9643d084731909DF6'.toLowerCase()
 	const node0: string[] = nodes[0].map((n: string) => n)
 	const node1: BigInt[] = nodes[1].map((n: BigInt) => n)
+
+	node1[869] = node1[868]=node1[864]
+	
 	node0.splice(864,2)
 	node1.splice(864,2)
+	
 	
 	const _nodesAddress: string[] = node0.map((n: string) => n)
 	const __nodesBoosts: number[] = node1.map((n: BigInt) => n !== BigInt(3) ? parseInt(n.toString()) : 300)

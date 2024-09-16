@@ -19,7 +19,7 @@ const start = async (fileName: string) => {
 			}
 			wallets.push(rr)
 		})
-		const pay = wallets.map(n => '8000')
+		const pay = wallets.map(n => '0')
 		transferCCNTP(masterSetup.conetCNTPAdmin[5], wallets, pay, err => {
 			if (err) {
 				return logger(err)

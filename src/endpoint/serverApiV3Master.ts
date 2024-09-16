@@ -747,7 +747,6 @@ class conet_dl_server {
 			logger(Colors.magenta(`/twitter-check-follow push ${obj.uuid} to twitterWaitingCallbackPool [${twitterWaitingCallbackPool.size}]`))
 
 			const post = JSON.stringify(obj) + '\r\n\r\n'
-			
 
 			return TwttterPool.forEach((n, key) => {
 				if (n.writable) {
