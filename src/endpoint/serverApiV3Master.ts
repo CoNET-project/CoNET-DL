@@ -21,7 +21,7 @@ import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
-
+import profileABI from './profile.ABI.json'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -414,13 +414,19 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 }
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
-
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
+const profileAddr = '0x520fE1e7C5ba38D29fF42cB0F7211090b2816ae1'
+
+
+
+
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
+const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
+const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
 interface faucetRequest {
@@ -428,9 +434,14 @@ interface faucetRequest {
 	ipAddress: string
 }
 
+interface ticketPoolData {
+	total: number
+	nft: number
+}
+
 const ticketPool: Map<string, number> = new Map()
 const ticketBrunPool: Map<string, number> = new Map()
-
+const twitterNFTPool: Map<string, boolean> = new Map()
 
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
@@ -471,11 +482,13 @@ const ticketPoolProcess = async (block: number) => {
 	if (ticketPoolProcesing){
 		return
 	}
+
 	ticketPoolProcesing = true
 	const wallet: string[] = []
 	const tickets: number[] = []
 	const walletBrun: string[] = []
 	const brunNumber: number[] = []
+	const twitter: string [] = []
 	ticketPool.forEach((v, key) => {
 		if (v > 0) {
 			wallet.push(key)
@@ -492,14 +505,23 @@ const ticketPoolProcess = async (block: number) => {
 		ticketBrunPool.set(key, 0)
 	})
 
+	twitterNFTPool.forEach((v, key) => {
+		twitter.push(key)
+	})
+
 
 	const ids: number[] = wallet.map(n => 1)
 	const ids1: number[] = walletBrun.map(n => 1)
+	const idTw: number [] = twitter.map(n => 2)
+	const totalTw: number[] = twitter.map(n => 1)
 
+	const mintWallets = [...wallet, ...twitter]
+	const mintIds = [...ids, ...idTw]
+	const mintTotal = [...tickets, ...totalTw]
 	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
 	try {
-		if (wallet.length) {
-			const tx = await ticket_contract.mintBatch(wallet, ids, tickets)
+		if (mintWallets.length) {
+			const tx = await ticket_contract.mintBatch(mintWallets, mintIds, mintTotal)
 			const tr = await tx.wait()
 			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
 			logger(inspect(tr, false, 3, true))
@@ -544,8 +566,79 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 let block = 0
 
 const faucet_call_pool: Map<string, boolean> = new Map()
-const TwttterPool: Map<string, Response> = new Map()
-const twitterWaitingCallbackPool: Map<string, Response> = new Map()
+const TwttterServiceListeningPool: Map<string, Response> = new Map()
+const twitterWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
+const twitterNFTNumber = 2
+
+
+const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
+	let ret: twitterResult = {
+		status: 200
+	}
+
+	const twitterAccount = obj.data[0].toUpperCase()
+	
+
+	try {
+		const tx = await profileContract.checkSocialNFT(twitterNFTNumber, twitterAccount)
+		if (tx) {
+			ret.isusedByOtherWallet = true
+			return resolve (ret)
+		}
+
+	} catch (ex) {
+		ret.status = 500
+		return resolve (ret)
+	}
+
+
+	if (!TwttterServiceListeningPool.size) {
+		ret.status = 500
+		return resolve (ret)
+	}
+
+	obj.uuid = v4()
+	const post = JSON.stringify(obj) + '\r\n\r\n'
+
+	const waitCallBack = async (_obj: minerObj) => {
+		logger(`waitCallBack return`)
+		logger(inspect(_obj, false, 3, true))
+		const result = _obj.result
+		if (!result) {
+			ret.status = 500
+			return resolve (ret)
+		}
+		
+		ret = result
+		if (ret.status !== 200 || !ret.isFollow || !ret.isRetweet ) {
+			return resolve (ret)
+		}
+
+		twitterNFTPool.set(obj.walletAddress, true)
+		await profileContract.updateSocial(twitterNFTNumber, twitterAccount, obj.walletAddress)
+		return resolve (ret)
+	}
+
+	twitterWaitingCallbackPool.set (obj.uuid, waitCallBack)
+
+	TwttterServiceListeningPool.forEach((n, key) => {
+
+		if (n.writable) {
+			return n.write(post, err => {
+				if (err) {
+					TwttterServiceListeningPool.delete(key)
+					return logger(Colors.red(`TwttterServiceListeningPool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
+				}
+
+				return logger(Colors.red(`TwttterServiceListeningPool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
+			})
+		}
+
+		TwttterServiceListeningPool.delete(key)
+		return logger(Colors.red(`TwttterServiceListeningPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
+	})
+
+})
 
 class conet_dl_server {
 
@@ -720,48 +813,29 @@ class conet_dl_server {
 			res.write( JSON.stringify (returnData) + '\r\n\r\n')
 
 			res.once('error', err => {
-				TwttterPool.delete(obj.walletAddress)
+				TwttterServiceListeningPool.delete(obj.walletAddress)
 				return logger(Colors.red(`TwttterPool ${obj.walletAddress} res.on ERROR ${err.message} delete from pool!`))
 			})
+			
 			res.once('end', () => {
-				TwttterPool.delete(obj.walletAddress)
+				TwttterServiceListeningPool.delete(obj.walletAddress)
 				return logger(Colors.red(`TwttterPool ${obj.walletAddress} res.on END! delete from pool!`))
 			})
 
-			TwttterPool.set(obj.walletAddress, res)
+			TwttterServiceListeningPool.set(obj.walletAddress, res)
 
-			return logger(Colors.magenta(`/twitter-listen added ${obj.walletAddress} to TwttterPool ${TwttterPool.size}`))
+			return logger(Colors.magenta(`/twitter-listen added ${obj.walletAddress} to TwttterServiceListeningPool ${TwttterServiceListeningPool.size}`))
 		})
 
 		router.post ('/twitter-check-follow',  async (req, res) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/twitter-check-follow`))
 			logger(inspect(obj, false, 3, true))
-			if (!TwttterPool.size) {
-				logger(Colors.red(`/twitter-check-follow TwttterPool Empty Error!`))
-				return res.status(502).end()
+			const result: twitterResult|null  = await callTwitterCheck (obj)
+			if (!result ) {
+				return res.status(500).end()
 			}
-
-			obj.uuid = v4()
-			twitterWaitingCallbackPool.set(obj.uuid, res)
-			logger(Colors.magenta(`/twitter-check-follow push ${obj.uuid} to twitterWaitingCallbackPool [${twitterWaitingCallbackPool.size}]`))
-
-			const post = JSON.stringify(obj) + '\r\n\r\n'
-
-			return TwttterPool.forEach((n, key) => {
-				if (n.writable) {
-					return n.write(post, err => {
-						if (err) {
-							TwttterPool.delete(key)
-							return logger(Colors.red(`TwttterPool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
-						}
-						return logger(Colors.red(`TwttterPool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
-					})
-				}
-
-				TwttterPool.delete(key)
-				return logger(Colors.red(`TwttterPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
-			})
+			return res.status(200).json(result).end()
 		})
 		
 		router.post ('/twitter-callback',  async (req, res) => {
@@ -780,17 +854,15 @@ class conet_dl_server {
 				return logger(Colors.red(`/twitter-callback got obj data format Error`))
 			}
 
-			const _res = twitterWaitingCallbackPool.get(_obj.uuid)
+			const callback = twitterWaitingCallbackPool.get(_obj.uuid)
 
-			if (!_res) {
+			if (!callback) {
 				return logger(Colors.red(`/twitter-callback has no ${obj.uuid} RES from twitterWaitingCallbackPool ${twitterWaitingCallbackPool.size} !`))
 			}
 
 			twitterWaitingCallbackPool.delete(_obj.uuid)
 			
-			if (_res.writable) {
-				_res.status(200).json(_obj).end()
-			}
+			callback(_obj)
 
 			logger(Colors.magenta(`/twitter-callback return ${inspect(obj.data, false, 3, true)} success!`))
 		})
@@ -805,3 +877,4 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+

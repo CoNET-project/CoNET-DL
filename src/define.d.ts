@@ -217,6 +217,12 @@ interface clusterMessage {
 }
 
 
+interface twitterResult {
+	isFollow?: boolean
+	isRetweet?: boolean
+	status: number
+	isusedByOtherWallet?: boolean
+}
 interface minerObj {
 	walletAddress: string
 	walletAddress1?:string
@@ -231,6 +237,7 @@ interface minerObj {
 	bio?: string
 	uuid?: string
 	serverIPAddress?: string
+	result?: twitterResult
 }
 
 interface nodeType {

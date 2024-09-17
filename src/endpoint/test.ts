@@ -68,7 +68,7 @@ const listenEPOCH1 = async () => {
 const testTwitterAPI = async () => {
 	const acc = ethers.Wallet.createRandom()
 	const url = 'https://apiv3.conet.network/api/twitter-check-follow'
-	const checkTwitterAccount = 'ppc_canada3'
+	const checkTwitterAccount = 'sfssdfvdsfvdsfvdf'
 	const messageObj: minerObj = {
 		walletAddress: acc.address.toLowerCase(),
 		data: [checkTwitterAccount]

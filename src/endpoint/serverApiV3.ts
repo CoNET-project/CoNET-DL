@@ -503,6 +503,7 @@ class conet_dl_server {
 				logger (Colors.grey(`Router /twitter-check-follow checkSignObj obj Error!`), message, signMessage)
 				return res.status(403).end()
 			}
+			
 			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-check-follow forward to master! `))
 			return postLocalhost('/api/twitter-check-follow', {obj}, res)
 			
