@@ -222,6 +222,7 @@ interface twitterResult {
 	isRetweet?: boolean
 	status: number
 	isusedByOtherWallet?: boolean
+	NFT_ID?: number
 }
 interface minerObj {
 	walletAddress: string

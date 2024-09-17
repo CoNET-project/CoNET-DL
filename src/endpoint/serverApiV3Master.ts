@@ -415,7 +415,7 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
-const profileAddr = '0x520fE1e7C5ba38D29fF42cB0F7211090b2816ae1'
+const profileAddr = '0x9f2d92da19beA5B2aBc51e69841a2dD7077EAD8f'
 
 
 
@@ -580,11 +580,24 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 	
 
 	try {
-		const tx = await profileContract.checkSocialNFT(twitterNFTNumber, twitterAccount)
+		const [tx, SocialArray] = await Promise.all ([
+			profileContract.checkSocialNFT(twitterNFTNumber, twitterAccount),
+			profileContract.getSocialUser(obj.walletAddress)
+		])
+		
 		if (tx) {
 			ret.isusedByOtherWallet = true
 			return resolve (ret)
 		}
+		if (SocialArray?.length) {
+			const SocialNFT: number[] = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
+			const jj = SocialNFT.findIndex(n => n === twitterNFTNumber)
+			if (jj > -1) {
+				ret.status = 403
+				return resolve (ret)
+			}
+		}
+		
 
 	} catch (ex) {
 		ret.status = 500
@@ -616,6 +629,7 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 
 		twitterNFTPool.set(obj.walletAddress, true)
 		await profileContract.updateSocial(twitterNFTNumber, twitterAccount, obj.walletAddress)
+		ret.NFT_ID = twitterNFTNumber
 		return resolve (ret)
 	}
 
@@ -878,3 +892,13 @@ class conet_dl_server {
 
 export default conet_dl_server
 
+const test = async () => {
+	const kk = {
+		walletAddress: '0x520fe1e7c5ba38d29ff42cb0f7211090b2816ae1',
+		data: ['PPC_CANADA3']
+	}
+	const kk1 = await callTwitterCheck(kk)
+
+}
+
+test()
