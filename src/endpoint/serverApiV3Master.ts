@@ -1024,13 +1024,13 @@ class conet_dl_server {
 				return logger(Colors.red(`/tg-callback got obj data format Error`))
 			}
 
-			const callback = twitterWaitingCallbackPool.get(_obj.uuid)
+			const callback = TGWaitingCallbackPool.get(_obj.uuid)
 
 			if (!callback) {
-				return logger(Colors.red(`/tg-callback has no ${obj.uuid} RES from TGCallbackPool ${twitterWaitingCallbackPool.size} !`))
+				return logger(Colors.red(`/tg-callback has no ${obj.uuid} RES from TGCallbackPool ${TGWaitingCallbackPool.size} !`))
 			}
 
-			twitterWaitingCallbackPool.delete(_obj.uuid)
+			TGWaitingCallbackPool.delete(_obj.uuid)
 			
 			callback(_obj)
 
