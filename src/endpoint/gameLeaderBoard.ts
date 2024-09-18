@@ -1,9 +1,11 @@
 import {ethers} from 'ethers'
 import {listAllLotte} from './help-database'
 import {writeFile} from 'node:fs'
-import {masterSetup} from '../util/util'
+import {logger, masterSetup} from '../util/util'
+import Colors from 'colors/safe'
 
 const conetRPC = new ethers.JsonRpcProvider('https://rpc.conet.network')
+
 const startWriteReadboard = async (block:  number) => {
 	const list = await listAllLotte ()
 	await saveFragment('gaem_LeaderBoard', JSON.stringify(list))
@@ -16,7 +18,7 @@ const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 	const n = parseInt(`0x${lastChar}`, 16)
 	const path = storagePATH[n%storagePATH.length]
 	const fileName = `${path}/${hashName}`
-
+	logger(Colors.blue(`saveFragment path = ${fileName}`))
 	return writeFile(fileName, data, err => {
 		if (err) {
 			console.log(`saveFragment [${hashName}] data length [${data.length}] Error! ${err.message}`)
