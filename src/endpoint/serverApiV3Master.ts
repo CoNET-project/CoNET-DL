@@ -969,7 +969,7 @@ class conet_dl_server {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/tg-check-follow`))
 			logger(inspect(obj, false, 3, true))
-			const result: twitterResult|null  = await callTwitterCheck (obj)
+			const result: twitterResult|null  = await callTGCheck (obj)
 			if (!result ) {
 				return res.status(500).end()
 			}
