@@ -16,7 +16,7 @@ const storagePATH = masterSetup.storagePATH
 const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 	const lastChar = hashName[hashName.length-1]
 	const n = parseInt(`0x${lastChar}`, 16)
-	const path = storagePATH.length > 1 ? storagePATH[n%storagePATH.length]: storagePATH[0]
+	const path = storagePATH[n%storagePATH.length]
 	const fileName = `${path}/${hashName}`
 	logger(Colors.blue(`saveFragment path = ${fileName}`))
 	return writeFile(fileName, data, err => {
