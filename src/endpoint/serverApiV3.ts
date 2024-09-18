@@ -565,6 +565,35 @@ class conet_dl_server {
 			
 		})
 
+		router.post ('/tg-check-follow',  async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /tg-check-follow req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /tg-check-follow !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj || !obj.data ) {
+				logger (Colors.grey(`Router /tg-check-follow checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+			
+			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-check-follow forward to master! `))
+			return postLocalhost('/api/tg-check-follow', {obj}, res)
+			
+		})
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
