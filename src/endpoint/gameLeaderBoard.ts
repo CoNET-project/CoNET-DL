@@ -29,6 +29,7 @@ const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 	})
 })
 export const start = () => {
+	logger(Colors.blue(`Started with PATH ${storagePATH}`))
 	conetRPC.on ('block', async block => {
 		return startWriteReadboard (block)
 	})
