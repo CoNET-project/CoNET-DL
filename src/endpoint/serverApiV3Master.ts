@@ -568,8 +568,10 @@ let block = 0
 const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterServiceListeningPool: Map<string, Response> = new Map()
 const TGListeningPool: Map<string, Response> = new Map()
+const TGWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
 const twitterWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
 const twitterNFTNumber = 2
+const TGNFTNumber = 3
 
 const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
 	let ret: twitterResult = {
@@ -581,7 +583,7 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 
 	try {
 		const [tx, SocialArray] = await Promise.all ([
-			profileContract.checkSocialNFT(twitterNFTNumber, twitterAccount),
+			profileContract.checkSocialNFT(TGNFTNumber, twitterAccount),
 			profileContract.getSocialUser(obj.walletAddress)
 		])
 		
@@ -589,23 +591,23 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 			ret.isusedByOtherWallet = true
 			return resolve (ret)
 		}
+
 		if (SocialArray?.length) {
 			const SocialNFT: number[] = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
-			const jj = SocialNFT.findIndex(n => n === twitterNFTNumber)
+			const jj = SocialNFT.findIndex(n => n === TGNFTNumber)
 			if (jj > -1) {
 				ret.status = 403
 				return resolve (ret)
 			}
 		}
 		
-
 	} catch (ex) {
 		ret.status = 500
 		return resolve (ret)
 	}
 
 
-	if (!TwttterServiceListeningPool.size) {
+	if (!TGListeningPool.size) {
 		ret.status = 500
 		return resolve (ret)
 	}
@@ -614,8 +616,9 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 	const post = JSON.stringify(obj) + '\r\n\r\n'
 
 	const waitCallBack = async (_obj: minerObj) => {
-		logger(`waitCallBack return`)
+		logger(`TG wait CallBack return`)
 		logger(inspect(_obj, false, 3, true))
+
 		const result = _obj.result
 		if (!result) {
 			ret.status = 500
@@ -623,33 +626,33 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		}
 		
 		ret = result
-		if (ret.status !== 200 || !ret.isFollow || !ret.isRetweet ) {
+		if (ret.status !== 200 || !ret.isInTGGroup ) {
 			return resolve (ret)
 		}
 
-		twitterNFTPool.set(obj.walletAddress, true)
-		await profileContract.updateSocial(twitterNFTNumber, twitterAccount, obj.walletAddress)
-		ret.NFT_ID = twitterNFTNumber
+		//twitterNFTPool.set(obj.walletAddress, true)
+		await profileContract.updateSocial(TGNFTNumber, twitterAccount, obj.walletAddress)
+		ret.NFT_ID = TGNFTNumber
 		return resolve (ret)
 	}
 
-	twitterWaitingCallbackPool.set (obj.uuid, waitCallBack)
+	TGWaitingCallbackPool.set (obj.uuid, waitCallBack)
 
-	TwttterServiceListeningPool.forEach((n, key) => {
+	TGListeningPool.forEach((n, key) => {
 
 		if (n.writable) {
 			return n.write(post, err => {
 				if (err) {
-					TwttterServiceListeningPool.delete(key)
-					return logger(Colors.red(`TwttterServiceListeningPool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
+					TGListeningPool.delete(key)
+					return logger(Colors.red(`TG Pool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
 				}
 
-				return logger(Colors.red(`TwttterServiceListeningPool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
+				return logger(Colors.red(`TG Pool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
 			})
 		}
 
-		TwttterServiceListeningPool.delete(key)
-		return logger(Colors.red(`TwttterServiceListeningPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
+		TGListeningPool.delete(key)
+		return logger(Colors.red(`TG Pool ${key} got writeable = false Error remove ${key} from listening POOL!`))
 	})
 
 })
@@ -710,7 +713,7 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 			return resolve (ret)
 		}
 
-		twitterNFTPool.set(obj.walletAddress, true)
+		//twitterNFTPool.set(obj.walletAddress, true)
 		await profileContract.updateSocial(twitterNFTNumber, twitterAccount, obj.walletAddress)
 		ret.NFT_ID = twitterNFTNumber
 		return resolve (ret)
