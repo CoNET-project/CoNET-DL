@@ -60,7 +60,7 @@ const getFragment = async (hashName: string, res: Response) => {
 
 class server {
 
-	private PORT = 433
+	private PORT = 80
 	public ipaddressWallet: Map<string, string> = new Map()
 	public WalletIpaddress: Map<string, string> = new Map()
 	public regiestNodes: Map<string, string> = new Map()
@@ -80,9 +80,6 @@ class server {
 		const router = Router ()
 		app.use( '/api', router )
 	
-
-	
-
 		app.once ( 'error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
