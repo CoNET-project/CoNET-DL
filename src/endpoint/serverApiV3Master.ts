@@ -567,9 +567,92 @@ let block = 0
 
 const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterServiceListeningPool: Map<string, Response> = new Map()
+const TGListeningPool: Map<string, Response> = new Map()
 const twitterWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
 const twitterNFTNumber = 2
 
+const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
+	let ret: twitterResult = {
+		status: 200
+	}
+
+	const twitterAccount = obj.data[0].toUpperCase()
+	
+
+	try {
+		const [tx, SocialArray] = await Promise.all ([
+			profileContract.checkSocialNFT(twitterNFTNumber, twitterAccount),
+			profileContract.getSocialUser(obj.walletAddress)
+		])
+		
+		if (tx) {
+			ret.isusedByOtherWallet = true
+			return resolve (ret)
+		}
+		if (SocialArray?.length) {
+			const SocialNFT: number[] = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
+			const jj = SocialNFT.findIndex(n => n === twitterNFTNumber)
+			if (jj > -1) {
+				ret.status = 403
+				return resolve (ret)
+			}
+		}
+		
+
+	} catch (ex) {
+		ret.status = 500
+		return resolve (ret)
+	}
+
+
+	if (!TwttterServiceListeningPool.size) {
+		ret.status = 500
+		return resolve (ret)
+	}
+
+	obj.uuid = v4()
+	const post = JSON.stringify(obj) + '\r\n\r\n'
+
+	const waitCallBack = async (_obj: minerObj) => {
+		logger(`waitCallBack return`)
+		logger(inspect(_obj, false, 3, true))
+		const result = _obj.result
+		if (!result) {
+			ret.status = 500
+			return resolve (ret)
+		}
+		
+		ret = result
+		if (ret.status !== 200 || !ret.isFollow || !ret.isRetweet ) {
+			return resolve (ret)
+		}
+
+		twitterNFTPool.set(obj.walletAddress, true)
+		await profileContract.updateSocial(twitterNFTNumber, twitterAccount, obj.walletAddress)
+		ret.NFT_ID = twitterNFTNumber
+		return resolve (ret)
+	}
+
+	twitterWaitingCallbackPool.set (obj.uuid, waitCallBack)
+
+	TwttterServiceListeningPool.forEach((n, key) => {
+
+		if (n.writable) {
+			return n.write(post, err => {
+				if (err) {
+					TwttterServiceListeningPool.delete(key)
+					return logger(Colors.red(`TwttterServiceListeningPool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
+				}
+
+				return logger(Colors.red(`TwttterServiceListeningPool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
+			})
+		}
+
+		TwttterServiceListeningPool.delete(key)
+		return logger(Colors.red(`TwttterServiceListeningPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
+	})
+
+})
 
 const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
 	let ret: twitterResult = {
@@ -841,9 +924,50 @@ class conet_dl_server {
 			return logger(Colors.magenta(`/twitter-listen added ${obj.walletAddress} to TwttterServiceListeningPool ${TwttterServiceListeningPool.size}`))
 		})
 
+		router.post ('/tg-listen',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+
+			logger(Colors.blue(`/tg-listen`))
+			logger(inspect(obj, false, 3, true))
+			
+			res.status(200)
+			res.setHeader('Cache-Control', 'no-cache')
+            res.setHeader('Content-Type', 'text/event-stream')
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Connection', 'keep-alive')
+            res.flushHeaders() // flush the headers to establish SSE with client
+			const returnData = {status: 200}
+			res.write( JSON.stringify (returnData) + '\r\n\r\n')
+
+			res.once('error', err => {
+				TGListeningPool.delete(obj.walletAddress)
+				return logger(Colors.red(`TGPool ${obj.walletAddress} res.on ERROR ${err.message} delete from pool!`))
+			})
+			
+			res.once('end', () => {
+				TGListeningPool.delete(obj.walletAddress)
+				return logger(Colors.red(`TwttterPool ${obj.walletAddress} res.on END! delete from pool!`))
+			})
+
+			TGListeningPool.set(obj.walletAddress, res)
+
+			return logger(Colors.magenta(`/tg added ${obj.walletAddress} to TwttterServiceListeningPool ${TwttterServiceListeningPool.size}`))
+		})
+
 		router.post ('/twitter-check-follow',  async (req, res) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/twitter-check-follow`))
+			logger(inspect(obj, false, 3, true))
+			const result: twitterResult|null  = await callTwitterCheck (obj)
+			if (!result ) {
+				return res.status(500).end()
+			}
+			return res.status(200).json(result).end()
+		})
+
+		router.post ('/tg-check-follow',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/tg-check-follow`))
 			logger(inspect(obj, false, 3, true))
 			const result: twitterResult|null  = await callTwitterCheck (obj)
 			if (!result ) {
@@ -879,6 +1003,35 @@ class conet_dl_server {
 			callback(_obj)
 
 			logger(Colors.magenta(`/twitter-callback return ${inspect(obj.data, false, 3, true)} success!`))
+		})
+
+		router.post ('/tg-callback',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/tg-callback`))
+			logger(inspect(obj, false, 3, true))
+			res.status(200).json({}).end()
+			if (!obj|| !obj.data) {
+				logger(inspect(obj, false, 3, true))
+				return logger(Colors.red(`/tg-callback got obj format Error`))
+			}
+			const _obj: minerObj = obj.data
+
+			if (!_obj||!_obj.uuid ) {
+
+				return logger(Colors.red(`/tg-callback got obj data format Error`))
+			}
+
+			const callback = twitterWaitingCallbackPool.get(_obj.uuid)
+
+			if (!callback) {
+				return logger(Colors.red(`/tg-callback has no ${obj.uuid} RES from TGCallbackPool ${twitterWaitingCallbackPool.size} !`))
+			}
+
+			twitterWaitingCallbackPool.delete(_obj.uuid)
+			
+			callback(_obj)
+
+			logger(Colors.magenta(`/tg-callback return ${inspect(obj.data, false, 3, true)} success!`))
 		})
 
 		router.all ('*', (req, res ) =>{
