@@ -150,10 +150,10 @@ const checkTicket = async (wallet: string) => {
 		ticket_contract.balanceOf(wallet, 1)
 	])
 	logger(Colors.blue (`checkTicket account ${wallet} isApproved = ${isApproved} balance = ${balance}`))
-	if (!isApproved || balance.toString() < '1') {
-		return false
+	if (isApproved && balance.toString() > '1') {
+		return true
 	}
-	return true
+	return false
 }
 
 
@@ -563,6 +563,27 @@ class conet_dl_server {
 			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-callback forward to master! `))
 			return postLocalhost('/api/twitter-callback', {obj}, res)
 			
+		})
+
+		router.post ('/claimToken', async ( req, res ) => {
+
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			// const response = await claimeToekn (message, signMessage)
+			// if (response) {
+			// 	return res.status(200).json({}).end()
+			// }
+			return res.status(403).end()
+
 		})
 
 		router.post ('/tg-callback',  async (req, res) => {

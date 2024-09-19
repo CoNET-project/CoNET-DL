@@ -198,10 +198,9 @@ const walletPool: Map<string, clientRequestTimeControl> = new Map()
 
 const initWalletPool: Map<string, boolean> = new Map()
 const _rand1 = 1
-const _rand2 = _rand1 * 5
-const _rand3 = _rand1 * 10
-const _rand4 = _rand1 * 50
-const _rand5 = _rand1 * 100
+const _rand2 = _rand1 * 2
+const _rand3 = _rand1 * 5
+const _rand4 = _rand1 * 10
 
 const MaximumBet= 1000
 
@@ -215,35 +214,37 @@ interface winnerObj {
 
 const LotteryWinnerPool: Map<string, winnerObj> = new Map()
 
-const randomLottery = (test = false) => {
-	
-	const rand1 = !(Math.floor(Math.random()*1.5))
+
+const randomLotteryV3 = () => {
+
+	//			60% 
+	const rand1 = Math.round(Math.random()*1.2) > 0
+
+	const lotterRate = [_rand1, _rand2, _rand3, _rand4]
 
 	if (rand1) {
-		const rand2 = !(Math.floor(Math.random()*2))
+		//		60% / 50% => 30%
+		const rand2 = Math.round(Math.random()) > 0
 
 		if (rand2)	{
-			const rand3 = !(Math.floor(Math.random()*3))
+			//		30% / 29% = 9%
+			const rand3 = Math.round(Math.random()*.7) > 0
 			if (rand3) {
-				if (!test) {
-					return {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand3}
-				}
-				const rand4 = !(Math.floor(Math.random()*4))
+
+				const rand4 = Math.round(Math.random()) > 0
+
 				if (!rand4) {
-					return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand3}
-				}
-				const rand5 = !(Math.floor(Math.random()*5))
-				if (rand5) {
-					return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand5}
+					return {lotterRate, lottery: _rand3}
 				}
 
-				return {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand4}
+				return {lotterRate, lottery: _rand4}
 			}
-			return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: _rand2} : {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand2}
+			return {lotterRate, lottery: _rand2}
 		}
-		return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5],lottery: _rand1} :  {lotterRate: [_rand1, _rand2, _rand3], lottery: _rand1}
+		return {lotterRate,lottery: _rand1}
 	}
-	return test ? {lotterRate: [_rand1, _rand2, _rand3, _rand4, _rand5], lottery: 0} : {lotterRate: [_rand1, _rand2, _rand3], lottery: 0}
+
+	return {lotterRate: [_rand1, _rand2, _rand3, _rand4], lottery: 0} 
 }
 
 process.on('unhandledRejection', (reason) => { throw reason; })
@@ -359,11 +360,14 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	])
 }
 
-const double = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_class, test = false) => {
+
+
+const doubleV3 = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_class, test = false) => {
 	const winner = LotteryWinnerPool.get (wallet)
 
+	//				new Lottery game!
 	if (!winner) {
-		const obj = randomLottery (test)
+		const obj = randomLotteryV3 ()
 		if (obj.lottery > 0){
 			addToWinnerPool ({
 				ipAddress, wallet, bet: obj.lottery, Daemon: null
@@ -399,8 +403,8 @@ const double = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_cla
 	return {lottery: 0}
 }
 
-const soLottery = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
-	const obj = double (wallet, ipaddress,CNYP_class, test)
+const soLotteryV3 = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
+	const obj = doubleV3 (wallet, ipaddress,CNYP_class, test)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
 }
@@ -410,16 +414,12 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 	if (lastAccess) {
 		return res.status(301).end()
 	}
-	soLottery (wallet, ipaddress, res, CNYP_class, test)
+	soLotteryV3 (wallet, ipaddress, res, CNYP_class, test)
 }
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const profileAddr = '0x9f2d92da19beA5B2aBc51e69841a2dD7077EAD8f'
-
-
-
-
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)

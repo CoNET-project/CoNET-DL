@@ -1854,10 +1854,7 @@ const Claimable_Arb_USDT_new = '0xF40A8EFc8Dd47929ba8Ee9d5B3f1534239E930Fe'.toLo
 
 export const getNetworkName = (tokenName: string) => {
 	switch(tokenName) {
-		case 'conet':
-		case 'dWETH':
-		case 'dWBNB':
-		case 'dUSDT': {
+		case 'conet': {
 			return `CONET Holesky`
 		}
 		
