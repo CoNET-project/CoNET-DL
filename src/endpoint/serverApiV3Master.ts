@@ -686,13 +686,13 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 		
 
 	} catch (ex) {
-		ret.status = 500
+		ret.status = 501
 		return resolve (ret)
 	}
 
 
 	if (!TwttterServiceListeningPool.size) {
-		ret.status = 500
+		ret.status = 502
 		return resolve (ret)
 	}
 
@@ -704,7 +704,7 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 		logger(inspect(_obj, false, 3, true))
 		const result = _obj.result
 		if (!result) {
-			ret.status = 500
+			ret.status = 503
 			return resolve (ret)
 		}
 		
