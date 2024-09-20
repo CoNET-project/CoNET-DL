@@ -588,7 +588,9 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		])
 		
 		if (tx) {
+			ret.status = 402
 			ret.isusedByOtherWallet = true
+			ret.message = 'This Telegram Account was registered by someone already.'
 			return resolve (ret)
 		}
 
@@ -597,18 +599,21 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 			const jj = SocialNFT.findIndex(n => n === TGNFTNumber)
 			if (jj > -1) {
 				ret.status = 403
+				ret.message = 'Your Telegram are registered already.'
 				return resolve (ret)
 			}
 		}
 		
 	} catch (ex) {
-		ret.status = 500
+		ret.status = 501
+		ret.message = 'Service Unavailable!'
 		return resolve (ret)
 	}
 
 
 	if (!TGListeningPool.size) {
-		ret.status = 500
+		ret.status = 502
+		ret.message = 'Telegram Bot Service Unavailable!'
 		return resolve (ret)
 	}
 
@@ -622,6 +627,7 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		const result = _obj.result
 		if (!result) {
 			ret.status = 500
+			ret.message = 'Telegram Bot Service Unavailable!'
 			return resolve (ret)
 		}
 		
@@ -672,7 +678,9 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 		])
 		
 		if (tx) {
+			ret.status = 402
 			ret.isusedByOtherWallet = true
+			ret.message = 'This Twitter Account was registered by someone already.'
 			return resolve (ret)
 		}
 		if (SocialArray?.length) {
@@ -680,6 +688,7 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 			const jj = SocialNFT.findIndex(n => n === twitterNFTNumber)
 			if (jj > -1) {
 				ret.status = 403
+				ret.message = 'Your Twitter are registered already.'
 				return resolve (ret)
 			}
 		}
@@ -687,12 +696,14 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 
 	} catch (ex) {
 		ret.status = 501
+		ret.message = 'Service Unavailable!'
 		return resolve (ret)
 	}
 
 
 	if (!TwttterServiceListeningPool.size) {
 		ret.status = 502
+		ret.message = 'Twitter Service Unavailable!'
 		return resolve (ret)
 	}
 
@@ -704,6 +715,7 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 		logger(inspect(_obj, false, 3, true))
 		const result = _obj.result
 		if (!result) {
+			ret.message = 'Twitter Service Unavailable!'
 			ret.status = 503
 			return resolve (ret)
 		}

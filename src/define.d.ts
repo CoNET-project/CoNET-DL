@@ -224,6 +224,7 @@ interface twitterResult {
 	isusedByOtherWallet?: boolean
 	isInTGGroup?: boolean
 	NFT_ID?: number
+	message?: string
 }
 interface minerObj {
 	walletAddress: string
