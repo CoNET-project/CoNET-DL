@@ -1615,9 +1615,9 @@ const getNetwork = (networkName: string) => {
 	switch (networkName) {
 		// case 'CNTP':
 		
-		case 'usdb': {
-			return balstMainchainRPC
-		}
+		// case 'usdb': {
+		// 	return balstMainchainRPC
+		// }
 		
 		// case 'dUSDT':
 		// case 'dWBNB':
@@ -1886,22 +1886,22 @@ export const realToClaimableContractAddress = (tokenName: string) => {
 	switch(tokenName) {
 		//case 'dUSDT':
 		case 'usdt':{
-			return Claimable_ETHUSDT_new
+			return Claimable_ETHUSDT_new			//	0x7D9F0564554325Cd114010fCDEc34Aee8ca7e22A
 		}
 		case 'eth': {
-			return Claimable_ETH_new
+			return Claimable_ETH_new				//	0xAD7dEC79BC005F699Ef80EB53fF1a7E21E24A456
 		}
 		case 'bnb': {
-			return Claimable_BNB_new
+			return Claimable_BNB_new				//	0xBE8184294613a6f2531A7EA996deD57cb8CAeB0B
 		}
 		case 'wusdt':{
-			return Claimable_BNBUSDT_new
+			return Claimable_BNBUSDT_new			//	0x49d1E11A25E99015cAaE3e032a7ED23D4399F3f9
 		}
 		case 'arb_usdt' : {
-			return Claimable_Arb_USDT_new
+			return Claimable_Arb_USDT_new			//	0xF40A8EFc8Dd47929ba8Ee9d5B3f1534239E930Fe
 		}
 		case 'arb_eth': {
-			return Claimable_Arb_ETH_new
+			return Claimable_Arb_ETH_new			//	0xF406385E1A0389Ae35684D27c3Ef2799E88E2c4A
 		}
 		// case 'usdb': {
 		// 	return Claimable_BlastUSDB_v3
@@ -1925,16 +1925,41 @@ export const realToClaimableContractAddress = (tokenName: string) => {
 
 
 const getCONETHoleskyClaimableRealTokenName = (tokenName: string) => {
+
+	/***
+	 * case 'eth':
+		case 'usdt': {
+			return ethMainchainRPC
+		}
+		case 'arb_eth':
+		case 'arb_usdt': {
+			return provideArbOne
+		}
+		case 'bnb':
+		case 'wusdt':{
+			return bscMainchainRPC
+		}
+	 */
 	switch(tokenName) {
 
-		case 'cCNTP':{
-			return 'CNTP'
-		}
-		case 'cUSDB':{
-			return 'usdb'
-		}
+		
+		// case 'cUSDB':{
+		// 	return 'usdb'
+		// }
 		case 'cUSDT': {
 			return 'usdt'
+		}
+		case 'cBNB': {
+			return 'bnb'
+		}
+		case 'cETH': {
+			return 'eth'
+		}
+		case 'cArbETH': {
+			return 'arb_eth'
+		}
+		case 'cArbUSDT': {
+			return 'arb_usdt'
 		}
 		case 'cBNBUSDT': {
 			return 'wusdt'
@@ -1955,22 +1980,22 @@ const getCONETHoleskyClaimableContractAddress = (tokenName: string) => {
 		// 	return Claimable_
 		// }
 		case 'cBNB': {
-			return Claimable_BNB_new
+			return Claimable_BNB_new					//	0xBE8184294613a6f2531A7EA996deD57cb8CAeB0B
 		}
 		case 'cBNBUSDT': {
-			return Claimable_BNBUSDT_new
+			return Claimable_BNBUSDT_new				//	0x49d1E11A25E99015cAaE3e032a7ED23D4399F3f9
 		}
 		case 'cETH': {
-			return Claimable_ETH_new
+			return Claimable_ETH_new					//	0xAD7dEC79BC005F699Ef80EB53fF1a7E21E24A456
 		}
 		case 'cUSDT': {
-			return Claimable_ETHUSDT_new
+			return Claimable_ETHUSDT_new				//	0x7D9F0564554325Cd114010fCDEc34Aee8ca7e22A
 		}
 		case 'cArbETH': {
-			return Claimable_Arb_ETH_new
+			return Claimable_Arb_ETH_new				//	0xF406385E1A0389Ae35684D27c3Ef2799E88E2c4A
 		}
 		case 'cArbUSDT': {
-			return Claimable_Arb_USDT_new
+			return Claimable_Arb_USDT_new				//	0xF40A8EFc8Dd47929ba8Ee9d5B3f1534239E930Fe
 		}
 		
 		default : {
@@ -2156,6 +2181,8 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 	}
 	const realRPC = getNetwork(realTokenName)
 	const sc1 = getAssetERC20Address(realTokenName)
+
+	
 	if (!sc1) {
 		return false
 	}
