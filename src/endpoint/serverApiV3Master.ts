@@ -579,8 +579,7 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 	}
 
 	const twitterAccount = obj.data[0].toUpperCase()
-	
-
+	let SocialNFT: number[] = []
 	try {
 		const [tx, SocialArray] = await Promise.all ([
 			profileContract.checkSocialNFT(TGNFTNumber, twitterAccount),
@@ -595,7 +594,7 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		}
 
 		if (SocialArray?.length) {
-			const SocialNFT: number[] = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
+			SocialNFT = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
 			const jj = SocialNFT.findIndex(n => n === TGNFTNumber)
 			if (jj > -1) {
 				ret.status = 403
@@ -639,6 +638,11 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		//twitterNFTPool.set(obj.walletAddress, true)
 		await profileContract.updateSocial(TGNFTNumber, twitterAccount, obj.walletAddress)
 		ret.NFT_ID = TGNFTNumber
+		if (SocialNFT.length > 0) {
+			const _ticket = (ticketPool.get (obj.walletAddress)||0) + 1
+			ticketPool.set(obj.walletAddress, _ticket)
+		}
+		
 		return resolve (ret)
 	}
 
@@ -669,7 +673,7 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 	}
 
 	const twitterAccount = obj.data[0].toUpperCase()
-	
+	let SocialNFT: number[] = []
 
 	try {
 		const [tx, SocialArray] = await Promise.all ([
@@ -683,14 +687,16 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 			ret.message = 'This Twitter Account was registered by someone already.'
 			return resolve (ret)
 		}
+
 		if (SocialArray?.length) {
-			const SocialNFT: number[] = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
+			SocialNFT = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
 			const jj = SocialNFT.findIndex(n => n === twitterNFTNumber)
 			if (jj > -1) {
 				ret.status = 403
 				ret.message = 'Your Twitter are registered already.'
 				return resolve (ret)
 			}
+
 		}
 		
 
@@ -728,6 +734,10 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 		//twitterNFTPool.set(obj.walletAddress, true)
 		await profileContract.updateSocial(twitterNFTNumber, twitterAccount, obj.walletAddress)
 		ret.NFT_ID = twitterNFTNumber
+		if (SocialNFT.length > 0) {
+			const _ticket = (ticketPool.get (obj.walletAddress)||0) + 1
+			ticketPool.set(obj.walletAddress, _ticket)
+		}
 		return resolve (ret)
 	}
 
