@@ -150,7 +150,7 @@ const checkTicket = async (wallet: string) => {
 		ticket_contract.balanceOf(wallet, 1)
 	])
 	logger(Colors.blue (`checkTicket account ${wallet} isApproved = ${isApproved} balance = ${balance}`))
-	if (isApproved && balance.toString() > '1') {
+	if (isApproved && balance.toString() > '0') {
 		return true
 	}
 	return false
