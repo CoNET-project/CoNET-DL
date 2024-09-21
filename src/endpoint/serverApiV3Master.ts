@@ -20,8 +20,9 @@ import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
-import CNTP_Transfer_class  from '../util/CNTP_Transfer_pool'
+import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool_useTicketManager'
 import profileABI from './profile.ABI.json'
+import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -37,9 +38,6 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-
-
-
 
 const detailTransfer = async (tx: string) => {
 	const transObj = await provideCONET.getTransactionReceipt(tx)
@@ -64,14 +62,12 @@ const listeningGuardianNodes = async (block: number) => {
 	})
 }
 
-
-
 const startListeningCONET_Holesky_EPOCH = async () => {
-	
+	checkLotteryHasBalance()
 	getAllOwnershipOfGuardianNodes()
 	provideCONET.on ('block', async block => {
 		listeningGuardianNodes (block)
-
+		checkLotteryHasBalance()
 	})
 }
 
@@ -213,10 +209,30 @@ interface winnerObj {
 
 
 const LotteryWinnerPool: Map<string, winnerObj> = new Map()
+let isHourlyBalance = false
 
+const checkLotteryHasBalance = async () => {
+
+	try {
+		const _balance = await cntp_ticketManager_Contract.currentTime_CNTP_balance()
+		const balace = parseInt(ethers.formatEther(_balance))
+		logger(Colors.magenta(`checkLotteryHasBalance ${balace} `))
+		if (balace > 0) {
+			return isHourlyBalance = true
+		}
+		logger(Colors.magenta(`checkLotteryHasBalance has no balance! ${balace}`))
+		isHourlyBalance = false
+	} catch (ex) {
+		
+	}
+	return false
+}
 
 const randomLotteryV3 = () => {
-
+	
+	if (!isHourlyBalance) {
+		return {lotterRate: [_rand1, _rand2, _rand3, _rand4], lottery: 0} 
+	}
 	//			60% 
 	const rand1 = Math.round(Math.random()*1.2) > 0
 
@@ -250,7 +266,7 @@ const randomLotteryV3 = () => {
 process.on('unhandledRejection', (reason) => { throw reason; })
 
 
-const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_Transfer_class) => {
+const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_TicketManager_class) => {
 	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
 	
 	const setT = setTimeout(() => {
@@ -362,7 +378,7 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 
 
 
-const doubleV3 = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_class, test = false) => {
+const doubleV3 = (wallet: string, ipAddress: string, CNYP_class: CNTP_TicketManager_class) => {
 	const winner = LotteryWinnerPool.get (wallet)
 
 	//				new Lottery game!
@@ -403,23 +419,25 @@ const doubleV3 = (wallet: string, ipAddress: string, CNYP_class: CNTP_Transfer_c
 	return {lottery: 0}
 }
 
-const soLotteryV3 = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
-	const obj = doubleV3 (wallet, ipaddress,CNYP_class, test)
+const soLotteryV3 = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_TicketManager_class) => {
+
+	const obj = doubleV3 (wallet, ipaddress,CNYP_class)
 	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
 	return res.status(200).json(obj).end()
 }
 
-const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_Transfer_class, test = false) => {
+const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_TicketManager_class) => {
 	const lastAccess = walletPool.get(wallet)
 	if (lastAccess) {
 		return res.status(301).end()
 	}
-	soLotteryV3 (wallet, ipaddress, res, CNYP_class, test)
+	soLotteryV3 (wallet, ipaddress, res, CNYP_class)
 }
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const profileAddr = '0x9f2d92da19beA5B2aBc51e69841a2dD7077EAD8f'
+const ticketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
@@ -429,19 +447,18 @@ const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCO
 const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
+const cntp_ticketManager_Contract = new ethers.Contract(ticketManager_addr, tickerManagerABi, provideCONET)
+
 interface faucetRequest {
 	wallet: string
 	ipAddress: string
 }
 
-interface ticketPoolData {
-	total: number
-	nft: number
-}
 
 const ticketPool: Map<string, number> = new Map()
 const ticketBrunPool: Map<string, number> = new Map()
 const twitterNFTPool: Map<string, boolean> = new Map()
+
 
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
@@ -767,7 +784,7 @@ class conet_dl_server {
 	private PORT = 8002
 	private serverID = ''
 
-	public CNTP_manager = new CNTP_Transfer_class ([masterSetup.gameCNTPAdmin[0]], 1000)
+	public CNTP_manager = new CNTP_TicketManager_class ([masterSetup.gameCNTPAdmin[0]], 1000)
 
 	private initSetupData = async () => {
         logger (Colors.blue(`start local server!`))
@@ -856,7 +873,6 @@ class conet_dl_server {
 
 		})
 
-
 		router.post ('/claimToken', async ( req, res ) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -895,13 +911,13 @@ class conet_dl_server {
 			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
 		})
 
-		router.post ('/lottery', async ( req, res ) => {
-			logger(Colors.blue(`Cluster Master got: /lottery`))
-			logger(inspect(req.body, false, 3, true))
-			const wallet = req.body.obj.walletAddress
-			const ipaddress = req.body.obj.ipAddress
-			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
-		})
+		// router.post ('/lottery', async ( req, res ) => {
+		// 	logger(Colors.blue(`Cluster Master got: /lottery`))
+		// 	logger(inspect(req.body, false, 3, true))
+		// 	const wallet = req.body.obj.walletAddress
+		// 	const ipaddress = req.body.obj.ipAddress
+		// 	return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
+		// })
 
 		router.post ('/initV3',  async (req, res) => {
 			const wallet: string = req.body.wallet
@@ -1069,14 +1085,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-
-const test = async () => {
-	const kk = {
-		walletAddress: '0x520fe1e7c5ba38d29ff42cb0f7211090b2816ae1',
-		data: ['PPC_CANADA3']
-	}
-	const kk1 = await callTwitterCheck(kk)
-
-}
-
-test()

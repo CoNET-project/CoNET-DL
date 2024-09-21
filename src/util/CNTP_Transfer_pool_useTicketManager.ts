@@ -1,11 +1,12 @@
 import {BlobLike, ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
-import {abi as CONET_Point_ABI} from './conet-point.json'
+import CNTP_ticketManager_ABI from './CNTP_ticketManager.ABI.json'
 import { inspect } from 'node:util'
 import {mapLimit} from 'async'
 const rpcUrl = 'https://rpc.conet.network'
-const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
+
+const CNTP_TicketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
 const transferTimeout = 1000 * 180			//	3 mins
 const checkGasPrice = 2000010007
 const longestWaitingTime = 1000 * 60 * 5	//	5 mins
@@ -31,7 +32,7 @@ export default class CNTP_Transfer_Manager {
 			logger(Color.red(`transferCNTP wallets.length = ${wallets.length} !== pays length ${pays.length}`))
 			return resolve (false)
 		}
-		const CNTP_Contract = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
+		const CNTP_Contract = new ethers.Contract(CNTP_TicketManager_addr, CNTP_ticketManager_ABI, wallet)
 		let total = 0
 		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
 		pays.forEach(n => {
