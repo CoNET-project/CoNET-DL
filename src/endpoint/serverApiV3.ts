@@ -137,14 +137,18 @@ let currentEpoch = 0
 const listenEpoch = async () => {
 	
 	
-	currentEpoch = await provider.getBlockNumber()
-	watch(filePath, (eventType, filename) => {
-		logger(Colors.grey(`watch has event ${eventType} ${filename}`))
-		if (/\.total$/.test(filename||'')) {
-			logger(Colors.blue(`${filename}`))
+	
+	watch(filePath, async (eventType, _filename) => {
+		const filename = _filename||''
+	
+		if (/\.total$/.test(filename)) {
+			currentEpoch = parseInt(filename.split('.')[0]) + 1
+			await get_epoch_total()
 		}
 	})
-	// await get_epoch_total()
+	
+	currentEpoch = await provider.getBlockNumber()
+	await get_epoch_total()
 }
 
 const MaxCount = 1
