@@ -168,7 +168,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 		}
 	})
 }
-const filePath = '~/data/'
+const filePath = '~/.data/'
 const moveData = async () => {
 	const block = currentEpoch - 1
 	logger(Colors.magenta(`move data at epoch ${block}`))
