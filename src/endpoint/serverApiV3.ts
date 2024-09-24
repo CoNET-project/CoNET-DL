@@ -5,48 +5,24 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {regiestFaucet, getOraclePrice, txManager, claimeToekn, conet_lotte_bio} from './help-database'
 import Colors from 'colors/safe'
-import { homedir } from 'node:os'
-import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc
-} from '../util/util'
+import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc} from '../util/util'
 import {ticket_contract} from './serverApiV3Master'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
-import type { RequestOptions, get } from 'node:http'
+import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool} from './utilNew'
 import {createServer} from 'node:http'
+import {readFile} from 'node:fs/promises'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
-
-
-let leaderboardData = {
-	epoch: '',
-	free_cntp: null,
-	free_referrals: null,
-	guardians_cntp: null, 
-	guardians_referrals: null
-}
-
-interface rate_list {
-	wallet: string
-	cntpRate: string
-	referrals: string
-}
-let free_referrals_rate_lists: rate_list[] = []
-
-let guardians_referrals_rate_lists: rate_list[] = []
-
-let minerRate = ''
-let totalMiner = ''
-
+const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -94,9 +70,25 @@ const addAttackToCluster = async (ipaddress: string) => {
 	req.end()
 }
 
- 
+const eposh_total: Map<number, number> = new Map()
+
+
+const filePath = '/home/peter/.data/v2/'
+
+const get_epoch_total = async () => {
+	const block = currentEpoch - 1
+	const filename1 = `${filePath}${block}.total`
+	const data = await readFile(filename1, 'utf8')
+	const total = parseInt(data)
+	if (!isNaN (total)) {
+		logger(Colors.blue(`get_epoch_total ${block} total = ${total}`))
+		eposh_total.set(block, total)
+	}
+}
+
+
 const unlockCNTP = async (wallet: string, privateKey: string) => {
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+
 	const walletObj = new ethers.Wallet(privateKey, provider)
 	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CNTPAbi, walletObj)
 	let tx
@@ -140,6 +132,17 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	req.end()
 }
 
+let currentEpoch = 0
+const listenEpoch = async () => {
+	
+	provider.on ('block', block => {
+		currentEpoch = block
+		get_epoch_total()
+	})
+	currentEpoch = await provider.getBlockNumber()
+	await get_epoch_total()
+}
+
 const MaxCount = 1
 
 const checkTicket = async (wallet: string) => {
@@ -153,7 +156,6 @@ const checkTicket = async (wallet: string) => {
 	}
 	return false
 }
-
 
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
@@ -262,6 +264,7 @@ class conet_dl_server {
 		})
 
 		server.listen(this.PORT, '0.0.0.0', () => {
+
 			return console.table([
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
@@ -650,3 +653,5 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+listenEpoch()
