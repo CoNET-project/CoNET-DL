@@ -16,6 +16,7 @@ import {request} from 'node:http'
 import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool} from './utilNew'
 import {createServer} from 'node:http'
 import {readFile} from 'node:fs/promises'
+import {watch} from 'node:fs'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -135,12 +136,15 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 let currentEpoch = 0
 const listenEpoch = async () => {
 	
-	provider.on ('block', block => {
-		currentEpoch = block
-		get_epoch_total()
-	})
+	
 	currentEpoch = await provider.getBlockNumber()
-	await get_epoch_total()
+	watch(filePath, (eventType, filename) => {
+		logger(Colors.grey(`watch has event ${eventType} ${filename}`))
+		if (/\.total$/.test(filename||'')) {
+			logger(Colors.blue(`${filename}`))
+		}
+	})
+	// await get_epoch_total()
 }
 
 const MaxCount = 1
