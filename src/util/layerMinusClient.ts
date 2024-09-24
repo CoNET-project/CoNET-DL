@@ -170,7 +170,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 	})
 }
 
-const filePath = '/home/peter/CoNET-DL/.data/v2/'
+const filePath = '/home/peter/.data/v2/'
 const moveData = async () => {
 	const block = currentEpoch - 1
 	logger(Colors.magenta(`move data at epoch ${block}`))
