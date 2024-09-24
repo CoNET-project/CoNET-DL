@@ -140,10 +140,14 @@ const listenEpoch = async () => {
 	
 	watch(filePath, async (eventType, _filename) => {
 		const filename = _filename||''
-	
+		
 		if (/\.total$/.test(filename)) {
-			currentEpoch = parseInt(filename.split('.')[0]) + 1
-			await get_epoch_total()
+			const epoch = parseInt(filename.split('.')[0]) + 1
+			if (epoch +1 > currentEpoch) {
+				currentEpoch = epoch + 1
+				await get_epoch_total()
+			}
+			
 		}
 	})
 	
