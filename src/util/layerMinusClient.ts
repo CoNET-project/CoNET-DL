@@ -56,7 +56,7 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 					data = ''
 					return
 				}
-				
+
 				data = data.replace(/\r\n/g, '')
 				callback ('', data)
 				data = ''
@@ -197,7 +197,7 @@ const moveData = async () => {
 	logger(inspect(_wallets, false, 3, true))
 
 	const totalMiners = _wallets.length
-	const minerRate = rate/totalMiners
+	const minerRate = (rate/totalMiners)/12
 	previousGossipStatus.nodeWallets = _wallets
 	previousGossipStatus.totalConnectNode = obj.size
 	previousGossipStatus.totalMiners = totalMiners

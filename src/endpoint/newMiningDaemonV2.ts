@@ -214,7 +214,7 @@ const checkDevelopIP = (ipaddress: string) => {
 
 class v3_master {
 
-	private PORT = 8002
+	private PORT = 8008
 	public ipaddressWallet: Map<string, string> = new Map()
 	public WalletIpaddress: Map<string, string> = new Map()
 	public regiestNodes: Map<string, string> = new Map()
