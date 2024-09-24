@@ -666,7 +666,9 @@ class conet_dl_server {
 			const query = req.query
 			logger(inspect(query, false, 3, true))
 			const epoch = typeof query?.eposh === 'string' ? parseInt(query.eposh) : currentEpoch
-			return res.json(eposh_total.get(epoch)).end()
+			let obj = eposh_total.get(epoch)||eposh_total.get(epoch-1)
+
+			return res.json(obj).end()
 		})
 
 		router.all ('*', (req, res ) =>{
