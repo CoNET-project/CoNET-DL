@@ -166,12 +166,10 @@ class conet_dl_server {
 
 	private initSetupData = async () => {
 
-
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
 		this.startServer()
-
 	}
 
 	constructor () {

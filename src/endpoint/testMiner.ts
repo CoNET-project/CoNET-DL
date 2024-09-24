@@ -54,6 +54,7 @@ const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	})
 
 })
+
 const startTestMiner = (url: string, POST: string,  callback: (err?: string, data?: string) => void) => {
 	const Url = new URL(url)
 	const option: RequestOptions = {

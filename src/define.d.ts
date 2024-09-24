@@ -54,7 +54,7 @@ interface ICoNET_DL_masterSetup {
 
 
 
-
+	GossipNodeAdmin: string[]
 	//			new Admin	
 	oracleManager: string
 	conetNodeAdmin: string[]
