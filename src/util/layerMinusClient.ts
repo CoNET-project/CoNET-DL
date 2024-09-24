@@ -12,6 +12,7 @@ import NodesInfo from '../endpoint/CONET_nodeInfo.ABI.json'
 import {getRandomValues} from 'node:crypto'
 import { writeFile} from 'node:fs/promises'
 
+
 const conet_rpc = 'https://rpc.conet.network'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
@@ -168,7 +169,8 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 		}
 	})
 }
-const filePath = '~/.data/'
+
+const filePath = '/home/peter/CoNET-DL/.data/v2/'
 const moveData = async () => {
 	const block = currentEpoch - 1
 	logger(Colors.magenta(`move data at epoch ${block}`))
