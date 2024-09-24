@@ -143,8 +143,8 @@ const listenEpoch = async () => {
 		
 		if (/\.total$/.test(filename)) {
 			const epoch = parseInt(filename.split('.')[0]) + 1
-			if (epoch +1 > currentEpoch) {
-				currentEpoch = epoch + 1
+			if (epoch > currentEpoch) {
+				currentEpoch = epoch
 				await get_epoch_total()
 			}
 			
