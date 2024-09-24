@@ -11,13 +11,13 @@ import {mapLimit} from 'async'
 import NodesInfo from '../endpoint/CONET_nodeInfo.ABI.json'
 import {getRandomValues} from 'node:crypto'
 import { writeFile} from 'node:fs/promises'
-
+import rateABI from '../endpoint/conet-rate.json'
 
 const conet_rpc = 'https://rpc.conet.network'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
-const provoder = new ethers.JsonRpcProvider(conet_rpc)
+const provider = new ethers.JsonRpcProvider(conet_rpc)
 
 const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data?: string) => void) => {
 	
@@ -169,9 +169,13 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 		}
 	})
 }
-
+const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
+
 const moveData = async () => {
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
+	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
+
 	const block = currentEpoch - 1
 	logger(Colors.magenta(`move data at epoch ${block}`))
 	let _wallets: string[] = []
@@ -187,14 +191,15 @@ const moveData = async () => {
 	
 	logger(inspect(_wallets, false, 3, true))
 
-	let totalMiners = _wallets.length
+	const totalMiners = _wallets.length
+	const minerRate = rate/totalMiners
 	previousGossipStatus.nodeWallets = _wallets
 	previousGossipStatus.totalConnectNode = obj.size
 	previousGossipStatus.totalMiners = totalMiners
 	const filename = `${filePath}${block}.wallet`
 	const filename1 = `${filePath}${block}.total`
 	await writeFile(filename, JSON.stringify(previousGossipStatus))
-	await writeFile(filename1, JSON.stringify(previousGossipStatus.totalMiners))
+	await writeFile(filename1, JSON.stringify({totalMiners, minerRate}))
 	.catch(ex => {
 		logger(Colors.red(`writeFile ${filename} error ${ex.message}`))
 	})
@@ -205,9 +210,10 @@ const listenPool: Map<number, Map<string, string[]>> = new Map()
 let currentEpoch = 0
 
 const listenEpoch = async () => {
-	currentEpoch = await provoder.getBlockNumber()
+	currentEpoch = await provider.getBlockNumber()
 	gossipStatus.epoch = currentEpoch
-	provoder.on('block', block => {
+
+	provider.on('block', block => {
 		currentEpoch = block
 		moveData()
 		listenPool.delete(currentEpoch - 3)
@@ -239,7 +245,7 @@ const getAllNodes = async () => {
 		return
 	}
 	getAllNodesProcess = true
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provoder)
+	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
 	let scanNodes = 0
 	try {
 		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
@@ -264,7 +270,7 @@ const getAllNodes = async () => {
 			domain: ''
 		})
 	}
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfo, provoder)
+	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfo, provider)
 
 	await mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
 		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
