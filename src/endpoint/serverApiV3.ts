@@ -661,7 +661,7 @@ class conet_dl_server {
 			
 		})
 
-		router.get('miningRate', async (req, res) => {
+		router.get('/miningRate', async (req, res) => {
 			const query = req.query
 			const epoch = typeof query?.eposh === 'string' ? parseInt(query.eposh) : currentEpoch
 			return res.json(eposh_total.get(epoch)).end()
