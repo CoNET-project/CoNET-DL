@@ -70,9 +70,12 @@ const addAttackToCluster = async (ipaddress: string) => {
 	req.write(JSON.stringify(postData))
 	req.end()
 }
+interface epochRate {
+	totalMiners: number
+	minerRate: number
+}
 
-const eposh_total: Map<number, number> = new Map()
-
+const eposh_total: Map<number, epochRate> = new Map()
 
 const filePath = '/home/peter/.data/v2/'
 
@@ -80,10 +83,12 @@ const get_epoch_total = async () => {
 	const block = currentEpoch - 1
 	const filename1 = `${filePath}${block}.total`
 	const data = await readFile(filename1, 'utf8')
-	const total = parseInt(data)
-	if (!isNaN (total)) {
-		logger(Colors.blue(`get_epoch_total ${block} total = ${total}`))
-		eposh_total.set(block, total)
+	try {
+		const ratedata = JSON.parse(data)
+		eposh_total.set(block, ratedata)
+		
+	} catch (ex) {
+		logger(Colors.red(`get_epoch_total JSON.parse(data) Error!\n ${data}`))
 	}
 }
 
@@ -181,6 +186,7 @@ class conet_dl_server {
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
+		listenEpoch()
 		this.startServer()
 	}
 
@@ -655,6 +661,12 @@ class conet_dl_server {
 			
 		})
 
+		router.get('miningRate', async (req, res) => {
+			const query = req.query
+			const epoch = typeof query?.eposh === 'string' ? parseInt(query.eposh) : currentEpoch
+			return res.json(eposh_total.get(epoch)).end()
+		})
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
@@ -666,4 +678,3 @@ class conet_dl_server {
 
 export default conet_dl_server
 
-listenEpoch()
