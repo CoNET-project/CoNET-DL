@@ -47,12 +47,14 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 		res.on ('data', _data => {
 
 			data += _data.toString()
-			
+			if (first) {
+				first = false
+				return
+			}
+
 			if (/\r\n\r\n/.test(data)) {
 				clearTimeout(_Time)
-				if (first) {
-					first = false
-				}
+				
 				data = data.replace(/\r\n/g, '')
 				callback ('', data)
 				data = ''
@@ -65,7 +67,7 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 		})
 
 		res.once('error', err => {
-			kkk.destroy()
+			startGossip (node, POST, callback)
 			logger(Colors.red(`startGossip [${node.ip_addr}] res on ERROR! Try to restart! `), err.message)
 		})
 
@@ -169,6 +171,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 		}
 	})
 }
+
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
@@ -177,7 +180,7 @@ const moveData = async () => {
 	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
 
 	const block = currentEpoch - 1
-	logger(Colors.magenta(`move data at epoch ${block}`))
+	
 	let _wallets: string[] = []
 	const obj = listenPool.get (block)
 	if (!obj) {
@@ -188,7 +191,7 @@ const moveData = async () => {
 		_wallets = [..._wallets, ...v]
 	})
 
-	
+	logger(Colors.magenta(`move data at epoch ${block} total connecting = ${obj.size}`))
 	logger(inspect(_wallets, false, 3, true))
 
 	const totalMiners = _wallets.length
