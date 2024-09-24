@@ -40,7 +40,6 @@ const stratFreeMinerTransfer = async (block: number) => {
 	
 	try{
 		const data = JSON.parse(_data)
-		logger(inspect(data))
 		walletArray = data.nodeWallets
 	} catch (ex) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
