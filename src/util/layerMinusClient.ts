@@ -45,15 +45,17 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 		let _Time: NodeJS.Timeout
 
 		res.on ('data', _data => {
-
+			clearTimeout(_Time)
 			data += _data.toString()
-			if (first) {
-				first = false
-				return
-			}
+			
 
 			if (/\r\n\r\n/.test(data)) {
-				clearTimeout(_Time)
+				
+				if (first) {
+					first = false
+					data = ''
+					return
+				}
 				
 				data = data.replace(/\r\n/g, '')
 				callback ('', data)
