@@ -94,8 +94,6 @@ const addAttackToCluster = async (ipaddress: string) => {
 	req.end()
 }
 
-
-
  
 const unlockCNTP = async (wallet: string, privateKey: string) => {
 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)

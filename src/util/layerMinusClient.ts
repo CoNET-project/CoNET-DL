@@ -191,8 +191,10 @@ const moveData = async () => {
 	previousGossipStatus.nodeWallets = _wallets
 	previousGossipStatus.totalConnectNode = obj.size
 	previousGossipStatus.totalMiners = totalMiners
-	const filename = `${filePath}${block}.data`
+	const filename = `${filePath}${block}.wallet`
+	const filename1 = `${filePath}${block}.total`
 	await writeFile(filename, JSON.stringify(previousGossipStatus))
+	await writeFile(filename1, JSON.stringify(previousGossipStatus.totalMiners))
 	.catch(ex => {
 		logger(Colors.red(`writeFile ${filename} error ${ex.message}`))
 	})
