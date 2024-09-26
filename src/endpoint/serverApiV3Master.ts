@@ -1095,7 +1095,7 @@ class conet_dl_server {
 			logger(Colors.blue(`/dailyClick`))
 			const canClick =  await checkAddressDailyClick(obj.walletAddress)
 			if (canClick) {
-				return res.status(403).json({}).end()
+				return res.status(401).json({}).end()
 			}
 			return res.status(200).json({result: true}).end()
 		})

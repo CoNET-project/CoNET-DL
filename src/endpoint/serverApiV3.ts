@@ -685,7 +685,7 @@ class conet_dl_server {
 
 			if (!message||!signMessage) {
 				logger (Colors.grey(`Router /dailyClick !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
+				return res.status(404).end()
 			}
 
 			const obj = checkSign (message, signMessage)
