@@ -7,7 +7,7 @@ import {mapLimit} from 'async'
 const rpcUrl = 'https://rpc.conet.network'
 const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const transferTimeout = 1000 * 180			//	3 mins
-const checkGasPrice = 1700000000
+const checkGasPrice = 1400000000
 const longestWaitingTime = 1000 * 60 * 5	//	5 mins
 const MaxWaitingTimes = 10
 
@@ -100,6 +100,9 @@ export default class CNTP_Transfer_Manager {
 				this.transferProcessStatus = false
 				return logger(Color.grey(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${this.pool.size}]`))
 			}
+			logger(Color.grey(`startTransfer NOW GAS [${gasPrice}] vs ${checkGasPrice} because timeStamp - this.lastTransferTimeStamp < longestWaitingTime = ${timeStamp - this.lastTransferTimeStamp < longestWaitingTime} [${this.pool.size}]`))
+		} else {
+			logger(Color.grey(`startTransfer NOW GAS [${gasPrice}] vs ${checkGasPrice}  [${this.pool.size}]`))
 		}
 		this.lastTransferTimeStamp = timeStamp
 		const splitGroupNumber = Math.round (this.pool.size / this.eachTransLength + 0.5)
