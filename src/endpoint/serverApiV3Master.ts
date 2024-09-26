@@ -65,7 +65,7 @@ const listeningGuardianNodes = async (block: number) => {
 	})
 }
 
-export const checkGasPrice = 2000010012
+export const checkGasPrice = 2000008007
 let startDailyPoolTranferProcess = false
 let lastTransferTimeStamp = new Date().getTime()
 const longestWaitingTime = 1000 * 60 * 10

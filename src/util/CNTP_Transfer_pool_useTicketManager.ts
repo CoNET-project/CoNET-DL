@@ -8,7 +8,7 @@ const rpcUrl = 'https://rpc.conet.network'
 
 const CNTP_TicketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
 const transferTimeout = 1000 * 180			//	3 mins
-const checkGasPrice = 2000010007
+const checkGasPrice = 2000008007
 const longestWaitingTime = 1000 * 60 * 5	//	5 mins
 const MaxWaitingTimes = 10
 
