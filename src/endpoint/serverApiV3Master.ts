@@ -98,6 +98,7 @@ const startDailyPoolTranfer = async () => {
 		const ts = await tx.wait()
 		logger(Colors.blue(`startDailyPoolTranfer success!`))
 		logger(inspect(ts, false, 3, true))
+		lastTransferTimeStamp = timeStamp
 	} catch (ex: any) {
 		logger(Colors.red(`dailyClickContract.batchDaliy got Error! return wallets to pool!`), ex.message)
 		logger(JSON.stringify(wallets))
@@ -386,6 +387,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	startFaucetProcessStatus = false
 	return resolve(true)
 })
+
 const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
 const developWalletPool: Map<string, boolean> = new Map()
@@ -551,12 +553,26 @@ const returnArrayToTicketPoolProcess = (wallet: string[], tickets: number[]) => 
 	})
 }
 
+let lastticketTransferTimeStamp = new Date().getTime()
+
 const ticketPoolProcess = async (block: number) => {
-	if (ticketPoolProcesing){
+	if (ticketPoolProcesing || !ticketPool.size){
 		return
 	}
-
 	ticketPoolProcesing = true
+	const feeData = await provideCONET.getFeeData()
+	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
+
+	const timeStamp = new Date().getTime()
+
+	if ( gasPrice > checkGasPrice || !gasPrice ) {
+		if (timeStamp - lastticketTransferTimeStamp < longestWaitingTime) {
+			ticketPoolProcesing = false
+			logger(Colors.grey(`ticketPoolProcess waiting low GAS fee! Pool size = ${ticketPool.size}`))
+			return 
+		}
+	}
+
 	const wallet: string[] = []
 	const tickets: number[] = []
 	const walletBrun: string[] = []
@@ -616,6 +632,7 @@ const ticketPoolProcess = async (block: number) => {
 		return returnArrayToTicketPoolProcess (wallet, tickets)
 	}
 	ticketPoolProcesing = false
+	lastticketTransferTimeStamp = timeStamp
 }
 
 let faucetWaitingPool: faucetRequest[] = []
