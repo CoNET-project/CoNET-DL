@@ -65,12 +65,55 @@ const listeningGuardianNodes = async (block: number) => {
 	})
 }
 
+export const checkGasPrice = 2000010012
+let startDailyPoolTranferProcess = false
+let lastTransferTimeStamp = new Date().getTime()
+const longestWaitingTime = 1000 * 60 * 10
+
+const startDailyPoolTranfer = async () => {
+	if (startDailyPoolTranferProcess || !dailyClickPool.size) {
+		return
+	}
+	startDailyPoolTranferProcess = true
+	const feeData = await provideCONET.getFeeData()
+	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
+
+	const timeStamp = new Date().getTime()
+
+	if ( gasPrice > checkGasPrice || !gasPrice ) {
+		if (timeStamp - lastTransferTimeStamp < longestWaitingTime) {
+			startDailyPoolTranferProcess = false
+			logger(Colors.grey(`startDailyPoolTranfer waiting low GAS fee! Pool size = ${dailyClickPool.size}`))
+			return 
+		}
+	}
+	const wallets: string[] = []
+	dailyClickPool.forEach((v, key) => {
+		wallets.push(key)
+		dailyClickPool.delete(key)
+	})
+
+	try {
+		const tx =  await dailyClickContract.batchDaliy(wallets)
+		const ts = await tx.wait()
+		logger(Colors.blue(`startDailyPoolTranfer success!`))
+		logger(inspect(ts, false, 3, true))
+	} catch (ex: any) {
+		logger(Colors.red(`dailyClickContract.batchDaliy got Error! return wallets to pool!`), ex.message)
+		logger(JSON.stringify(wallets))
+		startDailyPoolTranferProcess = false
+		return wallets.forEach(n => dailyClickPool.set(n, true))
+	}
+	
+}
+
 const startListeningCONET_Holesky_EPOCH = async () => {
 	checkLotteryHasBalance()
 	getAllOwnershipOfGuardianNodes()
 	provideCONET.on ('block', async block => {
 		listeningGuardianNodes (block)
 		checkLotteryHasBalance()
+		startDailyPoolTranfer()
 	})
 }
 
@@ -391,8 +434,6 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	])
 }
 
-
-
 const doubleV3 = (wallet: string, ipAddress: string, CNYP_class: CNTP_TicketManager_class) => {
 	const winner = LotteryWinnerPool.get (wallet)
 
@@ -473,7 +514,7 @@ interface faucetRequest {
 const ticketPool: Map<string, number> = new Map()
 const ticketBrunPool: Map<string, number> = new Map()
 const twitterNFTPool: Map<string, boolean> = new Map()
-
+const dailyClickPool: Map<string, boolean> = new Map()
 
 
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
@@ -1093,10 +1134,12 @@ class conet_dl_server {
 		router.post ('/dailyClick',  async (req, res) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/dailyClick`))
-			const canClick =  await checkAddressDailyClick(obj.walletAddress)
+
+			const canClick = dailyClickPool.get(obj.walletAddress) || await checkAddressDailyClick(obj.walletAddress)
 			if (canClick) {
 				return res.status(401).json({}).end()
 			}
+			dailyClickPool.set(obj.walletAddress, true)
 			return res.status(200).json({result: true}).end()
 		})
 
@@ -1110,5 +1153,3 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
-
-checkAddressDailyClick('0x0981275553A41E00ec1006fe074971285E00c2A3')

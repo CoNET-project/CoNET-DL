@@ -73,7 +73,7 @@ export const startTransfer = async () => {
 	startTransfering = true
 
 	const feeData = await conet_Holesky_rpc.getFeeData()
-	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice+1
+	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
 	marginPool()
 	const timeStamp = new Date().getTime()
 
