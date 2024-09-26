@@ -95,26 +95,7 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 
 let wallet: ethers.HDNodeWallet
 
-interface listenClient {
-	status: number
-	epoch: number
-	rate: string
-	hash: string
-	nodeWallet: string
-	totalMiners: number
-	connetingNodes: number
-	nodeDomain: string
-	nodeIpAddr: string
-	nodeWallets: string []
-}
 
-interface IGossipStatus {
-	totalConnectNode: number
-	epoch: number
-	nodesWallets: Map<string, string[]>
-	totalMiners: number
-	nodeWallets: string[]
-}
 
 let gossipStatus: IGossipStatus = {
 	totalConnectNode: 0,
@@ -233,13 +214,7 @@ const listenEpoch = async () => {
 	logger(Colors.blue(`listenEpoch start current = [${currentEpoch}]`))
 }
 
-interface nodeInfo {
-	region: string
-	ip_addr: string
-	armoredPublicKey: string
-	nftNumber: number
-	domain: string
-}
+
 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []

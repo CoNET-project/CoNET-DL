@@ -49,10 +49,17 @@ interface ICoNET_DecryptedPayload {
 	messageHash: string
 	
 }
+interface nodeInfo {
+	region: string
+	ip_addr: string
+	armoredPublicKey: string
+	nftNumber: number
+	domain: string
+}
 
 interface ICoNET_DL_masterSetup {
 
-
+	constGAMEAccount: string[]
 
 	GossipNodeAdmin: string[]
 	//			new Admin	
@@ -319,14 +326,6 @@ interface leaderboard {
 	cntpRate: string
 }
 
-interface nodeInfo {
-	ipaddress: string
-	regionName: string
-	pgpArmored: string
-	pgpKeyID: string
-	wallet: string
-	nodeID: number
-}
 
 interface assetPrice {
 	name: string
@@ -339,3 +338,23 @@ interface assetOracle {
 	assets: assetPrice[]
 }
 
+interface listenClient {
+	status: number
+	epoch: number
+	rate: string
+	hash: string
+	nodeWallet: string
+	totalMiners: number
+	connetingNodes: number
+	nodeDomain: string
+	nodeIpAddr: string
+	nodeWallets: string []
+}
+
+interface IGossipStatus {
+	totalConnectNode: number
+	epoch: number
+	nodesWallets: Map<string, string[]>
+	totalMiners: number
+	nodeWallets: string[]
+}

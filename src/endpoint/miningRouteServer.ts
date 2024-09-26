@@ -138,7 +138,9 @@ const initGuardianNodes = async () => {
 	for (let i = 100; i < nodes[0].length; i++) {
 		nodeIDs.push(i)
 	}
+
 	await getDNS ()
+
 	return await mapLimit(nodeIDs, 1, async (n, next) => {
 		
 		const result = await getNodeInfo(n)
@@ -151,18 +153,17 @@ const initGuardianNodes = async () => {
 		const pgpKeyObj = await readKey({ armoredKey })
 		const pgpKey =  pgpKeyObj.getKeyIDs()[1].toHex().toUpperCase()
 		const node: nodeInfo = {
-			wallet: _node.toLowerCase(),
-			ipaddress: result.ipaddress,
-			pgpKeyID: pgpKey,
-			pgpArmored: armoredKey,
-			regionName: result.regionName,
-			nodeID: n
+			ip_addr: result.ipaddress,
+			armoredPublicKey: pgpKey,
+			region: result.regionName,
+			nftNumber: n,
+			domain: pgpKey + '.conet.network'
 		}
 		
 		routerInfoWithWallet.set (_node, node)
 		routerInfoWithID.set(n, node)
 		routerInfoWithPGPKey.set(pgpKey, node)
-		await regiestDNS(node.pgpKeyID, node.ipaddress)
+		await regiestDNS(node.armoredPublicKey, node.ip_addr)
 
 	}, err => {
 		getNodeInfoProssing = false

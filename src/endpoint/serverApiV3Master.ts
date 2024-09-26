@@ -23,8 +23,10 @@ import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool_useTicketManager'
 import profileABI from './profile.ABI.json'
 import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
+import dailyClick_ABI from './dailyClick.ABI.json'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
+const dailyClickAddr = '0x6d97059A01bF489Ad1b28a4E3591069b5eE12a23'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -38,7 +40,8 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-
+const gameWallet0 = new ethers.Wallet (masterSetup.constGAMEAccount[0], provideCONET)
+const dailyClickContract = new ethers.Contract(dailyClickAddr, dailyClick_ABI, gameWallet0)
 const detailTransfer = async (tx: string) => {
 	const transObj = await provideCONET.getTransactionReceipt(tx)
 
@@ -123,7 +126,7 @@ const getAllOwnershipOfGuardianNodes = async () => {
 		return logger(`getAllOwnershipOfGuardianNodes already process!`)
 	}
 	getAllOwnershipOfGuardianNodesProcessing = true
-	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI,provideCONET)
+	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI, provideCONET)
 	let nodes
 	try {
 		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
@@ -226,6 +229,18 @@ const checkLotteryHasBalance = async () => {
 		
 	}
 	return false
+}
+
+const checkAddressDailyClick = async (addr: string) => {
+	try {
+		const today = await dailyClickContract.currentDay()
+		const isCanClick = await dailyClickContract.daily_users(today, addr)
+		logger(Colors.blue(`checkAddressDailyClick ${addr} daily click is ${isCanClick}!`))
+		return isCanClick
+	} catch (ex) {
+		logger(Colors.red(`checkAddressDailyClick call dailyClickContract Contract got Error!`))
+		return null
+	}
 }
 
 const randomLotteryV3 = () => {
@@ -1075,6 +1090,16 @@ class conet_dl_server {
 			logger(Colors.magenta(`/tg-callback return ${inspect(obj.data, false, 3, true)} success!`))
 		})
 
+		router.post ('/dailyClick',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/dailyClick`))
+			const canClick =  await checkAddressDailyClick(obj.walletAddress)
+			if (canClick) {
+				return res.status(403).json({}).end()
+			}
+			return res.status(200).json({result: true}).end()
+		})
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
@@ -1085,3 +1110,5 @@ class conet_dl_server {
 }
 
 export default conet_dl_server
+
+checkAddressDailyClick('0x0981275553A41E00ec1006fe074971285E00c2A3')

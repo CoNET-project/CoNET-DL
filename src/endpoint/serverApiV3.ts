@@ -671,6 +671,34 @@ class conet_dl_server {
 			return res.json(obj).end()
 		})
 
+		router.post ('/dailyClick',  async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /dailyClick req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /dailyClick !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj) {
+				logger (Colors.grey(`Router /dailyClick checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+			
+			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-check-follow forward to master! `))
+			return postLocalhost('/api/dailyClick', {obj}, res)
+		})
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
