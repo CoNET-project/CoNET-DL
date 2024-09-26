@@ -7,7 +7,7 @@ import {mapLimit} from 'async'
 const rpcUrl = 'https://rpc.conet.network'
 const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const transferTimeout = 1000 * 180			//	3 mins
-const checkGasPrice = 150000000
+const checkGasPrice = 130000000
 const longestWaitingTime = 1000 * 60 * 15	//	5 mins
 
 interface paymentItem {
