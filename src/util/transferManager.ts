@@ -58,7 +58,7 @@ const marginPool = () => {
 	margin()
 }
 
-export const checkGasPrice = 700000000
+export const checkGasPrice = 500000000
 let lastTransferTimeStamp = new Date().getTime()
 export const longestWaitingTime = 1000 * 60 * 10
 let transferWithoutGasFee = false
