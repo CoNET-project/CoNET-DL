@@ -1648,9 +1648,11 @@ const getNetwork = (networkName: string) => {
 
 export const checkTx =  async (txHash: string, tokenName: string) => {
 	const rpc = getNetwork(tokenName)
+	
 	if (!rpc) {
 		return null
 	}
+
 	const provide = new ethers.JsonRpcProvider(rpc)
 	
 	try {

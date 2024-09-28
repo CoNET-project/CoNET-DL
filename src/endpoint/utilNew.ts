@@ -848,9 +848,22 @@ interface IGuardianPurchasePool {
 export const GuardianPurchasePool: IGuardianPurchasePool[] = []
 
 const GuardianPurchaseReturn403Error = (res: Response) => {
-	GuardianPurchaseLocked
-	res.status(403).end()
+	GuardianPurchaseLocked = false
+	if (res.writable) {
+		res.status(403).end()
+		
+	}
 	return GuardianPurchase()
+	
+}
+
+const CONETianPlanPurchaseReturn403Error = (res: Response) => {
+	CONETianPlanPurchaseLocked = false
+	if (res.writable) {
+		res.status(403).end()
+	}
+	
+	// return CONETianPlanPurchase()
 }
 
 const _GuardianPurchase = async (obj: minerObj) => {
@@ -1063,3 +1076,125 @@ export const GuardianPurchase = async () => {
 	return 
 }
 
+export const CONETianPlanPurchasePool: IGuardianPurchasePool[] = []
+
+let CONETianPlanPurchaseLocked = false
+
+interface ICONETianPurchaseData {
+	receiptTx: string
+	tokenName: string
+}
+// export const CONETianPlanPurchase = async () => {
+// 	if (CONETianPlanPurchaseLocked || !CONETianPlanPurchasePool.length) {
+// 		return
+// 	}
+
+// 	CONETianPlanPurchaseLocked = true
+// 	const CONETianPlanPurchaseObj = CONETianPlanPurchasePool.shift()
+
+// 	if(!CONETianPlanPurchaseObj) {
+// 		CONETianPlanPurchaseLocked = false
+// 		return 
+// 	}
+
+// 	const obj = checkSign (CONETianPlanPurchaseObj.message, CONETianPlanPurchaseObj.signMessage)
+	
+// 	const purchaseData: ICONETianPurchaseData = obj?.data
+
+// 	if (!obj || !purchaseData?.receiptTx ||!purchaseData?.tokenName) {
+// 		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`), CONETianPlanPurchaseObj.message, CONETianPlanPurchaseObj.signMessage)
+// 		CONETianPlanPurchaseReturn403Error(CONETianPlanPurchaseObj.res)
+// 		return
+// 	}
+
+// 	logger(Colors.magenta(`/CONETianPlanPurchase from ${CONETianPlanPurchaseObj.ipaddress}:${obj.walletAddress}`), CONETianPlanPurchaseObj.message, CONETianPlanPurchaseObj.signMessage)
+	
+
+
+// 	const txObj = await checkTx (purchaseData.receiptTx, purchaseData.tokenName)
+
+// 	if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
+// 		logger(Colors.grey(`Router /CONETianPlanPurchase checkTx Error!`), inspect(txObj, false, 3, true))
+// 		CONETianPlanPurchaseReturn403Error(CONETianPlanPurchaseObj.res)
+// 		return
+// 	}
+
+// 	// if (txObj.tx1.from.toLowerCase() !== obj.walletAddress) {
+// 	// 	logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
+// 	// 	GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 	// 	return
+// 	// }
+
+// 	const networkName = getNetworkName(obj.data.tokenName)
+
+// 	if (!networkName) {
+// 		logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
+// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 		return
+// 	}
+
+// 	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(obj.data.tokenName)
+	
+// 	const _checkTx = await checkUsedTx (obj.data.receiptTx )
+
+// 	if (_checkTx) {
+// 		logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
+// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 		return
+// 	}
+
+
+// 	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet ) {
+// 		//		check tokenName matched smart contract address
+// 		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+// 			logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
+// 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 			return
+// 		}
+
+// 		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+// 		if (erc20Result === false) {
+// 			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
+// 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 			return
+// 		}
+
+// 		const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+// 		if (!kk) {
+// 			logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
+// 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 			return
+// 		}
+
+// 		const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+// 		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
+// 		GuardianPurchaseObj.res.status(200).json({}).end()
+// 		GuardianPurchaseLocked = false
+// 		GuardianPurchase()
+// 		return 
+		
+// 	}
+	
+	
+// 	const value = txObj.tx1.value.toString()
+// 	if (obj.data.amount !== value) {
+// 		logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
+// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 		return
+// 	}
+
+// 	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+
+// 	if (!kk) {
+// 		logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
+// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
+// 		return
+// 	}
+
+// 	const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+// 	await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
+// 	GuardianPurchaseObj.res.status(200).json({}).end()
+// 	GuardianPurchaseLocked = false
+// 	GuardianPurchase()
+// 	return 
+// }
