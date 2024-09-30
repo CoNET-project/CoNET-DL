@@ -70,6 +70,7 @@ const addAttackToCluster = async (ipaddress: string) => {
 	req.write(JSON.stringify(postData))
 	req.end()
 }
+
 interface epochRate {
 	totalMiners: number
 	minerRate: number
@@ -140,9 +141,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 
 let currentEpoch = 0
 const listenEpoch = async () => {
-	
-	
-	
+
 	watch(filePath, async (eventType, _filename) => {
 		const filename = _filename||''
 		
@@ -169,9 +168,14 @@ const checkTicket = async (wallet: string) => {
 	])
 	logger(Colors.blue (`checkTicket account ${wallet} isApproved = ${isApproved} balance = ${balance}`))
 	if (isApproved && balance.toString() > '0') {
+
 		return true
 	}
 	return false
+}
+
+const checkIpAddress = async (ipaddress: string) => {
+	
 }
 
 const countAccessPool: Map<string, number[]> = new Map()
@@ -670,6 +674,8 @@ class conet_dl_server {
 
 			return res.json(obj).end()
 		})
+
+
 
 		router.post ('/dailyClick',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)

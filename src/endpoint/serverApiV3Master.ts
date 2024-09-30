@@ -65,10 +65,11 @@ const listeningGuardianNodes = async (block: number) => {
 	})
 }
 
-export const checkGasPrice = 20000000
+export const checkGasPrice = 25000000
 let startDailyPoolTranferProcess = false
 let lastTransferTimeStamp = new Date().getTime()
-const longestWaitingTime = 1000 * 60 * 10
+const longestWaitingTimeForDaily = 1000 * 60 * 10
+const longestWaitingTimeForTicket = 1000 * 60 * 5
 
 const startDailyPoolTranfer = async () => {
 	if (startDailyPoolTranferProcess || !dailyClickPool.size) {
@@ -81,7 +82,7 @@ const startDailyPoolTranfer = async () => {
 	const timeStamp = new Date().getTime()
 
 	if ( gasPrice > checkGasPrice || !gasPrice ) {
-		if (timeStamp - lastTransferTimeStamp < longestWaitingTime) {
+		if (timeStamp - lastTransferTimeStamp < longestWaitingTimeForDaily) {
 			startDailyPoolTranferProcess = false
 			logger(Colors.grey(`startDailyPoolTranfer waiting low GAS fee! Pool size = ${dailyClickPool.size}`))
 			return 
@@ -566,7 +567,7 @@ const ticketPoolProcess = async (block: number) => {
 	const timeStamp = new Date().getTime()
 
 	if ( gasPrice > checkGasPrice || !gasPrice ) {
-		if (timeStamp - lastticketTransferTimeStamp < longestWaitingTime) {
+		if (timeStamp - lastticketTransferTimeStamp < longestWaitingTimeForTicket) {
 			ticketPoolProcesing = false
 			logger(Colors.grey(`ticketPoolProcess waiting low GAS fee! Pool size = ${ticketPool.size}`))
 			return 
@@ -977,8 +978,18 @@ class conet_dl_server {
 			logger(Colors.blue(`Cluster Master got: /ticket-lottery`))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
-
 			const brun = ticketBrunPool.get (wallet)||0
+			try {
+				const balance = await ticket_contract.balanceOf(wallet, 1)
+				if (brun + 1 > parseInt(balance)) {
+					return res.status(301).end()
+				}
+			} catch (ex) {
+				
+				return res.status(301).end()
+				
+			}
+			
 			ticketBrunPool.set (wallet, brun + 1)
 
 			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
