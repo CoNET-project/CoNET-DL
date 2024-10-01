@@ -828,9 +828,8 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 	}
 
 	try {
-		const [tx, SocialArray] = await Promise.all ([
+		const [tx] = await Promise.all ([
 			profileContract.checkSocialNFT(socialTaskNFTNumber, socialTaskText),
-			profileContract.getSocialUser(obj.walletAddress)
 		])
 		
 		if (tx) {
@@ -838,17 +837,6 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 			ret.isusedByOtherWallet = true
 			ret.message = 'Your social task was completed.'
 			return resolve (ret)
-		}
-
-		let SocialNFT: number[] = []
-		if (SocialArray?.length) {
-			SocialNFT = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
-			const jj = SocialNFT.findIndex(n => n === socialTaskNFTNumber)
-			if (jj > -1) {
-				ret.status = 403
-				ret.message = 'Your social task was completed.'
-				return resolve (ret)
-			}
 		}
 		
 	} catch (ex) {
