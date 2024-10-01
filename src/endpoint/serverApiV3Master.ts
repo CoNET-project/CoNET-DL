@@ -814,14 +814,14 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 })
 
 const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
-	const socialTaskText = obj.data[1].toUpperCase()
+	const socialTaskText = obj.walletAddress
 	const socialTaskNFTNumber = parseInt(obj.data[0])
 
 	let ret: twitterResult = {
 		status: 200
 	}
 
-	if(isNaN(socialTaskNFTNumber)||socialTaskNFTNumber<3 || socialTaskNFTNumber>5) {
+	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 5 ) {
 		ret.status = 404
 		ret.message = 'Unknow social Task number!'
 		return resolve (ret)
@@ -839,6 +839,7 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 			ret.message = 'Your social task was completed.'
 			return resolve (ret)
 		}
+
 		let SocialNFT: number[] = []
 		if (SocialArray?.length) {
 			SocialNFT = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
