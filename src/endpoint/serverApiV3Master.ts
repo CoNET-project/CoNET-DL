@@ -25,6 +25,8 @@ import profileABI from './profile.ABI.json'
 import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
 import dailyClick_ABI from './dailyClick.ABI.json'
 
+import {dailyTaskSC} from '../util/dailyTaskChangeHash'
+
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const dailyClickAddr = '0x6d97059A01bF489Ad1b28a4E3591069b5eE12a23'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -116,6 +118,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 		listeningGuardianNodes (block)
 		checkLotteryHasBalance()
 		startDailyPoolTranfer()
+		dailyTaskPoolProcess()
 	})
 }
 
@@ -635,6 +638,58 @@ const ticketPoolProcess = async (block: number) => {
 	ticketPoolProcesing = false
 	lastticketTransferTimeStamp = timeStamp
 }
+
+
+export const checkGasPriceFordailyTaskPool = 25000000
+
+
+const dailyTaskPool: Map<string, string> = new Map()
+let dailyTaskPoolProcessLocked = false
+const dailyTaskPoolProcess = async () => {
+	if (dailyTaskPoolProcessLocked || !dailyTaskPool.size) {
+		return
+	}
+	dailyTaskPoolProcessLocked = true
+
+	const feeData = await provideCONET.getFeeData()
+	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
+
+	const timeStamp = new Date().getTime()
+
+	if ( gasPrice > checkGasPriceFordailyTaskPool || !gasPrice ) {
+		if (timeStamp - lastticketTransferTimeStamp < longestWaitingTimeForTicket) {
+			ticketPoolProcesing = false
+			logger(Colors.grey(`ticketPoolProcess waiting low GAS fee! Pool size = ${ticketPool.size}`))
+			dailyTaskPoolProcessLocked = false
+			return 
+		}
+	}
+
+	const wallet: string[] = []
+	const ipAddress: string[] = []
+	dailyTaskPool.forEach((v,k) => {
+		wallet.push(k)
+		ipAddress.push(v)
+	})
+
+	try{
+		const tx = await dailyTaskSC.batchDaliy(wallet, ipAddress)
+		const ts = await tx.wait()
+		logger(Colors.blue(`dailyTaskPoolProcess send address length ${wallet.length} dailyTaskSC.batchDaliy success!`))
+		logger(inspect(ts, false, 3, true))
+
+	} catch (ex: any) {
+		logger(Colors.red(`dailyTaskPoolProcess dailyTaskSC.batchDaliy Error! ${ex.message} return all data ${wallet.length} to Pool!`))
+		wallet.forEach((n, index) => {
+			dailyTaskPool.set(n,ipAddress[index])
+		})
+
+	}
+	dailyTaskPoolProcessLocked = false
+
+}
+
+
 
 let faucetWaitingPool: faucetRequest[] = []
 export const faucet_call =  (wallet: string, ipAddress: string) => {
@@ -1168,6 +1223,19 @@ class conet_dl_server {
 				return res.status(401).json({}).end()
 			}
 			dailyClickPool.set(obj.walletAddress, true)
+			return res.status(200).json({result: true}).end()
+		})
+
+		router.post ('/dailyTask',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/dailyTask`))
+			logger(inspect(obj, false, 3, true))
+
+			if (!obj.ipAddress) {
+				return res.status(403).json({}).end()
+			}
+			
+			dailyTaskPool.set(obj.walletAddress, obj.ipAddress )
 			return res.status(200).json({result: true}).end()
 		})
 

@@ -17,6 +17,7 @@ import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool} from './utilNew
 import {createServer} from 'node:http'
 import {readFile} from 'node:fs/promises'
 import {watch} from 'node:fs'
+import {getDailyIPAddressAndhashCheck} from '../util/dailyTaskChangeHash'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -673,6 +674,49 @@ class conet_dl_server {
 			let obj = eposh_total.get(epoch)||eposh_total.get(epoch-1)
 
 			return res.json(obj).end()
+		})
+
+		router.get (`/dailyTask`, async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /dailyTask req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /dailyTask !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj || !obj.data ) {
+				logger (Colors.grey(`Router /dailyTask checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+
+
+			const ipCheck = await getDailyIPAddressAndhashCheck (ipaddress, obj.data[0])
+
+			//	Error		ipAddr err	 hash error!
+			
+			if (!ipCheck || ipCheck[0] || !ipCheck[1]) {
+				//@ts-ignore
+				const ipCountOverDaily: boolean = ipCheck[0]
+				//@ts-ignore
+				const isHashMatchesToday: boolean = ipCheck[1]
+				return res.status(403).json({reason: {ipCountOverDaily, isHashMatchesToday}}).end()
+			}
+
+			obj.ipAddress = ethers.id(ipaddress)
+			logger(Colors.grey(`${obj.walletAddress}:${ipaddress} POST twitter-check-follow forward to master! `))
+			return postLocalhost('/api/dailyTask', {obj}, res)
+			
 		})
 
 
