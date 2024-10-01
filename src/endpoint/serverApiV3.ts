@@ -719,7 +719,7 @@ class conet_dl_server {
 			
 		})
 
-		router.get (`/socialTask`, async (req, res) => {
+		router.post (`/socialTask`, async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
