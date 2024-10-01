@@ -112,11 +112,11 @@ const startDailyPoolTranfer = async () => {
 }
 
 const startListeningCONET_Holesky_EPOCH = async () => {
-	checkLotteryHasBalance()
+	// checkLotteryHasBalance()
 	getAllOwnershipOfGuardianNodes()
 	provideCONET.on ('block', async block => {
 		listeningGuardianNodes (block)
-		checkLotteryHasBalance()
+		// checkLotteryHasBalance()
 		startDailyPoolTranfer()
 		dailyTaskPoolProcess()
 	})
@@ -260,24 +260,24 @@ interface winnerObj {
 
 
 const LotteryWinnerPool: Map<string, winnerObj> = new Map()
-let isHourlyBalance = false
+// let isHourlyBalance = false
 
-const checkLotteryHasBalance = async () => {
+// const checkLotteryHasBalance = async () => {
 
-	try {
-		const _balance = await cntp_ticketManager_Contract.currentTime_CNTP_balance()
-		const balace = parseInt(ethers.formatEther(_balance))
-		logger(Colors.magenta(`checkLotteryHasBalance ${balace} `))
-		if (balace > 0) {
-			return isHourlyBalance = true
-		}
-		logger(Colors.magenta(`checkLotteryHasBalance has no balance! ${balace}`))
-		isHourlyBalance = false
-	} catch (ex) {
+// 	try {
+// 		const _balance = await cntp_ticketManager_Contract.currentTime_CNTP_balance()
+// 		const balace = parseInt(ethers.formatEther(_balance))
+// 		logger(Colors.magenta(`checkLotteryHasBalance ${balace} `))
+// 		if (balace > 0) {
+// 			return isHourlyBalance = true
+// 		}
+// 		logger(Colors.magenta(`checkLotteryHasBalance has no balance! ${balace}`))
+// 		isHourlyBalance = false
+// 	} catch (ex) {
 		
-	}
-	return false
-}
+// 	}
+// 	return false
+// }
 
 const checkAddressDailyClick = async (addr: string) => {
 	try {
@@ -293,9 +293,9 @@ const checkAddressDailyClick = async (addr: string) => {
 
 const randomLotteryV3 = () => {
 	
-	if (!isHourlyBalance) {
-		return {lotterRate: [_rand1, _rand2, _rand3, _rand4], lottery: 0} 
-	}
+	// if (!isHourlyBalance) {
+	// 	return {lotterRate: [_rand1, _rand2, _rand3, _rand4], lottery: 0} 
+	// }
 	//			60% 
 	const rand1 = Math.round(Math.random()*1.2) > 0
 
