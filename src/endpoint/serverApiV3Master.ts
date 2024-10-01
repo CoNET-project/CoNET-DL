@@ -561,8 +561,10 @@ let lastticketTransferTimeStamp = new Date().getTime()
 
 const ticketPoolProcess = async (block: number) => {
 	if (ticketPoolProcesing || !ticketPool.size){
+		logger(Colors.blue(` ticketPoolProcess stoped because ticketPoolProcesing = true || ${ticketPool.size} is zero!`))
 		return
 	}
+
 	ticketPoolProcesing = true
 	const feeData = await provideCONET.getFeeData()
 	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
@@ -576,7 +578,7 @@ const ticketPoolProcess = async (block: number) => {
 			return 
 		}
 	}
-
+	logger(Colors.blue(`ticketPoolProcess start ticketPool has ${ticketPool.size} record!`))
 	const wallet: string[] = []
 	const tickets: number[] = []
 	const walletBrun: string[] = []
