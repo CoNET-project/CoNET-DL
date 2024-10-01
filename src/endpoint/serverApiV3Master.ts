@@ -813,6 +813,58 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 
 })
 
+const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
+	const socialTaskText = obj.data[1].toUpperCase()
+	const socialTaskNFTNumber = parseInt(obj.data[0])
+
+	let ret: twitterResult = {
+		status: 200
+	}
+
+	if(isNaN(socialTaskNFTNumber)||socialTaskNFTNumber<3 || socialTaskNFTNumber>5) {
+		ret.status = 404
+		ret.message = 'Unknow social Task number!'
+		return resolve (ret)
+	}
+
+	try {
+		const [tx, SocialArray] = await Promise.all ([
+			profileContract.checkSocialNFT(socialTaskNFTNumber, socialTaskText),
+			profileContract.getSocialUser(obj.walletAddress)
+		])
+		
+		if (tx) {
+			ret.status = 402
+			ret.isusedByOtherWallet = true
+			ret.message = 'Your social task was completed.'
+			return resolve (ret)
+		}
+		let SocialNFT: number[] = []
+		if (SocialArray?.length) {
+			SocialNFT = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
+			const jj = SocialNFT.findIndex(n => n === socialTaskNFTNumber)
+			if (jj > -1) {
+				ret.status = 403
+				ret.message = 'Your social task was completed.'
+				return resolve (ret)
+			}
+		}
+		
+	} catch (ex) {
+		ret.status = 501
+		ret.message = 'Service Unavailable!'
+		return resolve (ret)
+	}
+
+	await profileContract.updateSocial(socialTaskNFTNumber, socialTaskText, obj.walletAddress)
+		ret.NFT_ID = socialTaskNFTNumber
+		
+		const _ticket = (ticketPool.get (obj.walletAddress)||0) + 1
+		ticketPool.set(obj.walletAddress, _ticket)
+		
+	return resolve (ret)
+})
+
 const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
 	let ret: twitterResult = {
 		status: 200
@@ -1150,6 +1202,17 @@ class conet_dl_server {
 			logger(Colors.blue(`/tg-check-follow`))
 			logger(inspect(obj, false, 3, true))
 			const result: twitterResult|null  = await callTGCheck (obj)
+			if (!result ) {
+				return res.status(500).end()
+			}
+			return res.status(200).json(result).end()
+		})
+
+		router.post ('/socialTask',  async (req, res) => {
+			const obj: minerObj = req.body.obj
+			logger(Colors.blue(`/socialTask`))
+			logger(inspect(obj, false, 3, true))
+			const result: twitterResult|null  = await callSocialTaskTaskCheck (obj)
 			if (!result ) {
 				return res.status(500).end()
 			}

@@ -719,7 +719,33 @@ class conet_dl_server {
 			
 		})
 
+		router.get (`/socialTask`, async (req, res) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
 
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /socialTask req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			if (!message||!signMessage) {
+				logger (Colors.grey(`Router /socialTask !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
+				return res.status(403).end()
+			}
+
+			const obj = checkSign (message, signMessage)
+
+			if (!obj || !obj.data ) {
+				logger (Colors.grey(`Router /socialTask checkSignObj obj Error!`), message, signMessage)
+				return res.status(403).end()
+			}
+
+			return postLocalhost('/api/socialTask', {obj}, res)
+			
+		})
 
 		router.post ('/dailyClick',  async (req, res) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
