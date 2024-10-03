@@ -1,5 +1,5 @@
 import {ethers, TransactionResponse} from 'ethers'
-import { logger, sendGuardianNodesContract, masterSetup, checkSign, checkTx, getNetworkName, getAssetERC20Address, checkErc20Tx, CONET_guardian_purchase_Receiving_Address, checkReferralsV2_OnCONET_Holesky, returnGuardianPlanReferral} from '../util/util'
+import { logger, sendClaimableAsset, realToClaimableContractAddress, masterSetup, checkSign, checkTx, getNetworkName, getAssetERC20Address, checkErc20Tx, CONET_guardian_purchase_Receiving_Address, checkReferralsV2_OnCONET_Holesky, returnGuardianPlanReferral} from '../util/util'
 import rateABI from './conet-rate.json'
 import Colors from 'colors/safe'
 
@@ -22,6 +22,8 @@ import faucet_init_ABI from './faucet_abi.json'
 import faucet_new_ABI from './new_faucet.ABI.json'
 import assetOracle_ABI from './oracleAsset.ABI.json'
 import type {Response, Request } from 'express'
+import CONETianPlanABI from './CONETianPlan.ABI.json'
+
 
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
@@ -132,6 +134,7 @@ const initmanagerW_4 = new ethers.Wallet(masterSetup.initManager[4], newCONETPro
 const initmanagerW_5 = new ethers.Wallet(masterSetup.initManager[5], newCONETProvider)
 const initmanagerW_6 = new ethers.Wallet(masterSetup.initManager[6], newCONETProvider)
 const initmanagerW_7 = new ethers.Wallet(masterSetup.initManager[7], newCONETProvider)
+const initmanagerW_8 = new ethers.Wallet(masterSetup.initManager[8], newCONETProvider)
 
 const oldReferralsContract = new ethers.Contract(oldReffAddr, ReferralsV3ABI, old_2_ConetProvider)
 const Guardian_Contract = new ethers.Contract(newGuardianAddr, CGPNsV7_newABI, initmanagerW_2)
@@ -150,6 +153,8 @@ const newCNTPContract = new ethers.Contract(new_CNTP_addr, cCNTPv7ABI, initmanag
 const new_Guardian_Contract = new ethers.Contract(new_Guardian_addr, CGPNsV7_newABI, initmanagerW_5)
 const new_CONET_Faucet_COntract = new ethers.Contract(new_initCONET_faucet_addr, faucet_new_ABI, initmanagerW_4)
 const newReff_Contract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_3)
+
+const CONETianPlanContract = new ethers.Contract (`0x27B9043873dE8684822DEC12F90bAE08f6a06657`, CONETianPlanABI, initmanagerW_8)
 
 
 let sendCONETPool: sendCONETObj[] = []
@@ -733,12 +738,16 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 })
 
 
-
-const checkUsedTx = async (tx: number) => {
-	const txSC = new ethers.Contract(new_Guardian_addr, CGPNsV7_newABI, newCONETProvider)
+const checkUsedTx = async (tx: string) => {
+	
 	try {
-		const usedTx = await txSC.credentialTx(tx)
-		return usedTx
+		const [usedTx, isUsed] = await 
+		Promise.all ([
+			new_Guardian_Contract.credentialTx(tx),
+			CONETianPlanContract.getCredentialTx(tx)
+		])
+
+		return usedTx || isUsed
 	} catch (ex) {
 		return true
 	}
@@ -898,7 +907,7 @@ const _GuardianPurchase = async (obj: minerObj) => {
 
 	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(obj.data.tokenName)
 	
-	const _checkTx = await checkUsedTx (obj.data.receiptTx )
+	let _checkTx = await checkUsedTx (obj.data.receiptTx )
 
 	if (_checkTx) {
 		logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
@@ -1080,121 +1089,253 @@ export const CONETianPlanPurchasePool: IGuardianPurchasePool[] = []
 
 let CONETianPlanPurchaseLocked = false
 
+interface nftOrder {
+	nft: number
+	total: number
+}
 interface ICONETianPurchaseData {
 	receiptTx: string
 	tokenName: string
+	nfts: nftOrder[]
+	amount: string
+	referrer: string
 }
-// export const CONETianPlanPurchase = async () => {
-// 	if (CONETianPlanPurchaseLocked || !CONETianPlanPurchasePool.length) {
-// 		return
-// 	}
-
-// 	CONETianPlanPurchaseLocked = true
-// 	const CONETianPlanPurchaseObj = CONETianPlanPurchasePool.shift()
-
-// 	if(!CONETianPlanPurchaseObj) {
-// 		CONETianPlanPurchaseLocked = false
-// 		return 
-// 	}
-
-// 	const obj = checkSign (CONETianPlanPurchaseObj.message, CONETianPlanPurchaseObj.signMessage)
-	
-// 	const purchaseData: ICONETianPurchaseData = obj?.data
-
-// 	if (!obj || !purchaseData?.receiptTx ||!purchaseData?.tokenName) {
-// 		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`), CONETianPlanPurchaseObj.message, CONETianPlanPurchaseObj.signMessage)
-// 		CONETianPlanPurchaseReturn403Error(CONETianPlanPurchaseObj.res)
-// 		return
-// 	}
-
-// 	logger(Colors.magenta(`/CONETianPlanPurchase from ${CONETianPlanPurchaseObj.ipaddress}:${obj.walletAddress}`), CONETianPlanPurchaseObj.message, CONETianPlanPurchaseObj.signMessage)
-	
 
 
-// 	const txObj = await checkTx (purchaseData.receiptTx, purchaseData.tokenName)
+const getTotalUsdt = (nft: nftOrder) => {
 
-// 	if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
-// 		logger(Colors.grey(`Router /CONETianPlanPurchase checkTx Error!`), inspect(txObj, false, 3, true))
-// 		CONETianPlanPurchaseReturn403Error(CONETianPlanPurchaseObj.res)
-// 		return
-// 	}
+	nft.nft = typeof (nft.nft) === 'string' ? parseInt(nft.nft) : nft.nft
 
-// 	// if (txObj.tx1.from.toLowerCase() !== obj.walletAddress) {
-// 	// 	logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
-// 	// 	GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 	// 	return
-// 	// }
+	switch(nft.nft) {
+		case 0: {
+			return 1200 * nft.total
+		}
+		case 1: {
+			return 700 * nft.total
+		}
+		case 2: {
+			return 400 * nft.total
+		}
 
-// 	const networkName = getNetworkName(obj.data.tokenName)
+		case 3: {
+			return 100 * nft.total
+		}
 
-// 	if (!networkName) {
-// 		logger(Colors.red(`Router /Purchase-Guardian Can't get network Name from token name Error ${obj.data.tokenName}`))
-// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 		return
-// 	}
+		default: {
+			return 0
+		}
+	}
+}
 
-// 	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(obj.data.tokenName)
-	
-// 	const _checkTx = await checkUsedTx (obj.data.receiptTx )
+const checkValueOfCONETianPlan = async (purchaseData: ICONETianPurchaseData) => {
+	await getassetOracle ()
+	if (!assetOracle) {
+		return false
 
-// 	if (_checkTx) {
-// 		logger(Colors.red(`Router /Purchase-Guardian tx [${obj.data.receiptTx}] laready used`))
-// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 		return
-// 	}
+	}
+	const tokenName = purchaseData.tokenName
+	const _asset = /usdt/i.test(tokenName) ? 'usdt': (/eth/i.test(tokenName) ? 'eth': /bnb/i.test(tokenName) ? 'bnb' : '')
 
+	if (!_asset) {
+		return false
+	}
 
-// 	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet ) {
-// 		//		check tokenName matched smart contract address
-// 		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
-// 			logger(Colors.red(`Router /Purchase-Guardian ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
-// 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 			return
-// 		}
+	const index = assetOracle.assets.findIndex(n => n.name === _asset)
 
-// 		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
-// 		if (erc20Result === false) {
-// 			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
-// 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 			return
-// 		}
+	if (index < 0) {
+		return false
+	}
 
-// 		const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-// 		if (!kk) {
-// 			logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
-// 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 			return
-// 		}
+	const assetPrice = assetOracle.assets[index]
 
-// 		const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-// 		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
-// 		GuardianPurchaseObj.res.status(200).json({}).end()
-// 		GuardianPurchaseLocked = false
-// 		GuardianPurchase()
-// 		return 
+	let amount_need = 0
+	purchaseData.nfts.forEach(n => {
+		amount_need += getTotalUsdt (n)
+	})
+
+	amount_need /= /bnb|eth/i.test(tokenName) ? assetPrice.price : 1
+
+	const _amount = parseFloat(convertEth (tokenName, purchaseData.amount))
+
+	if ( isNaN(_amount) ) {
+		return false
+	}
+
+	if ( Math.abs( amount_need - _amount) * assetPrice.price > 15 ) {
+		return false
+	}
+
+	return true
+}
+
+const checkCONETianPlanReferrer = async (referrer: string) => {
+	try {
+		const isreferrer = await CONETianPlanContract.isReferrer(referrer)
+		return isreferrer
+	} catch (ex: any) {
+		logger(Colors.red(`checkCONETianPlanReferrer got Error!`), ex.message)
+		return null
+	}
+}
+
+const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, wallet: string) => {
+	logger(Colors.magenta(`finishCONETianPlanPurchase wallet = ${wallet}`))
+	logger(inspect(purchaseData, false, 3, true))
+
+	const amount = purchaseData.amount
+	const referrer = purchaseData.referrer
+	const referrerReturn = (parseFloat(ethers.formatEther(amount)) * .2).toFixed(8)
+	const retClaimableContractAddress = realToClaimableContractAddress(purchaseData.tokenName)
+	const ngfs = []
+	const _nfts = purchaseData.nfts
+	for (let i = 0; i < 4; i ++) {
+		const index = _nfts.findIndex(n => n.nft === i)
+		if (index > -1) {
+			ngfs.push(_nfts[index].total)
+		}
+	}
+
+	try {
+		const [tx1, tx2] = await Promise.all([
+			new_Guardian_Contract.credentialTx(purchaseData.receiptTx),
+			CONETianPlanContract.mint(wallet, referrer, purchaseData.receiptTx, ngfs),
+			sendClaimableAsset ( masterSetup.conetFaucetAdmin[0], retClaimableContractAddress, referrer, referrerReturn)
+		])
+		logger(`finishCONETianPlanPurchase success! [${inspect(tx1, false, 3, true)}]  [${inspect(tx2, false, 3, true)}]`)
+	} catch (ex: any) {
+		return logger(`finishCONETianPlanPurchase got Error!`, ex.message)
+	}
+}
+
+export const CONETianPlanPurchase = async (obj: minerObj) => {
+	if ( !obj?.data?.length ) {
+		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`))
+		return false
+	}
+
+	const purchaseData: ICONETianPurchaseData = obj.data[0]
+	logger(inspect(obj, false, 5, true))
+	if (!purchaseData?.receiptTx ||!purchaseData?.tokenName) {
+		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`))
 		
-// 	}
+		return false
+	}
+
+	const txObj = await checkTx (purchaseData.receiptTx, purchaseData.tokenName)
+
+	if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
+		logger(Colors.grey(`Router /CONETianPlanPurchase checkTx Error!`), inspect(txObj, false, 3, true))
+		return false
+	}
+
+	if (txObj.tx1.from.toLowerCase() !== obj.walletAddress) {
+		logger(Colors.red(`Router /Purchase-Guardian txObj txObj.tx1.from [${txObj.tx1.from}] !== obj.walletAddress [${obj.walletAddress}]`))
+		return false
+	}
+
+	const networkName = getNetworkName(purchaseData.tokenName)
+
+	if (!networkName) {
+		logger(Colors.red(`Router /CONETianPlanPurchase Can't get network Name from token name Error ${inspect(purchaseData, false, 3, true)}`))
+		return false
+	}
+
+	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(purchaseData.tokenName)
 	
+	const checkReferrer = await checkCONETianPlanReferrer(purchaseData.referrer)
+	if (checkReferrer === null || checkReferrer === false) {
+		logger(Colors.grey(`Router /CONETianPlanPurchase checkCONETianPlanReferrer Error!`), inspect(purchaseData, false, 3, true))
+		return false
+	}
+
+	let _checkTx = await checkUsedTx ( purchaseData.receiptTx )
+
+	if (_checkTx === null || _checkTx === true) {
+		logger(Colors.red(`Router /CONETianPlanPurchase checkUsedTx [${purchaseData.receiptTx}] already used`))
+		return false
+	}
+
+
+	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet ) {
+		//		check tokenName matched smart contract address
+		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+			logger(Colors.red(`Router /CONETianPlanPurchase ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
+			return false
+		}
+
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+		if (erc20Result === false) {
+			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
+			
+			return false
+		}
+
+		const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+		if (!kk) {
+			logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
+			
+			return false
+		}
+
+		const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
+		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
+		
+		GuardianPurchaseLocked = false
+		GuardianPurchase()
+		return 
+		
+	}
 	
-// 	const value = txObj.tx1.value.toString()
-// 	if (obj.data.amount !== value) {
-// 		logger(Colors.red(`GuardianPlanPreCheck amount[${obj.data.amount}] !== tx.value [${value}] Error!`))
-// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 		return
+	const value = txObj.tx1.value.toString()
+	if (purchaseData.amount !== value) {
+		logger(Colors.red(`GuardianPlanPreCheck amount[${purchaseData}] !== tx.value [${value}] Error!`))
+		return false
+	}
+
+	let kk = await checkValueOfCONETianPlan(purchaseData)
+
+	if (!kk) {
+		logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
+		return false
+	}
+
+
+	await finishCONETianPlanPurchase(purchaseData, obj.walletAddress)
+	
+	return 
+}
+
+// const nfts: nftOrder[] = [
+	
+// 	{
+// 		nft: 0,
+// 		total: 1
+// 	},
+// 	{
+// 		nft: 1,
+// 		total: 0
+// 	},
+// 	{
+// 		nft: 2,
+// 		total: 0
+// 	},
+// 	{
+// 		nft: 3,
+// 		total: 1
 // 	}
+// ]
 
-// 	const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
-
-// 	if (!kk) {
-// 		logger(Colors.red(`checkValueOfGuardianPlan checkValueOfGuardianPlan has unknow tokenName [${obj.data.tokenName}] Error! ${inspect(txObj, false, 3, true)}`))
-// 		GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
-// 		return
-// 	}
-
-// 	const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-// 	await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
-// 	GuardianPurchaseObj.res.status(200).json({}).end()
-// 	GuardianPurchaseLocked = false
-// 	GuardianPurchase()
-// 	return 
+// const kk: ICONETianPurchaseData = {
+// 	receiptTx: '0xfaad4f7be0b078d603e40d148a5ebd07cd53efcb9e0a1d193300822965b759d1',
+// 	tokenName: 'bnb',
+// 	nfts,
+// 	amount: '2500000000000000000',
+// 	referrer: '0xE28E5b7F232654334437A75139Ea3c161aB3ba7A'
 // }
+
+// const obj: minerObj = {
+// 	walletAddress: '0x5C809C34112911199e748B0d70173Acb18E5533a'.toLowerCase(),
+// 	data: [kk]
+// }
+
+// CONETianPlanPurchase(obj)
