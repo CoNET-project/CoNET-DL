@@ -832,21 +832,14 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 	}
 
 	try {
-		const [tx, twAndTgCheck] = await Promise.all ([
-			profileContract.checkSocialNFT(socialTaskNFTNumber, socialTaskText),
-			checkDailyCheckKeepSocial(socialTaskText)
+		const [tx] = await Promise.all ([
+			profileContract.checkSocialNFT(socialTaskNFTNumber, socialTaskText)
 		])
 		
 		if (tx) {
 			ret.status = 402
 			ret.isusedByOtherWallet = true
 			ret.message = 'Your social task was completed.'
-			return resolve (ret)
-		}
-
-		if (!twAndTgCheck) {
-			ret.status = 401
-			ret.message = `Your Telegram or Twitter Social tasks wasn't completed.`
 			return resolve (ret)
 		}
 		
@@ -1372,9 +1365,14 @@ class conet_dl_server {
 				return res.status(401).json({}).end()
 			}
 
-			
-
-
+			const twAndTgCheck = await checkDailyCheckKeepSocial(obj.walletAddress)
+			if (!twAndTgCheck) {
+				const ret = {
+					status: 401,
+					message:`Your Telegram or Twitter Social tasks wasn't completed.`
+				}
+				return res.status(401).json(ret).end()
+			}
 			dailyClickPool.set(obj.walletAddress, true)
 			return res.status(200).json({result: true}).end()
 		})
