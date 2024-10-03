@@ -71,7 +71,8 @@ const testTwitterAPI = async () => {
 	const checkTwitterAccount = 'ppc_canada2'
 	const messageObj: minerObj = {
 		walletAddress: acc.address.toLowerCase(),
-		data: [checkTwitterAccount]
+		data: [checkTwitterAccount],
+		uuid: 'scsvfdsfvdfv'
 	}
 	const message = JSON.stringify(messageObj)
 	const signMessage = await acc.signMessage(message)

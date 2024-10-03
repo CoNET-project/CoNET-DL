@@ -245,7 +245,7 @@ interface minerObj {
 	data?: any
 	allWallets?: string[]
 	bio?: string
-	uuid?: string
+	uuid: string
 	serverIPAddress?: string
 	result?: twitterResult
 }

@@ -823,21 +823,30 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 		status: 200
 	}
 
-	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 5 ) {
+
+
+	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 6 ) {
 		ret.status = 404
 		ret.message = 'Unknow social Task number!'
 		return resolve (ret)
 	}
 
 	try {
-		const [tx] = await Promise.all ([
+		const [tx, twAndTgCheck] = await Promise.all ([
 			profileContract.checkSocialNFT(socialTaskNFTNumber, socialTaskText),
+			checkDailyCheckKeepSocial(socialTaskText)
 		])
 		
 		if (tx) {
 			ret.status = 402
 			ret.isusedByOtherWallet = true
 			ret.message = 'Your social task was completed.'
+			return resolve (ret)
+		}
+
+		if (!twAndTgCheck) {
+			ret.status = 401
+			ret.message = `Your Telegram or Twitter Social tasks wasn't completed.`
 			return resolve (ret)
 		}
 		
@@ -949,6 +958,155 @@ const callTwitterCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => ne
 		return logger(Colors.red(`TwttterServiceListeningPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
 	})
 
+})
+
+
+const callTwitterCheckCallback: (walletAddress: string, twitterAccount: string) => Promise<boolean> = (walletAddress, twitterAccount) =>  new Promise(async resolve => {
+	const _obj: minerObj = {
+		walletAddress,
+		uuid: v4(),
+		data: [twitterAccount]
+	}
+	let ret: twitterResult = {
+		status: 200
+	}
+	const waitCallBack = async (obj: minerObj) => {
+		logger(inspect(obj, false, 3, true))
+		const result = obj.result
+
+		if (!result) {
+			logger(Colors.red(`callTwitterCheckCallback Twitter Service Unavailable Error!`))
+			return resolve (false)
+		}
+		
+		ret = result
+
+		if (ret.status !== 200 || !ret.isFollow ) {
+			logger(Colors.magenta(`callTwitterCheckCallback wllet ${walletAddress} has released Twitter follow! soing updateSocial !`), inspect(ret, false, 3, true))
+			await profileContract.updateSocial(twitterNFTNumber, '', walletAddress)
+			return resolve (false)
+		}
+
+		return resolve (true)
+	}
+	
+	twitterWaitingCallbackPool.set (_obj.uuid, waitCallBack)
+
+	const post = JSON.stringify(_obj) + '\r\n\r\n'
+
+	TwttterServiceListeningPool.forEach((n, key) => {
+
+		if (n.writable) {
+			return n.write(post, err => {
+				if (err) {
+					TwttterServiceListeningPool.delete(key)
+					return logger(Colors.red(`TwttterServiceListeningPool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
+				}
+
+				return logger(Colors.red(`TwttterServiceListeningPool POST ${inspect(_obj, false, 3, true)} to ${key} success!`))
+			})
+		}
+
+		TwttterServiceListeningPool.delete(key)
+		return logger(Colors.red(`TwttterServiceListeningPool ${key} got writeable = false Error remove ${key} from listening POOL!`))
+	})
+})
+
+const callTGCheckCallback: (walletAddress: string, TGAccount: string) => Promise<boolean> = (walletAddress, TGAccount) =>  new Promise(async resolve => {
+	const _obj: minerObj = {
+		walletAddress,
+		uuid: v4(),
+		data: [TGAccount]
+	}
+	let ret: twitterResult = {
+		status: 200
+	}
+
+	const waitCallBack = async (obj: minerObj) => {
+		logger(`TG wait CallBack return`)
+		logger(inspect(obj, false, 3, true))
+
+		const result = obj.result
+		if (!result) {
+			ret.status = 500
+			ret.message = 'callTGCheckCallback Telegram Bot Service Unavailable!'
+			return resolve (false)
+		}
+		
+		ret = result
+		if (ret.status !== 200 || !ret.isInTGGroup ) {
+			logger(Colors.magenta(`callTGCheckCallback wllet ${walletAddress} has released TeleGram Grounp! soing updateSocial !`))
+			await profileContract.updateSocial(TGNFTNumber, '', walletAddress)
+			return resolve (false)
+		}
+
+
+		return resolve (true)
+	}
+	
+	TGWaitingCallbackPool.set (_obj.uuid, waitCallBack)
+
+	const post = JSON.stringify(_obj) + '\r\n\r\n'
+
+	TGListeningPool.forEach((n, key) => {
+
+		if (n.writable) {
+			return n.write(post, err => {
+				if (err) {
+					TGListeningPool.delete(key)
+					return logger(Colors.red(`TG Pool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
+				}
+
+				return logger(Colors.red(`TG Pool POST ${inspect(_obj, false, 3, true)} to ${key} success!`))
+			})
+		}
+
+		TGListeningPool.delete(key)
+		return logger(Colors.red(`TG Pool ${key} got writeable = false Error remove ${key} from listening POOL!`))
+	})
+})
+
+const findsSocialNumberName = (socialNFTs: BigInt[], socials:string[]) => {
+	const ret = {
+		twitter: '',
+		Telegram: ''
+	}
+	const indexTwitter = socialNFTs.findIndex(n => n.toString() == "2")
+	if (indexTwitter > -1) {
+		ret.twitter = socials[indexTwitter]
+	}
+
+	const index = socialNFTs.findIndex(n => n.toString() == "3")
+	if (index > -1) {
+		ret.Telegram = socials[index]
+	}
+	return ret
+}
+
+const checkDailyCheckKeepSocial = (wallet: string) => new Promise(async resolve => {
+	try {
+		const [socialNFTs, socials] = await profileContract.getSocialUser(wallet)
+		if (socialNFTs?.length < 1) {
+			logger(Colors.gray(`checkDailyCheckKeepSocial ${wallet} has no socialNFTs Error!`))
+			resolve(false)
+		}
+		const socialsName = findsSocialNumberName(socialNFTs, socials)
+		if (!socialsName.twitter || !socialsName.Telegram) {
+			return resolve(false)
+		}
+		const [twCheck, tgCheck] = await Promise.all([
+			callTwitterCheckCallback(wallet, socialsName.twitter),
+			callTGCheckCallback(wallet, socialsName.Telegram)
+		])
+		if (!twCheck || !tgCheck) {
+			logger(Colors.magenta(`checkDailyCheckKeepSocial ${wallet} twCheck = ${twCheck} tgCheck = ${tgCheck} Error!`))
+			return resolve(false)
+		}
+
+	} catch (ex: any) {
+		logger(Colors.red(`checkDailyCheckKeepSocial profileContract.getSocialUser got Error`), ex.message)
+		resolve(false)
+	}
 })
 
 class conet_dl_server {
@@ -1213,6 +1371,10 @@ class conet_dl_server {
 			if (canClick) {
 				return res.status(401).json({}).end()
 			}
+
+			
+
+
 			dailyClickPool.set(obj.walletAddress, true)
 			return res.status(200).json({result: true}).end()
 		})
