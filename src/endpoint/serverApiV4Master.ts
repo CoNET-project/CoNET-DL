@@ -933,6 +933,32 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 
+		router.post ('/initV3',  async (req, res) => {
+			const wallet: string = req.body.wallet
+			logger(Colors.blue(`/initV3 ${wallet}`))
+			await initNewCONET(wallet)
+			res.status(200).json({}).end()
+			
+		})
+		
+		router.post ('/conet-faucet', async (req, res ) => {
+			const wallet = req.body.walletAddress
+			const ipaddress = req.body.ipaddress
+			if (!wallet) {
+				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
+				return res.status(403).end()
+			}
+
+			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
+			if (tx) {
+				return res.status(200).json(tx).end()
+			}
+
+			return res.status(403).end()
+
+		})
+
+
 		router.all ('*', (req, res ) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
