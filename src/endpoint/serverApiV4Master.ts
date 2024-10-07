@@ -28,7 +28,7 @@ import dailyClick_ABI from './dailyClick.ABI.json'
 import {dailyTaskSC} from '../util/dailyTaskChangeHash'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
-const dailyClickAddr = '0x6d97059A01bF489Ad1b28a4E3591069b5eE12a23'
+const dailyClickAddr = '0xDCe3FAE41Eb95eA3Be59Ca334f340bdd1799aA29'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
