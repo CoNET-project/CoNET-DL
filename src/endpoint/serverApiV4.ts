@@ -13,7 +13,7 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool} from './utilNew'
+import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool, CONETianPlanPurchase} from './utilNew'
 import {createServer} from 'node:http'
 import {readFile} from 'node:fs/promises'
 import {watch} from 'node:fs'
@@ -344,6 +344,35 @@ class conet_dl_server_v4 {
 			let obj = eposh_total.get(epoch)||eposh_total.get(epoch-1)
 
 			return res.json(obj).end()
+		})
+
+		router.post ('/PurchaseCONETianPlan', async (req, res) => {
+			
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/PurchaseCONETianPlan`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
+			const obj = checkSign (message, signMessage)
+	
+			if (!obj || !obj?.data ) {
+				logger (Colors.grey(`Router /PurchaseCONETianPlan checkSignObj obj Error!`), message, signMessage)
+				
+				return res.status(403).json(req.body).end()
+			}
+			
+			const result = await CONETianPlanPurchase(obj)
+			if (!result) {
+				return res.status(403).json(req.body).end()
+			}
+			return res.status(200).json({}).end()
 		})
 		
 		router.all ('*', (req, res ) =>{

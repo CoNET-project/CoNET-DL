@@ -1116,7 +1116,6 @@ const getTotalUsdt = (nft: nftOrder) => {
 		case 2: {
 			return 400 * nft.total
 		}
-
 		case 3: {
 			return 100 * nft.total
 		}
