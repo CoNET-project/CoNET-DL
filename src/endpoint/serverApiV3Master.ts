@@ -1091,10 +1091,14 @@ const checkDailyCheckKeepSocial = (wallet: string) => new Promise(async resolve 
 			callTwitterCheckCallback(wallet, socialsName.twitter),
 			callTGCheckCallback(wallet, socialsName.Telegram)
 		])
+		
 		if (!twCheck || !tgCheck) {
 			logger(Colors.magenta(`checkDailyCheckKeepSocial ${wallet} twCheck = ${twCheck} tgCheck = ${tgCheck} Error!`))
 			return resolve(false)
 		}
+
+		logger(Colors.grey(`checkDailyCheckKeepSocial ${wallet} twCheck = ${twCheck} tgCheck = ${tgCheck} success!`))
+		return resolve(true)
 
 	} catch (ex: any) {
 		logger(Colors.red(`checkDailyCheckKeepSocial profileContract.getSocialUser got Error`), ex.message)
