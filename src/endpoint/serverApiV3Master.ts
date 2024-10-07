@@ -1372,6 +1372,13 @@ class conet_dl_server {
 				return res.status(401).json({}).end()
 			}
 
+			const uu = developWalletPool.get(obj.walletAddress)
+			
+			if (uu) {
+				dailyClickPool.set(obj.walletAddress, true)
+				return res.status(200).json({result: true}).end()
+			}
+			
 			const twAndTgCheck = await checkDailyCheckKeepSocial(obj.walletAddress)
 			if (!twAndTgCheck) {
 				const ret = {
