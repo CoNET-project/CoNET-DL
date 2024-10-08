@@ -924,7 +924,7 @@ const _GuardianPurchase = async (obj: minerObj) => {
 			return false
 		}
 
-		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount)
 		if (erc20Result === false) {
 			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
 			
@@ -1038,7 +1038,7 @@ export const GuardianPurchase = async () => {
 			return
 		}
 
-		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount)
 		if (erc20Result === false) {
 			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
 			GuardianPurchaseReturn403Error(GuardianPurchaseObj.res)
@@ -1257,30 +1257,26 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 
 	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet ) {
 		//		check tokenName matched smart contract address
-		if (getAssetERC20Address(obj.data.tokenName) !== txObj.tx1.to?.toLowerCase()) {
+		if (getAssetERC20Address(purchaseData.tokenName) !== txObj.tx1.to?.toLowerCase()) {
 			logger(Colors.red(`Router /CONETianPlanPurchase ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
 			return false
 		}
 
-		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, obj.data.amount, obj.data.nodes, obj.data.tokenName)
+		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, purchaseData.amount)
 		if (erc20Result === false) {
-			logger(Colors.red(`Router /Purchase-Guardian  checkErc20Tx Error!`))
+			logger(Colors.red(`Router /CONETianPlanPurchase  checkErc20Tx Error!`))
 			
 			return false
 		}
 
-		const kk = await checkValueOfGuardianPlan(obj.data.nodes, obj.data.tokenName, obj.data.amount)
+		const kk = await checkValueOfCONETianPlan(purchaseData)
 		if (!kk) {
-			logger(Colors.red(`Router /Purchase-Guardian  checkValueOfGuardianPlan Error!`))
-			
+			logger(Colors.red(`Router /CONETianPlanPurchase  checkValueOfGuardianPlan Error!`))
 			return false
 		}
 
-		const referral = await checkReferralsV2_OnCONET_Holesky(obj.walletAddress)
-		const ret = await returnGuardianPlanReferral(obj.data.nodes, referral, obj.walletAddress, obj.data.tokenName, masterSetup.conetFaucetAdmin[0], obj.data.publishKeys, convertEth (obj.data.tokenName, obj.data.amount), obj.data.receiptTx)
-		
-		GuardianPurchaseLocked = false
-		GuardianPurchase()
+		await finishCONETianPlanPurchase(purchaseData, obj.walletAddress)
+
 		return 
 		
 	}
@@ -1304,37 +1300,37 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	return 
 }
 
-// const nfts: nftOrder[] = [
-	
-// 	{
-// 		nft: 0,
-// 		total: 1
-// 	},
-// 	{
-// 		nft: 1,
-// 		total: 0
-// 	},
-// 	{
-// 		nft: 2,
-// 		total: 0
-// 	},
-// 	{
-// 		nft: 3,
-// 		total: 1
-// 	}
-// ]
 
-// const kk: ICONETianPurchaseData = {
-// 	receiptTx: '0xfaad4f7be0b078d603e40d148a5ebd07cd53efcb9e0a1d193300822965b759d1',
-// 	tokenName: 'bnb',
-// 	nfts,
-// 	amount: '2500000000000000000',
-// 	referrer: '0xE28E5b7F232654334437A75139Ea3c161aB3ba7A'
-// }
 
-// const obj: minerObj = {
-// 	walletAddress: '0x5C809C34112911199e748B0d70173Acb18E5533a'.toLowerCase(),
-// 	data: [kk]
-// }
+const kk: ICONETianPurchaseData = {
+    "receiptTx": "0x9d8bb248e5935535e067aaa955409000bf5c0db468f3cd01c42b09cfe55f163d",
+    "tokenName": "wusdt",
+    "amount": "4500000000000000000000",
+    "nfts": [
+        {
+            "nft": 0,
+            "total": 1
+        },
+        {
+            "nft": 1,
+            "total": 2
+        },
+        {
+            "nft": 2,
+            "total": 3
+        },
+        {
+            "nft": 3,
+            "total": 4
+        }
+    ],
+    "referrer": "0xD5DcB574e92C9b0EC4a2b678C5d313AD1f14777b"
+}
 
-// CONETianPlanPurchase(obj)
+const obj: minerObj = {
+	walletAddress: '0x5c809c34112911199e748b0d70173acb18e5533a'.toLowerCase(),
+	data: [kk],
+	uuid: ''
+}
+
+CONETianPlanPurchase(obj)

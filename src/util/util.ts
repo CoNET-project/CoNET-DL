@@ -1749,7 +1749,7 @@ const parseEther = (ether: string, tokenName: string ) => {
 }
 
 
-export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string, nodes: number, assetName: string) => {
+export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: string, fromWallet: string, value: string) => {
 
 	const txLogs = tx.logs[0]
 	if (!txLogs) {
