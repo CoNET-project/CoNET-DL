@@ -201,6 +201,7 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 // 	try {
 // 		privateKeyObj = await makePrivateKeyObj (currentProfile.pgpKey.privateKeyArmor)
 // 	} catch (ex){
+
 // 		return logger (ex)
 // 	}
 
@@ -209,35 +210,45 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 // 	return (command)
 // }
 
-// const validator = async (data: listenClient, wallet: ethers.Wallet, sentryNode: nodeInfo) => {
-// 	if (!data.hash) {
-// 		logger(data)
-// 		return logger(`checkMiningHash got NULL response.hash ERROR!`)
-// 	}
-// 	const message = JSON.stringify({epoch: data.epoch, wallet: wallet.address.toLowerCase()})
+const validator = async (data: listenClient, wallet: ethers.Wallet, sentryNode: nodeInfo|null) => {
+	if (!sentryNode) {
+		return logger(Colors.red(`validator sentryNode NULL ERROR!`))
+	}
 
-// 	const va = ethers.verifyMessage(message, data.hash)
+	if (!data.hash) {
+		logger(inspect(data, false, 3, true))
+		return logger(`checkMiningHash got NULL response.hash ERROR!`)
+	}
+	
+	const message = JSON.stringify({epoch: data.epoch, wallet: wallet.address.toLowerCase()})
 
-// 	if (va.toLowerCase() !== data.nodeWallet.toLowerCase()) {
-// 		return logger(`validator va${va.toLowerCase()} !== response.nodeWallet ${data.nodeWallet.toLowerCase()}`)
-// 	}
-// 	const response = {
-// 		minerResponseHash: await wallet.signMessage(data.hash)
-// 	}
+	const va = ethers.verifyMessage(message, data.hash)
 
-// 	const request = await ceateMininngValidator(profile, sentryNode, response)
+	if (va.toLowerCase() !== data.nodeWallet.toLowerCase()) {
+		return logger(`validator va${va.toLowerCase()} !== response.nodeWallet ${data.nodeWallet.toLowerCase()}`)
+	}
 
-// 	if (!request) {
-// 		return logger(`ceateMininngValidator got null Error!`)
-// 	}
+	const response = {
+		minerResponseHash: await wallet.signMessage(data.hash)
+	}
 
-// 	const url = `https://${sentryNode.domain}/post`
-// 	const req = await postToEndpoint(url, true, {data: request.requestData[0]}).catch(ex => {
-// 		logger(ex)
-// 	})
+	// const request = await ceateMininngValidator(profile, sentryNode, response)
 
-// 	logger(req)
-// }
+	// if (!request) {
+	// 	return logger(`ceateMininngValidator got null Error!`)
+	// }
+
+	// const url = `https://${sentryNode.domain}/post`
+	// const req = await postToEndpoint(url, true, {data: request.requestData[0]}).catch(ex => {
+	// 	logger(ex)
+	// })
+
+	// logger(req)
+}
+
+
+
+
 
 const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
@@ -270,9 +281,8 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 
 		try {
 			const data: listenClient = JSON.parse(_data)
-			logger(inspect(data, false, 3, true))
 			const validatorNode = getRandomNodeV2(index)
-			// validator(response, profile, entryNode)
+			validator(data, wallet, validatorNode)
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
 			logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
