@@ -3,13 +3,12 @@ import {ethers} from 'ethers'
 import { logger } from '../util/logger'
 import {inspect} from 'node:util'
 import {mapLimit} from 'async'
-import EthCrypto from 'eth-crypto'
 import Colors from 'colors/safe'
 
 import {request as requestHttps} from 'node:https'
 import GuardianNodesV2ABI from './CGPNv7New.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
-import {createMessage, encrypt, enums, readKey, Key} from 'openpgp'
+import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
 import {getRandomValues} from 'node:crypto'
 import {RequestOptions, request } from 'node:http'
 
@@ -17,7 +16,7 @@ const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
-const maxScanNodesNumber = 20
+const maxScanNodesNumber = 3
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
@@ -66,29 +65,27 @@ const getAllNodes = async () => {
 	getAllNodesProcess = false
 }
 
-
 const getWallet = async (SRP: string, max: number, __start: number) => {
 	await getAllNodes()
+
 	const acc = ethers.Wallet.fromPhrase(SRP)
 	const wallets: string[] = []
 	wallets.push (acc.signingKey.privateKey)
-	for (let i = __start; i < max; i ++) {
+
+	for (let i = __start + 1; i < max; i ++) {
 		const sub = acc.deriveChild(i)
 		wallets.push (sub.signingKey.privateKey)
 	}
 
-
 	let i = 0
 
-	mapLimit(wallets, 5, async (n, next) => {
-		i++
-		logger (`start connect ${i}`)
-		await start(n)
+	wallets.forEach(n => {
+		 start(n)
 	})
 
 }
 
-const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data?: string) => void) => {
+const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
 	
 
 	const option: RequestOptions = {
@@ -127,7 +124,10 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 				}
 
 				data = data.replace(/\r\n/g, '')
-				callback ('', data)
+				if (typeof callback === 'function') {
+					callback ('', data)
+				}
+				
 				data = ''
 
 				_Time = setTimeout(() => {
@@ -143,8 +143,16 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 		})
 
 		res.once('end', () => {
+
 			kkk.destroy()
-			logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
+			if (typeof callback === 'function') {
+				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
+				setTimeout(() => {
+					logger(Colors.red(`startGossip [${node.ip_addr}] requestHttps on Error! Try to restart! `))
+					startGossip (node, POST, callback)
+				}, 1000)
+			}
+			
 		})
 		
 	})
@@ -177,85 +185,17 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 	if (!node.ip_addr) {
 		return getRandomNodeV2 (index)
 	}
-	
+	logger(Colors.blue(`getRandomNodeV2 Guardian_Nodes length =${Guardian_Nodes.length} nodoNumber = ${nodoNumber} `))
 	return node
 }
 
-// const ceateMininngValidator = async (wallet: ethers.Wallet, node: nodeInfo, requestData: any = null) => {
-	
-// 	const key = Buffer.from(self.crypto.getRandomValues(new Uint8Array(16))).toString('base64')
-// 	const command = {
-// 		command: 'mining_validator',
-// 		algorithm: 'aes-256-cbc',
-// 		Securitykey: key,
-// 		requestData,
-// 		walletAddress: wallet.address.toLowerCase()
-// 	}
-
-
-// 	const message =JSON.stringify(command)
-
-// 	const signMessage = await wallet.signMessage(message)
-// 	let privateKeyObj = null
-
-// 	try {
-// 		privateKeyObj = await makePrivateKeyObj (currentProfile.pgpKey.privateKeyArmor)
-// 	} catch (ex){
-
-// 		return logger (ex)
-// 	}
-
-// 	const encryptedCommand = await encrypt_Message( privateKeyObj, node.armoredPublicKey, {message, signMessage})
-// 	command.requestData = [encryptedCommand, '', key]
-// 	return (command)
-// }
-
-const validator = async (data: listenClient, wallet: ethers.Wallet, sentryNode: nodeInfo|null) => {
-	if (!sentryNode) {
-		return logger(Colors.red(`validator sentryNode NULL ERROR!`))
-	}
-
-	if (!data.hash) {
-		logger(inspect(data, false, 3, true))
-		return logger(`checkMiningHash got NULL response.hash ERROR!`)
-	}
-	
-	const message = JSON.stringify({epoch: data.epoch, wallet: wallet.address.toLowerCase()})
-
-	const va = ethers.verifyMessage(message, data.hash)
-
-	if (va.toLowerCase() !== data.nodeWallet.toLowerCase()) {
-		return logger(`validator va${va.toLowerCase()} !== response.nodeWallet ${data.nodeWallet.toLowerCase()}`)
-	}
-
-	const response = {
-		minerResponseHash: await wallet.signMessage(data.hash)
-	}
-
-	// const request = await ceateMininngValidator(profile, sentryNode, response)
-
-	// if (!request) {
-	// 	return logger(`ceateMininngValidator got null Error!`)
-	// }
-
-	// const url = `https://${sentryNode.domain}/post`
-	// const req = await postToEndpoint(url, true, {data: request.requestData[0]}).catch(ex => {
-	// 	logger(ex)
-	// })
-
-	// logger(req)
-}
-
-
-
-
-
 const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
-	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
-	const node = Guardian_Nodes[index]
+	//const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
+	const node = Guardian_Nodes[0]
 
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
+	
 	const command = {
 		command: 'mining',
 		walletAddress: wallet.address.toLowerCase(),
@@ -265,95 +205,66 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 	const message =JSON.stringify(command)
 	const signMessage = await wallet.signMessage(message)
+
 	const encryptObj = {
         message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
 		encryptionKeys: await readKey({armoredKey: node.armoredPublicKey}),
 		config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
     }
+	
 
 	const postData = await encrypt (encryptObj)
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
 
-	startGossip(node, JSON.stringify({data: postData}), (err, _data ) => {
+	
+	startGossip(node, JSON.stringify({data: postData}), async (err, _data ) => {
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
 		}
-
+		let data: listenClient
 		try {
-			const data: listenClient = JSON.parse(_data)
-			const validatorNode = getRandomNodeV2(index)
-			validator(data, wallet, validatorNode)
+			data = JSON.parse(_data)
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
-			logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
+			return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
 		}
+
+		const validatorNode = Guardian_Nodes[1]
+		if (!validatorNode) {
+			return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
+		}
+		
+		data.minerResponseHash = await wallet.signMessage(data.hash)
+
+		const command = {
+			command: 'mining_validator',
+			walletAddress: wallet.address.toLowerCase(),
+			algorithm: 'aes-256-cbc',
+			Securitykey: key,
+			requestData: data
+		}
+
+		const message =JSON.stringify(command)
+		const signMessage = await wallet.signMessage(message)
+
+		const encryptObj = {
+			message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
+			encryptionKeys: await readKey({armoredKey: validatorNode.armoredPublicKey}),
+			config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
+		}
+
+
+		const _postData = await encrypt (encryptObj)
+		logger(Colors.grey(`validator [${wallet.address.toLowerCase()}] post to ${validatorNode.ip_addr} epoch ${data.epoch} total miner [${data.online}]`))
+		startGossip(validatorNode, JSON.stringify({data: _postData}))
+
 	})
 }
 
 const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
-	const message  = JSON.stringify({walletAddress: wallet.address.toLowerCase()})
-	const messageHash =  ethers.id(message)
-	const signMessage = EthCrypto.sign(privateKeyArmor, messageHash)
-	const sendData = {
-		message, signMessage
-	}
 	connectToGossipNode(wallet)
 })
-
-const startTestMiner = (url: string, POST: string,  callback: (err?: string, data?: string) => void) => {
-	const Url = new URL(url)
-	const option: RequestOptions = {
-		hostname: Url.hostname,
-		port: 443,
-		method: 'POST',
-		protocol: 'https:',
-		headers: {
-			'Content-Type': 'application/json;charset=UTF-8'
-		},
-		path: Url.pathname
-	}
-	let first = true
-	const kkk = requestHttps(option, res => {
-
-		if (res.statusCode !==200) {
-			setTimeout(() => {
-				startTestMiner (url, POST, callback)
-			}, 1000)
-			
-			return logger(`startTestMiner got res.statusCode = [${res.statusCode}] != 200 error! restart`)
-		}
-
-		let data = ''
-		let _Time: NodeJS.Timeout
-		res.on ('data', _data => {
-			data += _data.toString()
-			if (/\r\n\r\n/.test(data)) {
-				clearTimeout(_Time)
-				if (first) {
-					first = false
-					callback ('', data)
-				}
-				
-				_Time = setTimeout(() => {
-					return startTestMiner (url, POST, callback)
-				}, 24 * 1000)
-			}
-		})
-		
-	})
-
-	kkk.on('error', err => {
-		return startTestMiner (url, POST, callback)
-	})
-
-	kkk.once('end', () => {
-		return startTestMiner (url, POST, callback)
-	})
-
-	kkk.end(POST)
-
-}
 
 const [,,...args] = process.argv
 let _SRP = ''

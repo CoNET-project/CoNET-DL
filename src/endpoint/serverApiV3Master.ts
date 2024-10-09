@@ -825,7 +825,7 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 
 
 
-	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 8 ) {
+	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 10 ) {
 		ret.status = 404
 		ret.message = 'Unknow social Task number!'
 		return resolve (ret)

@@ -344,11 +344,12 @@ interface listenClient {
 	rate: string
 	hash: string
 	nodeWallet: string
-	totalMiners: number
+	online: number
 	connetingNodes: number
 	nodeDomain: string
 	nodeIpAddr: string
 	nodeWallets: string []
+	minerResponseHash: any
 }
 
 interface IGossipStatus {
