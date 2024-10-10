@@ -110,9 +110,7 @@ let previousGossipStatus = gossipStatus
 
 
 const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
-	if (!wallets.length) {
-		return
-	}
+	
 	const epochNode = listenPool.get(epoch)
 	if (!epochNode) {
 		if (epoch > currentEpoch) {
@@ -126,9 +124,7 @@ const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
 }
 
 const addToEpochNodeUser = (wallets: string[], epoch: number, node: nodeInfo) => {
-	if (!wallets.length) {
-		return
-	}
+	
 	const epochUserNodes = userPool.get(epoch)
 	if (!epochUserNodes) {
 		if (epoch > currentEpoch) {
