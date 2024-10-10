@@ -206,7 +206,7 @@ const moveData = async () => {
 
 	logger(Colors.magenta(`move data at epoch ${block} total connecting = ${obj.size}`))
 	logger(inspect(_wallets, false, 3, true))
-
+	logger(inspect(_users, false, 3, true))
 	const totalMiners = _wallets.length
 	const minerRate = (rate/totalMiners)/12
 	previousGossipStatus.nodeWallets = _wallets

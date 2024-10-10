@@ -260,7 +260,6 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
 		}
 
-
 		const _postData = await encrypt (encryptObj)
 		logger(Colors.grey(`validator [${wallet.address.toLowerCase()}] post to ${validatorNode.ip_addr} epoch ${data.epoch} total miner [${data.online}]`))
 		startGossip(validatorNode, JSON.stringify({data: _postData}))
