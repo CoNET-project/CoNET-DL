@@ -110,7 +110,7 @@ let previousGossipStatus = gossipStatus
 
 
 const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
-	
+	logger(Colors.blue(`addToEpochNode ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length}`))
 	const epochNode = listenPool.get(epoch)
 	if (!epochNode) {
 		if (epoch > currentEpoch) {
@@ -120,6 +120,7 @@ const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
 		}
 		return logger(Colors.red(`${node.ip_addr} send unknow EPOCH ${epoch} data!`))
 	}
+	logger(Colors.blue(`addToEpochNode ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochNode.size}`))
 	epochNode.set(node.ip_addr, wallets)
 }
 
@@ -134,7 +135,7 @@ const addToEpochNodeUser = (wallets: string[], epoch: number, node: nodeInfo) =>
 		}
 		return logger(Colors.red(`${node.ip_addr} send unknow EPOCH ${epoch} data!`))
 	}
-	
+	logger(Colors.blue(`addToEpochNodeUser ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochUserNodes.size}`))
 	epochUserNodes.set(node.ip_addr, wallets)
 }
 
@@ -166,7 +167,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 
 		try {
 			const data: listenClient = JSON.parse(_data)
-			logger(inspect(data, false, 3, true))
+			
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
 			addToEpochNode(wallets, data.epoch, node)
