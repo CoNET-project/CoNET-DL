@@ -170,13 +170,14 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 
 		try {
 			const data: listenClient = JSON.parse(_data)
+			logger(inspect(data, false, 3, true))
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
 			addToEpochNode(wallets, data.epoch, node)
 			addToEpochNodeUser(users, data.epoch, node)
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
-			logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
+			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
 		}
 	})
 }
