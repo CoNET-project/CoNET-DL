@@ -350,6 +350,7 @@ interface listenClient {
 	nodeIpAddr: string
 	nodeWallets: string []
 	minerResponseHash: any
+	userWallets: string[]
 }
 
 interface IGossipStatus {
@@ -358,4 +359,5 @@ interface IGossipStatus {
 	nodesWallets: Map<string, string[]>
 	totalMiners: number
 	nodeWallets: string[]
+	userWallets: string[]
 }

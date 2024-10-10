@@ -119,6 +119,13 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 				
 				if (first) {
 					first = false
+					logger(Colors.magenta(`first`))
+					try{
+						const uu = JSON.parse(data)
+						logger(inspect(uu, false, 3, true))
+					} catch(ex) {
+						logger(Colors.red(`first JSON.parse Error`), data)
+					}
 					data = ''
 					return
 				}
@@ -214,9 +221,9 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 
 	const postData = await encrypt (encryptObj)
-	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
+	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}`))
+	logger(inspect(node))
 
-	
 	startGossip(node, JSON.stringify({data: postData}), async (err, _data ) => {
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
