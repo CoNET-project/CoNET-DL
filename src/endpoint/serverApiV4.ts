@@ -339,11 +339,12 @@ class conet_dl_server_v4 {
 		router.get('/miningRate', async (req, res) => {
 			logger(Colors.blue(`/miningRate`))
 			const query = req.query
-			logger(inspect(query, false, 3, true))
+			
 			const epoch = typeof query?.eposh === 'string' ? parseInt(query.eposh) : currentEpoch
 			let obj = eposh_total.get(epoch)||eposh_total.get(epoch-1)
-
-			return res.json(obj).end()
+			logger(Colors.blue(`/miningRate`))
+			logger(inspect(obj, false, 3, true))
+			return res.status(200).json(obj).end()
 		})
 
 		router.post ('/PurchaseCONETianPlan', async (req, res) => {
