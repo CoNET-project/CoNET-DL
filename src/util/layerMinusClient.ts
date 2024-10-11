@@ -169,6 +169,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
+			logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
 			addToEpochNode(wallets, data.epoch, node)
 			addToEpochNodeUser(users, data.epoch, node)
 		} catch (ex) {
