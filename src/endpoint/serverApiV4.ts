@@ -119,14 +119,14 @@ const listenEpoch = async () => {
 			const epoch = parseInt(filename.split('.')[0]) + 1
 			if (epoch > currentEpoch) {
 				currentEpoch = epoch
-				//await get_epoch_total()
+				await get_epoch_total()
 			}
 			
 		}
 	})
 	
 	currentEpoch = await provider.getBlockNumber()
-	//await get_epoch_total()
+	await get_epoch_total()
 }
 
 const MaxCount = 1
