@@ -70,9 +70,12 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	const acc = ethers.Wallet.fromPhrase(SRP)
 	const wallets: string[] = []
-	wallets.push (acc.signingKey.privateKey)
+	if (__start === 0) {
+		wallets.push (acc.signingKey.privateKey)
+		__start++
+	}
 
-	for (let i = __start + 1; i < max; i ++) {
+	for (let i = __start; i < max; i ++) {
 		const sub = acc.deriveChild(i)
 		wallets.push (sub.signingKey.privateKey)
 	}
@@ -242,7 +245,8 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		}
 		
 		data.minerResponseHash = await wallet.signMessage(data.hash)
-
+		data.isUser = isUser
+		data.userWallets = data.nodeWallets = []
 		const command = {
 			command: 'mining_validator',
 			walletAddress: wallet.address.toLowerCase(),
@@ -276,6 +280,7 @@ const [,,...args] = process.argv
 let _SRP = ''
 let number = 1
 let _start = 0
+let isUser = false
 args.forEach ((n, index ) => {
 
 	if (/^P\=/i.test(n)) {
@@ -288,6 +293,9 @@ args.forEach ((n, index ) => {
 
 	if (/^S\=/i.test(n)) {
 		_start = parseInt(n.split('=')[1])
+	}
+	if (/^U\=/i.test(n)) {
+		isUser = n.split('=')[1] === 'true' ? true : false
 	}
 })
 

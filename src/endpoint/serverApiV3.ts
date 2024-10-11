@@ -79,20 +79,20 @@ interface epochRate {
 
 const eposh_total: Map<number, epochRate> = new Map()
 
-const filePath = '/home/peter/.data/v2/'
+// const filePath = '/home/peter/.data/v2/'
 
-const get_epoch_total = async () => {
-	const block = currentEpoch - 1
-	const filename1 = `${filePath}${block}.total`
-	const data = await readFile(filename1, 'utf8')
-	try {
-		const ratedata = JSON.parse(data)
-		eposh_total.set(block, ratedata)
+// const get_epoch_total = async () => {
+// 	const block = currentEpoch - 1
+// 	const filename1 = `${filePath}${block}.total`
+// 	const data = await readFile(filename1, 'utf8')
+// 	try {
+// 		const ratedata = JSON.parse(data)
+// 		eposh_total.set(block, ratedata)
 		
-	} catch (ex) {
-		logger(Colors.red(`get_epoch_total JSON.parse(data) Error!\n ${data}`))
-	}
-}
+// 	} catch (ex) {
+// 		logger(Colors.red(`get_epoch_total JSON.parse(data) Error!\n ${data}`))
+// 	}
+// }
 
 
 const unlockCNTP = async (wallet: string, privateKey: string) => {
@@ -141,24 +141,24 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 }
 
 let currentEpoch = 0
-const listenEpoch = async () => {
+// const listenEpoch = async () => {
 
-	watch(filePath, async (eventType, _filename) => {
-		const filename = _filename||''
+// 	watch(filePath, async (eventType, _filename) => {
+// 		const filename = _filename||''
 		
-		if (/\.total$/.test(filename)) {
-			const epoch = parseInt(filename.split('.')[0]) + 1
-			if (epoch > currentEpoch) {
-				currentEpoch = epoch
-				await get_epoch_total()
-			}
+// 		if (/\.total$/.test(filename)) {
+// 			const epoch = parseInt(filename.split('.')[0]) + 1
+// 			if (epoch > currentEpoch) {
+// 				currentEpoch = epoch
+// 				await get_epoch_total()
+// 			}
 			
-		}
-	})
+// 		}
+// 	})
 	
-	currentEpoch = await provider.getBlockNumber()
-	await get_epoch_total()
-}
+// 	currentEpoch = await provider.getBlockNumber()
+// 	await get_epoch_total()
+// }
 
 const MaxCount = 1
 
@@ -191,7 +191,7 @@ class conet_dl_server {
         logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
 		logger(Colors.blue(`serverID = [${this.serverID}]`))
-		listenEpoch()
+		// listenEpoch()
 		this.startServer()
 	}
 

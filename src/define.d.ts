@@ -351,6 +351,7 @@ interface listenClient {
 	nodeWallets: string []
 	minerResponseHash: any
 	userWallets: string[]
+	isUser: boolean
 }
 
 interface IGossipStatus {
