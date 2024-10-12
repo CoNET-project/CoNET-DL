@@ -119,7 +119,7 @@ const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
 		}
 		return logger(Colors.red(`${node.ip_addr} send unknow EPOCH ${epoch} data!`))
 	}
-	logger(Colors.grey(`addToEpochNode ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochNode.size}`))
+	//logger(Colors.grey(`addToEpochNode ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochNode.size}`))
 	epochNode.set(node.ip_addr, wallets)
 }
 
@@ -169,7 +169,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
-			logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
+			//logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
 			addToEpochNode(wallets, data.epoch, node)
 			addToEpochNodeUser(users, data.epoch, node)
 		} catch (ex) {
