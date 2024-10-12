@@ -134,7 +134,7 @@ const addToEpochNodeUser = (wallets: string[], epoch: number, node: nodeInfo) =>
 		}
 		return logger(Colors.red(`${node.ip_addr} send unknow EPOCH ${epoch} data!`))
 	}
-	logger(Colors.grey(`addToEpochNodeUser ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochUserNodes.size}`))
+	//logger(Colors.grey(`addToEpochNodeUser ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochUserNodes.size}`))
 	epochUserNodes.set(node.ip_addr, wallets)
 }
 
