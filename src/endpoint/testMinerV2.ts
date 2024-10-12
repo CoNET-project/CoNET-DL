@@ -16,7 +16,7 @@ const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
-const maxScanNodesNumber = 3
+const maxScanNodesNumber = 30
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
@@ -188,13 +188,11 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 
 	const nodoNumber = Math.floor(Math.random() * totalNodes)
 	if (index > -1 && nodoNumber === index) {
+		logger(Colors.grey(`getRandomNodeV2 nodoNumber ${nodoNumber} == index ${index} REUNING AGAIN!`))
 		return getRandomNodeV2(index)
 	}
 
 	const node = Guardian_Nodes[nodoNumber]
-	if (!node.ip_addr) {
-		return getRandomNodeV2 (index)
-	}
 	logger(Colors.blue(`getRandomNodeV2 Guardian_Nodes length =${Guardian_Nodes.length} nodoNumber = ${nodoNumber} `))
 	return node
 }
@@ -224,7 +222,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 
 	const postData = await encrypt (encryptObj)
-	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}`))
+	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}:${wallet.address.toLowerCase()}`))
 	logger(inspect(node))
 
 	startGossip(node, JSON.stringify({data: postData}), async (err, _data ) => {
@@ -239,7 +237,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
 		}
 
-		const validatorNode = Guardian_Nodes[1]
+		const validatorNode = getRandomNodeV2(0)
 		if (!validatorNode) {
 			return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
 		}

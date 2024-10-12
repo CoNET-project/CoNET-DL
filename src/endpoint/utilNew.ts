@@ -1302,35 +1302,35 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 
 
 
-const kk: ICONETianPurchaseData = {
-    "receiptTx": "0x9d8bb248e5935535e067aaa955409000bf5c0db468f3cd01c42b09cfe55f163d",
-    "tokenName": "wusdt",
-    "amount": "4500000000000000000000",
-    "nfts": [
-        {
-            "nft": 0,
-            "total": 1
-        },
-        {
-            "nft": 1,
-            "total": 2
-        },
-        {
-            "nft": 2,
-            "total": 3
-        },
-        {
-            "nft": 3,
-            "total": 4
-        }
-    ],
-    "referrer": "0xD5DcB574e92C9b0EC4a2b678C5d313AD1f14777b"
-}
+// const kk: ICONETianPurchaseData = {
+//     "receiptTx": "0x9d8bb248e5935535e067aaa955409000bf5c0db468f3cd01c42b09cfe55f163d",
+//     "tokenName": "wusdt",
+//     "amount": "4500000000000000000000",
+//     "nfts": [
+//         {
+//             "nft": 0,
+//             "total": 1
+//         },
+//         {
+//             "nft": 1,
+//             "total": 2
+//         },
+//         {
+//             "nft": 2,
+//             "total": 3
+//         },
+//         {
+//             "nft": 3,
+//             "total": 4
+//         }
+//     ],
+//     "referrer": "0xD5DcB574e92C9b0EC4a2b678C5d313AD1f14777b"
+// }
 
-const obj: minerObj = {
-	walletAddress: '0x5c809c34112911199e748b0d70173acb18e5533a'.toLowerCase(),
-	data: [kk],
-	uuid: ''
-}
+// const obj: minerObj = {
+// 	walletAddress: '0x5c809c34112911199e748b0d70173acb18e5533a'.toLowerCase(),
+// 	data: [kk],
+// 	uuid: ''
+// }
 
-CONETianPlanPurchase(obj)
+// CONETianPlanPurchase(obj)
