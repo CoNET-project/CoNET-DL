@@ -524,8 +524,8 @@ const dailyClickPool: Map<string, boolean> = new Map()
 const ticket = (wallet: string, res: Response, ipAddress: string) => {
 	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}]`))
 	const develop = developWalletPool.get (wallet)
-	logger(Colors.magenta(`ticket developWalletPool.get develop = ${develop}`))
-	logger(inspect(developWalletPool, false, 3, true))
+	// logger(Colors.magenta(`ticket developWalletPool.get develop = ${develop}`))
+	// logger(inspect(developWalletPool, false, 3, true))
 	if (develop) {
 		const _ticket = ( ticketPool.get (wallet) || 0 ) + 1
 		ticketPool.set( wallet, _ticket )
@@ -572,7 +572,8 @@ const _mintBatch = (privateKey: string, item: paymentItem) => new Promise(async 
 	const ticketContract = new ethers.Contract(ticketAddr, Ticket_ABI, wallet)
 	try{
 		const tx = await ticketContract.mintBatch(item.wallets, item.ids, item.pays)
-		logger(Colors.grey(`_Batch mintBatch success! ==> ${tx.hash}`))
+		const ts = await tx.wait()
+		logger(inspect(ts))
 		resolve (true)
 	} catch (ex: any) {
 		logger(Colors.red(`_Batch Error`), ex.message)
@@ -585,7 +586,9 @@ const _burnBatch = (privateKey: string, item: paymentItem) => new Promise(async 
 	const ticketContract = new ethers.Contract(ticketAddr, Ticket_ABI, wallet)
 	try{
 		const tx = await ticketContract.BurnBatch(item.wallets, item.ids, item.pays)
-		logger(Colors.grey(`_Batch mintBatch success! ==> ${tx.hash}`))
+		const ts = await tx.wait()
+		logger(inspect(ts))
+
 		resolve (true)
 	} catch (ex: any) {
 		logger(Colors.red(`_Batch Error`), ex.message)
@@ -644,7 +647,7 @@ const transfermintBatch = async (privateKeys: string[], _wallets: string[], _ids
 		if (iii_1 >= privateKeys.length) {
 			iii_1 = 0
 		}
-		logger(Colors.magenta(`start transfermintBatch group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
+		logger(Colors.magenta(`ticketPoolProcess start transfermintBatch group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
 		// logger(inspect(n.wallets, false, 3, true))
 		// logger(inspect(n.pays, false, 3, true))
 		await _mintBatch (privateKeys[iii_1], n)
@@ -703,7 +706,7 @@ const transferBurnBatch = async (privateKeys: string[], _wallets: string[], valu
 		if (iii_1 >= privateKeys.length) {
 			iii_1 = 0
 		}
-		logger(Colors.magenta(`start transferBurnBatch group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
+		logger(Colors.magenta(`start ticketPoolProcess transferBurnBatch group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
 		// logger(inspect(n.wallets, false, 3, true))
 		// logger(inspect(n.pays, false, 3, true))
 		await _burnBatch (privateKeys[iii_1], n)
@@ -756,6 +759,7 @@ const ticketPoolProcess = async (block: number) => {
 
 	twitterNFTPool.forEach((v, key) => {
 		twitter.push(key)
+		twitterNFTPool.delete(key)
 	})
 
 
@@ -770,7 +774,7 @@ const ticketPoolProcess = async (block: number) => {
 	const mintTotal = [...tickets, ...totalTw]
 
 
-	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
+	logger(Colors.magenta(`ticketPoolProcess started total wallets [${wallet.length}]`))
 
 	await transfermintBatch(ticketPrivatekeys, mintWallets, mintIds, mintTotal)
 	await transferBurnBatch(ticketPrivatekeys, walletBrun, brunNumber)
