@@ -223,7 +223,7 @@ const moveData = async () => {
 		}
 	})
 
-	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)}`))
+	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
 
 	await writeFile(filename, JSON.stringify(previousGossipStatus))
 	await writeFile(filename1, JSON.stringify({totalMiners, minerRate}))
