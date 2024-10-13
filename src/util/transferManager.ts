@@ -184,6 +184,7 @@ export const transferCCNTP = (privateKey: string, __walletList: string[], __PayL
 		// logger(inspect(walletList, false, 3, true), inspect(PayList, false, 3, true))
 		callback()
 	}
+	
 	send()
 	
 }

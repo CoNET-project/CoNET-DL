@@ -509,8 +509,6 @@ const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCO
 const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
-const cntp_ticketManager_Contract = new ethers.Contract(ticketManager_addr, tickerManagerABi, provideCONET)
-
 interface faucetRequest {
 	wallet: string
 	ipAddress: string
@@ -559,6 +557,161 @@ const returnArrayToTicketPoolProcess = (wallet: string[], tickets: number[]) => 
 
 let lastticketTransferTimeStamp = new Date().getTime()
 
+
+const eachTransLength = 1000
+
+interface paymentItem {
+	wallets: string[]
+	pays: number[]
+	ids: number[]
+}
+
+
+const _mintBatch = (privateKey: string, item: paymentItem) => new Promise(async resolve => {
+	const wallet = new ethers.Wallet(privateKey, provideCONET)
+	const ticketContract = new ethers.Contract(ticketAddr, Ticket_ABI, wallet)
+	try{
+		const tx = await ticketContract.mintBatch(item.wallets, item.ids, item.pays)
+		logger(Colors.grey(`_Batch mintBatch success! ==> ${tx.hash}`))
+		resolve (true)
+	} catch (ex: any) {
+		logger(Colors.red(`_Batch Error`), ex.message)
+		return resolve (false)
+	}
+})
+
+const _burnBatch = (privateKey: string, item: paymentItem) => new Promise(async resolve => {
+	const wallet = new ethers.Wallet(privateKey, provideCONET)
+	const ticketContract = new ethers.Contract(ticketAddr, Ticket_ABI, wallet)
+	try{
+		const tx = await ticketContract.BurnBatch(item.wallets, item.ids, item.pays)
+		logger(Colors.grey(`_Batch mintBatch success! ==> ${tx.hash}`))
+		resolve (true)
+	} catch (ex: any) {
+		logger(Colors.red(`_Batch Error`), ex.message)
+		return resolve (false)
+	}
+})
+
+const transfermintBatch = async (privateKeys: string[], _wallets: string[], _ids: number[], values: number[]) => {
+	if (!_wallets.length) {
+		return
+	}
+
+	const splitGroupNumber = Math.round (_wallets.length / eachTransLength)
+	const eachGroupLength = Math.floor(_wallets.length / splitGroupNumber)
+	let groupCount = 0
+	let wallets: string[] = []
+	let pays: number [] = []
+	let ids: number [] = []
+	const item: paymentItem[] = []
+	
+	_wallets.forEach((n, index) => {
+		const v = values[index]
+		if (v === 0) {
+			return
+		}
+		const groupSplit = index % eachGroupLength
+		if (!groupSplit) {
+			item[groupCount] = {
+				wallets,
+				pays,
+				ids
+			}
+
+			if (index > 0) {
+				groupCount ++
+			}
+			
+			wallets = []
+			pays = []
+			ids = []
+		}
+
+		wallets.push(n)
+		pays.push(v)
+		ids.push(_ids[index])
+		return 
+	})
+
+	item[groupCount] = {
+		wallets, pays,ids
+	}
+
+	let iii_1 = 0
+
+	await mapLimit(item, privateKeys.length, async (n, next) => {
+		if (iii_1 >= privateKeys.length) {
+			iii_1 = 0
+		}
+		logger(Colors.magenta(`start transfermintBatch group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
+		// logger(inspect(n.wallets, false, 3, true))
+		// logger(inspect(n.pays, false, 3, true))
+		await _mintBatch (privateKeys[iii_1], n)
+		iii_1 ++
+	})
+}
+
+const transferBurnBatch = async (privateKeys: string[], _wallets: string[], values: number[]) => {
+	if (!_wallets.length) {
+		return
+	}
+
+	const splitGroupNumber = Math.round (_wallets.length / eachTransLength)
+	const eachGroupLength = Math.floor(_wallets.length / splitGroupNumber)
+	let groupCount = 0
+	let wallets: string[] = []
+	let pays: number [] = []
+	let ids: number [] = []
+	const item: paymentItem[] = []
+	
+	_wallets.forEach((n, index) => {
+		const v = values[index]
+		if (v === 0) {
+			return
+		}
+		const groupSplit = index % eachGroupLength
+		if (!groupSplit) {
+			item[groupCount] = {
+				wallets,
+				pays,
+				ids
+			}
+
+			if (index > 0) {
+				groupCount ++
+			}
+			
+			wallets = []
+			pays = []
+			ids = []
+		}
+
+		wallets.push(n)
+		pays.push(v)
+		ids.push(1)
+		return 
+	})
+
+	item[groupCount] = {
+		wallets, pays,ids
+	}
+
+	let iii_1 = 0
+
+	await mapLimit(item, privateKeys.length, async (n, next) => {
+		if (iii_1 >= privateKeys.length) {
+			iii_1 = 0
+		}
+		logger(Colors.magenta(`start transferBurnBatch group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
+		// logger(inspect(n.wallets, false, 3, true))
+		// logger(inspect(n.pays, false, 3, true))
+		await _burnBatch (privateKeys[iii_1], n)
+		iii_1 ++
+	})
+}
+
+const ticketPrivatekeys: string[] = JSON.parse(JSON.stringify(masterSetup.constGAMEAccount)).splice(2)
 const ticketPoolProcess = async (block: number) => {
 	if (ticketPoolProcesing || !ticketPool.size){
 		logger(Colors.blue(` ticketPoolProcess stoped because ticketPoolProcesing = true || ${ticketPool.size} is zero!`))
@@ -584,6 +737,7 @@ const ticketPoolProcess = async (block: number) => {
 	const walletBrun: string[] = []
 	const brunNumber: number[] = []
 	const twitter: string [] = []
+
 	ticketPool.forEach((v, key) => {
 		if (v > 0) {
 			wallet.push(key)
@@ -606,6 +760,7 @@ const ticketPoolProcess = async (block: number) => {
 
 
 	const ids: number[] = wallet.map(n => 1)
+
 	const ids1: number[] = walletBrun.map(n => 1)
 	const idTw: number [] = twitter.map(n => 2)
 	const totalTw: number[] = twitter.map(n => 1)
@@ -613,30 +768,39 @@ const ticketPoolProcess = async (block: number) => {
 	const mintWallets = [...wallet, ...twitter]
 	const mintIds = [...ids, ...idTw]
 	const mintTotal = [...tickets, ...totalTw]
+
+
 	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
-	try {
-		if (mintWallets.length) {
-			const tx = await ticket_contract.mintBatch(mintWallets, mintIds, mintTotal)
-			const tr = await tx.wait()
-			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
-			logger(inspect(tr, false, 3, true))
-		}
-		if (walletBrun.length) {
-			const tx = await ticket_contract.BurnBatch(walletBrun, ids1, brunNumber)
-			const tr = await tx.wait()
-			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
-			logger(inspect(tr, false, 3, true))
-		}
+
+	await transfermintBatch(ticketPrivatekeys, mintWallets, mintIds, mintTotal)
+	await transferBurnBatch(ticketPrivatekeys, walletBrun, brunNumber)
+
+
+	// try {
+	// 	if (mintWallets.length) {
+	// 		const tx = await ticket_contract.mintBatch(mintWallets, mintIds, mintTotal)
+	// 		const tr = await tx.wait()
+	// 		logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
+	// 		logger(inspect(tr, false, 3, true))
+	// 	}
+
+	// 	if (walletBrun.length) {
+	// 		const tx = await ticket_contract.BurnBatch(walletBrun, ids1, brunNumber)
+	// 		const tr = await tx.wait()
+	// 		logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
+	// 		logger(inspect(tr, false, 3, true))
+	// 	}
 		
-	} catch (ex) {
-		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
-		ticketPoolProcesing = false
-		logger(ex)
-		logger(inspect(walletBrun, false, 3, true))
-		logger(inspect(ids1, false, 3, true))
-		logger(inspect(brunNumber, false, 3, true))
-		return returnArrayToTicketPoolProcess (wallet, tickets)
-	}
+	// } catch (ex) {
+	// 	logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
+	// 	ticketPoolProcesing = false
+	// 	logger(ex)
+	// 	logger(inspect(walletBrun, false, 3, true))
+	// 	logger(inspect(ids1, false, 3, true))
+	// 	logger(inspect(brunNumber, false, 3, true))
+	// 	return returnArrayToTicketPoolProcess (wallet, tickets)
+	// }
+
 	ticketPoolProcesing = false
 	lastticketTransferTimeStamp = timeStamp
 }
@@ -690,8 +854,6 @@ const dailyTaskPoolProcess = async () => {
 	dailyTaskPoolProcessLocked = false
 
 }
-
-
 
 let faucetWaitingPool: faucetRequest[] = []
 export const faucet_call =  (wallet: string, ipAddress: string) => {
@@ -814,6 +976,9 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 	})
 
 })
+
+
+
 
 const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
 	const socialTaskText = obj.walletAddress
