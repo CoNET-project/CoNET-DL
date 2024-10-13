@@ -1,8 +1,8 @@
 import {ethers} from 'ethers'
 import { logger } from './logger'
 import Colors from 'colors/safe'
-import ticketABI from './ABI/ticket.json'
-import cntpABI from './cCNTP_v5.json'
+import ticketABI from '../endpoint/ticket.abi.json'
+import cntpABI from './cCNTP.json'
 
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 const ticketContract = new ethers.Contract('0x92a033A02fA92169046B91232195D0E82b8017AB', ticketABI, provider)
