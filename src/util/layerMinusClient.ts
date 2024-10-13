@@ -275,7 +275,7 @@ const listenEpoch = async () => {
 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
-const maxScanNodesNumber = 70
+const maxScanNodesNumber = 80
 
 const getAllNodes = async () => {
 	if (getAllNodesProcess) {
