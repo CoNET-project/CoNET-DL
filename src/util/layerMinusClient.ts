@@ -48,7 +48,6 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 			clearTimeout(_Time)
 			data += _data.toString()
 			
-
 			if (/\r\n\r\n/.test(data)) {
 				
 				if (first) {
@@ -169,6 +168,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
+			node.lastEposh =  data.epoch
 			//logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
 			addToEpochNode(wallets, data.epoch, node)
 			addToEpochNodeUser(users, data.epoch, node)
@@ -213,13 +213,24 @@ const moveData = async () => {
 	previousGossipStatus.totalConnectNode = obj.size
 	previousGossipStatus.totalMiners = totalMiners
 	previousGossipStatus.userWallets = _users
+
 	const filename = `${filePath}${block}.wallet`
 	const filename1 = `${filePath}${block}.total`
+	const timeOverNodes: nodeInfo[] = []
+	Guardian_Nodes.forEach(n => {
+		if (typeof n.lastEposh === 'undefined' || n.lastEposh < block) {
+			timeOverNodes.push(n)
+		}
+	})
+
+	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)}`))
+
 	await writeFile(filename, JSON.stringify(previousGossipStatus))
 	await writeFile(filename1, JSON.stringify({totalMiners, minerRate}))
 	.catch(ex => {
 		logger(Colors.red(`writeFile ${filename} error ${ex.message}`))
 	})
+	
 	
 }
 

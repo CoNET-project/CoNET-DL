@@ -55,6 +55,7 @@ interface nodeInfo {
 	armoredPublicKey: string
 	nftNumber: number
 	domain: string
+	lastEposh?: number
 }
 
 interface ICoNET_DL_masterSetup {
