@@ -218,9 +218,17 @@ const moveData = async () => {
 	const filename1 = `${filePath}${block}.total`
 	const timeOverNodes: nodeInfo[] = []
 	Guardian_Nodes.forEach(n => {
-		if (typeof n.lastEposh === 'undefined' || n.lastEposh < block) {
+		if (typeof n.lastEposh === 'undefined') {
+			timeOverNodes.push(n)
+
+		} else if (block - n.lastEposh > 2) {
 			timeOverNodes.push(n)
 		}
+
+	})
+
+	timeOverNodes.forEach(n => {
+		connectToGossipNode(n)
 	})
 
 	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
