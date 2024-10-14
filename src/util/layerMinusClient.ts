@@ -102,7 +102,7 @@ let gossipStatus: IGossipStatus = {
 	nodesWallets: new Map(),
 	totalMiners: 0,
 	nodeWallets: [],
-	userWallets: []
+	userWallets: [],
 }
 
 let previousGossipStatus = gossipStatus
@@ -204,19 +204,39 @@ const moveData = async () => {
 		_users = [..._users, ...v]
 	})
 
-	logger(Colors.magenta(`move data at epoch ${block} total connecting = ${obj.size}`))
-	logger(inspect(_wallets, false, 3, true))
-	logger(inspect(_users, false, 3, true))
-	const totalMiners = _wallets.length
+	
+	const totalUsrs = _users.length
+	const totalMiners = _wallets.length + totalUsrs
 	const minerRate = (rate/totalMiners)/12
 	previousGossipStatus.nodeWallets = _wallets
 	previousGossipStatus.totalConnectNode = obj.size
 	previousGossipStatus.totalMiners = totalMiners
-	previousGossipStatus.userWallets = _users
+	
+	const minerPreviousGossipStatus: IGossipStatus = {
+		epoch: previousGossipStatus.epoch,
+		totalMiners,
+		nodeWallets: _wallets,
+		totalConnectNode: obj.size,
+		userWallets: [],
+		nodesWallets: new Map()
+	}
 
+
+	const userPreviousGossipStatus: IGossipStatus = {
+		epoch: previousGossipStatus.epoch,
+		totalMiners,
+		nodeWallets: [],
+		totalConnectNode: obj.size,
+		userWallets: _users,
+		nodesWallets: new Map()
+	}
+
+	logger(Colors.magenta(`${block} move data connecting = ${obj.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
 	const filename = `${filePath}${block}.wallet`
 	const filename1 = `${filePath}${block}.total`
+	const filename2 = `${filePath}${block}.users`
 	const timeOverNodes: nodeInfo[] = []
+
 	Guardian_Nodes.forEach(n => {
 		if (typeof n.lastEposh === 'undefined') {
 			timeOverNodes.push(n)
@@ -231,13 +251,15 @@ const moveData = async () => {
 		connectToGossipNode(n)
 	})
 
-	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
 
-	await writeFile(filename, JSON.stringify(previousGossipStatus))
-	await writeFile(filename1, JSON.stringify({totalMiners, minerRate}))
-	.catch(ex => {
-		logger(Colors.red(`writeFile ${filename} error ${ex.message}`))
-	})
+
+	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
+	await Promise.all ([
+		writeFile(filename, JSON.stringify(minerPreviousGossipStatus)),
+		writeFile(filename1, JSON.stringify({totalMiners, minerRate, totalUsrs})),
+		writeFile(filename2, JSON.stringify(userPreviousGossipStatus))
+	])
+
 	
 	
 }
