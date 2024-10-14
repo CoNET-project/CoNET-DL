@@ -224,6 +224,7 @@ const miningData = (body: any, res: Response) => {
 			totalMiners: 0,
 			totalUsers: 0
 		}
+		epochTotalData.set(body.epoch, epochTotal)
 	}
 
 	epochTotal.totalMiners += body.wallets.length
