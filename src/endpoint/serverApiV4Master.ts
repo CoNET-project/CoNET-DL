@@ -866,9 +866,13 @@ const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
 const miningData = (body: any, res: Response) => {
 	
 
-	const eposh = epochNodeData.get(body.epoch)|| new Map()
+	let eposh = epochNodeData.get(body.epoch)
+	if (!eposh) {
+		eposh = new Map()
+		epochNodeData.set(body.epoch, eposh)
+	}
 	eposh.set (body.ipaddress, {wallets: body.wallets, users: body.users})
-	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes = ${eposh.size}`))
+	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddres} = ${eposh.size}`))
 	return res.status(200).end()
 }
 
