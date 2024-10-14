@@ -857,6 +857,13 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 })
 
 
+const miningData = (body: any, res: Response) => {
+	logger(Colors.grey(`/miningData`))
+	logger(inspect(body, false, 3, true))
+	return res.status(200).json({}).end()
+}
+
+
 class conet_dl_server {
 
 	private PORT = 8002
@@ -939,6 +946,10 @@ class conet_dl_server {
 			await initNewCONET(wallet)
 			res.status(200).json({}).end()
 			
+		})
+
+		router.post ('/miningData',  async (req, res) => {
+			return miningData(req.body, res)
 		})
 		
 		router.post ('/conet-faucet', async (req, res ) => {

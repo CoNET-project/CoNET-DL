@@ -292,6 +292,7 @@ args.forEach ((n, index ) => {
 	if (/^S\=/i.test(n)) {
 		_start = parseInt(n.split('=')[1])
 	}
+	
 	if (/^U\=/i.test(n)) {
 		isUser = n.split('=')[1] === 'true' ? true : false
 	}
