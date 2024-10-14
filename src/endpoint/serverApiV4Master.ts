@@ -144,6 +144,7 @@ const developWalletListening = async (block: number) => {
 }
 
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
+	logger
 	await Promise.all([
 		startFaucetProcess(),
 		developWalletListening(eposh),
@@ -242,7 +243,7 @@ const moveData = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
 	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
 
-	const block = currentEpoch - 2
+	const block = currentEpoch - 1
 	
 	let _wallets: string[] = []
 	let _users: string[] = []
