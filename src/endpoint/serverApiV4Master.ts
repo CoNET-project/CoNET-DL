@@ -856,10 +856,19 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 	return resolve (ret)
 })
 
+interface InodeEpochData {
+	wallets: string[]
+	users: string[]
+}
+const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
+
 
 const miningData = (body: any, res: Response) => {
-	logger(Colors.grey(`/miningData`))
-	logger(inspect(body, false, 3, true))
+	
+
+	const eposh = epochNodeData.get(body.epoch)|| new Map()
+	eposh.set (body.ipaddress, {wallets: body.wallets, users: body.users})
+	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes = ${eposh.size}`))
 	return res.status(200).end()
 }
 
