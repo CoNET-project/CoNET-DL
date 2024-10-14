@@ -358,8 +358,8 @@ interface listenClient {
 interface IGossipStatus {
 	totalConnectNode: number
 	epoch: number
-	nodesWallets: Map<string, string[]>
 	totalMiners: number
-	nodeWallets: string[]
-	userWallets: string[]
+	totalUsers: number
+	nodeWallets?: string[]
+	userWallets?: string[]
 }

@@ -97,46 +97,6 @@ let wallet: ethers.HDNodeWallet
 
 
 
-let gossipStatus: IGossipStatus = {
-	totalConnectNode: 0,
-	epoch: 0,
-	nodesWallets: new Map(),
-	totalMiners: 0,
-	nodeWallets: [],
-	userWallets: [],
-}
-
-let previousGossipStatus = gossipStatus
-
-
-const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
-	const epochNode = listenPool.get(epoch)
-	if (!epochNode) {
-		if (epoch > currentEpoch) {
-			const obj = new Map()
-			obj.set(node.ip_addr, wallets)
-			return listenPool.set (epoch, obj)
-		}
-		return logger(Colors.red(`${node.ip_addr} send unknow EPOCH ${epoch} data!`))
-	}
-	//logger(Colors.grey(`addToEpochNode ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochNode.size}`))
-	epochNode.set(node.ip_addr, wallets)
-}
-
-const addToEpochNodeUser = (wallets: string[], epoch: number, node: nodeInfo) => {
-	
-	const epochUserNodes = userPool.get(epoch)
-	if (!epochUserNodes) {
-		if (epoch > currentEpoch) {
-			const obj = new Map()
-			obj.set(node.ip_addr, wallets)
-			return userPool.set (epoch, obj)
-		}
-		return logger(Colors.red(`${node.ip_addr} send unknow EPOCH ${epoch} data!`))
-	}
-	//logger(Colors.grey(`addToEpochNodeUser ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochUserNodes.size}`))
-	epochUserNodes.set(node.ip_addr, wallets)
-}
 const postLocalhost = async (path: string, obj: any)=> {
 	
 	const option: RequestOptions = {
@@ -236,9 +196,7 @@ const moveData = async () => {
 	const totalUsrs = _users.length
 	const totalMiners = _wallets.length + totalUsrs
 	const minerRate = (rate/totalMiners)/12
-	previousGossipStatus.nodeWallets = _wallets
-	previousGossipStatus.totalConnectNode = obj.size
-	previousGossipStatus.totalMiners = totalMiners
+
 	
 
 	logger(Colors.magenta(`${block} move data ${_start}~${_end} connecting = ${obj.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
@@ -277,30 +235,6 @@ const listenPool: Map<number, Map<string, string[]>> = new Map()
 const userPool: Map<number, Map<string, string[]>> = new Map()
 
 let currentEpoch = 0
-
-const listenEpoch = async () => {
-	currentEpoch = await provider.getBlockNumber()
-	gossipStatus.epoch = currentEpoch
-
-	provider.on('block', block => {
-		currentEpoch = block
-		moveData()
-		listenPool.delete(currentEpoch - 3)
-
-		const obj = listenPool.get (currentEpoch)
-		if (!obj) {
-			listenPool.set(currentEpoch, new Map())
-		}
-		const obj1 = userPool.get (currentEpoch)
-		if (!obj1) {
-			userPool.set(currentEpoch, new Map())
-		}
-		
-		logger(Colors.blue(`listenEpoch on [${currentEpoch}]`))
-	})
-
-	logger(Colors.blue(`listenEpoch start current = [${currentEpoch}]`))
-}
 
 
 
@@ -368,7 +302,7 @@ const start = async () => {
 	wallet = ethers.Wallet.createRandom()
 	await getAllNodes()
 	startGossipListening()
-	// listenEpoch()
+
 }
 
 

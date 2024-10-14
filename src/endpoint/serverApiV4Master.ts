@@ -5,30 +5,21 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {claimeToekn, conet_lotte_new} from './help-database'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import { masterSetup, getServerIPV4Address, conet_Holesky_rpc} from '../util/util'
 import {logger} from '../util/logger'
-import {v4} from 'uuid'
-import CGPNsABI from '../util/CGPNs.json'
 import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
-import type { RequestOptions } from 'node:http'
-import {request} from 'node:http'
+import { writeFile} from 'node:fs/promises'
 import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool_useTicketManager'
-import profileABI from './profile.ABI.json'
-import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
-import dailyClick_ABI from './dailyClick.ABI.json'
 
-import {dailyTaskSC} from '../util/dailyTaskChangeHash'
+import rateABI from './conet-rate.json'
 
-const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
-const dailyClickAddr = '0xDCe3FAE41Eb95eA3Be59Ca334f340bdd1799aA29'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -41,86 +32,14 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
+
 const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-const gameWallet0 = new ethers.Wallet (masterSetup.constGAMEAccount[0], provideCONET)
-const dailyClickContract = new ethers.Contract(dailyClickAddr, dailyClick_ABI, gameWallet0)
-const detailTransfer = async (tx: string) => {
-	const transObj = await provideCONET.getTransactionReceipt(tx)
-
-	const toAddr = transObj?.to?.toLowerCase()
-	
-	if ( CGPNsAddr === toAddr) {
-		return await getAllOwnershipOfGuardianNodes()
-	}
-}
-
-const listeningGuardianNodes = async (block: number) => {
-	logger(Colors.gray(`listeningGuardianNodes start at block ${block}`))
-	const blockDetail = await provideCONET.getBlock(block)
-	const transactions = blockDetail?.transactions
-	if (!transactions) {
-		return
-	}
-	//@ts-ignore
-	await mapLimit(transactions, 1, async (n, next) => {
-		await detailTransfer(n)
-	})
-}
 
 export const checkGasPrice = 1550000
 let startDailyPoolTranferProcess = false
 let lastTransferTimeStamp = new Date().getTime()
 const longestWaitingTimeForDaily = 1000 * 60 * 10
 const longestWaitingTimeForTicket = 1000 * 60 * 5
-
-const startDailyPoolTranfer = async () => {
-	if (startDailyPoolTranferProcess || !dailyClickPool.size) {
-		return
-	}
-	startDailyPoolTranferProcess = true
-	const feeData = await provideCONET.getFeeData()
-	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
-
-	const timeStamp = new Date().getTime()
-
-	if ( gasPrice > checkGasPrice || !gasPrice ) {
-		if (timeStamp - lastTransferTimeStamp < longestWaitingTimeForDaily) {
-			startDailyPoolTranferProcess = false
-			logger(Colors.grey(`startDailyPoolTranfer waiting low GAS fee! Pool size = ${dailyClickPool.size}`))
-			return 
-		}
-	}
-	const wallets: string[] = []
-	dailyClickPool.forEach((v, key) => {
-		wallets.push(key)
-		dailyClickPool.delete(key)
-	})
-
-	try {
-		const tx =  await dailyClickContract.batchDaliy(wallets)
-		const ts = await tx.wait()
-		logger(Colors.blue(`startDailyPoolTranfer success!`))
-		logger(inspect(ts, false, 3, true))
-		lastTransferTimeStamp = timeStamp
-	} catch (ex: any) {
-		logger(Colors.red(`dailyClickContract.batchDaliy got Error! return wallets to pool!`), ex.message)
-		logger(JSON.stringify(wallets))
-		startDailyPoolTranferProcess = false
-		return wallets.forEach(n => dailyClickPool.set(n, true))
-	}
-	
-}
-
-const startListeningCONET_Holesky_EPOCH = async () => {
-	// checkLotteryHasBalance()
-	getAllOwnershipOfGuardianNodes()
-	provideCONET.on ('block', async block => {
-		listeningGuardianNodes (block)
-		// checkLotteryHasBalance()
-		startDailyPoolTranfer()
-		dailyTaskPoolProcess()
-	})
-}
 
 
 //			getIpAddressFromForwardHeader(req.header(''))
@@ -132,216 +51,9 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	return ipaddress
 }
 
-const addAttackToCluster = async (ipaddress: string) => {
-	const option: RequestOptions = {
-		hostname: 'apiv2.conet.network',
-		path: `/api/ipaddress`,
-		port: 4100,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	const postData = {
-		ipaddress: ipaddress
-	}
-
-	const req = await request (option, res => {
-		let data = ''
-		res.on('data', _data => {
-			data += _data
-		})
-		res.once('end', () => {
-			logger(Colors.blue(`addAttackToCluster [${ipaddress}] success! data = [${data}]`))
-		})
-	})
-
-	req.once('error', (e) => {
-		logger(Colors.red(`addAttackToCluster r[${ipaddress}] equest on Error! ${e.message}`))
-	})
-
-	req.write(JSON.stringify(postData))
-	req.end()
-}
-
-
-const guardianNodesList: string[] = []
-
-let getAllOwnershipOfGuardianNodesProcessing = false
-
-const getAllOwnershipOfGuardianNodes = async () => {
-	if (getAllOwnershipOfGuardianNodesProcessing) {
-		return logger(`getAllOwnershipOfGuardianNodes already process!`)
-	}
-	getAllOwnershipOfGuardianNodesProcessing = true
-	const guardianSmartContract = new ethers.Contract(CGPNsAddr, CGPNsABI, provideCONET)
-	let nodes
-	try {
-		nodes = await guardianSmartContract.getAllIdOwnershipAndBooster()
-	} catch (ex: any) {
-		getAllOwnershipOfGuardianNodesProcessing = false
-		return logger(Colors.grey(`nodesAirdrop guardianSmartContract.getAllIdOwnershipAndBooster() Error! STOP `), ex.mesage)
-	}
-	const _nodesAddress: string[] = nodes[0].map((n: string) => n.toLowerCase())
-
-	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
-
-	let NFTAssets: number[]
-
-	try {
-		NFTAssets = await guardianSmartContract.balanceOfBatch(_nodesAddress, NFTIds)
-	} catch (ex: any) {
-		getAllOwnershipOfGuardianNodesProcessing = false
-		return logger(Colors.red(`nodesAirdrop guardianSmartContract.balanceOfBatch() Error! STOP`), ex.mesage)
-	}
-
-
-	NFTAssets.forEach((n, index) => {
-		if (n ) {
-			guardianNodesList.push(_nodesAddress[index])
-		}
-	})
-	
-	logger(Colors.blue(`guardianNodesList length = [${guardianNodesList.length}]`))
-	getAllOwnershipOfGuardianNodesProcessing = false
-}
-
-
-interface conetData {
-	address: string
-	balance?: any
-	req: any
-}
-
-const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[3], new ethers.JsonRpcProvider(conet_Holesky_rpc))
-const sentData = async (data: conetData, callback: (err?: any, data?: ethers.TransactionResponse) => void) => {
-
-	let tx
-	try{
-		const addr = ethers.getAddress(data.address)
-		const ts = {
-			to: addr,
-			// Convert currency unit from ether to wei
-			value: data.balance?.toString()
-		}
-		tx = await etherNew_Init_Admin.sendTransaction(ts)
-	} catch (ex) {
-		console.log(Colors.red(`${ethers.formatEther(data.balance||0)} CONET => [${data.address}] Error!`), ex)
-		return callback(ex)
-	}
-	return callback (null, tx)
-}
-
-interface clientRequestTimeControl {
-	lastTimestamp: number
-	ipAddress: string
-}
-
-const LimitAccess = 50000
-const doubleWinnerWaiting = 20 * 1000
-
-
-const walletPool: Map<string, clientRequestTimeControl> = new Map()
-
-const initWalletPool: Map<string, boolean> = new Map()
-const _rand1 = 1
-const _rand2 = _rand1 * 2
-const _rand3 = _rand1 * 5
-const _rand4 = _rand1 * 10
-
-const MaximumBet= 1000
-
-interface winnerObj {
-	bet: number
-	wallet: string
-	ipAddress: string
-	Daemon: NodeJS.Timeout|null
-}
-
-
-const LotteryWinnerPool: Map<string, winnerObj> = new Map()
-// let isHourlyBalance = false
-
-// const checkLotteryHasBalance = async () => {
-
-// 	try {
-// 		const _balance = await cntp_ticketManager_Contract.currentTime_CNTP_balance()
-// 		const balace = parseInt(ethers.formatEther(_balance))
-// 		logger(Colors.magenta(`checkLotteryHasBalance ${balace} `))
-// 		if (balace > 0) {
-// 			return isHourlyBalance = true
-// 		}
-// 		logger(Colors.magenta(`checkLotteryHasBalance has no balance! ${balace}`))
-// 		isHourlyBalance = false
-// 	} catch (ex) {
-		
-// 	}
-// 	return false
-// }
-
-const checkAddressDailyClick = async (addr: string) => {
-	try {
-		const today = await dailyClickContract.currentDay()
-		const isCanClick = await dailyClickContract.daily_users(today, addr)
-		logger(Colors.blue(`checkAddressDailyClick ${addr} daily click is ${isCanClick}!`))
-		return isCanClick
-	} catch (ex) {
-		logger(Colors.red(`checkAddressDailyClick call dailyClickContract Contract got Error!`))
-		return null
-	}
-}
-
-const randomLotteryV3 = () => {
-	
-	// if (!isHourlyBalance) {
-	// 	return {lotterRate: [_rand1, _rand2, _rand3, _rand4], lottery: 0} 
-	// }
-	//			60% 
-	const rand1 = Math.round(Math.random()*1.2) > 0
-
-	const lotterRate = [_rand1, _rand2, _rand3, _rand4]
-
-	if (rand1) {
-		//		60% / 50% => 30%
-		const rand2 = Math.round(Math.random()) > 0
-
-		if (rand2)	{
-			//		30% / 29% = 9%
-			const rand3 = Math.round(Math.random()*.7) > 0
-			if (rand3) {
-
-				const rand4 = Math.round(Math.random()) > 0
-
-				if (!rand4) {
-					return {lotterRate, lottery: _rand3}
-				}
-
-				return {lotterRate, lottery: _rand4}
-			}
-			return {lotterRate, lottery: _rand2}
-		}
-		return {lotterRate,lottery: _rand1}
-	}
-
-	return {lotterRate: [_rand1, _rand2, _rand3, _rand4], lottery: 0} 
-}
 
 process.on('unhandledRejection', (reason) => { throw reason; })
 
-
-const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_TicketManager_class) => {
-	logger(Colors.magenta(`[${winnObj.wallet}:${winnObj.ipAddress}] Win${winnObj.bet} added to LotteryWinnerPool`))
-	
-	const setT = setTimeout(() => {
-		LotteryWinnerPool.delete (winnObj.wallet)
-		CNTP_Transfer_manager.addToPool([winnObj.wallet], [winnObj.bet])
-		logger(Colors.blue(`Move winner [${winnObj.wallet}:${winnObj.ipAddress}] Pay [${winnObj.bet}] to LotteryWinnerPool size = [${LotteryWinnerPool.size}]`))
-
-	}, doubleWinnerWaiting)
-
-	winnObj.Daemon = setT
-	LotteryWinnerPool.set(winnObj.wallet, winnObj)
-}
 
 let startFaucetProcessStatus = false
 const MAX_TX_Waiting = 1000 * 60 * 3
@@ -433,267 +145,34 @@ const developWalletListening = async (block: number) => {
 
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	await Promise.all([
-		ticketPoolProcess(eposh),
 		startFaucetProcess(),
-		developWalletListening(eposh)
-
+		developWalletListening(eposh),
+		moveData()
 	])
 }
 
-const doubleV3 = (wallet: string, ipAddress: string, CNYP_class: CNTP_TicketManager_class) => {
-	const winner = LotteryWinnerPool.get (wallet)
-
-	//				new Lottery game!
-	if (!winner) {
-		const obj = randomLotteryV3 ()
-		if (obj.lottery > 0){
-			addToWinnerPool ({
-				ipAddress, wallet, bet: obj.lottery, Daemon: null
-			}, CNYP_class)
-			
-		}
-		return obj
-	}
-
-	logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] Win${winner.bet} START play Double`))
-
-	if (winner.Daemon) {
-		clearTimeout(winner.Daemon)
-	}
-
-	logger(Colors.magenta(`Double Game Start for [${wallet}] Bet = [${winner.bet}]`))
-
-	if (winner.bet >= MaximumBet) {
-		LotteryWinnerPool.delete (wallet)
-		return {lottery: 0}
-	}
-
-	const rand1 = !(Math.floor(Math.random()*3))
-	
-	if (rand1) {
-		winner.bet *= 2
-		addToWinnerPool (winner, CNYP_class)
-		logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] Winner ${winner.bet} WIN Double! `))
-		return {lottery: winner.bet}
-	}
-	logger(Colors.magenta(`[${winner.wallet}:${winner.ipAddress}] ${winner.bet} Double GAME OVER!`))
-	LotteryWinnerPool.delete (wallet)
-	return {lottery: 0}
-}
-
-const soLotteryV3 = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_TicketManager_class) => {
-
-	const obj = doubleV3 (wallet, ipaddress,CNYP_class)
-	logger(Colors.magenta(`Start new randomLottery [${wallet}:${ipaddress}]`), inspect(obj, false, 3, true))
-	return res.status(200).json(obj).end()
-}
-
-const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP_class: CNTP_TicketManager_class) => {
-	const lastAccess = walletPool.get(wallet)
-	if (lastAccess) {
-		return res.status(301).end()
-	}
-	soLotteryV3 (wallet, ipaddress, res, CNYP_class)
-}
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
-const profileAddr = '0x9f2d92da19beA5B2aBc51e69841a2dD7077EAD8f'
-const ticketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
-const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
-const cntp_ticketManager_Contract = new ethers.Contract(ticketManager_addr, tickerManagerABi, provideCONET)
 
 interface faucetRequest {
 	wallet: string
 	ipAddress: string
 }
 
-
-const ticketPool: Map<string, number> = new Map()
-const ticketBrunPool: Map<string, number> = new Map()
-const twitterNFTPool: Map<string, boolean> = new Map()
-const dailyClickPool: Map<string, boolean> = new Map()
-
-
-const ticket = (wallet: string, res: Response, ipAddress: string) => {
-	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}]`))
-	const develop = developWalletPool.get (wallet)
-	//logger(Colors.magenta(`ticket developWalletPool.get develop = ${develop}`))
-	//logger(inspect(developWalletPool, false, 3, true))
-	if (develop) {
-		const _ticket = ( ticketPool.get (wallet) || 0 ) + 1
-		ticketPool.set( wallet, _ticket )
-		logger(Colors.magenta(`ticket for develop [${wallet}:${ipAddress}]`))
-		return res.status(200).json({ticket:1}).end()
-	}
-
-	const rand = !(Math.floor(Math.random() * 4 ))
-
-	if (!rand) {
-		logger(Colors.magenta(`ticket [${wallet}:${ipAddress}] lose`))
-		return res.status(200).json({}).end()
-	}
-
-	const _ticket = (ticketPool.get (wallet)||0) + 1
-	ticketPool.set(wallet, _ticket)
-	logger(Colors.magenta(`ticket [${wallet}:${ipAddress}] win 1 !`))
-	res.status(200).json({ticket:1}).end()
-}
-
-let ticketPoolProcesing = false
-
-const returnArrayToTicketPoolProcess = (wallet: string[], tickets: number[]) => {
-	wallet.forEach((n, index) => {
-		const ticket = (ticketPool.get (n)||0) + tickets[index]
-		ticketPool.set(n, ticket)
-	})
-}
-
-let lastticketTransferTimeStamp = new Date().getTime()
-
-const ticketPoolProcess = async (block: number) => {
-	if (ticketPoolProcesing || !ticketPool.size){
-		logger(Colors.blue(` ticketPoolProcess stoped because ticketPoolProcesing = true || ${ticketPool.size} is zero!`))
-		return
-	}
-
-	ticketPoolProcesing = true
-	const feeData = await provideCONET.getFeeData()
-	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
-
-	const timeStamp = new Date().getTime()
-
-	if ( gasPrice > checkGasPrice || !gasPrice ) {
-		if (timeStamp - lastticketTransferTimeStamp < longestWaitingTimeForTicket) {
-			ticketPoolProcesing = false
-			logger(Colors.grey(`ticketPoolProcess waiting low GAS fee! Pool size = ${ticketPool.size}`))
-			return 
-		}
-	}
-	logger(Colors.blue(`ticketPoolProcess start ticketPool has ${ticketPool.size} record!`))
-	const wallet: string[] = []
-	const tickets: number[] = []
-	const walletBrun: string[] = []
-	const brunNumber: number[] = []
-	const twitter: string [] = []
-	ticketPool.forEach((v, key) => {
-		if (v > 0) {
-			wallet.push(key)
-			tickets.push(v)
-		}
-		ticketPool.set(key, 0)
-	})
-
-	ticketBrunPool.forEach((v, key) => {
-		if (v > 0) {
-			walletBrun.push(key)
-			brunNumber.push(v)
-		}
-		ticketBrunPool.set(key, 0)
-	})
-
-	twitterNFTPool.forEach((v, key) => {
-		twitter.push(key)
-	})
-
-
-	const ids: number[] = wallet.map(n => 1)
-	const ids1: number[] = walletBrun.map(n => 1)
-	const idTw: number [] = twitter.map(n => 2)
-	const totalTw: number[] = twitter.map(n => 1)
-
-	const mintWallets = [...wallet, ...twitter]
-	const mintIds = [...ids, ...idTw]
-	const mintTotal = [...tickets, ...totalTw]
-	logger(Colors.magenta(`ticketPoolProcess started totla wallets [${wallet.length}]`))
-	try {
-		if (mintWallets.length) {
-			const tx = await ticket_contract.mintBatch(mintWallets, mintIds, mintTotal)
-			const tr = await tx.wait()
-			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
-			logger(inspect(tr, false, 3, true))
-		}
-		if (walletBrun.length) {
-			const tx = await ticket_contract.BurnBatch(walletBrun, ids1, brunNumber)
-			const tr = await tx.wait()
-			logger(Colors.magenta(`ticketPoolProcess mintBatch success!`))
-			logger(inspect(tr, false, 3, true))
-		}
-		
-	} catch (ex) {
-		logger(`ticketPoolProcess call ticket_contract.mintBatch Error! return all wallet [${wallet.length}] to Pool`)
-		ticketPoolProcesing = false
-		logger(ex)
-		logger(inspect(walletBrun, false, 3, true))
-		logger(inspect(ids1, false, 3, true))
-		logger(inspect(brunNumber, false, 3, true))
-		return returnArrayToTicketPoolProcess (wallet, tickets)
-	}
-	ticketPoolProcesing = false
-	lastticketTransferTimeStamp = timeStamp
-}
-
-
 export const checkGasPriceFordailyTaskPool = 25000000
 
 
-const dailyTaskPool: Map<string, string> = new Map()
-let dailyTaskPoolProcessLocked = false
-const dailyTaskPoolProcess = async () => {
-	if (dailyTaskPoolProcessLocked || !dailyTaskPool.size) {
-		return
-	}
-	dailyTaskPoolProcessLocked = true
-
-	const feeData = await provideCONET.getFeeData()
-	const gasPrice = feeData.gasPrice ? parseFloat(feeData.gasPrice.toString()): checkGasPrice + 1
-
-	const timeStamp = new Date().getTime()
-
-	if ( gasPrice > checkGasPriceFordailyTaskPool || !gasPrice ) {
-		if (timeStamp - lastticketTransferTimeStamp < longestWaitingTimeForTicket) {
-			ticketPoolProcesing = false
-			logger(Colors.grey(`ticketPoolProcess waiting low GAS fee! Pool size = ${ticketPool.size}`))
-			dailyTaskPoolProcessLocked = false
-			return 
-		}
-	}
-
-	const wallet: string[] = []
-	const ipAddress: string[] = []
-	dailyTaskPool.forEach((v,k) => {
-		wallet.push(k)
-		ipAddress.push(v)
-	})
-
-	try{
-		const tx = await dailyTaskSC.batchDaliy(wallet, ipAddress)
-		const ts = await tx.wait()
-		logger(Colors.blue(`dailyTaskPoolProcess send address length ${wallet.length} dailyTaskSC.batchDaliy success!`))
-		logger(inspect(ts, false, 3, true))
-
-	} catch (ex: any) {
-		logger(Colors.red(`dailyTaskPoolProcess dailyTaskSC.batchDaliy Error! ${ex.message} return all data ${wallet.length} to Pool!`))
-		wallet.forEach((n, index) => {
-			dailyTaskPool.set(n,ipAddress[index])
-		})
-
-	}
-	dailyTaskPoolProcessLocked = false
-
-}
-
-
-
 let faucetWaitingPool: faucetRequest[] = []
+
 export const faucet_call =  (wallet: string, ipAddress: string) => {
 	try {
 		let _wallet = ethers.getAddress(wallet).toLowerCase()
@@ -711,157 +190,19 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 	return true
 }
 
-let block = 0
+let currentEpoch = 0
 
 const faucet_call_pool: Map<string, boolean> = new Map()
-const TwttterServiceListeningPool: Map<string, Response> = new Map()
-const TGListeningPool: Map<string, Response> = new Map()
-const TGWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
-const twitterWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
-const twitterNFTNumber = 2
-const TGNFTNumber = 3
 
-const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
-	let ret: twitterResult = {
-		status: 200
-	}
-
-	const twitterAccount = obj.data[0].toUpperCase()
-	let SocialNFT: number[] = []
-	try {
-		const [tx, SocialArray] = await Promise.all ([
-			profileContract.checkSocialNFT(TGNFTNumber, twitterAccount),
-			profileContract.getSocialUser(obj.walletAddress)
-		])
-		
-		if (tx) {
-			ret.status = 402
-			ret.isusedByOtherWallet = true
-			ret.message = 'This Telegram Account was registered by someone already.'
-			return resolve (ret)
-		}
-
-		if (SocialArray?.length) {
-			SocialNFT = SocialArray[0].map((n: BigInt) => parseInt(n.toString()))
-			const jj = SocialNFT.findIndex(n => n === TGNFTNumber)
-			if (jj > -1) {
-				ret.status = 403
-				ret.message = 'Your Telegram are registered already.'
-				return resolve (ret)
-			}
-		}
-		
-	} catch (ex) {
-		ret.status = 501
-		ret.message = 'Service Unavailable!'
-		return resolve (ret)
-	}
-
-
-	if (!TGListeningPool.size) {
-		ret.status = 502
-		ret.message = 'Telegram Bot Service Unavailable!'
-		return resolve (ret)
-	}
-
-	obj.uuid = v4()
-	const post = JSON.stringify(obj) + '\r\n\r\n'
-
-	const waitCallBack = async (_obj: minerObj) => {
-		logger(`TG wait CallBack return`)
-		logger(inspect(_obj, false, 3, true))
-
-		const result = _obj.result
-		if (!result) {
-			ret.status = 500
-			ret.message = 'Telegram Bot Service Unavailable!'
-			return resolve (ret)
-		}
-		
-		ret = result
-		if (ret.status !== 200 || !ret.isInTGGroup ) {
-			return resolve (ret)
-		}
-
-		//twitterNFTPool.set(obj.walletAddress, true)
-		await profileContract.updateSocial(TGNFTNumber, twitterAccount, obj.walletAddress)
-		ret.NFT_ID = TGNFTNumber
-		if (SocialNFT.length > 0) {
-			const _ticket = (ticketPool.get (obj.walletAddress)||0) + 1
-			ticketPool.set(obj.walletAddress, _ticket)
-		}
-		
-		return resolve (ret)
-	}
-
-	TGWaitingCallbackPool.set (obj.uuid, waitCallBack)
-
-	TGListeningPool.forEach((n, key) => {
-
-		if (n.writable) {
-			return n.write(post, err => {
-				if (err) {
-					TGListeningPool.delete(key)
-					return logger(Colors.red(`TG Pool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
-				}
-
-				return logger(Colors.red(`TG Pool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
-			})
-		}
-
-		TGListeningPool.delete(key)
-		return logger(Colors.red(`TG Pool ${key} got writeable = false Error remove ${key} from listening POOL!`))
-	})
-
-})
-
-const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
-	const socialTaskText = obj.walletAddress
-	const socialTaskNFTNumber = parseInt(obj.data[0])
-
-	let ret: twitterResult = {
-		status: 200
-	}
-
-	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 5 ) {
-		ret.status = 404
-		ret.message = 'Unknow social Task number!'
-		return resolve (ret)
-	}
-
-	try {
-		const [tx] = await Promise.all ([
-			profileContract.checkSocialNFT(socialTaskNFTNumber, socialTaskText),
-		])
-		
-		if (tx) {
-			ret.status = 402
-			ret.isusedByOtherWallet = true
-			ret.message = 'Your social task was completed.'
-			return resolve (ret)
-		}
-		
-	} catch (ex) {
-		ret.status = 501
-		ret.message = 'Service Unavailable!'
-		return resolve (ret)
-	}
-
-	await profileContract.updateSocial(socialTaskNFTNumber, socialTaskText, obj.walletAddress)
-		ret.NFT_ID = socialTaskNFTNumber
-		
-		const _ticket = (ticketPool.get (obj.walletAddress)||0) + 1
-		ticketPool.set(obj.walletAddress, _ticket)
-		
-	return resolve (ret)
-})
 
 interface InodeEpochData {
 	wallets: string[]
 	users: string[]
 }
-const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
 
+
+const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
+const epochTotalData:  Map<number, IGossipStatus > = new Map()
 
 const miningData = (body: any, res: Response) => {
 	
@@ -871,9 +212,78 @@ const miningData = (body: any, res: Response) => {
 		eposh = new Map()
 		epochNodeData.set(body.epoch, eposh)
 	}
+
 	eposh.set (body.ipaddress, {wallets: body.wallets, users: body.users})
-	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddres} = ${eposh.size}`))
+
+	let epochTotal = epochTotalData.get (body.epoch)
+	if (!epochTotal) {
+		epochTotal = {
+			totalConnectNode: 0,
+			epoch: body.epoch,
+			totalMiners: 0,
+			totalUsers: 0
+		}
+	}
+
+	epochTotal.totalMiners += body.wallets.length
+	epochTotal.totalMiners += body.users.length
+	epochTotal.totalConnectNode += 1
+
+	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
 	return res.status(200).end()
+}
+
+
+const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
+const filePath = '/home/peter/.data/v2/'
+
+
+const moveData = async () => {
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
+	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
+
+	const block = currentEpoch - 2
+	
+	let _wallets: string[] = []
+	let _users: string[] = []
+
+	const epochTotal = epochTotalData.get (block)
+	const epochAll =  epochNodeData.get (block)
+
+	if (!epochTotal) {
+		return logger (Colors.red(`moveData can't get epochTotal ${block}`))
+	}
+
+	if (!epochAll) {
+		return logger (Colors.red(`moveData can't get epochAll ${block}`))
+	}
+
+
+
+	epochAll.forEach((v, keys) => {
+		_wallets = [..._wallets, ...v.wallets]
+		_users = [..._users, ...v.users]
+	})
+	
+	const totalUsrs = _users.length
+	const totalMiners = _wallets.length + totalUsrs
+	const minerRate = (rate/totalMiners)/12
+
+	
+	logger(Colors.magenta(`${block} move data connecting = ${epochAll.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
+	const filename = `${filePath}${block}.wallet`
+	const filename1 = `${filePath}${block}.total`
+	const filename2 = `${filePath}${block}.users`
+
+	
+	await Promise.all ([
+		writeFile(filename, JSON.stringify(_wallets)),
+		writeFile(filename1, JSON.stringify({totalMiners, minerRate, totalUsrs})),
+		writeFile(filename2, JSON.stringify(_users))
+	])
+
+	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
+	
 }
 
 
@@ -885,25 +295,22 @@ class conet_dl_server {
 	public CNTP_manager = new CNTP_TicketManager_class ([masterSetup.gameCNTPAdmin[0]], 1000)
 
 	private initSetupData = async () => {
-        logger (Colors.blue(`start local server!`))
 		this.serverID = getServerIPV4Address(false)[0]
-		logger(Colors.blue(`serverID = [${this.serverID}]`))
-		block = await provideCONET.getBlockNumber()
-		logger(`conet_dl_server STARTED BLOCK`)
-		
+		currentEpoch = await provideCONET.getBlockNumber()
+		await getAllDevelopAddress()
+		this.startServer()
+
 		provideCONET.on ('block', async _block => {
-			if (_block === block + 1 ) {
-				block++
+			if (_block === currentEpoch + 1 ) {
+				currentEpoch++
 				return stratlivenessV2(_block, this)
 			}
 		})
-		await getAllDevelopAddress()
-		this.startServer()
+		
 	}
 
 	constructor () {
 		this.initSetupData ()
-		startListeningCONET_Holesky_EPOCH()
     }
 
 	private startServer = async () => {
@@ -977,9 +384,7 @@ class conet_dl_server {
 			if (tx) {
 				return res.status(200).json(tx).end()
 			}
-
 			return res.status(403).end()
-
 		})
 
 

@@ -95,19 +95,6 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 let wallet: ethers.HDNodeWallet
 
 
-
-let gossipStatus: IGossipStatus = {
-	totalConnectNode: 0,
-	epoch: 0,
-	nodesWallets: new Map(),
-	totalMiners: 0,
-	nodeWallets: [],
-	userWallets: [],
-}
-
-let previousGossipStatus = gossipStatus
-
-
 const addToEpochNode = (wallets: string[], epoch: number, node: nodeInfo) => {
 	const epochNode = listenPool.get(epoch)
 	if (!epochNode) {
@@ -182,117 +169,73 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
-const moveData = async () => {
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
+// const moveData = async () => {
+// 	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
+// 	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
 
-	const block = currentEpoch - 1
+// 	const block = currentEpoch - 1
 	
-	let _wallets: string[] = []
-	let _users: string[] = []
-	const obj = listenPool.get (block)
-	const objuser = userPool.get(block)
-	if (!obj||!objuser) {
-		return logger(Colors.red(`moveData Error! listenPool hasn't Epoch ${block} data! `))
-	}
+// 	let _wallets: string[] = []
+// 	let _users: string[] = []
+// 	const obj = listenPool.get (block)
+// 	const objuser = userPool.get(block)
+// 	if (!obj||!objuser) {
+// 		return logger(Colors.red(`moveData Error! listenPool hasn't Epoch ${block} data! `))
+// 	}
 
-	obj.forEach((v, keys) => {
-		_wallets = [..._wallets, ...v]
-	})
+// 	obj.forEach((v, keys) => {
+// 		_wallets = [..._wallets, ...v]
+// 	})
 
-	objuser.forEach((v,keys) => {
-		_users = [..._users, ...v]
-	})
+// 	objuser.forEach((v,keys) => {
+// 		_users = [..._users, ...v]
+// 	})
 
 	
-	const totalUsrs = _users.length
-	const totalMiners = _wallets.length + totalUsrs
-	const minerRate = (rate/totalMiners)/12
-	previousGossipStatus.nodeWallets = _wallets
-	previousGossipStatus.totalConnectNode = obj.size
-	previousGossipStatus.totalMiners = totalMiners
+// 	const totalUsrs = _users.length
+// 	const totalMiners = _wallets.length + totalUsrs
+// 	const minerRate = (rate/totalMiners)/12
+// 	previousGossipStatus.nodeWallets = _wallets
+// 	previousGossipStatus.totalConnectNode = obj.size
+// 	previousGossipStatus.totalMiners = totalMiners
 	
-	const minerPreviousGossipStatus: IGossipStatus = {
-		epoch: previousGossipStatus.epoch,
-		totalMiners,
-		nodeWallets: _wallets,
-		totalConnectNode: obj.size,
-		userWallets: [],
-		nodesWallets: new Map()
-	}
+// 	logger(Colors.magenta(`${block} move data connecting = ${obj.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
+// 	const filename = `${filePath}${block}.wallet`
+// 	const filename1 = `${filePath}${block}.total`
+// 	const filename2 = `${filePath}${block}.users`
+// 	const timeOverNodes: nodeInfo[] = []
 
+// 	Guardian_Nodes.forEach(n => {
+// 		if (typeof n.lastEposh === 'undefined') {
+// 			timeOverNodes.push(n)
 
-	const userPreviousGossipStatus: IGossipStatus = {
-		epoch: previousGossipStatus.epoch,
-		totalMiners,
-		nodeWallets: [],
-		totalConnectNode: obj.size,
-		userWallets: _users,
-		nodesWallets: new Map()
-	}
+// 		} else if (block - n.lastEposh > 2) {
+// 			timeOverNodes.push(n)
+// 		}
 
-	logger(Colors.magenta(`${block} move data connecting = ${obj.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
-	const filename = `${filePath}${block}.wallet`
-	const filename1 = `${filePath}${block}.total`
-	const filename2 = `${filePath}${block}.users`
-	const timeOverNodes: nodeInfo[] = []
+// 	})
 
-	Guardian_Nodes.forEach(n => {
-		if (typeof n.lastEposh === 'undefined') {
-			timeOverNodes.push(n)
-
-		} else if (block - n.lastEposh > 2) {
-			timeOverNodes.push(n)
-		}
-
-	})
-
-	timeOverNodes.forEach(n => {
-		connectToGossipNode(n)
-	})
+// 	timeOverNodes.forEach(n => {
+// 		connectToGossipNode(n)
+// 	})
 
 
 
-	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
-	await Promise.all ([
-		writeFile(filename, JSON.stringify(minerPreviousGossipStatus)),
-		writeFile(filename1, JSON.stringify({totalMiners, minerRate, totalUsrs})),
-		writeFile(filename2, JSON.stringify(userPreviousGossipStatus))
-	])
+// 	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
+// 	await Promise.all ([
+// 		// writeFile(filename, JSON.stringify(minerPreviousGossipStatus)),
+// 		// writeFile(filename1, JSON.stringify({totalMiners, minerRate, totalUsrs})),
+// 		// writeFile(filename2, JSON.stringify(userPreviousGossipStatus))
+// 	])
 
 	
 	
-}
+// }
 
 const listenPool: Map<number, Map<string, string[]>> = new Map()
 const userPool: Map<number, Map<string, string[]>> = new Map()
 
 let currentEpoch = 0
-
-const listenEpoch = async () => {
-	currentEpoch = await provider.getBlockNumber()
-	gossipStatus.epoch = currentEpoch
-
-	provider.on('block', block => {
-		currentEpoch = block
-		moveData()
-		listenPool.delete(currentEpoch - 3)
-
-		const obj = listenPool.get (currentEpoch)
-		if (!obj) {
-			listenPool.set(currentEpoch, new Map())
-		}
-		const obj1 = userPool.get (currentEpoch)
-		if (!obj1) {
-			userPool.set(currentEpoch, new Map())
-		}
-		
-		logger(Colors.blue(`listenEpoch on [${currentEpoch}]`))
-	})
-
-	logger(Colors.blue(`listenEpoch start current = [${currentEpoch}]`))
-}
-
 
 
 let getAllNodesProcess = false
@@ -359,7 +302,7 @@ const start = async () => {
 	wallet = ethers.Wallet.createRandom()
 	await getAllNodes()
 	startGossipListening()
-	listenEpoch()
+	
 }
 
 start()
