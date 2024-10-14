@@ -52,13 +52,15 @@ const filePath = '/home/peter/.data/v2/'
 const get_epoch_total = async () => {
 	const block = currentEpoch - 1
 	const filename1 = `${filePath}${block}.total`
-	const data = await readFile(filename1, 'utf8')
+	
 	try {
+		const data = await readFile(filename1, 'utf8')
 		const ratedata = JSON.parse(data)
 		eposh_total.set(block, ratedata)
 		eposh_total.delete(block - 2)
 	} catch (ex) {
-		logger(Colors.red(`get_epoch_total JSON.parse(data) Error!\n ${data}`))
+		eposh_total.set(block, {totalMiners: 0, minerRate: 0})
+		logger(Colors.red(`get_epoch_total JSON.parse(data) Error!`))
 	}
 }
 
