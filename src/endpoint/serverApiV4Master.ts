@@ -860,7 +860,7 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 const miningData = (body: any, res: Response) => {
 	logger(Colors.grey(`/miningData`))
 	logger(inspect(body, false, 3, true))
-	return res.status(200).json({}).end()
+	return res.status(200).end()
 }
 
 

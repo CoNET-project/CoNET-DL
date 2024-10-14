@@ -12,6 +12,7 @@ import NodesInfo from '../endpoint/CONET_nodeInfo.ABI.json'
 import {getRandomValues} from 'node:crypto'
 import { writeFile} from 'node:fs/promises'
 import rateABI from '../endpoint/conet-rate.json'
+import type {Response, Request } from 'express'
 
 const conet_rpc = 'https://rpc.conet.network'
 
@@ -136,6 +137,31 @@ const addToEpochNodeUser = (wallets: string[], epoch: number, node: nodeInfo) =>
 	//logger(Colors.grey(`addToEpochNodeUser ${node.ip_addr} epoch ${epoch} wallets = ${wallets.length} connecting = ${epochUserNodes.size}`))
 	epochUserNodes.set(node.ip_addr, wallets)
 }
+const postLocalhost = async (path: string, obj: any)=> {
+	
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path,
+		port: 8002,
+		method: 'POST',
+		protocol: 'http:',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	
+	const req = await request (option, res => {
+		logger(Colors.grey(`postLocalhost http://localhost/${path} success!`), res)
+
+	})
+
+	req.once('error', (e) => {
+		console.error(`postLocalhost to master on Error! ${e.message}`)
+	})
+
+	req.write(JSON.stringify(obj))
+	req.end()
+}
 
 const connectToGossipNode = async (node: nodeInfo ) => {
 	
@@ -170,8 +196,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			const users = data.userWallets||[]
 			node.lastEposh =  data.epoch
 			//logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
-			addToEpochNode(wallets, data.epoch, node)
-			addToEpochNodeUser(users, data.epoch, node)
+			postLocalhost('/miningData', {wallets, users, ipaddress: node.ip_addr})
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
 			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
@@ -212,24 +237,6 @@ const moveData = async () => {
 	previousGossipStatus.totalConnectNode = obj.size
 	previousGossipStatus.totalMiners = totalMiners
 	
-	const minerPreviousGossipStatus: IGossipStatus = {
-		epoch: previousGossipStatus.epoch,
-		totalMiners,
-		nodeWallets: _wallets,
-		totalConnectNode: obj.size,
-		userWallets: [],
-		nodesWallets: new Map()
-	}
-
-
-	const userPreviousGossipStatus: IGossipStatus = {
-		epoch: previousGossipStatus.epoch,
-		totalMiners,
-		nodeWallets: [],
-		totalConnectNode: obj.size,
-		userWallets: _users,
-		nodesWallets: new Map()
-	}
 
 	logger(Colors.magenta(`${block} move data ${_start}~${_end} connecting = ${obj.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
 	const filename = `${filePath}${block}.wallet`
@@ -358,7 +365,7 @@ const start = async () => {
 	wallet = ethers.Wallet.createRandom()
 	await getAllNodes()
 	startGossipListening()
-	listenEpoch()
+	// listenEpoch()
 }
 
 
