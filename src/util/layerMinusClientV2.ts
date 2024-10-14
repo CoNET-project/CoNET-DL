@@ -151,7 +151,10 @@ const postLocalhost = async (path: string, obj: any)=> {
 	}
 	
 	const req = await request (option, res => {
-		logger(Colors.grey(`postLocalhost http://localhost/${path} success!`), res)
+		if (res.statusCode !== 200) {
+			return logger(Colors.red(`postLocalhost http://localhost/${path} Error!!!`))
+		}
+		return logger(Colors.grey(`postLocalhost http://localhost/${path} Success!!!`))
 
 	})
 
