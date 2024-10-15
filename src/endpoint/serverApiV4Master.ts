@@ -245,8 +245,8 @@ const moveData = async () => {
 
 	const block = currentEpoch - 1
 	
-	let _wallets: string[] = []
-	let _users: string[] = []
+	let _wallets_: Map<string, true> = new Map()
+	let _users_: Map<string, true> = new Map()
 
 	const epochTotal = epochTotalData.get (block)
 	const epochAll =  epochNodeData.get (block)
@@ -262,16 +262,25 @@ const moveData = async () => {
 
 
 	epochAll.forEach((v, keys) => {
-		_wallets = [..._wallets, ...v.wallets]
-		_users = [..._users, ...v.users]
+		v.wallets.forEach(n => _wallets_.set(n.toLowerCase(), true))
+	})
+
+	epochAll.forEach((v, keys) => {
+		v.users.forEach(n => {
+			const k = n.toLowerCase()
+			_users_.set(k, true)
+			_wallets_.delete(k)
+		})
 	})
 	
-	const totalUsrs = _users.length
-	const totalMiners = _wallets.length + totalUsrs
-	const minerRate = (rate/totalMiners)/12
+	
 
 	
-	logger(Colors.magenta(`${block} move data connecting = ${epochAll.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
+	const totalUsrs = _users_.size
+	const totalMiners = _wallets_.size + totalUsrs
+	const minerRate = (rate/totalMiners)/12
+
+	logger(Colors.magenta(`${block} move data connecting = ${epochAll.size} total [${totalMiners}] miners [${_wallets_.size}] users [${_users_.size}] rate ${minerRate}`))
 	const filename = `${filePath}${block}.wallet`
 	const filename1 = `${filePath}${block}.total`
 	const filename2 = `${filePath}${block}.users`
@@ -279,9 +288,9 @@ const moveData = async () => {
 	const jsonData = {totalMiners, minerRate, totalUsrs, epoch: block}
 	logger(inspect(jsonData, false, 3, true))
 	await Promise.all ([
-		writeFile(filename, JSON.stringify(_wallets), 'utf8'),
+		writeFile(filename, JSON.stringify([..._wallets_.keys()]), 'utf8'),
 		writeFile(filename1, JSON.stringify(jsonData), 'utf8'),
-		writeFile(filename2, JSON.stringify(_users), 'utf8')
+		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
