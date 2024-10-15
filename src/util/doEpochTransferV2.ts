@@ -8,11 +8,14 @@ import {readFile} from 'node:fs/promises'
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 import {inspect} from 'node:util'
 import rateABI from '../endpoint/conet-rate.json'
+import {abi as CONET_Point_ABI} from './conet-point.json'
 
 const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
-
+const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
+const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[1], provider)
+const CNTP_SC = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
 
 const localIPFS_path = '/home/peter/.data/v2/'
 
@@ -34,6 +37,17 @@ interface ITotal {
 	totalUsrs: number
 	epoch: number
 }
+
+const burnCNTP = async (valueCNTP: number) => {
+	try {
+		const tx = await CNTP_SC.bronCNTP(ethers.parseEther(valueCNTP.toFixed(8)))
+		const ts = await tx.wait()
+		logger(inspect(ts, false, 3, true))
+	} catch (ex: any) {
+		return logger(Color.red(`burnCNTP Error!`), ex.message)
+	}
+}
+
 const stratFreeMinerTransfer = async (block: number) => {
 
 	const _data = await getLocalIPFS (block.toString())
@@ -59,9 +73,10 @@ const stratFreeMinerTransfer = async (block: number) => {
 	
 	const minerRate = total.minerRate
 	const payArray = walletArray.map (n => parseFloat(minerRate.toFixed(6)))
-	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}] users ${total.totalUsrs}`))
-	// CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
-	
+	const brunCNTP = total.totalUsrs * minerRate
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}] users ${total.totalUsrs} brun CNTP = ${brunCNTP}`))
+	CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
+	await burnCNTP(brunCNTP)
 }
 
 let EPOCH = 0
