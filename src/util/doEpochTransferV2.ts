@@ -16,7 +16,7 @@ const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[1], provider)
 const CNTP_SC = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
-
+const CNTP_holder= '0x418833b70F882C833EF0F0Fcee3FB9d89C79d47C'
 const localIPFS_path = '/home/peter/.data/v2/'
 
 const getLocalIPFS = async (block: string) => {
@@ -40,7 +40,7 @@ interface ITotal {
 
 const burnCNTP = async (valueCNTP: number) => {
 	try {
-		const tx = await CNTP_SC.bronCNTP(ethers.parseEther(valueCNTP.toFixed(8)))
+		const tx = await CNTP_SC.burnFrom(CNTP_holder, ethers.parseEther(valueCNTP.toFixed(8)))
 		const ts = await tx.wait()
 		logger(inspect(ts, false, 3, true))
 	} catch (ex: any) {
