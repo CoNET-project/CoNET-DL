@@ -8,7 +8,7 @@ import {readFile} from 'node:fs/promises'
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 import {inspect} from 'node:util'
 import rateABI from '../endpoint/conet-rate.json'
-import {abi as CONET_Point_ABI} from './conet-point.json'
+import CONET_Point_ABI from './cCNTP.json'
 
 const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
