@@ -114,7 +114,7 @@ const postLocalhost = async (path: string, obj: any)=> {
 		if (res.statusCode !== 200) {
 			return logger(Colors.red(`postLocalhost http://localhost/${path} Error!!!`))
 		}
-		return logger(Colors.grey(`postLocalhost http://localhost/${path} Success!!!`))
+		return //logger(Colors.grey(`postLocalhost http://localhost/${path} Success!!!`))
 
 	})
 
@@ -158,7 +158,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
 			node.lastEposh =  data.epoch
-			//logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
+			logger(Colors.grey(`startGossip got ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
 			postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))

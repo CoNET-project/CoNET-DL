@@ -160,6 +160,7 @@ const sendPaymentToPool = async (totalMiner: string, walletList: string[], payLi
 			'Content-Type': 'application/json'
 		}
 	}
+	
 	const postData = {
 		walletList, payList, totalMiner
 	}
@@ -221,8 +222,6 @@ const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new 
 
 
 const stratFreeMinerReferrals = async (block: string) => {
-
-
 	const _data = await getLocalIPFS (block)
 	
 	if (!_data) {

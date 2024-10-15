@@ -17,7 +17,7 @@ import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool_useTicketManager'
-
+import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -155,6 +155,7 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 
 const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
+const conet_Referral_contractV3 = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
@@ -162,7 +163,7 @@ const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI,
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
-
+const contract_Referral = new ethers.Contract(conet_Referral_contractV3, CONET_Referral_ABI, provideCONET)
 
 interface faucetRequest {
 	wallet: string
@@ -238,6 +239,7 @@ const miningData = (body: any, res: Response) => {
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
+const ReferralsMap: Map<string, string> = new Map()
 
 const moveData = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
@@ -381,6 +383,40 @@ class conet_dl_server {
 
 		router.post ('/miningData',  async (req, res) => {
 			return miningData(req.body, res)
+		})
+
+		router.post ('/wallet',  async (req, res) =>{
+			
+			let wallet: string
+			try {
+				wallet = req.body.wallet
+			} catch (ex) {
+				logger (Colors.grey(`request /wallet req.body ERROR!`), inspect(req.body, false,3, true))
+				return res.status(403).end()
+			}
+			
+			wallet = wallet.toLowerCase()
+			let address = ReferralsMap.get (wallet)
+			if (address) {
+				return res.status(200).json({address}).end()
+			}
+
+			try {
+				
+				address = await contract_Referral.getReferrer(wallet)
+			} catch (ex){
+				logger(Colors.red(`contract.getReferrer Error!`))
+				return res.status(200).json({}).end()
+			}
+
+			if (!address) {
+				address = '0x0000000000000000000000000000000000000000'
+			}
+			address = address.toLowerCase()
+			
+			ReferralsMap.set(wallet, address)
+			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
+			return res.status(200).json({address}).end()
 		})
 		
 		router.post ('/conet-faucet', async (req, res ) => {
