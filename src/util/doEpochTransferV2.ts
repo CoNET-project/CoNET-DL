@@ -49,7 +49,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
 	
-	if (walletArray?.length) {
+	if (!walletArray.length) {
 		logger(inspect(walletArray, false, 3, true))
 		logger(inspect(total, false, 3, true))
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
