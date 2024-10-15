@@ -277,11 +277,12 @@ const moveData = async () => {
 	const filename1 = `${filePath}${block}.total`
 	const filename2 = `${filePath}${block}.users`
 
-	
+	const jsonData = {totalMiners, minerRate, totalUsrs}
+	logger(inspect(jsonData, false, 3, true))
 	await Promise.all ([
-		writeFile(filename, JSON.stringify(_wallets)),
-		writeFile(filename1, JSON.stringify({totalMiners, minerRate, totalUsrs})),
-		writeFile(filename2, JSON.stringify(_users))
+		writeFile(filename, JSON.stringify(_wallets), 'utf8'),
+		writeFile(filename1, JSON.stringify(jsonData), 'utf8'),
+		writeFile(filename2, JSON.stringify(_users), 'utf8')
 	])
 
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
