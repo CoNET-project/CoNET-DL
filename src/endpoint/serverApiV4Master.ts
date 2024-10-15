@@ -226,12 +226,11 @@ const miningData = (body: any, res: Response) => {
 		}
 		epochTotalData.set(body.epoch, epochTotal)
 	}
-
 	epochTotal.totalMiners += body.wallets.length
 	epochTotal.totalMiners += body.users.length
 	epochTotal.totalConnectNode += 1
 
-	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
+	//logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
 	return res.status(200).end()
 }
 
@@ -277,7 +276,7 @@ const moveData = async () => {
 	const filename1 = `${filePath}${block}.total`
 	const filename2 = `${filePath}${block}.users`
 
-	const jsonData = {totalMiners, minerRate, totalUsrs}
+	const jsonData = {totalMiners, minerRate, totalUsrs, epoch: block}
 	logger(inspect(jsonData, false, 3, true))
 	await Promise.all ([
 		writeFile(filename, JSON.stringify(_wallets), 'utf8'),
