@@ -4,7 +4,7 @@ import {masterSetup} from './util'
 import Color from 'colors/safe'
 import { logger } from './logger'
 import { join } from 'node:path'
-import {readFile} from 'node:fs'
+import {readFile} from 'node:fs/promises'
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 import {inspect} from 'node:util'
 import rateABI from '../endpoint/conet-rate.json'
@@ -16,18 +16,22 @@ const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 
 const localIPFS_path = '/home/peter/.data/v2/'
 
-const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new Promise(resolve => {
-	const path = join(localIPFS_path, `${block}.wallet`)
+const getLocalIPFS = async (block: string) => {
+	const path1 = join(localIPFS_path, `${block}.wallet`)
+	const path2 = join(localIPFS_path, `${block}.total`)
+	const [total, wallet] = await Promise.all([
+		readFile(path2, 'utf8'),
+		readFile(path1, 'utf8')
+	])
+	return {total, wallet}
+}
 
-	return readFile(path, 'utf-8', (err, data) => {
-		if (err) {
-			return resolve ('')
-		}
-		return resolve(data.toString())
-	})
-})	
-
-
+interface ITotal {
+	totalMiners: number
+	minerRate: number
+	totalUsrs: number
+	epoch: number
+}
 const stratFreeMinerTransfer = async (block: number) => {
 
 	const _data = await getLocalIPFS (block.toString())
@@ -37,24 +41,25 @@ const stratFreeMinerTransfer = async (block: number) => {
 	}
 	
 	let walletArray: string[]
+	let total: ITotal
 	
 	try{
-		const data = JSON.parse(_data)
-		walletArray = data.nodeWallets
+		total = JSON.parse(_data.total)
+		walletArray = JSON.parse(_data.wallet)
 	} catch (ex) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
 	
-	if (!walletArray?.length) {
+	if (walletArray?.length) {
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 	
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
-	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))/1000
-	const minerRate = rate/walletArray.length
+
+	
+	const minerRate = total.minerRate
 	const payArray = walletArray.map (n => parseFloat(minerRate.toFixed(6)))
-	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate [${rate}] minerRate = [${ minerRate }]MinerWallets length = [${walletArray.length}]`))
-	CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
+	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}] users ${total.totalUsrs}`))
+	// CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
 	
 }
 
