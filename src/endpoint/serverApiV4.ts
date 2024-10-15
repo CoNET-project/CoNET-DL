@@ -50,7 +50,7 @@ const eposh_total: Map<number, epochRate> = new Map()
 const filePath = '/home/peter/.data/v2/'
 
 const get_epoch_total = async () => {
-	const block = currentEpoch - 1
+	const block = currentEpoch - 2
 	const filename1 = `${filePath}${block}.total`
 	
 	try {
@@ -58,7 +58,7 @@ const get_epoch_total = async () => {
 		logger(inspect(data, false, 3, true))
 		const ratedata = JSON.parse(data)
 		eposh_total.set(block, ratedata)
-		eposh_total.delete(block - 2)
+		eposh_total.delete(block - 4)
 	} catch (ex: any) {
 		eposh_total.set(block, {totalMiners: 0, minerRate: 0})
 		logger(Colors.red(`get_epoch_total ${filename1} Error!`), ex.message)
