@@ -64,6 +64,8 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 				_Time = setTimeout(() => {
 					logger(Colors.red(`startGossip [${node.ip_addr}] has 2 EPOCH got NONE Gossip Error! Try to restart! `))
 					kkk.destroy()
+					startGossip (node, POST, callback)
+					
 				}, 24 * 1000)
 			}
 		})
