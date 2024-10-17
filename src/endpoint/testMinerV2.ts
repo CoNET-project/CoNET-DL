@@ -89,7 +89,16 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 }
 
 const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
-	
+	const launch = launchMap.get (node.ip_addr)
+	if (launch) {
+		return
+	}
+	launchMap.set (node.ip_addr, true)
+
+	const relaunch = () => setTimeout(() => {
+		launchMap.set (node.ip_addr, false)
+		startGossip(node, POST, callback)
+	}, 1000)
 
 	const option: RequestOptions = {
 		host: node.ip_addr,
@@ -106,18 +115,19 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 
 	const kkk = request(option, res => {
 
-		if (res.statusCode !==200) {
-			return logger(`startTestMiner ${node.ip_addr} got res.statusCode = [${res.statusCode}] != 200 error!`)
-		}
-
 		let data = ''
 		let _Time: NodeJS.Timeout
 
+
+		if (res.statusCode !==200) {
+			relaunch()
+			return logger(`startTestMiner ${node.ip_addr} got res.statusCode = [${res.statusCode}] != 200 error!`)
+		}
+		
 		res.on ('data', _data => {
 			clearTimeout(_Time)
 			data += _data.toString()
 			
-
 			if (/\r\n\r\n/.test(data)) {
 				
 				if (first) {
@@ -148,7 +158,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 		})
 
 		res.once('error', err => {
-			startGossip (node, POST, callback)
+			relaunch()
 			logger(Colors.red(`startGossip [${node.ip_addr}] res on ERROR! Try to restart! `), err.message)
 		})
 
@@ -157,9 +167,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 			kkk.destroy()
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
-				setTimeout(() => {
-					startGossip (node, POST, callback)
-				}, 1000)
+				relaunch()
 			}
 			
 		})
@@ -168,11 +176,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 
 	kkk.on('error', err => {
 		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! Try to restart! `), err.message)
-		setTimeout(() => {
-			
-			startGossip (node, POST, callback)
-		}, 1000)
-		
+		relaunch()
 	})
 
 	kkk.end(POST)
@@ -196,7 +200,11 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 	return node
 }
 
+const launchMap: Map<string, boolean> = new Map()
+
 const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
+	const walletAddress = wallet.address.toLowerCase()
+	
 	
 	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
 	const node = Guardian_Nodes[index]
@@ -209,7 +217,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 	const command = {
 		command: 'mining',
-		walletAddress: wallet.address.toLowerCase(),
+		walletAddress,
 		algorithm: 'aes-256-cbc',
 		Securitykey: key,
 	}
@@ -225,7 +233,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 
 	const postData = await encrypt (encryptObj)
-	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}:${wallet.address.toLowerCase()}`))
+	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
 	logger(inspect(node))
 
 	startGossip(node, JSON.stringify({data: postData}), async (err, _data ) => {
@@ -250,7 +258,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		data.userWallets = data.nodeWallets = []
 		const command = {
 			command: 'mining_validator',
-			walletAddress: wallet.address.toLowerCase(),
+			walletAddress,
 			algorithm: 'aes-256-cbc',
 			Securitykey: key,
 			requestData: data
@@ -266,7 +274,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		}
 
 		const _postData = await encrypt (encryptObj)
-		logger(Colors.grey(`validator [${wallet.address.toLowerCase()}] post to ${validatorNode.ip_addr} epoch ${data.epoch} total miner [${data.online}]`))
+		logger(Colors.grey(`validator [${walletAddress}] post to ${validatorNode.ip_addr} epoch ${data.epoch} total miner [${data.online}]`))
 		startGossip(validatorNode, JSON.stringify({data: _postData}))
 
 	})
