@@ -272,11 +272,13 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		}
 		
 		let epochObj = epochTotal.get(data.epoch)
+
 		if (!epochObj) {
 			epochObj = new Map()
 			epochTotal.set(data.epoch, epochObj)
 		}
-		epochObj.set(data.nodeIpAddr, true)
+
+		epochObj.set(walletAddress, true)
 
 		data.minerResponseHash = await wallet.signMessage(data.hash)
 		data.isUser = isUser
