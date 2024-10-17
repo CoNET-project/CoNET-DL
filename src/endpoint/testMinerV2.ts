@@ -158,7 +158,6 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
 				setTimeout(() => {
-					logger(Colors.red(`startGossip [${node.ip_addr}] requestHttps on Error! Try to restart! `))
 					startGossip (node, POST, callback)
 				}, 1000)
 			}
@@ -168,9 +167,9 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 	})
 
 	kkk.on('error', err => {
-		
+		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! Try to restart! `), err.message)
 		setTimeout(() => {
-			logger(Colors.red(`startGossip [${node.ip_addr}] requestHttps on Error! Try to restart! `), err.message)
+			
 			startGossip (node, POST, callback)
 		}, 1000)
 		
@@ -201,7 +200,10 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
 	const node = Guardian_Nodes[index]
-	logger(inspect(node, false, 3, true))
+	if (!node.armoredPublicKey) {
+		logger(Colors.red(`connectToGossipNode node ${node.ip_addr} ${node.nftNumber} armoredPublicKey Error restart connectToGossipNode`))
+		return connectToGossipNode(wallet)
+	}
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	
 	const command = {
