@@ -20,12 +20,15 @@ const maxScanNodesNumber = 110
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
+const epochTotal: Map<number, Map<string, boolean>> = new Map()
 
 const getAllNodes = async () => {
 	if (getAllNodesProcess) {
 		return
 	}
+
 	getAllNodesProcess = true
+
 	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
 	let scanNodes = 0
 	try {
@@ -65,6 +68,20 @@ const getAllNodes = async () => {
 	getAllNodesProcess = false
 }
 
+const listenEposh = async () => {
+	let currentEpoch = await provider.getBlockNumber()
+
+	provider.on ('block', block => {
+		currentEpoch  = block
+		const obj = epochTotal.get(block-2)
+		if (!obj) {
+			return logger(Colors.blue(`listenEposh epochTotal.get(${block-2}) got null error!`))
+		}
+		logger(Colors.magenta(`EPOCH ${block-2} Total connecting ${obj.size}`))
+		epochTotal.delete(block-2)
+	})
+}
+
 const getWallet = async (SRP: string, max: number, __start: number) => {
 	await getAllNodes()
 
@@ -86,6 +103,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		 start(n)
 	})
 
+	listenEposh()
 }
 
 const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
@@ -213,6 +231,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		connectToGossipNode(wallet)
 		return 
 	}
+
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	
 	const command = {
@@ -234,7 +253,6 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 
 	const postData = await encrypt (encryptObj)
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
-	logger(inspect(node))
 
 	startGossip(node, JSON.stringify({data: postData}), async (err, _data ) => {
 		if (!_data) {
@@ -253,6 +271,13 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
 		}
 		
+		let epochObj = epochTotal.get(data.epoch)
+		if (!epochObj) {
+			epochObj = new Map()
+			epochTotal.set(data.epoch, epochObj)
+		}
+		epochObj.set(data.nodeIpAddr, true)
+
 		data.minerResponseHash = await wallet.signMessage(data.hash)
 		data.isUser = isUser
 		data.userWallets = data.nodeWallets = []
