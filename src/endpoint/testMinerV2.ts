@@ -107,7 +107,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 	const kkk = request(option, res => {
 
 		if (res.statusCode !==200) {
-			return logger(`startTestMiner got res.statusCode = [${res.statusCode}] != 200 error! restart`)
+			return logger(`startTestMiner ${node.ip_addr} got res.statusCode = [${res.statusCode}] != 200 error!`)
 		}
 
 		let data = ''
