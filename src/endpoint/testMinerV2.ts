@@ -299,7 +299,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		}
 
 		const _postData = await encrypt (encryptObj)
-		logger(Colors.grey(`validator [${walletAddress}] post to ${validatorNode.ip_addr} epoch ${data.epoch} total miner [${data.online}]`))
+		logger(Colors.grey(`validator [${walletAddress}] post to ${validatorNode.ip_addr} epoch ${data.epoch} linsten clients [${epochObj.size}]  total miner [${data.online}]`))
 		startGossip(validatorNode, JSON.stringify({data: _postData}))
 
 	})
