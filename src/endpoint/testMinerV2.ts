@@ -153,7 +153,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 					logger(Colors.magenta(`first`))
 					try{
 						const uu = JSON.parse(data)
-						logger(inspect(uu, false, 3, true))
+						// logger(inspect(uu, false, 3, true))
 					} catch(ex) {
 						logger(Colors.red(`first JSON.parse Error`), data)
 					}
@@ -214,7 +214,7 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 	}
 
 	const node = Guardian_Nodes[nodoNumber]
-	logger(Colors.blue(`getRandomNodeV2 Guardian_Nodes length =${Guardian_Nodes.length} nodoNumber = ${nodoNumber} `))
+	//logger(Colors.blue(`getRandomNodeV2 Guardian_Nodes length =${Guardian_Nodes.length} nodoNumber = ${nodoNumber} `))
 	return node
 }
 
