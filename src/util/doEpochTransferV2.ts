@@ -71,7 +71,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	
 
 	
-	const minerRate = total.minerRate
+	const minerRate = total.minerRate * 12
 	const payArray = walletArray.map (n => parseFloat(minerRate.toFixed(6)))
 	const brunCNTP = total.totalUsrs * minerRate
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}] users ${total.totalUsrs} brun CNTP = ${brunCNTP}`))
