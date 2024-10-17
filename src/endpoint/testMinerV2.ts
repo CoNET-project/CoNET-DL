@@ -199,8 +199,8 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 
 const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
-	//const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
-	const node = Guardian_Nodes[0]
+	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
+	const node = Guardian_Nodes[index]
 
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	
@@ -237,7 +237,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
 		}
 
-		const validatorNode = getRandomNodeV2(0)
+		const validatorNode = getRandomNodeV2(index)
 		if (!validatorNode) {
 			return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
 		}
