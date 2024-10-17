@@ -201,7 +201,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
 	const node = Guardian_Nodes[index]
-
+	logger(inspect(node, false, 3, true))
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	
 	const command = {
