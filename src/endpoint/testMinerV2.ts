@@ -150,7 +150,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 				
 				if (first) {
 					first = false
-					logger(Colors.magenta(`first`))
+					
 					try{
 						const uu = JSON.parse(data)
 						// logger(inspect(uu, false, 3, true))
