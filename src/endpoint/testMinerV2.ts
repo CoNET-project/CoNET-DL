@@ -202,7 +202,8 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	const node = Guardian_Nodes[index]
 	if (!node?.armoredPublicKey) {
 		logger(Colors.red(`connectToGossipNode total ${Guardian_Nodes.length} nodes, index [${index}] ${node?.ip_addr} ${node?.nftNumber} armoredPublicKey Error restart connectToGossipNode`))
-		return connectToGossipNode(wallet)
+		connectToGossipNode(wallet)
+		return 
 	}
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	
