@@ -106,17 +106,61 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	listenEposh()
 }
 
-const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
-	const launch = launchMap.get (node.ip_addr)
+
+const postToUrl = (node: nodeInfo, POST: string) => {
+	const option: RequestOptions = {
+		host: node.ip_addr,
+		port: 80,
+		method: 'POST',
+		protocol: 'http:',
+		headers: {
+			'Content-Type': 'application/json;charset=UTF-8'
+		},
+		path: "/post",
+	}
+
+	const waitingTimeout = setTimeout(() => {
+		logger(Colors.red(`postToUrl on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+	}, 5 * 1000)
+
+	const kkk = request(option, res => {
+		clearTimeout(waitingTimeout)
+
+		res.once('end', () => {
+			if (res.statusCode !==200) {
+				return logger(`postToUrl ${node.ip_addr} statusCode = [${res.statusCode}] != 200 error!`)
+			}
+		})
+		
+	})
+
+	kkk.once('error', err => {
+		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! no call relaunch`), err.message)
+	})
+
+	kkk.end(POST)
+}
+
+const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
+	
+	
+	const launch = launchMap.get (connectHash)||false
 	if (launch) {
 		return
 	}
-	launchMap.set (node.ip_addr, true)
+
+	launchMap.set (connectHash, true)
 
 	const relaunch = () => setTimeout(() => {
-		launchMap.set (node.ip_addr, false)
-		startGossip(node, POST, callback)
+		kkk._destroy(null, () => {
+			startGossip(connectHash, node, POST, callback)
+		})
 	}, 1000)
+
+	const waitingTimeout = setTimeout(() => {
+		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		relaunch()
+	}, 5 * 1000)
 
 	const option: RequestOptions = {
 		host: node.ip_addr,
@@ -132,14 +176,15 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 	let first = true
 
 	const kkk = request(option, res => {
+		clearTimeout(waitingTimeout)
 
 		let data = ''
 		let _Time: NodeJS.Timeout
-
+		launchMap.set(connectHash, false)
 
 		if (res.statusCode !==200) {
 			relaunch()
-			return logger(`startTestMiner ${node.ip_addr} got res.statusCode = [${res.statusCode}] != 200 error!`)
+			return logger(`startGossip ${node.ip_addr} got statusCode = [${res.statusCode}] != 200 error! relaunch !!!`)
 		}
 		
 		res.on ('data', _data => {
@@ -193,8 +238,7 @@ const startGossip = (node: nodeInfo, POST: string, callback?: (err?: string, dat
 	})
 
 	kkk.on('error', err => {
-		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! Try to restart! `), err.message)
-		relaunch()
+		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! no call relaunch`), err.message)
 	})
 
 	kkk.end(POST)
@@ -252,9 +296,9 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 
 	const postData = await encrypt (encryptObj)
-	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
+	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
 
-	startGossip(node, JSON.stringify({data: postData}), async (err, _data ) => {
+	startGossip(node.ip_addr+walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
 		}
@@ -302,7 +346,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 
 		const _postData = await encrypt (encryptObj)
 		logger(Colors.grey(`validator [${walletAddress}] post to ${validatorNode.ip_addr} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.online}]`))
-		startGossip(validatorNode, JSON.stringify({data: _postData}))
+		postToUrl(validatorNode, JSON.stringify({data: _postData}))
 
 	})
 }
