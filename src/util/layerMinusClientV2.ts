@@ -19,12 +19,31 @@ const conet_rpc = 'https://rpc.conet.network'
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider(conet_rpc)
+const launchMap: Map<string, boolean> = new Map()
 
-const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data?: string) => void) => {
+const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
 	
+	
+	const launch = launchMap.get (connectHash)||false
+	if (launch) {
+		return
+	}
+
+	launchMap.set (connectHash, true)
+
+	const relaunch = () => setTimeout(() => {
+		kkk._destroy(null, () => {
+			startGossip(connectHash, node, POST, callback)
+		})
+	}, 1000)
+
+	const waitingTimeout = setTimeout(() => {
+		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		relaunch()
+	}, 5 * 1000)
 
 	const option: RequestOptions = {
-		hostname: node.domain,
+		host: node.ip_addr,
 		port: 80,
 		method: 'POST',
 		protocol: 'http:',
@@ -37,14 +56,17 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 	let first = true
 
 	const kkk = request(option, res => {
-
-		if (res.statusCode !==200) {
-			return logger(`startTestMiner got res.statusCode = [${res.statusCode}] != 200 error! restart`)
-		}
+		clearTimeout(waitingTimeout)
 
 		let data = ''
 		let _Time: NodeJS.Timeout
+		launchMap.set(connectHash, false)
 
+		if (res.statusCode !==200) {
+			relaunch()
+			return logger(`startGossip ${node.ip_addr} got statusCode = [${res.statusCode}] != 200 error! relaunch !!!`)
+		}
+		
 		res.on ('data', _data => {
 			clearTimeout(_Time)
 			data += _data.toString()
@@ -53,42 +75,50 @@ const startGossip = (node: nodeInfo, POST: string, callback: (err?: string, data
 				
 				if (first) {
 					first = false
+					
+					try{
+						const uu = JSON.parse(data)
+						// logger(inspect(uu, false, 3, true))
+					} catch(ex) {
+						logger(Colors.red(`first JSON.parse Error`), data)
+					}
 					data = ''
 					return
 				}
 
 				data = data.replace(/\r\n/g, '')
-				callback ('', data)
+				if (typeof callback === 'function') {
+					callback ('', data)
+				}
+				
 				data = ''
 
 				_Time = setTimeout(() => {
 					logger(Colors.red(`startGossip [${node.ip_addr}] has 2 EPOCH got NONE Gossip Error! Try to restart! `))
 					kkk.destroy()
-					startGossip (node, POST, callback)
-					
 				}, 24 * 1000)
 			}
 		})
 
 		res.once('error', err => {
-			startGossip (node, POST, callback)
+			relaunch()
 			logger(Colors.red(`startGossip [${node.ip_addr}] res on ERROR! Try to restart! `), err.message)
 		})
 
 		res.once('end', () => {
+
 			kkk.destroy()
-			logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
+			if (typeof callback === 'function') {
+				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
+				relaunch()
+			}
+			
 		})
 		
 	})
 
 	kkk.on('error', err => {
-		
-		setTimeout(() => {
-			logger(Colors.red(`startGossip [${node.ip_addr}] requestHttps on Error! Try to restart! `), err.message)
-			startGossip (node, POST, callback)
-		}, 1000)
-		
+		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! no call relaunch`), err.message)
 	})
 
 	kkk.end(POST)
@@ -129,12 +159,12 @@ const postLocalhost = async (path: string, obj: any)=> {
 }
 
 const connectToGossipNode = async (node: nodeInfo ) => {
-	
+	const walletAddress = wallet.address.toLowerCase()
 	
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	const command = {
 		command: 'mining',
-		walletAddress: wallet.address.toLowerCase(),
+		walletAddress,
 		algorithm: 'aes-256-cbc',
 		Securitykey: key,
 	}
@@ -149,7 +179,8 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 
 	const postData = await encrypt (encryptObj)
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
-	startGossip(node, JSON.stringify({data: postData}), (err, _data ) => {
+	
+	startGossip(node.ip_addr+ walletAddress,node, JSON.stringify({data: postData}), (err, _data ) => {
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
 		}
