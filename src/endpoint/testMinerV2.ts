@@ -73,12 +73,12 @@ const listenEposh = async () => {
 
 	provider.on ('block', block => {
 		currentEpoch  = block
-		const obj = epochTotal.get(block-2)
+		const obj = epochTotal.get(block-1)
 		if (!obj) {
-			return logger(Colors.blue(`listenEposh epochTotal.get(${block-2}) got null error!`))
+			return 
 		}
-		logger(Colors.magenta(`EPOCH ${block-2} Total connecting ${obj.size}`))
-		epochTotal.delete(block-2)
+		logger(Colors.magenta(`EPOCH ${block-1} Total connecting ${obj.size}`))
+		epochTotal.delete(block-1)
 	})
 }
 
@@ -384,4 +384,9 @@ args.forEach ((n, index ) => {
 
 if ( _SRP && number > 0) {
 	getWallet (_SRP, number, _start)
+} else {
+	const wallet = ethers.Wallet.createRandom()
+	if (wallet?.mnemonic?.phrase) {
+		getWallet(wallet.mnemonic.phrase, 10, 0)
+	}
 }
