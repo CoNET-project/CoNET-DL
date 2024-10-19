@@ -177,10 +177,11 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 	const kkk = request(option, res => {
 		clearTimeout(waitingTimeout)
-
+		launchMap.set(connectHash, false)
+		
 		let data = ''
 		let _Time: NodeJS.Timeout
-		launchMap.set(connectHash, false)
+		
 
 		if (res.statusCode !==200) {
 			relaunch()
@@ -215,22 +216,28 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 				_Time = setTimeout(() => {
 					logger(Colors.red(`startGossip [${node.ip_addr}] has 2 EPOCH got NONE Gossip Error! Try to restart! `))
-					kkk.destroy()
+					res._destroy(null, () => {
+						relaunch()
+					})
 				}, 24 * 1000)
 			}
 		})
 
 		res.once('error', err => {
-			relaunch()
+			res._destroy(null, () => {
+				relaunch()
+			})
 			logger(Colors.red(`startGossip [${node.ip_addr}] res on ERROR! Try to restart! `), err.message)
 		})
 
 		res.once('end', () => {
 
-			kkk.destroy()
+			
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
-				relaunch()
+				res._destroy(null, () => {
+					relaunch()
+				})
 			}
 			
 		})
