@@ -16,7 +16,7 @@ const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
-const maxScanNodesNumber = 131
+const maxScanNodesNumber = 137
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
