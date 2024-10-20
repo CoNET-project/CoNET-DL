@@ -273,7 +273,7 @@ let currentEpoch = 0
 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
-const maxScanNodesNumber = 80
+const maxScanNodesNumber = 131
 
 const getAllNodes = async () => {
 	if (getAllNodesProcess) {
