@@ -32,9 +32,9 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 	launchMap.set (connectHash, true)
 
 	const relaunch = () => setTimeout(() => {
-		kkk._destroy(null, () => {
-			startGossip(connectHash, node, POST, callback)
-		})
+		
+		startGossip(connectHash, node, POST, callback)
+	
 	}, 1000)
 
 	const waitingTimeout = setTimeout(() => {
