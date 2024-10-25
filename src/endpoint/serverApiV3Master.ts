@@ -24,11 +24,14 @@ import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool_useTicketManag
 import profileABI from './profile.ABI.json'
 import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
 import dailyClick_ABI from './dailyClick.ABI.json'
-
+import maxSocialNftsABI from './maxSocialNftsABI.json'
 import {dailyTaskSC} from '../util/dailyTaskChangeHash'
 
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const dailyClickAddr = '0xDCe3FAE41Eb95eA3Be59Ca334f340bdd1799aA29'
+const maxSocialNftsAddr = '0xe94bfd8A04c6Baa3800bfE8a8870753bF71C5c9c'
+
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -111,13 +114,26 @@ const startDailyPoolTranfer = async () => {
 	
 }
 
+const maxSocialNftsContract = new ethers.Contract(maxSocialNftsAddr, maxSocialNftsABI, provideCONET)
+
+const getSocialTaskNFTNMaximumumber = async () => {
+	try {
+		const num: BigInt = await maxSocialNftsContract.maxNfts()
+		socialTaskNFTNMaximumumber = parseInt(num.toString())
+	} catch (ex: any) {
+		return logger(Colors.red(`getSocialTaskNFTNMaximumumber got Error!`),ex.message)
+	}
+}
+
 const startListeningCONET_Holesky_EPOCH = async () => {
+	await getSocialTaskNFTNMaximumumber()
 	// checkLotteryHasBalance()
 	getAllOwnershipOfGuardianNodes()
 	provideCONET.on ('block', async block => {
 		listeningGuardianNodes (block)
 		// checkLotteryHasBalance()
 		startDailyPoolTranfer()
+		getSocialTaskNFTNMaximumumber()
 		dailyTaskPoolProcess()
 	})
 }
@@ -214,6 +230,9 @@ interface conetData {
 }
 
 const etherNew_Init_Admin = new ethers.Wallet (masterSetup.conetFaucetAdmin[3], new ethers.JsonRpcProvider(conet_Holesky_rpc))
+
+
+
 const sentData = async (data: conetData, callback: (err?: any, data?: ethers.TransactionResponse) => void) => {
 
 	let tx
@@ -819,6 +838,7 @@ const dailyTaskPoolProcess = async () => {
 	if (dailyTaskPoolProcessLocked || !dailyTaskPool.size) {
 		return
 	}
+
 	dailyTaskPoolProcessLocked = true
 
 	const feeData = await provideCONET.getFeeData()
@@ -878,6 +898,7 @@ export const faucet_call =  (wallet: string, ipAddress: string) => {
 }
 
 let block = 0
+let socialTaskNFTNMaximumumber = 0
 
 const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterServiceListeningPool: Map<string, Response> = new Map()
@@ -982,8 +1003,6 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 })
 
 
-
-
 const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
 	const socialTaskText = obj.walletAddress
 	const socialTaskNFTNumber = parseInt(obj.data[0])
@@ -992,7 +1011,7 @@ const callSocialTaskTaskCheck: (obj: minerObj) => Promise<twitterResult> =  (obj
 		status: 200
 	}
 
-	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > 11 ) {
+	if( isNaN(socialTaskNFTNumber) || socialTaskNFTNumber < 4 || socialTaskNFTNumber > socialTaskNFTNMaximumumber ) {
 		ret.status = 404
 		ret.message = 'Unknow social Task number!'
 		return resolve (ret)
