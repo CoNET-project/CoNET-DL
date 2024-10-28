@@ -58,7 +58,7 @@
 		"ip": "^2.0.1",
 		"jsbi": "^4.3.0",
 		"openpgp": "^5.11.2",
-		"uuid": "^10.0.0",
+		"uuid": "^11.0.0",
 		"web3": "^4.14.0",
 		"phin": "^3.7.1",
 		"moment": "^2.30.1",
@@ -68,7 +68,6 @@
 		"@openpgp/web-stream-tools": "^0.1.3",
 		"@types/async": "^3.2.24",
 		"@types/compression": "^1.7.5",
-		"@types/express": "^5.0.0",
 		"@types/ip": "^1.1.3",
 		"@types/openpgp": "^4.4.22",
 		"@types/uuid": "^10.0.0"
