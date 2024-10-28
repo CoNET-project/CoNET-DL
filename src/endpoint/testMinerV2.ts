@@ -168,6 +168,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 	const waitingTimeout = setTimeout(() => {
 		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		launchMap.set(connectHash, false)
 		relaunch()
 	}, 5 * 1000)
 
