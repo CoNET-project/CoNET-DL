@@ -116,7 +116,6 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	listenEposh()
 }
 
-
 const postToUrl = (node: nodeInfo, POST: string) => {
 	const option: RequestOptions = {
 		host: node.ip_addr,

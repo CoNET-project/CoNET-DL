@@ -39,6 +39,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 	const waitingTimeout = setTimeout(() => {
 		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		launchMap.set(connectHash, false)
 		relaunch()
 	}, 5 * 1000)
 
@@ -96,6 +97,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 				_Time = setTimeout(() => {
 					logger(Colors.red(`startGossip [${node.ip_addr}] has 2 EPOCH got NONE Gossip Error! Try to restart! `))
 					kkk.destroy()
+					relaunch()
 				}, 24 * 1000)
 			}
 		})
