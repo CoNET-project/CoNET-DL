@@ -33,7 +33,7 @@ import {abi as erc20TokenABI} from './erc20.json'
 import {Readable} from 'node:stream'
 
 export const conet_Holesky_rpc = 'https://rpc.conet.network'
-const bscMainchainRPC = 'https://bsc-dataseed.binance.org/'
+const bscMainchainRPC = 'https://bsc-dataseed.bnbchain.org/'
 const balstMainchainRPC = 'https://rpc.ankr.com/blast'
 
 const ethMainchainRPC = 'https://eth-mainnet.g.alchemy.com/v2/dxNi8w6owhHdzNZPXQPeppST3CqFRO-F'

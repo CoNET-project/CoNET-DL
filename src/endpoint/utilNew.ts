@@ -1300,7 +1300,11 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	return 
 }
 
+// const test = async () => {
+// 	const uu = await checkTx ('0xb6e6b07ef84de5b13b7c6eb9465874a195ce6a8846e1b8ec4356ba63beb3a2ee', 'wusdt')
+// }
 
+// test()
 
 // const kk: ICONETianPurchaseData = {
 //     "receiptTx": "0x9d8bb248e5935535e067aaa955409000bf5c0db468f3cd01c42b09cfe55f163d",
