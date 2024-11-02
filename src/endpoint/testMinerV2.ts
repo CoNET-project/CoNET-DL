@@ -283,8 +283,6 @@ const launchMap: Map<string, boolean> = new Map()
 
 const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	const walletAddress = wallet.address.toLowerCase()
-	
-	
 	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
 	const node = Guardian_Nodes[index]
 	if (!node?.armoredPublicKey) {
@@ -294,7 +292,6 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	}
 
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
-	
 	const command = {
 		command: 'mining',
 		walletAddress,
@@ -302,76 +299,80 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		Securitykey: key,
 	}
 	
-	const message =JSON.stringify(command)
-	const signMessage = await wallet.signMessage(message)
-	const pubKey = await readKey({armoredKey: node.armoredPublicKey}).catch(ex => {
+	const message = JSON.stringify(command)
+
+	wallet.signMessage(message)
+	
+	.then (signMessage => Promise.all([
+		createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
+		readKey({armoredKey: node.armoredPublicKey})
+	]))
+		
+	.then ( value => {
+		encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }})
+	})
+	.then (postData => {
+		logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
+		startGossip(node.ip_addr+walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
+			if (!_data) {
+				return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
+			}
+			let data: listenClient
+			try {
+				data = JSON.parse(_data)
+			} catch (ex) {
+				logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
+				return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
+			}
+	
+			const validatorNode = getRandomNodeV2(index)
+			if (!validatorNode) {
+				return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
+			}
+			
+			let epochObj = epochTotal.get(data.epoch)
+	
+			if (!epochObj) {
+				epochObj = new Map()
+				epochTotal.set(data.epoch, epochObj)
+			}
+	
+			epochObj.set(walletAddress, true)
+	
+			data.minerResponseHash = await wallet.signMessage(data.hash)
+			logger(Colors.grey(`${node.ip_addr}:${node.nftNumber} validator [${walletAddress}] post to ${validatorNode.ip_addr}:${validatorNode.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
+			data.isUser = isUser
+			data.userWallets = data.nodeWallets = []
+			const command = {
+				command: 'mining_validator',
+				walletAddress,
+				algorithm: 'aes-256-cbc',
+				Securitykey: key,
+				requestData: data
+			}
+	
+			const message =JSON.stringify(command)
+			const signMessage = await wallet.signMessage(message)
+	
+			const encryptObj = {
+				message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
+				encryptionKeys: await readKey({armoredKey: validatorNode.armoredPublicKey}),
+				config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
+			}
+	
+			const _postData = await encrypt (encryptObj)
+			
+	
+			postToUrl(validatorNode, JSON.stringify({data: _postData}))
+	
+		})
+	})
+
+	.catch(ex => {
 		return logger(Colors.red(`await readKey ${node.ip_addr} ${node.armoredPublicKey} error!`))
 	})
 
-
-	const encryptObj = {
-        message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-		encryptionKeys: pubKey,
-		config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
-    }
 	
-
-	const postData = await encrypt (encryptObj)
-	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
-
-	startGossip(node.ip_addr+walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
-		if (!_data) {
-			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
-		}
-		let data: listenClient
-		try {
-			data = JSON.parse(_data)
-		} catch (ex) {
-			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
-			return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
-		}
-
-		const validatorNode = getRandomNodeV2(index)
-		if (!validatorNode) {
-			return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
-		}
-		
-		let epochObj = epochTotal.get(data.epoch)
-
-		if (!epochObj) {
-			epochObj = new Map()
-			epochTotal.set(data.epoch, epochObj)
-		}
-
-		epochObj.set(walletAddress, true)
-
-		data.minerResponseHash = await wallet.signMessage(data.hash)
-		logger(Colors.grey(`${node.ip_addr}:${node.nftNumber} validator [${walletAddress}] post to ${validatorNode.ip_addr}:${validatorNode.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
-		data.isUser = isUser
-		data.userWallets = data.nodeWallets = []
-		const command = {
-			command: 'mining_validator',
-			walletAddress,
-			algorithm: 'aes-256-cbc',
-			Securitykey: key,
-			requestData: data
-		}
-
-		const message =JSON.stringify(command)
-		const signMessage = await wallet.signMessage(message)
-
-		const encryptObj = {
-			message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-			encryptionKeys: await readKey({armoredKey: validatorNode.armoredPublicKey}),
-			config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
-		}
-
-		const _postData = await encrypt (encryptObj)
-		
-
-		postToUrl(validatorNode, JSON.stringify({data: _postData}))
-
-	})
 }
 
 const start = (privateKeyArmor: string) => new Promise(async resolve => {
