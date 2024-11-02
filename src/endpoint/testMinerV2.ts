@@ -71,10 +71,12 @@ const getAllNodes = () => new Promise(async resolve=> {
 		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase() + '.conet.network'
 		
 	}).catch(ex=> {
-		logger(Colors.red(`mapLimit catch ex!`), ex.mesage)
-		const index = Guardian_Nodes.findIndex(n => n.nftNumber === i)
-		Guardian_Nodes = Guardian_Nodes.slice(0, index-1)
+		
 	})
+
+	const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
+	Guardian_Nodes = Guardian_Nodes.slice(0, index)
+	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
 	resolve (true)
 })
 
