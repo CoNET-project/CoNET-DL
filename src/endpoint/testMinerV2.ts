@@ -308,9 +308,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		readKey({armoredKey: node.armoredPublicKey})
 	]))
 		
-	.then ( value => {
-		encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }})
-	})
+	.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
 	.then (postData => {
 		logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
 		startGossip(node.ip_addr+walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
@@ -409,6 +407,6 @@ if ( _SRP && number > 0) {
 } else {
 	const wallet = ethers.Wallet.createRandom()
 	if (wallet?.mnemonic?.phrase) {
-		getWallet(wallet.mnemonic.phrase, 10, 0)
+		getWallet(wallet.mnemonic.phrase, 1, 0)
 	}
 }
