@@ -304,10 +304,14 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 	const message =JSON.stringify(command)
 	const signMessage = await wallet.signMessage(message)
+	const pubKey = await readKey({armoredKey: node.armoredPublicKey}).catch(ex => {
+		return logger(Colors.red(`await readKey ${node.ip_addr} ${node.armoredPublicKey} error!`))
+	})
+
 
 	const encryptObj = {
         message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-		encryptionKeys: await readKey({armoredKey: node.armoredPublicKey}),
+		encryptionKeys: pubKey,
 		config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
     }
 	
