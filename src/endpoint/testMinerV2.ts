@@ -276,8 +276,15 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 		return getRandomNodeV2(index)
 	}
 
+
+
 	const node = Guardian_Nodes[nodoNumber]
-	//logger(Colors.blue(`getRandomNodeV2 Guardian_Nodes length =${Guardian_Nodes.length} nodoNumber = ${nodoNumber} `))
+	if (!node.armoredPublicKey) {
+		Guardian_Nodes.splice(nodoNumber, 1)
+		logger(Colors.red(`getRandomNodeV2 node armoredPublicKey null Error ${node.ip_addr}: [${node.nftNumber}] DELETE it`))
+		return getRandomNodeV2(index)
+	}
+	
 	return node
 }
 
@@ -331,9 +338,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 				return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
 			}
 
-			if (!validatorNode.armoredPublicKey) {
-				return logger(Colors.red(`startGossip validatorNode ${validatorNode.ip_addr}: [${validatorNode.nftNumber}] armoredPublicKey null Error!`))
-			}
+			
 			
 			let epochObj = epochTotal.get(data.epoch)
 	
