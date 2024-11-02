@@ -326,8 +326,9 @@ const getAllNodes = () => new Promise(async resolve=> {
 		
 	})
 
-	const index = Guardian_Nodes.findIndex(n => n.nftNumber === i)
-	Guardian_Nodes = Guardian_Nodes.slice(0, index-1)
+	const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
+	const end = _end > index ? index : _end
+	Guardian_Nodes = Guardian_Nodes.slice(_start, end)
 	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
 	resolve (true)
 })

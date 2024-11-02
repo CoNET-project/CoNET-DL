@@ -48,7 +48,7 @@
 		"async": "3.2.6",
 		"cassandra-driver": "^4.7.2",
 		"colors": "1.4.0",
-		"compression": "^1.7.4",
+		"compression": "^1.7.5",
 		"cors": "^2.8.5",
 		"eth-crypto": "^2.6.0",
 		"ethers": "^6.13.4",
