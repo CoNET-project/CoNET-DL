@@ -291,6 +291,8 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		return 
 	}
 
+
+
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	const command = {
 		command: 'mining',
@@ -302,7 +304,6 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	const message = JSON.stringify(command)
 
 	wallet.signMessage(message)
-	
 	.then (signMessage => Promise.all([
 		createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
 		readKey({armoredKey: node.armoredPublicKey})
@@ -324,8 +325,12 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			}
 	
 			const validatorNode = getRandomNodeV2(index)
-			if (!validatorNode) {
+			if (!validatorNode)  {
 				return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
+			}
+
+			if (!validatorNode.armoredPublicKey) {
+				return logger(Colors.red(`startGossip validatorNode ${validatorNode.ip_addr}: [${validatorNode.nftNumber}] armoredPublicKey null Error!`))
 			}
 			
 			let epochObj = epochTotal.get(data.epoch)
@@ -350,18 +355,29 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			}
 	
 			const message =JSON.stringify(command)
-			const signMessage = await wallet.signMessage(message)
+			wallet.signMessage(message)
+			.then (signMessage => Promise.all([
+				createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
+				readKey({armoredKey: validatorNode.armoredPublicKey})
+			]))
+			.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
+			.then (postData => {
+				postToUrl(validatorNode, JSON.stringify({data: postData}))
+			})
+			.catch(ex => {
+				return logger(Colors.red(`startGossip Error! ${node.ip_addr} ${node.armoredPublicKey} error!`))
+			})
 	
-			const encryptObj = {
-				message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-				encryptionKeys: await readKey({armoredKey: validatorNode.armoredPublicKey}),
-				config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
-			}
+			// const encryptObj = {
+			// 	message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
+			// 	encryptionKeys: await readKey({armoredKey: validatorNode.armoredPublicKey}),
+			// 	config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
+			// }
 	
-			const _postData = await encrypt (encryptObj)
+			// const _postData = await encrypt (encryptObj)
 			
 	
-			postToUrl(validatorNode, JSON.stringify({data: _postData}))
+			
 	
 		})
 	})
