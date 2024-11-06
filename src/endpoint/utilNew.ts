@@ -101,7 +101,7 @@ const oldReffAddr= '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
 const oldCNTPAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 const blastCNTPv1Addr = '0x53634b1285c256aE64BAd795301322E0e911153D'
-const newGuardianAddr = '0xc3e210034868e8d739feE46ac5D1b1953895C87E'
+
 const CNTP_old_Addr = '0x5B4d548BAA7d549D030D68FD494bD20032E2bb2b'
 const initCONETAddr = '0xDAFD7bb588014a7D96501A50256aa74755953c18'
 
@@ -116,6 +116,8 @@ const newReffAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const newCNTP_v1 = '0xb182d2c2338775B0aC3e177351D638b23D3Da4Ea'
 
 const assetOracle_contract_addr = '0x8A7FD0B01B9CAb2Ef1FdcEe4134e32D066895e0c'
+
+const CONETianPlan = '0x6365DbbeeC743d14eA3BC4823E53bf6a7984bf70'
 
 interface sendCONETObj {
 	wallet: string
@@ -137,7 +139,7 @@ const initmanagerW_7 = new ethers.Wallet(masterSetup.initManager[7], newCONETPro
 const initmanagerW_8 = new ethers.Wallet(masterSetup.initManager[8], newCONETProvider)
 
 const oldReferralsContract = new ethers.Contract(oldReffAddr, ReferralsV3ABI, old_2_ConetProvider)
-const Guardian_Contract = new ethers.Contract(newGuardianAddr, CGPNsV7_newABI, initmanagerW_2)
+
 
 const old_CNTPContract = new ethers.Contract(CNTP_old_Addr, cCNTPv7ABI, old_2_watch)
 
@@ -154,7 +156,7 @@ const new_Guardian_Contract = new ethers.Contract(new_Guardian_addr, CGPNsV7_new
 const new_CONET_Faucet_COntract = new ethers.Contract(new_initCONET_faucet_addr, faucet_new_ABI, initmanagerW_4)
 const newReff_Contract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_3)
 
-const CONETianPlanContract = new ethers.Contract (`0x27B9043873dE8684822DEC12F90bAE08f6a06657`, CONETianPlanABI, initmanagerW_8)
+const CONETianPlanContract = new ethers.Contract (CONETianPlan, CONETianPlanABI, initmanagerW_8)
 
 
 let sendCONETPool: sendCONETObj[] = []
@@ -739,11 +741,11 @@ export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => ne
 
 
 const checkUsedTx = async (tx: string) => {
-	
+	const _tx = ethers.id(tx)
 	try {
 		const [usedTx, isUsed] = await 
 		Promise.all ([
-			new_Guardian_Contract.credentialTx(tx),
+			new_Guardian_Contract.credentialTx(_tx),
 			CONETianPlanContract.getCredentialTx(tx)
 		])
 
@@ -1096,35 +1098,35 @@ interface nftOrder {
 interface ICONETianPurchaseData {
 	receiptTx: string
 	tokenName: string
-	nfts: nftOrder[]
+	ntfs: number
 	amount: string
 	referrer: string
 }
 
 
-const getTotalUsdt = (nft: nftOrder) => {
+// const getTotalUsdt = (nft: nftOrder) => {
 
-	nft.nft = typeof (nft.nft) === 'string' ? parseInt(nft.nft) : nft.nft
+// 	nft.nft = typeof (nft.nft) === 'string' ? parseInt(nft.nft) : nft.nft
 
-	switch(nft.nft) {
-		case 0: {
-			return 1200 * nft.total
-		}
-		case 1: {
-			return 700 * nft.total
-		}
-		case 2: {
-			return 400 * nft.total
-		}
-		case 3: {
-			return 100 * nft.total
-		}
+// 	switch(nft.nft) {
+// 		case 0: {
+// 			return 1200 * nft.total
+// 		}
+// 		case 1: {
+// 			return 700 * nft.total
+// 		}
+// 		case 2: {
+// 			return 400 * nft.total
+// 		}
+// 		case 3: {
+// 			return 100 * nft.total
+// 		}
 
-		default: {
-			return 0
-		}
-	}
-}
+// 		default: {
+// 			return 0
+// 		}
+// 	}
+// }
 
 const checkValueOfCONETianPlan = async (purchaseData: ICONETianPurchaseData) => {
 	await getassetOracle ()
@@ -1147,10 +1149,7 @@ const checkValueOfCONETianPlan = async (purchaseData: ICONETianPurchaseData) => 
 
 	const assetPrice = assetOracle.assets[index]
 
-	let amount_need = 0
-	purchaseData.nfts.forEach(n => {
-		amount_need += getTotalUsdt (n)
-	})
+	let amount_need = purchaseData.ntfs * 100
 
 	amount_need /= /bnb|eth/i.test(tokenName) ? assetPrice.price : 1
 
@@ -1168,6 +1167,9 @@ const checkValueOfCONETianPlan = async (purchaseData: ICONETianPurchaseData) => 
 }
 
 const checkCONETianPlanReferrer = async (referrer: string) => {
+	if (!referrer) {
+		return true
+	}
 	try {
 		const isreferrer = await CONETianPlanContract.isReferrer(referrer)
 		return isreferrer
@@ -1182,24 +1184,21 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 	logger(inspect(purchaseData, false, 3, true))
 
 	const amount = purchaseData.amount
-	const referrer = purchaseData.referrer
-	const referrerReturn = (parseFloat(ethers.formatEther(amount)) * .2).toFixed(8)
-	const retClaimableContractAddress = realToClaimableContractAddress(purchaseData.tokenName)
-	const ngfs = []
-	const _nfts = purchaseData.nfts
-	for (let i = 0; i < 4; i ++) {
-		const index = _nfts.findIndex(n => n.nft === i)
-		if (index > -1) {
-			ngfs.push(_nfts[index].total)
-		}
-	}
+	const referrer = purchaseData.referrer||'0x0000000000000000000000000000000000000000'
+	// const referrerReturn = (parseFloat(ethers.formatEther(amount)) * .2).toFixed(8)
+	// const retClaimableContractAddress = realToClaimableContractAddress(purchaseData.tokenName)
+
+	const _nfts = purchaseData.ntfs
+	const tx = ethers.id(purchaseData.receiptTx)
 
 	try {
-		const [tx1, tx2] = await Promise.all([
-			new_Guardian_Contract.credentialTx(purchaseData.receiptTx),
-			CONETianPlanContract.mint(wallet, referrer, purchaseData.receiptTx, ngfs),
-			sendClaimableAsset ( masterSetup.conetFaucetAdmin[0], retClaimableContractAddress, referrer, referrerReturn)
-		])
+		const tx1 = await new_Guardian_Contract.credentialTx(tx)
+		const tx2 = await CONETianPlanContract.mint(wallet, purchaseData.receiptTx, _nfts, referrer)
+		// const [tx1, tx2] = await Promise.all([
+		// 	,
+		// 	CONETianPlanContract.mint(wallet, referrer, purchaseData.receiptTx, _nfts),
+		// 	// 
+		// ])
 		logger(`finishCONETianPlanPurchase success! [${inspect(tx1, false, 3, true)}]  [${inspect(tx2, false, 3, true)}]`)
 	} catch (ex: any) {
 		return logger(`finishCONETianPlanPurchase got Error!`, ex.message)
@@ -1207,6 +1206,7 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 }
 
 export const CONETianPlanPurchase = async (obj: minerObj) => {
+
 	if ( !obj?.data?.length ) {
 		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`))
 		return false
@@ -1232,18 +1232,10 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 		return false
 	}
 
-	const networkName = getNetworkName(purchaseData.tokenName)
-
-	if (!networkName) {
-		logger(Colors.red(`Router /CONETianPlanPurchase Can't get network Name from token name Error ${inspect(purchaseData, false, 3, true)}`))
-		return false
-	}
-
-	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(purchaseData.tokenName)
-	
+		
 	const checkReferrer = await checkCONETianPlanReferrer(purchaseData.referrer)
+
 	if (checkReferrer === null || checkReferrer === false) {
-		logger(Colors.grey(`Router /CONETianPlanPurchase checkCONETianPlanReferrer Error!`), inspect(purchaseData, false, 3, true))
 		return false
 	}
 
@@ -1254,6 +1246,16 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 		return false
 	}
 
+
+
+	const networkName = getNetworkName(purchaseData.tokenName)
+
+	if (!networkName) {
+		logger(Colors.red(`Router /CONETianPlanPurchase Can't get network Name from token name Error ${inspect(purchaseData, false, 3, true)}`))
+		return false
+	}
+
+	const CONET_receiveWallet = CONET_guardian_purchase_Receiving_Address(purchaseData.tokenName)
 
 	if (txObj.tx1.to?.toLowerCase() !== CONET_receiveWallet ) {
 		//		check tokenName matched smart contract address
@@ -1306,35 +1308,6 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 
 // test()
 
-// const kk: ICONETianPurchaseData = {
-//     "receiptTx": "0x9d8bb248e5935535e067aaa955409000bf5c0db468f3cd01c42b09cfe55f163d",
-//     "tokenName": "wusdt",
-//     "amount": "4500000000000000000000",
-//     "nfts": [
-//         {
-//             "nft": 0,
-//             "total": 1
-//         },
-//         {
-//             "nft": 1,
-//             "total": 2
-//         },
-//         {
-//             "nft": 2,
-//             "total": 3
-//         },
-//         {
-//             "nft": 3,
-//             "total": 4
-//         }
-//     ],
-//     "referrer": "0xD5DcB574e92C9b0EC4a2b678C5d313AD1f14777b"
-// }
 
-// const obj: minerObj = {
-// 	walletAddress: '0x5c809c34112911199e748b0d70173acb18e5533a'.toLowerCase(),
-// 	data: [kk],
-// 	uuid: ''
-// }
 
 // CONETianPlanPurchase(obj)
