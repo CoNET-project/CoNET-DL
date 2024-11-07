@@ -1209,12 +1209,12 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 
 
 	const purchaseData: ICONETianPurchaseData = obj.data
-	
+
 	logger(inspect(obj, false, 5, true))
 
 	if (!purchaseData?.receiptTx ||!purchaseData?.tokenName) {
 		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`))
-		
+		typeof purchaseData == 'string'
 		return false
 	}
 
