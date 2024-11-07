@@ -2313,6 +2313,11 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 
 }
 
+
+
+
+
+
 // const test1 = async () => {
 // 	const privateKey = masterSetup.conetFaucetAdmin[0]
 
@@ -2335,16 +2340,23 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 
 // 	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 // 	const wallet = new ethers.Wallet(privateKey, provider)
-// 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
+// 	//const GuardianNodesContract = new ethers.Contract(GuardianNodes_ContractV3, GuardianNodesV2ABI, wallet)
 
 // 	const paymentWallet = '0x55D39f7397F2c1f5faDb3829F5CDb8aCcc107799'
 // 	const referrerAddress = '0xE482da05cB82d2b996780Db17D8B916356E1323d'
-// 	const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
-// 		getReferralNode (GuardianNodesContract, paymentWallet, 1),
-// 		getReferralNode (GuardianNodesContract, referrerAddress, 1)
-// 	])
+// 	// const [bayerOwnNodes, referrerHasNodes] = await Promise.all ([
+// 	// 	getReferralNode (GuardianNodesContract, paymentWallet, 1),
+// 	// 	getReferralNode (GuardianNodesContract, referrerAddress, 1)
+// 	// ])
 
-// 	logger(inspect(bayerOwnNodes), inspect(referrerHasNodes ? true : false))
+// 	// logger(inspect(bayerOwnNodes), inspect(referrerHasNodes ? true : false))
+// 	const message = `{"walletAddress":"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34","data":{"receiptTx":"0xe8f57b89dc528e45cb567c9fbca45d449a14066b813f924426cadaa620128caa","tokenName":"wusdt","amount":"100000000000000000000","ntfs":1,"referrer":""}}` 
+// 	const signMessage = '0x9b79f79f6e1235ca87d945caa15f3b4aa77b12e6c8cd936b751357d37f3ed4895d14fe81f0da5e1ace045ef2c3756dacef81cf1644c643a40e6acfc2524212641b'
+// 	const obj = checkSign (message, signMessage)
+// 	logger(inspect(obj))
+// 	if (!obj || !obj?.data ) {
+// 		logger(colors.red(`obj error!`))
+// 	}
 // }
 
 // const wallet = new ethers.Wallet(masterSetup.claimableAdmin)
@@ -2352,6 +2364,7 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 // transferCCNTPToNodes(walletList, '5000', () => {
 // 	logger('success')
 // })
+
 
 
 //transCleamableToken('wusdt', '0xD8b12054612119e9E45d5Deef40EDca38d54D3b5', '125')

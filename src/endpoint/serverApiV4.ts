@@ -358,11 +358,13 @@ class conet_dl_server_v4 {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
+
 			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
 			const obj = checkSign (message, signMessage)
 	
 			if (!obj || !obj?.data ) {
-				logger (Colors.grey(`Router /PurchaseCONETianPlan checkSignObj obj Error!`), message, signMessage)
+				logger (Colors.grey(`Router /PurchaseCONETianPlan checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
 				
 				return res.status(403).json(req.body).end()
 			}

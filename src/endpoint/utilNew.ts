@@ -1301,13 +1301,17 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	
 	return 
 }
+const kk = {
+    "message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"receiptTx\":\"0xacfee5338b43422f1b624aa385cf1c7dab36d79240e75b1975f65b02ed12bf5a\",\"tokenName\":\"arb_eth\",\"amount\":\"37131160000000000\",\"ntfs\":1,\"referrer\":\"\"}}",
+    "signMessage": "0xd730e0abd30db096ab8910e8892ce79996458432db35f93612cd1123e2e2760d3a13188c3aa847ac676a80e688015839f426f24956d44088e6e901d676ba4ddb1c"
+}
+const test = async () => {
+	const uu = await checkSign(kk.message, kk.signMessage)
+}
 
-// const test = async () => {
-// 	const uu = await checkTx ('0xb6e6b07ef84de5b13b7c6eb9465874a195ce6a8846e1b8ec4356ba63beb3a2ee', 'wusdt')
-// }
-
-// test()
+test()
 
 
 
 // CONETianPlanPurchase(obj)
+
