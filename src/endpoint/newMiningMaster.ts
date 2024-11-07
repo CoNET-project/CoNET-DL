@@ -179,7 +179,7 @@ class conet_dl_v3_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -195,7 +195,7 @@ class conet_dl_v3_server {
 
 	private router ( router: Router ) {
 		
-		router.post('/minerCheck',  async (req, res) => {
+		router.post('/minerCheck',  async (req: any, res: any) => {
 			
 			const obj = await checkNode(req, this.regiestNodes)
 
@@ -208,7 +208,7 @@ class conet_dl_v3_server {
 			return postLocalhost('/api/minerCheck', obj, res)
 		})
 
-		router.post('/getTotalMiners',  async (req, res) => {
+		router.post('/getTotalMiners',  async (req: any, res: any) => {
 
 			const obj = await checkNode(req, this.regiestNodes)
 
@@ -220,7 +220,7 @@ class conet_dl_v3_server {
 			return postLocalhost('/api/getTotalMiners', obj, res)
 		})
 
-		router.post('/deleteMiner',  async (req, res) =>{
+		router.post('/deleteMiner',  async (req: any, res: any) =>{
 			const obj = await checkNode(req, this.regiestNodes)
 
 			if (!obj || !obj?.ipAddress || !obj?.walletAddress1) {
@@ -254,7 +254,7 @@ class conet_dl_v3_server {
 		})
 
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

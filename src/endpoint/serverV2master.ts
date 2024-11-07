@@ -570,7 +570,7 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -592,7 +592,7 @@ class conet_dl_server {
 	private router ( router: Router ) {
 
 		//********************			V2    		****** */				
-		router.post ('/conet-faucet', async (req, res ) => {
+		router.post ('/conet-faucet', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress
 			const ipaddress = req.body.ipaddress
 			if (!wallet) {
@@ -610,7 +610,7 @@ class conet_dl_server {
 		})
 
 
-		router.post ('/claimToken', async ( req, res ) => {
+		router.post ('/claimToken', async (req: any, res: any) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -631,27 +631,27 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/ticket', async ( req, res ) => {
+		router.post ('/ticket', async (req: any, res: any) => {
 			logger(Colors.blue(`Cluster Master got: /ticket`))
 			const wallet = req.body.obj.walletAddress
-			return ticket(wallet, res, req.body.obj.ipAddress)
+			ticket(wallet, res, req.body.obj.ipAddress)
 		})
 
-		router.post ('/lottery', async ( req, res ) => {
+		router.post ('/lottery', async (req: any, res: any) => {
 			logger(Colors.blue(`Cluster Master got: /lottery`))
 			logger(inspect(req.body, false, 3, true))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
-			return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
+			checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager)
 		})
 
-		router.post ('/lottery-ticket', async ( req, res ) => {
+		router.post ('/lottery-ticket', async (req: any, res: any) => {
 			res.status(200).json({}).end()
 		
 		})
 
 
-		router.post ('/lottery_test', async ( req, res ) => {
+		router.post ('/lottery_test', async (req: any, res: any) => {
 			return res.status(403).end()
 			// logger(Colors.blue(`Cluster Master got: /lottery_test`))
 			// logger(inspect(req.body, false, 3, true))
@@ -660,7 +660,7 @@ class conet_dl_server {
 			// return checkTimeLimited(wallet, ipaddress, res, this.CNTP_manager, true)
 		})
 
-		router.post ('/initV3',  async (req, res) => {
+		router.post ('/initV3',  async (req: any, res: any) => {
 			const wallet: string = req.body.wallet
 			logger(Colors.blue(`/initV3 ${wallet}`))
 			await initNewCONET(wallet)
@@ -670,7 +670,7 @@ class conet_dl_server {
 
 		
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

@@ -352,7 +352,7 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -373,7 +373,7 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 
-		router.post ('/initV3',  async (req, res) => {
+		router.post ('/initV3',  async (req: any, res: any) => {
 			const wallet: string = req.body.wallet
 			logger(Colors.blue(`/initV3 ${wallet}`))
 			await initNewCONET(wallet)
@@ -381,11 +381,11 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/miningData',  async (req, res) => {
-			return miningData(req.body, res)
+		router.post ('/miningData', (req: any, res: any) => {
+			miningData(req.body, res)
 		})
 
-		router.post ('/wallet',  async (req, res) =>{
+		router.post ('/wallet',  async (req: any, res: any) =>{
 			
 			let wallet: string
 			try {
@@ -419,7 +419,7 @@ class conet_dl_server {
 			return res.status(200).json({address}).end()
 		})
 		
-		router.post ('/conet-faucet', async (req, res ) => {
+		router.post ('/conet-faucet', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress
 			const ipaddress = req.body.ipaddress
 			if (!wallet) {
@@ -435,7 +435,7 @@ class conet_dl_server {
 		})
 
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

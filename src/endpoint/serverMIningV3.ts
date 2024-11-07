@@ -390,7 +390,7 @@ class conet_mining_server {
 		
 		app.use(Express.json({limit: '100mb'}));
 		//app.use(Express.urlencoded({limit: '100mb'}));
-		app.use (async (req, res, next) => {
+		app.use (async (req: any, res: any, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
@@ -433,7 +433,7 @@ class conet_mining_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -450,7 +450,7 @@ class conet_mining_server {
 
 	private router ( router: Router ) {
 		
-		router.post ('/startMining', async (req, res) => {
+		router.post ('/startMining', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
 			let message, signMessage
@@ -497,7 +497,7 @@ class conet_mining_server {
 			
 		})
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req: any, res: any) =>{
 			
 			logger (Colors.grey(`Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

@@ -1350,7 +1350,7 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -1371,13 +1371,13 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 
-		router.post ('/ticket', async ( req, res ) => {
+		router.post ('/ticket', async (req: any, res: any) => {
 			logger(Colors.blue(`Cluster Master got: /ticket`))
 			const wallet = req.body.obj.walletAddress
-			return ticket(wallet, res, req.body.obj.ipAddress)
+			ticket(wallet, res, req.body.obj.ipAddress)
 		})
 
-		router.post ('/ticket-lottery', async ( req, res ) => {
+		router.post ('/ticket-lottery', async (req: any, res: any) => {
 			logger(Colors.blue(`Cluster Master got: /ticket-lottery`))
 			const wallet = req.body.obj.walletAddress
 			const ipaddress = req.body.obj.ipAddress
@@ -1458,7 +1458,7 @@ class conet_dl_server {
 			return logger(Colors.magenta(`/tg added ${obj.walletAddress} to TwttterServiceListeningPool ${TwttterServiceListeningPool.size}`))
 		})
 
-		router.post ('/twitter-check-follow',  async (req, res) => {
+		router.post ('/twitter-check-follow',  async(req: any, res: any) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/twitter-check-follow`))
 			logger(inspect(obj, false, 3, true))
@@ -1466,10 +1466,10 @@ class conet_dl_server {
 			if (!result ) {
 				return res.status(500).end()
 			}
-			return res.status(200).json(result).end()
+			res.status(200).json(result).end()
 		})
 
-		router.post ('/tg-check-follow',  async (req, res) => {
+		router.post ('/tg-check-follow',  async (req: any, res: any) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/tg-check-follow`))
 			logger(inspect(obj, false, 3, true))
@@ -1480,7 +1480,7 @@ class conet_dl_server {
 			return res.status(200).json(result).end()
 		})
 
-		router.post ('/socialTask',  async (req, res) => {
+		router.post ('/socialTask',  async (req: any, res: any) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/socialTask`))
 			logger(inspect(obj, false, 3, true))
@@ -1549,7 +1549,7 @@ class conet_dl_server {
 			logger(Colors.magenta(`/tg-callback return ${inspect(obj.data, false, 3, true)} success!`))
 		})
 
-		router.post ('/dailyClick',  async (req, res) => {
+		router.post ('/dailyClick',  async (req: any, res: any) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/dailyClick`))
 
@@ -1577,7 +1577,7 @@ class conet_dl_server {
 			return res.status(200).json({result: true}).end()
 		})
 
-		router.post ('/dailyTask',  async (req, res) => {
+		router.post ('/dailyTask',  async (req: any, res: any) => {
 			const obj: minerObj = req.body.obj
 			logger(Colors.blue(`/dailyTask`))
 			logger(inspect(obj, false, 3, true))
@@ -1590,7 +1590,7 @@ class conet_dl_server {
 			return res.status(200).json({result: true}).end()
 		})
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*',(req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

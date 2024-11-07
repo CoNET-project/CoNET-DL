@@ -209,7 +209,7 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use ( Express.static ( staticFolder ))
         app.use ( Express.static ( launcherFolder ))
-		app.use (async (req, res, next) => {
+		app.use (async (req: any, res: any, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			
@@ -279,7 +279,7 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -298,7 +298,7 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 		
-		router.get ('/health', async (req,res) => {
+		router.get ('/health', async (req: any, res: any) => {
 			if (res.writable && !res.writableEnded) {
 				res.json ({ health: true }).end()
 			}
@@ -308,7 +308,7 @@ class conet_dl_server {
 
 		//********************			V2    		****** */		
 
-		router.post ('/conet-faucet', async (req, res ) => {
+		router.post ('/conet-faucet', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
 			let wallet_add = req.body?.walletAddr
@@ -336,7 +336,7 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/Purchase-Guardian', async (req,res) => {
+		router.post ('/Purchase-Guardian', async (req: any, res: any) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/Purchase-Guardian`))
@@ -360,7 +360,7 @@ class conet_dl_server {
 			GuardianPurchase()
 		})
 
-		router.post ('/ticket', async ( req, res ) => {
+		router.post ('/ticket', async (req: any, res: any)=> {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -391,7 +391,7 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket', {obj}, res)
 		})
 
-		router.post ('/ticket-lottery', async ( req, res ) => {
+		router.post ('/ticket-lottery', async (req: any, res: any)=> {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -428,7 +428,7 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket-lottery', {obj}, res)
 		})
 
-		router.post ('/initV3',  async (req, res) => {
+		router.post ('/initV3',  async (req: any, res: any) => {
 
 			const _wallet: string = req.body.walletAddress
 			let wallet: string 
@@ -442,7 +442,7 @@ class conet_dl_server {
 			
 		})
 		
-		router.post ('/ticket', async ( req, res ) => {
+		router.post ('/ticket', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -474,7 +474,7 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket', {obj}, res)
 		})
 
-		router.post ('/twitter-listen',  async (req, res) => {
+		router.post ('/twitter-listen',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -502,7 +502,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/tg-listen',  async (req, res) => {
+		router.post ('/tg-listen',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -530,7 +530,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/twitter-check-follow',  async (req, res) => {
+		router.post ('/twitter-check-follow',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -559,7 +559,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/twitter-callback',  async (req, res) => {
+		router.post ('/twitter-callback',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -587,7 +587,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/claimToken', async ( req, res ) => {
+		router.post ('/claimToken', async (req: any, res: any) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -608,7 +608,7 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/tg-callback',  async (req, res) => {
+		router.post ('/tg-callback',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -637,7 +637,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/tg-check-follow',  async (req, res) => {
+		router.post ('/tg-check-follow',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -666,7 +666,7 @@ class conet_dl_server {
 			
 		})
 
-		router.get('/miningRate', async (req, res) => {
+		router.get('/miningRate', async (req: any, res: any) => {
 			logger(Colors.blue(`/miningRate`))
 			const query = req.query
 			logger(inspect(query, false, 3, true))
@@ -676,7 +676,7 @@ class conet_dl_server {
 			return res.json(obj).end()
 		})
 
-		router.get (`/dailyTask`, async (req, res) => {
+		router.get (`/dailyTask`, async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -719,7 +719,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post (`/socialTask`, async (req, res) => {
+		router.post (`/socialTask`, async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -747,7 +747,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/dailyClick',  async (req, res) => {
+		router.post ('/dailyClick',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -775,7 +775,7 @@ class conet_dl_server {
 			return postLocalhost('/api/dailyClick', {obj}, res)
 		})
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

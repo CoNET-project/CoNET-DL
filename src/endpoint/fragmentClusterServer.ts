@@ -95,7 +95,7 @@ class server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(406).end ()
 			return res.socket?.end().destroy()
@@ -110,7 +110,7 @@ class server {
 
 	private router ( router: Router ) {
 		
-		router.post ('/storageFragment',  async (req, res) => {
+		router.post ('/storageFragment',  async (req: any, res: any) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -141,7 +141,7 @@ class server {
 
 		})
 
-		router.get (/\/getFragment\//,  async (req, res) => {
+		router.get (/\/getFragment\//,  async (req: any, res: any) => {
 			
 
 			const _hashName = req.path.split('getFragment/')
@@ -153,7 +153,7 @@ class server {
 		})
 
 
-		router.all ('*', (req, res ) => {
+		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(410).end()

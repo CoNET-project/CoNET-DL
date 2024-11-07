@@ -250,7 +250,7 @@ class v3_master {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			//logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(406).end ()
 			return res.socket?.end().destroy()
@@ -266,7 +266,7 @@ class v3_master {
 
 	private router ( router: Router ) {
 		
-		router.post ('/wallet',  async (req, res) =>{
+		router.post ('/wallet',  async (req: any, res: any) =>{
 			
 			let wallet: string
 			try {
@@ -300,7 +300,7 @@ class v3_master {
 			return res.status(200).json({address}).end()
 		})
 
-		router.post ('/pay',  async (req, res) =>{
+		router.post ('/pay',  async (req: any, res: any) =>{
 
 
 			let walletList: string[]
@@ -323,7 +323,7 @@ class v3_master {
 			return await startTransfer()
 		})
 
-		router.post ('/guardians-data',  async (req, res) => {
+		router.post ('/guardians-data',  async (req: any, res: any) => {
 
 			let epoch: string
 			let totalNodes: string
@@ -350,7 +350,7 @@ class v3_master {
 		})
 
 
-		router.post('/minerCheck',  async (req, res) =>{
+		router.post('/minerCheck',  async (req: any, res: any) =>{
 			
 			let walletAddress: string, ipAddress: string, nodeAddress: string
 			try {
@@ -421,7 +421,7 @@ class v3_master {
 			
 		})
 
-		router.post('/deleteMiner',  async (req, res) =>{
+		router.post('/deleteMiner',  async (req: any, res: any) =>{
 
 			let walletAddress, ipAddress, nodeAddress
 			try {
@@ -468,7 +468,7 @@ class v3_master {
 			return res.status(200).json({totalMiner: this.WalletIpaddress.size}).end()
 		})
 
-		router.post('/nodeRestart',  async (req, res) =>{
+		router.post('/nodeRestart',  async (req: any, res: any) =>{
 
 			let obj:minerObj = req.body
 			if ( !obj) {
@@ -526,7 +526,7 @@ class v3_master {
 			return res.status(200).end()
 		})
 
-		router.post('/getTotalMiners',  async (req, res) => {
+		router.post('/getTotalMiners',  async (req: any, res: any) => {
 
 			let ipAddress, nodeAddress
 			try {
@@ -546,7 +546,7 @@ class v3_master {
 			return res.status(200).json(responseData).end()
 		})
 
-		router.all ('*', (req, res ) => {
+		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`[${ipaddress}] => Router /api get unknow router [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(410).end()

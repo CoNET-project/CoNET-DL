@@ -416,7 +416,7 @@ class conet_dl_server {
 		const Cors = require('cors')
 		app.use( Cors ())
 		app.use(Express.json())
-		app.use (async (req, res, next) => {
+		app.use (async (req: any, res: any, next) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			const readIp = req?.socket?.remoteAddress
 
@@ -461,7 +461,7 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any)=> {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -477,7 +477,7 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
-		router.get ('/health', async (req,res) => {
+		router.get ('/health', async (req: any, res: any) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(` Router /health form [${ ipaddress}]`))
@@ -487,7 +487,7 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/startMining', async (req, res) => {
+		router.post ('/startMining', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.blue(`ipaddress [${ipaddress}] => /startMining`))
 			
@@ -538,7 +538,7 @@ class conet_dl_server {
 			
 		})
 
-		router.all ('*', (req, res ) => {
+		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()

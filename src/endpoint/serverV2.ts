@@ -183,7 +183,7 @@ class conet_dl_server {
 		app.use( Cors ())
 		app.use ( Express.static ( staticFolder ))
         app.use ( Express.static ( launcherFolder ))
-		app.use (async (req, res, next) => {
+		app.use (async (req: any, res: any, next) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
@@ -247,7 +247,7 @@ class conet_dl_server {
 
 		this.router (router)
 
-		app.all ('*', (req, res) => {
+		app.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.red(`get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end ()
@@ -265,7 +265,7 @@ class conet_dl_server {
 
 	private router ( router: Router ) {
 		
-		router.get ('/health', async (req,res) => {
+		router.get ('/health', async (req: any, res: any) => {
 			if (res.writable && !res.writableEnded) {
 				res.json ({ health: true }).end()
 			}
@@ -274,7 +274,7 @@ class conet_dl_server {
 		})
 
 		//********************			V2    		****** */				
-		router.post ('/conet-faucet', async (req, res ) => {
+		router.post ('/conet-faucet', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
 			let wallet_add = req.body?.walletAddr
@@ -302,12 +302,12 @@ class conet_dl_server {
 
 		})
 
-		router.get ('/conet-nodes', async ( req, res ) => {
+		router.get ('/conet-nodes', async (req: any, res: any) => {
 			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
 		})
 
 
-		router.post ('/claimToken', async ( req, res ) => {
+		router.post ('/claimToken', async (req: any, res: any) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -329,7 +329,7 @@ class conet_dl_server {
 
 		})
 
-		router.post ('/Purchase-Guardian', async (req,res) => {
+		router.post ('/Purchase-Guardian', async (req: any, res: any) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/Purchase-Guardian`))
@@ -353,7 +353,7 @@ class conet_dl_server {
 			GuardianPurchase()
 		})
 
-		router.post ('/leaderboardData',  async (req, res) =>{
+		router.post ('/leaderboardData',  async (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let wallet: string
 			try {
@@ -378,7 +378,7 @@ class conet_dl_server {
 			return res.status(200).json(ret).end()
 		})
 
-		router.post ('/lottery_leaderBoardBio', async ( req, res ) => {
+		router.post ('/lottery_leaderBoardBio', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -408,7 +408,7 @@ class conet_dl_server {
 			return res.status(200).json({}).end()
 		})
 
-		router.post ('/lottery_test', async ( req, res ) => {
+		router.post ('/lottery_test', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -439,7 +439,7 @@ class conet_dl_server {
 			return postLocalhost('/api/lottery_test', {obj}, res)
 		})
 
-		router.post ('/lottery', async ( req, res ) => {
+		router.post ('/lottery', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -468,7 +468,7 @@ class conet_dl_server {
 			return postLocalhost('/api/lottery', {obj}, res)
 		})
 
-		router.post ('/ticket', async ( req, res ) => {
+		router.post ('/ticket', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -497,7 +497,7 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket', {obj}, res)
 		})
 
-		router.post ('/lottery-ticket', async ( req, res ) => {
+		router.post ('/lottery-ticket', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			if (!ipaddress) {
 				return res.status(404).end()
@@ -527,7 +527,7 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket-ticket', {obj}, res)
 		})
 
-		router.post ('/checkAccount',  async (req, res) => {
+		router.post ('/checkAccount',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -556,12 +556,12 @@ class conet_dl_server {
 			return res.status(403).json({ublock: true}).end()
 		})
 
-		router.post ('/unlockCONET', (req, res) => {
+		router.post ('/unlockCONET', (req: any, res: any) => {
 			return res.status(200).json({}).end()
 		})
 
 
-		router.post ('/initV3',  async (req, res) => {
+		router.post ('/initV3',  async (req: any, res: any) => {
 
 			const _wallet: string = req.body.walletAddress
 			let wallet: string 
@@ -575,7 +575,7 @@ class conet_dl_server {
 			
 		})
 
-		router.all ('*', (req, res ) =>{
+		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()
