@@ -1207,13 +1207,11 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 
 export const CONETianPlanPurchase = async (obj: minerObj) => {
 
-	if ( !obj?.data?.length ) {
-		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`))
-		return false
-	}
 
-	const purchaseData: ICONETianPurchaseData = obj.data[0]
+	const purchaseData: ICONETianPurchaseData = obj.data
+	
 	logger(inspect(obj, false, 5, true))
+
 	if (!purchaseData?.receiptTx ||!purchaseData?.tokenName) {
 		logger (Colors.grey(`Router /CONETianPlanPurchase checkSignObj obj Error!`))
 		
@@ -1301,15 +1299,15 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	
 	return 
 }
-const kk = {
-    "message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"receiptTx\":\"0xacfee5338b43422f1b624aa385cf1c7dab36d79240e75b1975f65b02ed12bf5a\",\"tokenName\":\"arb_eth\",\"amount\":\"37131160000000000\",\"ntfs\":1,\"referrer\":\"\"}}",
-    "signMessage": "0xd730e0abd30db096ab8910e8892ce79996458432db35f93612cd1123e2e2760d3a13188c3aa847ac676a80e688015839f426f24956d44088e6e901d676ba4ddb1c"
-}
-const test = async () => {
-	const uu = await checkSign(kk.message, kk.signMessage)
-}
+// const kk = {
+//     "message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"receiptTx\":\"0xacfee5338b43422f1b624aa385cf1c7dab36d79240e75b1975f65b02ed12bf5a\",\"tokenName\":\"arb_eth\",\"amount\":\"37131160000000000\",\"ntfs\":1,\"referrer\":\"\"}}",
+//     "signMessage": "0xd730e0abd30db096ab8910e8892ce79996458432db35f93612cd1123e2e2760d3a13188c3aa847ac676a80e688015839f426f24956d44088e6e901d676ba4ddb1c"
+// }
+// const test = async () => {
+// 	const uu = await checkSign(kk.message, kk.signMessage)
+// }
 
-test()
+// test()
 
 
 
