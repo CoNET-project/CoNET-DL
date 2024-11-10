@@ -308,57 +308,6 @@ class conet_dl_server {
 
 		//********************			V2    		****** */		
 
-		router.post ('/conet-faucet', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
-			let wallet_add = req.body?.walletAddr
-
-			if (! wallet_add ||! ipaddress) {
-				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
-				if (res.writable && !res.writableEnded) {
-					res.status(400).end()
-				}
-				return res.socket?.end().destroy()
-			}
-			
-			try {
-				wallet_add = ethers.getAddress(wallet_add)
-			} catch (ex) {
-				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
-				if (res.writable && !res.writableEnded) {
-					return res.status(400).end()
-				}
-				
-				return res.socket?.end().destroy()
-			}
-			
-			return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
-
-		})
-
-		router.post ('/Purchase-Guardian', async (req: any, res: any) => {
-			
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/Purchase-Guardian`))
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-			logger(Colors.magenta(`/Purchase-Guardian`), message, signMessage)
-			GuardianPurchasePool.push({
-				message,
-				signMessage,
-				ipaddress,
-				res
-			})
-
-			GuardianPurchase()
-		})
 
 		router.post ('/ticket', async (req: any, res: any)=> {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -428,19 +377,6 @@ class conet_dl_server {
 			return postLocalhost('/api/ticket-lottery', {obj}, res)
 		})
 
-		router.post ('/initV3',  async (req: any, res: any) => {
-
-			const _wallet: string = req.body.walletAddress
-			let wallet: string 
-			try {
-				wallet = ethers.getAddress(_wallet)
-			} catch (ex) {
-				return res.status(403).end()
-			}
-			logger(`/initV3`)
-			return postLocalhost('/api/initV3', {wallet: wallet.toLowerCase()}, res)
-			
-		})
 		
 		router.post ('/ticket', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -587,26 +523,7 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/claimToken', async (req: any, res: any) => {
 
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			// const response = await claimeToekn (message, signMessage)
-			// if (response) {
-			// 	return res.status(200).json({}).end()
-			// }
-			return res.status(403).end()
-
-		})
 
 		router.post ('/tg-callback',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -664,16 +581,6 @@ class conet_dl_server {
 			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-check-follow forward to master! `))
 			return postLocalhost('/api/tg-check-follow', {obj}, res)
 			
-		})
-
-		router.get('/miningRate', async (req: any, res: any) => {
-			logger(Colors.blue(`/miningRate`))
-			const query = req.query
-			logger(inspect(query, false, 3, true))
-			const epoch = typeof query?.eposh === 'string' ? parseInt(query.eposh) : currentEpoch
-			let obj = eposh_total.get(epoch)||eposh_total.get(epoch-1)
-
-			return res.json(obj).end()
 		})
 
 		router.get (`/dailyTask`, async (req: any, res: any) => {

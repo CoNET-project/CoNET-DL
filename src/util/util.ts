@@ -13,7 +13,7 @@ import { createInterface } from 'readline'
 import { publicKeyByPrivateKey, cipher, decryptWithPrivateKey, hex, recover, hash, sign } from 'eth-crypto'
 import { Buffer } from 'buffer'
 import { readCleartextMessage, verify, readKey, readMessage, readPrivateKey, decryptKey, decrypt, generateKey } from 'openpgp'
-import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream, NodeStream } from 'openpgp'
+import type { GenerateKeyOptions, Key, PrivateKey, Message, MaybeStream, Data, DecryptMessageResult, WebStream } from 'openpgp'
 import { Writable } from 'node:stream'
 import colors from 'colors/safe'
 import {ethers} from 'ethers'
@@ -2227,8 +2227,6 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 	
 	return true
 }
-
-
 
 
 const walletListPassed: string[] = [

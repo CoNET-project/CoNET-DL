@@ -375,6 +375,27 @@ class conet_dl_server_v4 {
 			}
 			return res.status(200).json({}).end()
 		})
+
+		router.post ('/claimToken', async (req: any, res: any) => {
+
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			// const response = await claimeToekn (message, signMessage)
+			// if (response) {
+			// 	return res.status(200).json({}).end()
+			// }
+			return res.status(403).end()
+
+		})
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
