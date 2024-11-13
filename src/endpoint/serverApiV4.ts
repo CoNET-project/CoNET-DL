@@ -18,6 +18,7 @@ import {createServer} from 'node:http'
 import {readFile} from 'node:fs/promises'
 import {watch} from 'node:fs'
 import {getDailyIPAddressAndhashCheck} from '../util/dailyTaskChangeHash'
+import referralsV3ABI from './ReferralsV3.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -43,6 +44,18 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 interface epochRate {
 	totalMiners: number
 	minerRate: number
+}
+
+const referralsV3_addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const referralsV3_Contract = new ethers.Contract(referralsV3_addr, referralsV3ABI, provider)
+
+const getreferralsCount = async (addr: string, _res: Response) => {
+	try {
+		const kk = await referralsV3_Contract.getReferees(addr)
+		return _res.status(200).json({totalWallets: kk.length}).end()
+	} catch (ex) {
+		return _res.status(503).end()
+	}
 }
 
 const eposh_total: Map<number, epochRate> = new Map()
@@ -146,6 +159,8 @@ const checkTicket = async (wallet: string) => {
 	}
 	return false
 }
+
+
 
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server_v4 {
@@ -375,6 +390,17 @@ class conet_dl_server_v4 {
 			}
 			return res.status(200).json({}).end()
 		})
+
+		router.get ('/totalReferrals', async (req: any, res: any) => {
+			const addr = req.query?.addr||null
+			if (!addr) {
+				return res.status(404).end()
+			}
+			return getreferralsCount(addr, res)
+		})
+
+
+
 
 		router.post ('/claimToken', async (req: any, res: any) => {
 
