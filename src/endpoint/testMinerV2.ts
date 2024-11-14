@@ -350,7 +350,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			epochObj.set(walletAddress, true)
 	
 			data.minerResponseHash = await wallet.signMessage(data.hash)
-			logger(Colors.grey(`${node.ip_addr}:${node.nftNumber} validator [${walletAddress}] post to ${validatorNode.ip_addr}:${validatorNode.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
+			//logger(Colors.grey(`${node.ip_addr}:${node.nftNumber} validator [${walletAddress}] post to ${validatorNode.ip_addr}:${validatorNode.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
 			data.isUser = isUser
 			data.userWallets = data.nodeWallets = []
 			const command = {
