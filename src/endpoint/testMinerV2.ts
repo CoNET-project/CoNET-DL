@@ -398,7 +398,8 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 
 const start = (privateKeyArmor: string) => new Promise(async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
-	connectToGossipNode(wallet)
+	await connectToGossipNode(wallet)
+	resolve (true)
 })
 
 const [,,...args] = process.argv
