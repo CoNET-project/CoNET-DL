@@ -272,7 +272,7 @@ const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => {
 
 	const nodoNumber = Math.floor(Math.random() * totalNodes)
 	if (index > -1 && nodoNumber === index) {
-		logger(Colors.grey(`getRandomNodeV2 nodoNumber ${nodoNumber} == index ${index} REUNING AGAIN!`))
+		//logger(Colors.grey(`getRandomNodeV2 nodoNumber ${nodoNumber} == index ${index} REUNING AGAIN!`))
 		return getRandomNodeV2(index)
 	}
 
@@ -320,7 +320,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		
 	.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
 	.then (postData => {
-		logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
+		//logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
 		startGossip(node.ip_addr+walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
 			if (!_data) {
 				return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
