@@ -2444,12 +2444,12 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 // 	logger(`success`)
 // })
 
-const testcheckClaimeToeknbalance = async () => {
-	const wallet = "0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34"
-	const tokenName = "cArbUSDT"
-	await checkClaimeToeknbalance(wallet, tokenName)
-}
-testcheckClaimeToeknbalance()
+// const testcheckClaimeToeknbalance = async () => {
+// 	const wallet = "0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34"
+// 	const tokenName = "cArbUSDT"
+// 	await checkClaimeToeknbalance(wallet, tokenName)
+// }
+// testcheckClaimeToeknbalance()
 
 
 
