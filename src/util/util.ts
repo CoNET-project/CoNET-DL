@@ -2255,7 +2255,7 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 
 	const requestAmount = parseEther(requestBalance.toString(), realTokenName)
 	try {
-		const tx1 = await claimableContract.burnFrom(wallet, balance)
+		const tx1 = await claimableContract.burnFrom(wallet, requestBalance)
 		logger(inspect(tx1, false, 3, true))
 		
 	} catch (ex: any) {
