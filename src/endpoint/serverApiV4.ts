@@ -450,17 +450,17 @@ export default conet_dl_server_v4
 
 
 
-const testCleam = () => {
-	const data = {
-		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cBNB\"}}",
-		"signMessage": "0x3aa33126541256cb55a215473afa1c56a4b3ec02cff48ee19d396c7e45ab7bb21eb452ec5cbc502a57ed745376e09b321bcccfe2c508156e9cbd3ce24a437fc71b"
-	}
+// const testCleam = () => {
+// 	const data = {
+// 		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cBNB\"}}",
+// 		"signMessage": "0x3aa33126541256cb55a215473afa1c56a4b3ec02cff48ee19d396c7e45ab7bb21eb452ec5cbc502a57ed745376e09b321bcccfe2c508156e9cbd3ce24a437fc71b"
+// 	}
 
-	claimeToekn(data.message, data.signMessage)
+// 	claimeToekn(data.message, data.signMessage)
 	
-}
+// }
 
 
-testCleam()
+// testCleam()
 
 //		curl -v "https://apiv4.conet.network/api/totalReferrals?addr=0xd57cA74229fd96A5CB9e99DFdfd9de79940FD61D"
