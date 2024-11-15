@@ -2143,6 +2143,7 @@ const checkWalletLastEvent = async (contract: ethers.Contract, wallet: string) =
 
 const convertWeiToEthWithDecimal = (value: string, tokenName: string) => {
 	switch(tokenName) {
+		case 'arb_usdt':
 		case 'usdt':
 			{
 				return ethers.formatUnits(value, 6)
