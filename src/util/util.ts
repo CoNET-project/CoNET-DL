@@ -1739,6 +1739,7 @@ export const getAssetERC20Address = (assetName: string) => {
 
 const parseEther = (ether: string, tokenName: string ) => {
 	switch (tokenName) {
+		case 'arb_usdt':
 		case 'usdt': {
 			return ethers.parseUnits(ether, 6)
 		}

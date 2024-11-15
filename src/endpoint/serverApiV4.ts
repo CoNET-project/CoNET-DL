@@ -451,17 +451,17 @@ export default conet_dl_server_v4
 
 
 
-// const testCleam = () => {
-// 	const data = {
-// 		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cArbUSDT\"}}",
-// 		"signMessage": "0x74c51a6730ea6cbc070a9a4fbe967c53f30e624143fcb99a97ee42fdaa46b388274c330a0039f2e2b8c47f473579984e5d8918b2182c06c0bb545b3e455070301b"
-// 	}
+const testCleam = () => {
+	const data = {
+		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cArbUSDT\"}}",
+		"signMessage": "0x74c51a6730ea6cbc070a9a4fbe967c53f30e624143fcb99a97ee42fdaa46b388274c330a0039f2e2b8c47f473579984e5d8918b2182c06c0bb545b3e455070301b"
+	}
 
-// 	claimeToekn(data.message, data.signMessage)
+	claimeToekn(data.message, data.signMessage)
 	
-// }
+}
 
 
-// testCleam()
+testCleam()
 
 //		curl -v "https://apiv4.conet.network/api/totalReferrals?addr=0xd57cA74229fd96A5CB9e99DFdfd9de79940FD61D"
