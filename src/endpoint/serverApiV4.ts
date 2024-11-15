@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc} from '../util/util'
+import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc, checkClaimeToeknbalance} from '../util/util'
 import {ticket_contract} from './serverApiV3Master'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
@@ -160,6 +160,23 @@ const checkTicket = async (wallet: string) => {
 	return false
 }
 
+export const claimeToekn = async (message: string, signMessage: string ) => {
+	const obj = checkSign (message, signMessage)
+	if (!obj || !obj?.data) {
+		logger(Colors.red(`claimeToekn obj Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
+		return false
+	}
+	logger(Colors.blue(`claimeToekn message=[${message}]`))
+	logger(Colors.blue(`claimeToekn signMessage=[${signMessage}]`))
+	const data = obj.data
+	if (!data?.tokenName) {
+		logger(Colors.red(`claimeToekn hasn't data.tokenName Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
+		return false
+	}
+	logger(inspect(obj, false, 3, true))
+	
+	return await checkClaimeToeknbalance(obj.walletAddress, data.tokenName)
+}
 
 
 const countAccessPool: Map<string, number[]> = new Map()
@@ -399,9 +416,6 @@ class conet_dl_server_v4 {
 			return getreferralsCount(addr, res)
 		})
 
-
-
-
 		router.post ('/claimToken', async (req: any, res: any) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -415,10 +429,10 @@ class conet_dl_server_v4 {
 				return res.status(404).end()
 			}
 
-			// const response = await claimeToekn (message, signMessage)
-			// if (response) {
-			// 	return res.status(200).json({}).end()
-			// }
+			const response = await claimeToekn (message, signMessage)
+			if (response) {
+				return res.status(200).json({}).end()
+			}
 			return res.status(403).end()
 
 		})
@@ -434,5 +448,19 @@ class conet_dl_server_v4 {
 
 export default conet_dl_server_v4
 
+
+
+const testCleam = () => {
+	const data = {
+		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cBNB\"}}",
+		"signMessage": "0x3aa33126541256cb55a215473afa1c56a4b3ec02cff48ee19d396c7e45ab7bb21eb452ec5cbc502a57ed745376e09b321bcccfe2c508156e9cbd3ce24a437fc71b"
+	}
+
+	claimeToekn(data.message, data.signMessage)
+	
+}
+
+
+testCleam()
 
 //		curl -v "https://apiv4.conet.network/api/totalReferrals?addr=0xd57cA74229fd96A5CB9e99DFdfd9de79940FD61D"

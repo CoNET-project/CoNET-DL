@@ -5,7 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {regiestFaucet, getOraclePrice, txManager, claimeToekn, conet_lotte_bio} from './help-database'
+import {regiestFaucet, getOraclePrice, txManager, conet_lotte_bio} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
@@ -306,28 +306,6 @@ class conet_dl_server {
 			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
 		})
 
-
-		router.post ('/claimToken', async (req: any, res: any) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			return res.status(403).end()
-			const response = await claimeToekn (message, signMessage)
-			if (response) {
-				return res.status(200).json({}).end()
-			}
-			return res.status(403).end()
-
-		})
 
 		router.post ('/Purchase-Guardian', async (req: any, res: any) => {
 			

@@ -2162,7 +2162,7 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 		return false
 	}
 	const provide = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-	const claimableAdmin = new ethers.Wallet(masterSetup.claimableAdmin, provide)
+	const claimableAdmin = new ethers.Wallet(masterSetup.claimableAdminNew, provide)
 	const claimableContract = new ethers.Contract(smartContractAddress, claimableToken, claimableAdmin)
 	let balance = ''
 	
@@ -2181,16 +2181,58 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 	if (!realTokenName) {
 		return false
 	}
-	const realRPC = getNetwork(realTokenName)
-	const sc1 = getAssetERC20Address(realTokenName)
 
-	
-	if (!sc1) {
+	const realRPC = getNetwork(realTokenName)
+	if (!realRPC) {
 		return false
 	}
 
+
+	const sc1 = getAssetERC20Address(realTokenName)
 	const provideReal = new ethers.JsonRpcProvider(realRPC)
-	const sendAdmin = new ethers.Wallet(masterSetup.conetPointAdmin, provideReal)
+	const sendAdmin = new ethers.Wallet(masterSetup.claimableAdminNew, provideReal)
+	const requestBalance = parseFloat(ethers.formatEther(balance))
+	//				nature Token
+	if (!sc1) {
+		let sendWalletBalance
+		try {
+			sendWalletBalance = await provideReal.getBalance(sendAdmin.address)
+		} catch (ex: any) {
+			logger(colors.red(`checkClaimeToeknbalance check nature Token Balance error [${ex.message}]`) )
+			return false
+		}
+		const masterBalance = parseFloat(ethers.formatEther(sendWalletBalance))
+		if (masterBalance - requestBalance <= 0.00001) {
+			logger(colors.red(`checkClaimeToeknbalance conetPointAdmin balance [${ masterBalance }] LESS ERROR`))
+			return false
+		}
+		
+		try {
+			const tx1 = await claimableContract.burnFrom(wallet, balance)
+			logger(inspect(tx1, false, 3, true))
+			
+		} catch (ex: any) {
+			logger(colors.red(`checkClaimeToeknbalance claimableContract.burnFrom||sc1d.transfer ERROR!`), ex.message)
+			return false
+		}
+		const transfer = {
+            to: wallet,
+            value: balance,
+        }
+
+		try {
+			const tx2 = await sendAdmin.sendTransaction(transfer)
+			logger(colors.magenta(`checkClaimeToeknbalance success transfer ${requestBalance} to ${wallet}`), inspect(tx2, false, 3, true))
+		} catch (ex: any) {
+			logger(colors.red(`checkClaimeToeknbalance sc1d.transfer ERROR!`), ex.message)
+			return false
+		}
+		
+		return true
+	}
+
+	
+	
 	const sc1d = new ethers.Contract(sc1, erc20TokenABI, sendAdmin)
 
 	//const lastuu = checkWalletLastEvent(sc1d, wallet)
@@ -2198,16 +2240,17 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 	let sendWalletBalance
 	try {
 		sendWalletBalance = await sc1d.balanceOf(sendAdmin.address.toLowerCase())
-	} catch (ex:any) {
+	} catch (ex: any) {
 		logger(colors.red(`checkClaimeToeknbalance check sendWalletBalance error [${ex.message}]`) )
 		return false
 	}
-	const requestBalance = parseFloat(ethers.formatEther(balance))
+	
 	const masterBalance = parseFloat(convertWeiToEthWithDecimal(sendWalletBalance.toString(), realTokenName).toString())
-	if (masterBalance - requestBalance <= 0) {
+	if (masterBalance - requestBalance <= 0.00001) {
 		logger(colors.red(`checkClaimeToeknbalance conetPointAdmin balance [${ masterBalance }] LESS ERROR`))
 		return false
 	}
+
 	const requestAmount = parseEther(requestBalance.toString(), realTokenName)
 	try {
 		const tx1 = await claimableContract.burnFrom(wallet, balance)
@@ -2399,6 +2442,16 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 // 	logger(`success`)
 // })
 
+// const testcheckClaimeToeknbalance = async () => {
+// 	const wallet = "0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34"
+// 	const tokenName = "cBNBUSDT"
+// 	await checkClaimeToeknbalance(wallet, tokenName)
+// }
+// testcheckClaimeToeknbalance()
+
+
 
 
 /** */
+
+

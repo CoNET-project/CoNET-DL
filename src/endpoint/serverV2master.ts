@@ -5,7 +5,6 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {claimeToekn, conet_lotte_new} from './help-database'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import { masterSetup, getServerIPV4Address, conet_Holesky_rpc, sendCONET} from '../util/util'
@@ -609,27 +608,6 @@ class conet_dl_server {
 
 		})
 
-
-		router.post ('/claimToken', async (req: any, res: any) => {
-
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-			return res.status(403).end()
-			const response = await claimeToekn (message, signMessage)
-			if (response) {
-				return res.status(200).json({}).end()
-			}
-			return res.status(403).end()
-
-		})
 
 		router.post ('/ticket', async (req: any, res: any) => {
 			logger(Colors.blue(`Cluster Master got: /ticket`))

@@ -894,23 +894,7 @@ const checkLastClaimeTime = async (assetName: string, wallet: string) => {
 }
 
 
-export const claimeToekn = async (message: string, signMessage: string ) => {
-	const obj = checkSignObj (message, signMessage)
-	if (!obj || !obj?.data) {
-		logger(Color.red(`claimeToekn obj Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
-		return false
-	}
-	logger(Color.blue(`claimeToekn message=[${message}]`))
-	logger(Color.blue(`claimeToekn signMessage=[${signMessage}]`))
-	const data = obj.data
-	if (!data?.tokenName) {
-		logger(Color.red(`claimeToekn hasn't data.tokenName Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
-		return false
-	}
-	logger(inspect(obj))
-	//const kk = await checkLastClaimeTime(data.tokenName, obj.walletAddress)
-	return await checkClaimeToeknbalance(obj.walletAddress, data.tokenName)
-}
+
 
 
 export const checkIpAddress = async (ipaddress: string) => {

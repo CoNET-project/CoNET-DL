@@ -70,7 +70,7 @@ interface ICoNET_DL_masterSetup {
 	guardianAmin: string[]
 	guardianReferralAdmin: string[]
 	gameCNTPAdmin: string[]
-
+	claimableAdminNew: string
 	guardianBuyADMIN: string[]
 	initManager: string[]
 	conetPointAdmin: string
