@@ -166,6 +166,7 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 		logger(Colors.red(`claimeToekn obj Error!`), `\nmessage=[${message}]\nsignMessage=[${signMessage}]`)
 		return false
 	}
+	
 	logger(Colors.blue(`claimeToekn message=[${message}]`))
 	logger(Colors.blue(`claimeToekn signMessage=[${signMessage}]`))
 	const data = obj.data
@@ -425,7 +426,7 @@ class conet_dl_server_v4 {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /claimToken req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
 
@@ -452,8 +453,8 @@ export default conet_dl_server_v4
 
 // const testCleam = () => {
 // 	const data = {
-// 		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cBNB\"}}",
-// 		"signMessage": "0x3aa33126541256cb55a215473afa1c56a4b3ec02cff48ee19d396c7e45ab7bb21eb452ec5cbc502a57ed745376e09b321bcccfe2c508156e9cbd3ce24a437fc71b"
+// 		"message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"tokenName\":\"cETH\"}}",
+// 		"signMessage": "0xce306a3f06392c55100520d099fc3948f6a368af86fd03b6b5fd88233c305b535d3511e0e43b85de70f120c6e0f56d62ec2cb3bbbfbf188023f74d9c523f1f5c1c"
 // 	}
 
 // 	claimeToekn(data.message, data.signMessage)
