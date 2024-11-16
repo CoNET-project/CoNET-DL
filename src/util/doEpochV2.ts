@@ -51,7 +51,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/wallet`,
-		port: 8008,
+		port: 8002,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -250,7 +250,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
 
-	mapLimit( walletArray, 5, async (n, next) => {
+	mapLimit( walletArray, 2, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
