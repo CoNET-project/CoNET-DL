@@ -364,3 +364,10 @@ interface IGossipStatus {
 	nodeWallets?: string[]
 	userWallets?: string[]
 }
+
+interface ITotal {
+	totalMiners: number
+	minerRate: number
+	totalUsrs: number
+	epoch: number
+}

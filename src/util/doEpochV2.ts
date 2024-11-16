@@ -6,17 +6,13 @@ import {masterSetup, storageIPFS, storageIPFS1} from './util'
 import Color from 'colors/safe'
 import { mapLimit} from 'async'
 import { logger } from './logger'
-import { Client, auth, types } from 'cassandra-driver'
-import type { TLSSocketOptions } from 'node:tls'
-import {homedir} from 'node:os'
 import { join } from 'node:path'
-import {readFile} from 'node:fs'
+import {readFile} from 'node:fs/promises'
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
-
+import {inspect} from 'node:util'
 
 const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
-
 
 interface leaderboard {
 	wallet: string
@@ -215,34 +211,36 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 
 const localIPFS_path = '/home/peter/.data/v2/'
 
-const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new Promise(resolve => {
-	const path = join(localIPFS_path, `${block}.wallet`)
+const getLocalIPFS = async (block: string) => {
+	const path1 = join(localIPFS_path, `${block}.wallet`)
+	const path2 = join(localIPFS_path, `${block}.total`)
+	logger(Color.blue(`getLocalIPFS [${path1}] [${path2}]`))
+	const [total, wallet] = await Promise.all([
+		readFile(path2, 'utf8'),
+		readFile(path1, 'utf8')
+	])
 
-	return readFile(path, 'utf-8', (err, data) => {
-		if (err) {
-			return resolve ('')
-		}
-		return resolve(data.toString())
-	})
-})	
+	return {total, wallet}
+}
 
 
 const stratFreeMinerReferrals = async (block: string) => {
-	const _data = await getLocalIPFS (block)
-	
-	if (!_data) {
-		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
-	}
+	const _data = await getLocalIPFS (block.toString())
 	
 	let walletArray: string[]
+	let total: ITotal
+	
 	try{
-		const data = JSON.parse(_data)
-		walletArray = data.nodeWallets
+		total = JSON.parse(_data.total)
+		walletArray = JSON.parse(_data.wallet)
 	} catch (ex) {
+		logger(inspect(_data, false, 3, true))
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
-
+	
 	if (!walletArray.length) {
+		logger(inspect(walletArray, false, 3, true))
+		logger(inspect(total, false, 3, true))
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 
@@ -300,13 +298,13 @@ let EPOCH = 0
 
 const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
-
 	provider.on('block', async (_block: number) => {
 		if (_block === EPOCH + 1) {
 			stratFreeMinerReferrals((_block - 2).toString())
 			EPOCH ++
 		}
 	})
+
 }
 
 const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager([masterSetup.conetFaucetAdmin_1[1]], 1000)

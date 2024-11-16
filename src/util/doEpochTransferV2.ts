@@ -29,12 +29,7 @@ const getLocalIPFS = async (block: string) => {
 	return {total, wallet}
 }
 
-interface ITotal {
-	totalMiners: number
-	minerRate: number
-	totalUsrs: number
-	epoch: number
-}
+
 
 const burnCNTP = async (valueCNTP: number) => {
 	try {
