@@ -224,7 +224,7 @@ const getLocalIPFS = async (block: string) => {
 }
 
 
-const stratFreeMinerReferrals = async (block: string) => {
+const stratFreeMinerReferrals = (block: string) => new Promise(async resolve => {
 	const _data = await getLocalIPFS (block.toString())
 	
 	let walletArray: string[]
@@ -235,12 +235,14 @@ const stratFreeMinerReferrals = async (block: string) => {
 		walletArray = JSON.parse(_data.wallet)
 	} catch (ex) {
 		logger(inspect(_data, false, 3, true))
+		resolve (false)
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} JSON parse Error!`))
 	}
 	
 	if (!walletArray.length) {
 		logger(inspect(walletArray, false, 3, true))
 		logger(inspect(total, false, 3, true))
+		resolve (false)
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
 
@@ -282,18 +284,21 @@ const stratFreeMinerReferrals = async (block: string) => {
 				referrals: n.count.toString()
 			})
 		})
-		console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}] payList [${payList.slice(0,10)}]!`))
+		
 		CNTP_Transfer_Manager_freemining.addToPool(walletList, payList)
+		console.error(Color.magenta(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}] payList [${payList.slice(0,3)}]!`))
 		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-
+		resolve (true)
 		// sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
 		// 	logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		// })
 		
 		
 	})
+})
 	
-}
+	
+
 
 
 let EPOCH = 0
@@ -302,7 +307,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
 	provider.on('block', async (_block: number) => {
 		if (_block === EPOCH + 1) {
-			stratFreeMinerReferrals((_block - 2).toString())
+			await stratFreeMinerReferrals((_block - 2).toString())
 			EPOCH ++
 		}
 	})
