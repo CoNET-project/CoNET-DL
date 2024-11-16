@@ -60,6 +60,7 @@ interface nodeInfo {
 
 interface ICoNET_DL_masterSetup {
 
+	conetFaucetAdmin_1: string[]
 	constGAMEAccount: string[]
 
 	GossipNodeAdmin: string[]

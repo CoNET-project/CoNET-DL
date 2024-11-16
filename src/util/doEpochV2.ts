@@ -11,6 +11,12 @@ import type { TLSSocketOptions } from 'node:tls'
 import {homedir} from 'node:os'
 import { join } from 'node:path'
 import {readFile} from 'node:fs'
+import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
+
+
+const conet_Holesky_RPC = 'https://rpc.conet.network'
+const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
+
 
 interface leaderboard {
 	wallet: string
@@ -290,19 +296,18 @@ const stratFreeMinerReferrals = async (block: string) => {
 }
 
 
+let EPOCH = 0
 
-let epoch = ''
+const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+	EPOCH = await provider.getBlockNumber()
 
-const [,,...args] = process.argv
-args.forEach ((n, index ) => {
-	if (/^epoch\=/i.test(n)) {
-		epoch = n.split('=')[1]
-	}
-})
-
-if (epoch) {
-	logger(Color.magenta(`stratFreeMinerReferrals doEpoch [${epoch}] `))
-	stratFreeMinerReferrals(epoch)
-} else {
-	console.error(`wallet ${epoch} Error!`)
+	provider.on('block', async (_block: number) => {
+		if (_block === EPOCH + 1) {
+			stratFreeMinerReferrals((_block - 2).toString())
+			EPOCH ++
+		}
+	})
 }
+
+const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager([masterSetup.conetFaucetAdmin_1[1]], 1000)
+startListeningCONET_Holesky_EPOCH_v2()

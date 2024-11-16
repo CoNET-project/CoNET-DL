@@ -342,7 +342,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	})
 }
 
-const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager(masterSetup.conetFaucetAdmin, 1000)
+const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager(masterSetup.conetFaucetAdmin_1, 1000)
 startListeningCONET_Holesky_EPOCH_v2()
 
 // let epoch = ''
