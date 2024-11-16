@@ -7,12 +7,10 @@ import { join } from 'node:path'
 import {readFile} from 'node:fs/promises'
 import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 import {inspect} from 'node:util'
-import rateABI from '../endpoint/conet-rate.json'
 import CONET_Point_ABI from './cCNTP.json'
 
 const conet_Holesky_RPC = 'https://rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
-const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[1], provider)
 const CNTP_SC = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
@@ -68,8 +66,6 @@ const stratFreeMinerTransfer = async (block: number) => {
 		logger(inspect(total, false, 3, true))
 		return logger(Color.red(`stratFreeMinerReferrals free_wallets_${block} Arraay is empty!`))
 	}
-	
-
 	
 	const minerRate = total.minerRate * 12
 	const payArray = walletArray.map (n => parseFloat(minerRate.toFixed(6)))

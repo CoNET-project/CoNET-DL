@@ -6,11 +6,10 @@ import {masterSetup, storageIPFS, storageIPFS1} from './util'
 import Color from 'colors/safe'
 import { mapLimit} from 'async'
 import { logger } from './logger'
-import { Client, auth, types } from 'cassandra-driver'
-import type { TLSSocketOptions } from 'node:tls'
 import {homedir} from 'node:os'
 import { join } from 'node:path'
 import {readFile} from 'node:fs'
+import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
 
 interface leaderboard {
 	wallet: string
@@ -24,7 +23,8 @@ interface walletCount {
 }
 
 const tokensEachEPOCH = 34.72
-
+const conet_Holesky_RPC = 'https://rpc.conet.network'
+const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals: leaderboard[], cntp: leaderboard[], totalMiner: string, minerRate: string}) => {
 
@@ -261,12 +261,9 @@ const getLocalIPFS: (block: string) => Promise<string> = (block: string) => new 
 	})
 })	
 
-const stratFreeMinerReferrals = async (block: string) => {
+const stratFreeMinerReferrals = async (block: number) => {
 
-	//	free_wallets_${block}
-	// const data = await getIPFSfile (`free_wallets_${block}`)
-
-	const data = await getLocalIPFS (block)
+	const data = await getLocalIPFS (block.toString())
 	
 	if (!data) {
 		return logger(Color.red(`stratFreeMinerReferrals get EPOCH ${block} free_wallets_${block} error!`))
@@ -289,7 +286,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
 
-	mapLimit( walletArray, 2, async (n, next) => {
+	mapLimit( walletArray, 5, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
@@ -322,30 +319,44 @@ const stratFreeMinerReferrals = async (block: string) => {
 			})
 		})
 		
-		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-		sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
-			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
-		})
+		await getFreeReferralsData (block.toString(), countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
+		// sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
+		// 	logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${block}] `))
+		// })
 		
 		
 	})
 	
 }
 
+let EPOCH = 0
 
+const startListeningCONET_Holesky_EPOCH_v2 = async () => {
+	EPOCH = await provider.getBlockNumber()
 
-let epoch = ''
-
-const [,,...args] = process.argv
-args.forEach ((n, index ) => {
-	if (/^epoch\=/i.test(n)) {
-		epoch = n.split('=')[1]
-	}
-})
-
-if (epoch) {
-	logger(Color.magenta(`stratFreeMinerReferrals doEpoch [${epoch}] `))
-	stratFreeMinerReferrals(epoch)
-} else {
-	console.error(`wallet ${epoch} Error!`)
+	provider.on('block', async (_block: number) => {
+		if (_block === EPOCH + 1) {
+			stratFreeMinerReferrals(_block - 2)
+			EPOCH ++
+		}
+	})
 }
+
+const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager(masterSetup.conetFaucetAdmin, 1000)
+startListeningCONET_Holesky_EPOCH_v2()
+
+// let epoch = ''
+
+// const [,,...args] = process.argv
+// args.forEach ((n, index ) => {
+// 	if (/^epoch\=/i.test(n)) {
+// 		epoch = n.split('=')[1]
+// 	}
+// })
+
+// if (epoch) {
+// 	logger(Color.magenta(`stratFreeMinerReferrals doEpoch [${epoch}] `))
+// 	stratFreeMinerReferrals(epoch)
+// } else {
+// 	console.error(`wallet ${epoch} Error!`)
+// }
