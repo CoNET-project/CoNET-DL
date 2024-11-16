@@ -269,7 +269,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 		
 	}, async () => {
 		
-		console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}]!`))
+		
 		const walletList: string[] = []
 		const payList: string[] = []
 		const countList: leaderboard[] = []
@@ -282,8 +282,9 @@ const stratFreeMinerReferrals = async (block: string) => {
 				referrals: n.count.toString()
 			})
 		})
-		
+		console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}] payList [${payList.slice(0,10)}]!`))
 		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
+
 		// sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
 		// 	logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
 		// })
