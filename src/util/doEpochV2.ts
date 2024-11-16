@@ -246,7 +246,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! minerRate = [${ parseFloat(minerRate.toString())/10**18 }] MinerWallets length = [${walletArray.length}]`))
 
-	mapLimit( walletArray, 2, async (n, next) => {
+	mapLimit( walletArray, 5, async (n, next) => {
 		const data1: any = await CalculateReferrals(n, parseFloat(minerRate.toString()))
 		const addressList: any[] = data1?.addressList
 		const payList: any[] = data1?.payList
@@ -280,9 +280,9 @@ const stratFreeMinerReferrals = async (block: string) => {
 		})
 		
 		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
-		sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
-			logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
-		})
+		// sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
+		// 	logger(Color.magenta(`stratFreeMinerReferrals Finshed Epoch [${epoch}] `))
+		// })
 		
 		
 	})
