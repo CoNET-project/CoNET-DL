@@ -271,11 +271,11 @@ const stratFreeMinerReferrals = async (block: string) => {
 		
 		
 		const walletList: string[] = []
-		const payList: string[] = []
+		const payList: number[] = []
 		const countList: leaderboard[] = []
 		walletTotal.forEach((n, key) => {
 			walletList.push(key)
-			payList.push(ethers.formatEther(n.cntp.toFixed(0)))
+			payList.push(parseFloat(ethers.formatEther(n.cntp.toFixed(0))))
 			countList.push({
 				wallet: key,
 				cntpRate: ethers.formatEther((n.cntp/12).toFixed(0)),
@@ -283,6 +283,7 @@ const stratFreeMinerReferrals = async (block: string) => {
 			})
 		})
 		console.error(Color.blue(`stratFreeMinerReferrals Finished walletTotal [${walletTotal.size}] payList [${payList.slice(0,10)}]!`))
+		CNTP_Transfer_Manager_freemining.addToPool(walletList, payList)
 		await getFreeReferralsData (block, countList, walletArray.length.toString(), (parseFloat(minerRate.toString())/10**18).toFixed(10))
 
 		// sendPaymentToPool (walletArray.length.toString(), walletList, payList, () => {
