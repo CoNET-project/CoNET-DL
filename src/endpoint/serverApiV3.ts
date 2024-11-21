@@ -175,9 +175,6 @@ const checkTicket = async (wallet: string) => {
 	return false
 }
 
-const checkIpAddress = async (ipaddress: string) => {
-	
-}
 
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {

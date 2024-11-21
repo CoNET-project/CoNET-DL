@@ -32,7 +32,7 @@ const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerW
 const client = new CoinMarketCap(apiKey)
 ///							1 Credits
 ///		ids BNB: 1839, Dai: 4943, ETH: 1027, USDC: 3408, USDT: 825
-const testData = [ 'eth', 'usdt', 'usdc', 'dai', 'bnb' ]
+const testData = [ 'eth', 'usdt', 'usdc', 'dai', 'bnb'  ]
 const testData1 = [
 
   2521.798130399146,
@@ -60,7 +60,7 @@ const updateOracle = async (tokenNames: string[], price: number[]) => {
 }
 
 const getIDs = () => {
-	return client.getIdMap({symbol: ['BNB', 'DAI', 'ETH', 'USDT', 'USDC']}).then((data: any) => {
+	return client.getIdMap({symbol: ['BNB', 'DAI', 'ETH', 'USDT', 'USDC', 'tron']}).then((data: any) => {
 		logger(inspect(data, false, 3, true))
 	})
 }
@@ -68,20 +68,21 @@ const getIDs = () => {
 
 const process = async () => {
 
-	return client.getQuotes({id: [1839, 4943, 1027, 825, 3408]}).then(async (data: any) => {
+	return client.getQuotes({id: [1839, 4943, 1027, 825, 3408, 883]}).then(async (data: any) => {
 		const usdt: quote = data.data['825'].quote
 		const eth: quote = data.data['1027'].quote
 		const usdc: quote = data.data['3408'].quote
 		const dai: quote = data.data['4943'].quote
 		const bnb: quote = data.data['1839'].quote
-		const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb']
-		
-		const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price]
-		await updateOracle(tokenNames, price)
-		setTimeout (() => {
-			process()
-		}, linten)
+		const tron: quote = data.data['883'].quote
+		const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'tron']
+		logger(inspect(tron, false, 3, true))
+		//const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price, tron.USD.price]
+		// await updateOracle(tokenNames, price)
+		// setTimeout (() => {
+		// 	process()
+		// }, linten)
 	})
 }
-
-process()
+getIDs()
+// process()

@@ -53,7 +53,8 @@ const getreferralsCount = async (addr: string, _res: Response) => {
 	try {
 		const kk = await referralsV3_Contract.getReferees(addr)
 		return _res.status(200).json({totalWallets: kk.length}).end()
-	} catch (ex) {
+	} catch (ex: any) {
+		logger(`getreferralsCount ERROR! ${ex.message}`)
 		return _res.status(503).end()
 	}
 }
