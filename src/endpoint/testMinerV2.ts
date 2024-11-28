@@ -24,60 +24,56 @@ const epochTotal: Map<number, Map<string, boolean>> = new Map()
 
 const getAllNodes = () => new Promise(async resolve=> {
 	
-		if (getAllNodesProcess) {
-			return resolve (true)
-		}
-	
-		getAllNodesProcess = true
-	
-		const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
-		let scanNodes = 0
-		try {
-			const maxNodes: BigInt = await GuardianNodes.currentNodeID()
-			scanNodes = parseInt(maxNodes.toString())
-	
-		} catch (ex) {
-			resolve (false)
-			return logger (`getAllNodes currentNodeID Error`, ex)
-		}
-		if (!scanNodes) {
-			resolve (false)
-			return logger(`getAllNodes STOP scan because scanNodes == 0`)
-		}
-	
-		Guardian_Nodes = []
-	
-		for (let i = 0; i < scanNodes; i ++) {
-			Guardian_Nodes.push({
-				region: '',
-				ip_addr: '',
-				armoredPublicKey: '',
-				nftNumber: 100 + i,
-				domain: ''
-			})
-		}
-			
+	if (getAllNodesProcess) {
+		return resolve (true)
+	}
+
+	getAllNodesProcess = true
+
+	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
+	let scanNodes = 0
+	try {
+		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
+		scanNodes = parseInt(maxNodes.toString())
+
+	} catch (ex) {
+		resolve (false)
+		return logger (`getAllNodes currentNodeID Error`, ex)
+	}
+	if (!scanNodes) {
+		resolve (false)
+		return logger(`getAllNodes STOP scan because scanNodes == 0`)
+	}
+
+	Guardian_Nodes = []
+
+	for (let i = 0; i < scanNodes; i ++) {
+		Guardian_Nodes.push({
+			region: '',
+			ip_addr: '',
+			armoredPublicKey: '',
+			nftNumber: 100 + i,
+			domain: ''
+		})
+	}
 		
-		
-		const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
+	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
 	let i = 0
-	await mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
+	mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
 		i = n.nftNumber
 		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
 		n.region = nodeInfo.regionName
 		n.ip_addr = nodeInfo.ipaddress
 		n.armoredPublicKey = Buffer.from(nodeInfo.pgp,'base64').toString()
 		const pgpKey1 = await readKey({ armoredKey: n.armoredPublicKey})
-		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase() + '.conet.network'
-		
-	}).catch(ex=> {
-		
+		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase()
+	}, err => {
+		const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
+		Guardian_Nodes = Guardian_Nodes.slice(0, index)
+		logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+		Guardian_Nodes = Guardian_Nodes.filter(n => n.armoredPublicKey)
+		resolve(true)
 	})
-
-	const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
-	Guardian_Nodes = Guardian_Nodes.slice(0, index)
-	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
-	resolve (true)
 })
 
 const listenEposh = async () => {
@@ -118,7 +114,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	listenEposh()
 }
 
-const postToUrl = (node: nodeInfo, POST: string) => {
+const postToUrl = (node: nodeInfo, POST: string) => new Promise(resolve =>{
 	const option: RequestOptions = {
 		host: node.ip_addr,
 		port: 80,
@@ -132,12 +128,14 @@ const postToUrl = (node: nodeInfo, POST: string) => {
 
 	const waitingTimeout = setTimeout(() => {
 		logger(Colors.red(`postToUrl on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		return resolve (false)
 	}, 5 * 1000)
 
 	const kkk = request(option, res => {
 		clearTimeout(waitingTimeout)
-
+		resolve (true)
 		res.once('end', () => {
+			
 			if (res.statusCode !==200) {
 				return logger(`postToUrl ${node.ip_addr} statusCode = [${res.statusCode}] != 200 error!`)
 			}
@@ -150,10 +148,9 @@ const postToUrl = (node: nodeInfo, POST: string) => {
 	})
 
 	kkk.end(POST)
-}
+})
 
-const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
-	
+const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunchCount: number = 0, callback?: (err?: string, data?: string) => void) => {
 	
 	const launch = launchMap.get (connectHash)||false
 	if (launch) {
@@ -163,9 +160,14 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 	launchMap.set (connectHash, true)
 
 	const relaunch = () => setTimeout(() => {
-		
-		startGossip(connectHash, node, POST, callback)
-		
+		if (++relaunchCount > 5) {
+			const err = `startGossip relaunchCount over 5 times STOP relaunchCount !`
+			if (typeof callback === 'function') {
+				callback (err)
+			}
+			return
+		}
+		startGossip(connectHash, node, POST, relaunchCount, callback)
 	}, 1000)
 
 	const waitingTimeout = setTimeout(() => {
@@ -243,8 +245,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 		})
 
 		res.once('end', () => {
-
-			
+			logger(`startGossip res on 'end'`)
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
 				res._destroy(null, () => {
@@ -264,44 +265,48 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 }
 
-const getRandomNodeV2: (index: number) => null|nodeInfo = (index = -1) => { 
+
+const getRandomNodeV2: (exclude: number) => Promise<null|{node: nodeInfo, index :number}> = (exclude = -1) => new Promise(async resolve => { 
 	const totalNodes = Guardian_Nodes.length - 1
-	if (!totalNodes ) {
-		return null
+	if (totalNodes <= 0 ) {
+		logger(`getRandomNodeV2 STOP because Guardian_Nodes length `)
+		return resolve (null)
 	}
 
-	const nodoNumber = Math.floor(Math.random() * totalNodes)
-	if (index > -1 && nodoNumber === index) {
-		//logger(Colors.grey(`getRandomNodeV2 nodoNumber ${nodoNumber} == index ${index} REUNING AGAIN!`))
-		return getRandomNodeV2(index)
+	const index = Math.floor(Math.random() * totalNodes)
+	if (exclude > -1 && exclude === index) {
+		logger(Colors.grey(`getRandomNodeV2 exclude ${exclude} == index ${index} REUNING AGAIN!`))
+		return getRandomNodeV2(exclude)
 	}
 
+	const node = Guardian_Nodes[index]
 
-
-	const node = Guardian_Nodes[nodoNumber]
-	if (!node.armoredPublicKey) {
-		Guardian_Nodes.splice(nodoNumber, 1)
-		logger(Colors.red(`getRandomNodeV2 node armoredPublicKey null Error ${node.ip_addr}: [${node.nftNumber}] DELETE it`))
-		return getRandomNodeV2(index)
+	const testConnect = await postToUrl(node, '')
+	if (!testConnect) {
+		logger(Colors.magenta(`${node.ip_addr} test connect was failed `))
+		Guardian_Nodes.splice(index, 1)
+		return getRandomNodeV2(exclude)
 	}
-	
-	return node
-}
+
+	return resolve({node, index})
+})
 
 const launchMap: Map<string, boolean> = new Map()
 
 const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	const walletAddress = wallet.address.toLowerCase()
-	const index = Math.floor(Math.random() * Guardian_Nodes.length - 1)
-	const node = Guardian_Nodes[index]
-	if (!node?.armoredPublicKey) {
-		logger(Colors.red(`connectToGossipNode total ${Guardian_Nodes.length} nodes, index [${index}] ${node?.ip_addr} ${node?.nftNumber} armoredPublicKey Error restart connectToGossipNode`))
-		connectToGossipNode(wallet)
-		return 
+	
+	const nodeInfo = await getRandomNodeV2(-1)
+	
+	if (!nodeInfo) {
+		return logger(Colors.red(`connectToGossipNode getRandomNodeV2 return null `))
+	}
+	const validatorNode = await getRandomNodeV2(nodeInfo.index)
+	if (!validatorNode) {
+		return logger(Colors.red(`connectToGossipNode getRandomNodeV2 for validatorNode return null `))
 	}
 
-
-
+	logger(Colors.magenta(`connectToGossipNode started for ${nodeInfo.node.ip_addr} validatorNode ${validatorNode.node.ip_addr}`))
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	const command = {
 		command: 'mining',
@@ -315,31 +320,29 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	wallet.signMessage(message)
 	.then (signMessage => Promise.all([
 		createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-		readKey({armoredKey: node.armoredPublicKey})
+		readKey({armoredKey: nodeInfo.node.armoredPublicKey})
 	]))
 		
 	.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
 	.then (postData => {
 		//logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
-		startGossip(node.ip_addr+walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
+		startGossip(nodeInfo.node.ip_addr+walletAddress, nodeInfo.node, JSON.stringify({data: postData}), 0, async (err, _data ) => {
+			if (err) {
+				logger(Colors.red(err))
+				return connectToGossipNode(wallet)
+			}
+			
 			if (!_data) {
-				return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
+				return logger(Colors.magenta(`connectToGossipNode ${nodeInfo.node.ip_addr} push ${_data} is null!`))
 			}
 			let data: listenClient
 			try {
 				data = JSON.parse(_data)
 			} catch (ex) {
-				logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
+				logger(Colors.blue(`${nodeInfo.node.ip_addr} => \n${_data}`))
 				return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
 			}
-	
-			const validatorNode = getRandomNodeV2(index)
-			if (!validatorNode)  {
-				return logger(Colors.red(`validator getRandomNodeV2 return NULL error!`))
-			}
 
-			
-			
 			let epochObj = epochTotal.get(data.epoch)
 	
 			if (!epochObj) {
@@ -365,14 +368,14 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			wallet.signMessage(message)
 			.then (signMessage => Promise.all([
 				createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-				readKey({armoredKey: validatorNode.armoredPublicKey})
+				readKey({armoredKey: validatorNode.node.armoredPublicKey})
 			]))
 			.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
 			.then (postData => {
-				postToUrl(validatorNode, JSON.stringify({data: postData}))
+				postToUrl(validatorNode.node, JSON.stringify({data: postData}))
 			})
 			.catch(ex => {
-				return logger(Colors.red(`startGossip Error! ${node.ip_addr} ${node.armoredPublicKey} error!`))
+				return logger(Colors.red(`startGossip Error! ${nodeInfo.node.ip_addr} ${nodeInfo.node.armoredPublicKey} error!`))
 			})
 	
 			// const encryptObj = {
@@ -387,10 +390,8 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			
 	
 		})
-	})
-
-	.catch(ex => {
-		return logger(Colors.red(`await readKey ${node.ip_addr} ${node.armoredPublicKey} error!`))
+	}).catch(ex => {
+		return logger(Colors.red(`await readKey ${nodeInfo.node.ip_addr} ${nodeInfo.node.armoredPublicKey} error!`))
 	})
 
 	

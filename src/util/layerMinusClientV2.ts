@@ -313,6 +313,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 		
 	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
 	let i = 0
+	
 	await mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
 		i = n.nftNumber
 		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
