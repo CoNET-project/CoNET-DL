@@ -167,6 +167,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 			}
 			return
 		}
+		logger(Colors.magenta(`startGossip do relaunch relaunchCount = ${relaunchCount} `))
 		startGossip(connectHash, node, POST, relaunchCount, callback)
 	}, 1000)
 
@@ -203,6 +204,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 		}
 		
 		res.on ('data', _data => {
+			relaunchCount = 0
 			clearTimeout(_Time)
 			data += _data.toString()
 			
@@ -331,7 +333,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 				logger(Colors.red(err))
 				return connectToGossipNode(wallet)
 			}
-			
+
 			if (!_data) {
 				return logger(Colors.magenta(`connectToGossipNode ${nodeInfo.node.ip_addr} push ${_data} is null!`))
 			}
