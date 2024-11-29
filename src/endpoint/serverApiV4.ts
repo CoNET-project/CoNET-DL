@@ -232,7 +232,9 @@ class conet_dl_server_v4 {
 				countAccessPool.set(ipaddress, [timeStamp])
 			} else {
 				count.push(timeStamp)
-				const _count = count.sort((a,b) => b-a).filter(v => v > timeStamp -1000)
+				const _count = count.sort((a,b) => b-a).filter(v => v > timeStamp - 1000)
+				const newCount = _count.slice(0, 10)
+				countAccessPool.set(ipaddress, newCount)
 				if (_count.length > MaxCount) {
 					logger(`${ipaddress} _count.length ${_count.length} > MaxCount ${MaxCount} => ${req.method} return 503!!!!!!!!`)
 					res.status(503).end()
