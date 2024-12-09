@@ -44,6 +44,7 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 interface epochRate {
 	totalMiners: number
 	minerRate: number
+	totalUsers: number
 }
 
 const referralsV3_addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
@@ -74,7 +75,7 @@ const get_epoch_total = async () => {
 		eposh_total.set(block, ratedata)
 		eposh_total.delete(block - 4)
 	} catch (ex: any) {
-		eposh_total.set(block, {totalMiners: 0, minerRate: 0})
+		eposh_total.set(block, {totalMiners: 0, minerRate: 0, totalUsers: 0})
 		logger(Colors.red(`get_epoch_total ${filename1} Error!`), ex.message)
 	}
 }

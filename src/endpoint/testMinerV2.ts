@@ -16,7 +16,6 @@ const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
-
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
@@ -59,7 +58,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 		
 	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
 	let i = 0
-	mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
+	mapLimit(Guardian_Nodes, 10, async (n: nodeInfo, next) => {
 		i = n.nftNumber
 		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
 		n.region = nodeInfo.regionName
@@ -75,6 +74,8 @@ const getAllNodes = () => new Promise(async resolve=> {
 		resolve(true)
 	})
 })
+
+
 
 const listenEposh = async () => {
 	let currentEpoch = await provider.getBlockNumber()
@@ -267,7 +268,6 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 
 }
 
-
 const getRandomNodeV2: (exclude: number) => Promise<null|{node: nodeInfo, index :number}> = (exclude = -1) => new Promise(async resolve => { 
 	const totalNodes = Guardian_Nodes.length - 1
 	if (totalNodes <= 0 ) {
@@ -327,7 +327,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		
 	.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
 	.then (postData => {
-		//logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}:${index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
+		logger(Colors.blue(`connectToGossipNode ${nodeInfo.node.domain}:${nodeInfo.node.ip_addr}:${nodeInfo.index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
 		startGossip(nodeInfo.node.ip_addr+walletAddress, nodeInfo.node, JSON.stringify({data: postData}), 0, async (err, _data ) => {
 			if (err) {
 				logger(Colors.red(err))
@@ -353,9 +353,17 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			}
 	
 			epochObj.set(walletAddress, true)
-	
+			
+			const messageVa = {epoch: data.epoch, wallet: walletAddress}
+			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
+
+			// if (nodeWallet !== data.nodeWallet.toLowerCase()) {
+				logger(Colors.red(`validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
+			// }
+
 			data.minerResponseHash = await wallet.signMessage(data.hash)
-			//logger(Colors.grey(`${node.ip_addr}:${node.nftNumber} validator [${walletAddress}] post to ${validatorNode.ip_addr}:${validatorNode.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
+
+			logger(Colors.grey(`${nodeInfo.node.ip_addr}:${nodeInfo.node.nftNumber} validator [${walletAddress}] post to ${validatorNode.node.ip_addr}:${validatorNode.node.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
 			data.isUser = isUser
 			data.userWallets = data.nodeWallets = []
 			const command = {
