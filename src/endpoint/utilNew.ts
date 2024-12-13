@@ -1299,17 +1299,20 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	
 	return 
 }
-// const kk = {
-//     "message": "{\"walletAddress\":\"0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34\",\"data\":{\"receiptTx\":\"0xacfee5338b43422f1b624aa385cf1c7dab36d79240e75b1975f65b02ed12bf5a\",\"tokenName\":\"arb_eth\",\"amount\":\"37131160000000000\",\"ntfs\":1,\"referrer\":\"\"}}",
-//     "signMessage": "0xd730e0abd30db096ab8910e8892ce79996458432db35f93612cd1123e2e2760d3a13188c3aa847ac676a80e688015839f426f24956d44088e6e901d676ba4ddb1c"
-// }
-// const test = async () => {
-// 	const uu = await checkSign(kk.message, kk.signMessage)
-// }
-
-// test()
 
 
+const data: ICONETianPurchaseData = {
+	amount: "222222",
+	referrer: "0x6c13339df37027cde88d0dcd6b8e9850809eda52",
+	ntfs: 250,
+	receiptTx: "0xecc1ba9432962aadc45726b4c2326d39dee50b0a607a48626cbcae9fd0049add",
+	tokenName: 'usdt'
 
+}
+
+const start = async () => {
+	await finishCONETianPlanPurchase(data, "0x8f05C5CDB95Ef99e358D45920D8E87b9846C149e")
+}
+// start()
 // CONETianPlanPurchase(obj)
 

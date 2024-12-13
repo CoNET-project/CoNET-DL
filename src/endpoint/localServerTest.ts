@@ -41,8 +41,6 @@ const connectClient = (host: string, req: Socket, data: Buffer) => {
 	const netC = createConnection(80, host, () => {
 		netC.pipe(data1).pipe(req).pipe(data2).pipe(netC)
 	})
-	
-
 	netC.write(data)
 }
 
@@ -50,6 +48,7 @@ const startServer = () => {
 	const server = createServer( socket => {
 		let first = true
 		socket.once('data', data => {
+			const data1 = data.toString()
 			
 			const stream = data.toString()
 			const host = stream.split(/Host: /)[1].split('\r\n')[0]
@@ -62,4 +61,9 @@ const startServer = () => {
 	server.listen(3333)
 }
 
-startServer() 
+startServer()
+
+
+
+
+//		curl -X OPTIONS -H "Access-Control-Request-Method: POST"  https://rpc.conet.network -i

@@ -12,8 +12,8 @@ let transferEposh = 0
 const newGuardianNodes_ContractV4 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
-const nodesEachEPOCH = 304.41400304414003 * 2
-const nodeRferralsEachEPOCH = 16.742770167427702 * 2
+const nodesEachEPOCH = 304.41400304414003
+const nodeRferralsEachEPOCH = 16.742770167427702
 const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 const guardianSmartContract = new ethers.Contract(newGuardianNodes_ContractV4, GuardianNodesV2ABI, CONETProvider)
 
