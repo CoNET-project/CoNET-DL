@@ -354,12 +354,12 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	
 			epochObj.set(walletAddress, true)
 			
-			const messageVa = {epoch: data.epoch, wallet: walletAddress}
+			const messageVa = {epoch: data.epoch.toString(), wallet: walletAddress}
 			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
 
-			// if (nodeWallet !== data.nodeWallet.toLowerCase()) {
+			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
 				logger(Colors.red(`validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
-			// }
+			}
 
 			data.minerResponseHash = await wallet.signMessage(data.hash)
 
