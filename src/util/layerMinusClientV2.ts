@@ -193,6 +193,14 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			const wallets = data.nodeWallets||[]
 			const users = data.userWallets||[]
 			node.lastEposh =  data.epoch
+
+			const messageVa = {epoch: data.epoch.toString(), wallet: walletAddress}
+			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
+
+			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
+				logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
+			}
+
 			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
 			postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
 		} catch (ex) {
