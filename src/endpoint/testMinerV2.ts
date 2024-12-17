@@ -358,7 +358,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
 
 			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
-				logger(Colors.red(`validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
+				logger(Colors.red(`${nodeInfo.node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
 			}
 
 			data.minerResponseHash = await wallet.signMessage(data.hash)
