@@ -198,10 +198,15 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
 				logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
 			}
+
 			let total = epochTotal.get (data.epoch.toString())||0
+
 			if (!total) {
-				logger('*******************************************')
+				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
+				logger('******************************************* didResponseNode ', inspect(didResponseNode, false, 3, true), '*******************************************')
 			}
+			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
+			didResponseNode.splice(index, 1)
 			epochTotal.set(data.epoch.toString(), total +1 )
 
 			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
@@ -212,6 +217,8 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 		}
 	})
 }
+let didResponseNode: string[] = []
+
 
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
@@ -342,15 +349,16 @@ const getAllNodes = () => new Promise(async resolve=> {
 	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
 	resolve (true)
 })
-
+let allNodeAddr: string[] = []
 const startGossipListening = () => {
 	if (!Guardian_Nodes.length) {
 		return logger(Colors.red(`startGossipListening Error! gossipNodes is null!`))
 	}
 
 	logger(Colors.blue(`startGossipListening gossipNodes = ${Guardian_Nodes.length}`))
-
+	
 	Guardian_Nodes.forEach(n => {
+		allNodeAddr.push (n.ip_addr)
 		connectToGossipNode(n)
 	})
 	
