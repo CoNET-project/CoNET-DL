@@ -20,6 +20,8 @@ const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider(conet_rpc)
 const launchMap: Map<string, boolean> = new Map()
+const epochTotal: Map<string, number> = new Map()
+
 
 const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
 	
@@ -129,8 +131,6 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 let wallet: ethers.HDNodeWallet
 
-
-
 const postLocalhost = async (path: string, obj: any)=> {
 	
 	const option: RequestOptions = {
@@ -200,8 +200,10 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
 				logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
 			}
+			let total = epochTotal.get (data.epoch.toString())||0
+			epochTotal.set(data.epoch.toString(), total +1 )
 
-			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} wallets miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
+			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
 			postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
@@ -279,8 +281,6 @@ const userPool: Map<number, Map<string, string[]>> = new Map()
 
 let currentEpoch = 0
 
-
-
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
@@ -346,6 +346,7 @@ const startGossipListening = () => {
 	if (!Guardian_Nodes.length) {
 		return logger(Colors.red(`startGossipListening Error! gossipNodes is null!`))
 	}
+
 	logger(Colors.blue(`startGossipListening gossipNodes = ${Guardian_Nodes.length}`))
 
 	Guardian_Nodes.forEach(n => {
@@ -358,9 +359,7 @@ const start = async () => {
 	logger(Colors.blue(`Layer Minus listenning V2 start from (${_start}) to (${_end})`))
 	wallet = ethers.Wallet.createRandom()
 	await getAllNodes()
-
 	startGossipListening()
-
 }
 
 
@@ -376,7 +375,6 @@ args.forEach ((n, index ) => {
 	if (/^S\=/i.test(n)) {
 		_start = parseInt(n.split('=')[1])
 	}
-
 })
 
 if (_end - _start > 0) {
