@@ -34,9 +34,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 	launchMap.set (connectHash, true)
 
 	const relaunch = () => setTimeout(() => {
-		
 		startGossip(connectHash, node, POST, callback)
-	
 	}, 1000)
 
 	const waitingTimeout = setTimeout(() => {
@@ -201,6 +199,9 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 				logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
 			}
 			let total = epochTotal.get (data.epoch.toString())||0
+			if (!total) {
+				logger('*******************************************')
+			}
 			epochTotal.set(data.epoch.toString(), total +1 )
 
 			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length}`))
