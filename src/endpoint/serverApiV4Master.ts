@@ -208,25 +208,25 @@ const epochTotalData:  Map<number, IGossipStatus > = new Map()
 
 const miningData = (body: any, res: Response) => {
 	
-	const ephch = parseInt(body.epoch)
+	const ephchKey = parseInt(body.epoch)
 
-	let eposh = epochNodeData.get(ephch)
+	let eposh = epochNodeData.get(ephchKey)
 	if (!eposh) {
 		eposh = new Map()
-		epochNodeData.set(body.epoch, eposh)
+		epochNodeData.set(ephchKey, eposh)
 	}
 
 	eposh.set (body.ipaddress, {wallets: body.wallets, users: body.users})
-	let epoch = parseInt(body.epoch)
-	let epochTotal = epochTotalData.get (epoch)
+
+	let epochTotal = epochTotalData.get (ephchKey)
 	if (!epochTotal) {
 		epochTotal = {
 			totalConnectNode: 0,
-			epoch: body.epoch,
+			epoch: ephchKey,
 			totalMiners: 0,
 			totalUsers: 0
 		}
-		epochTotalData.set(epoch, epochTotal)
+		epochTotalData.set(ephchKey, epochTotal)
 	}
 	epochTotal.totalMiners += body.wallets.length
 	epochTotal.totalMiners += body.users.length
