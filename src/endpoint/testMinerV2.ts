@@ -92,6 +92,7 @@ const listenEposh = async () => {
 }
 
 const getWallet = async (SRP: string, max: number, __start: number) => {
+	
 	await getAllNodes()
 
 	const acc = ethers.Wallet.fromPhrase(SRP)
@@ -107,11 +108,11 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	}
 
 	let i = 0
-
+	logger(Colors.red(`mining start total wallets = __start from ${number} to ${max} TOTAL = ${wallets.length}`))
 	wallets.forEach(n => {
-		 start(n)
+		connectToGossipNode(n, i ++)
 	})
-
+	
 	listenEposh()
 }
 
@@ -294,8 +295,10 @@ const getRandomNodeV2: (exclude: number) => Promise<null|{node: nodeInfo, index 
 })
 
 const launchMap: Map<string, boolean> = new Map()
+const listenningPool: Map<string, NodeJS.Timeout> = new Map()
 
-const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
+const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: number ) => {
+	const wallet = new ethers.Wallet(privateKeyArmor)
 	const walletAddress = wallet.address.toLowerCase()
 	
 	const nodeInfo = await getRandomNodeV2(-1)
@@ -303,6 +306,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	if (!nodeInfo) {
 		return logger(Colors.red(`connectToGossipNode getRandomNodeV2 return null `))
 	}
+
 	const validatorNode = await getRandomNodeV2(nodeInfo.index)
 	if (!validatorNode) {
 		return logger(Colors.red(`connectToGossipNode getRandomNodeV2 for validatorNode return null `))
@@ -318,8 +322,9 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 	}
 	
 	const message = JSON.stringify(command)
-
+	
 	wallet.signMessage(message)
+	
 	.then (signMessage => Promise.all([
 		createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
 		readKey({armoredKey: nodeInfo.node.armoredPublicKey})
@@ -327,16 +332,32 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 		
 	.then ( value => encrypt({message: value[0], encryptionKeys: value[1], config: { preferredCompressionAlgorithm: enums.compression.zlib }}))
 	.then (postData => {
-		logger(Colors.blue(`connectToGossipNode ${nodeInfo.node.domain}:${nodeInfo.node.ip_addr}:${nodeInfo.index}, wallet = ${wallet.signingKey.privateKey}:${walletAddress}`))
+		
+		let time = setTimeout(() => {
+			logger(Colors.magenta(`${connectingNUmber} ${wallet} listenning ${nodeInfo.index} ${nodeInfo.node.ip_addr} Timeout! *************`))
+		}, 24 * 1000)
+
+		listenningPool.set (walletAddress, time)
+
+		logger(Colors.blue(`[${connectingNUmber}] total connect = ${listenningPool.size} ${nodeInfo.node.domain}:${nodeInfo.node.ip_addr}:${nodeInfo.index} ${walletAddress}`))
+		
 		startGossip(nodeInfo.node.ip_addr+walletAddress, nodeInfo.node, JSON.stringify({data: postData}), 0, async (err, _data ) => {
+			
+
 			if (err) {
 				logger(Colors.red(err))
-				return connectToGossipNode(wallet)
+				return connectToGossipNode(privateKeyArmor, connectingNUmber)
 			}
 
 			if (!_data) {
 				return logger(Colors.magenta(`connectToGossipNode ${nodeInfo.node.ip_addr} push ${_data} is null!`))
 			}
+			clearTimeout(time)
+
+			time = setTimeout(() => {
+				logger(Colors.magenta(`${connectingNUmber} ${wallet} listenning ${nodeInfo.index} ${nodeInfo.node.ip_addr} Timeout! *************`))
+			}, 24 * 1000)
+
 			let data: listenClient
 			try {
 				data = JSON.parse(_data)
@@ -363,7 +384,7 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 
 			data.minerResponseHash = await wallet.signMessage(data.hash)
 
-			logger(Colors.grey(`${nodeInfo.node.ip_addr}:${nodeInfo.node.nftNumber} validator [${walletAddress}] post to ${validatorNode.node.ip_addr}:${validatorNode.node.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
+			logger(Colors.grey(`[${connectingNUmber}:${listenningPool.size}]=>${nodeInfo.node.ip_addr}:${nodeInfo.node.nftNumber} validator [${walletAddress}] post to ${validatorNode.node.ip_addr}:${validatorNode.node.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
 			data.isUser = isUser
 			data.userWallets = data.nodeWallets = []
 			const command = {
@@ -397,8 +418,6 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 			// const _postData = await encrypt (encryptObj)
 			
 	
-			
-	
 		})
 	}).catch(ex => {
 		return logger(Colors.red(`await readKey ${nodeInfo.node.ip_addr} ${nodeInfo.node.armoredPublicKey} error!`))
@@ -406,12 +425,6 @@ const connectToGossipNode = async ( wallet: ethers.Wallet ) => {
 
 	
 }
-
-const start = (privateKeyArmor: string) => new Promise(async resolve => {
-	const wallet = new ethers.Wallet(privateKeyArmor)
-	await connectToGossipNode(wallet)
-	resolve (true)
-})
 
 const [,,...args] = process.argv
 let _SRP = ''
