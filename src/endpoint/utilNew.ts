@@ -516,7 +516,7 @@ const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: str
 	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, veryold_ConetProvider)
 	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, veryold_ConetProvider)
 	const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, veryold_ConetProvider)
-	const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
+	//const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
 	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, veryold_ConetProvider)
 
 	let CONET_very_old_Balance = BigInt(0), 
@@ -571,7 +571,7 @@ const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: str
 			
 			//			for old CNTP 
 			CNTP_v1_Balance,
-			CNTP_v1_initStats,
+			//CNTP_v1_initStats,
 
 			oldGuardianNFT1, newGuardianNFT1_initSTatus, 
 			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
@@ -606,7 +606,8 @@ const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: str
 			old_cUSDB.balanceOf(wallet), old_cBNBUsdt.balanceOf(wallet), old_cUSDT.balanceOf(wallet), 
 			
 			//			for CNTP v1
-			oldCNTPv1.balanceOf(wallet), newCNTP_V1.initV2(wallet),
+			//oldCNTPv1.balanceOf(wallet), 
+			newCNTP_V1.initV2(wallet),
 
 			//			for Guardian Plan
 
