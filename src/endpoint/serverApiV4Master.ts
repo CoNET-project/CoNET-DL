@@ -217,8 +217,8 @@ const miningData = (body: any, res: Response) => {
 	}
 
 	eposh.set (body.ipaddress, {wallets: body.wallets, users: body.users})
-
-	let epochTotal = epochTotalData.get (body.epoch)
+	let epoch = parseInt(body.epoch)
+	let epochTotal = epochTotalData.get (epoch)
 	if (!epochTotal) {
 		epochTotal = {
 			totalConnectNode: 0,
@@ -226,7 +226,7 @@ const miningData = (body: any, res: Response) => {
 			totalMiners: 0,
 			totalUsers: 0
 		}
-		epochTotalData.set(body.epoch, epochTotal)
+		epochTotalData.set(epoch, epochTotal)
 	}
 	epochTotal.totalMiners += body.wallets.length
 	epochTotal.totalMiners += body.users.length
