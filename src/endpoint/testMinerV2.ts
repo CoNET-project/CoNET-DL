@@ -108,7 +108,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	}
 
 	let i = 0
-	logger(Colors.red(`mining start total wallets = __start from ${number} to ${max} TOTAL = ${wallets.length}`))
+	logger(Colors.red(`mining start total wallets from ${__start} to ${max} TOTAL = ${wallets.length}`))
 	wallets.forEach(n => {
 		connectToGossipNode(n, i ++)
 	})
@@ -365,12 +365,12 @@ const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: n
 				logger(Colors.blue(`${nodeInfo.node.ip_addr} => \n${_data}`))
 				return logger(Colors.red(`connectToGossipNode JSON.parse(_data) Error!`))
 			}
-
-			let epochObj = epochTotal.get(data.epoch)
+			let epoch = parseInt(data.epoch.toString())
+			let epochObj = epochTotal.get(epoch)
 	
 			if (!epochObj) {
 				epochObj = new Map()
-				epochTotal.set(data.epoch, epochObj)
+				epochTotal.set(epoch, epochObj)
 			}
 	
 			epochObj.set(walletAddress, true)
