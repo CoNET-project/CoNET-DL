@@ -208,8 +208,9 @@ const epochTotalData:  Map<number, IGossipStatus > = new Map()
 
 const miningData = (body: any, res: Response) => {
 	
+	const ephch = parseInt(body.epoch)
 
-	let eposh = epochNodeData.get(body.epoch)
+	let eposh = epochNodeData.get(ephch)
 	if (!eposh) {
 		eposh = new Map()
 		epochNodeData.set(body.epoch, eposh)
