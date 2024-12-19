@@ -110,7 +110,11 @@ const new_BNBU_USDT_addr = '0xCc112a8Ec397808a4ffA0115Ad3d65ee0A8fab6c'
 const new_USDB_addr = '0x37A35FFfa9cD133bB08d7359Ae7d90A6550951AA'
 
 const new_CNTP_addr = '0xa4b389994A591735332A67f3561D60ce96409347'
+
+
 const new_Guardian_addr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
+
+
 const new_initCONET_faucet_addr = '0x9E70d462c434ca3f5aE567E9a406C08B2e25c066'
 const newReffAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const newCNTP_v1 = '0xb182d2c2338775B0aC3e177351D638b23D3Da4Ea'
@@ -118,7 +122,7 @@ const newCNTP_v1 = '0xb182d2c2338775B0aC3e177351D638b23D3Da4Ea'
 const assetOracle_contract_addr = '0x8A7FD0B01B9CAb2Ef1FdcEe4134e32D066895e0c'
 
 const CONETianPlan = '0x6365DbbeeC743d14eA3BC4823E53bf6a7984bf70'
-
+const CONETianPlan_V2 = '0x4F1F5c25429Ea458C9e4363F05110f668f20D58B'
 interface sendCONETObj {
 	wallet: string
 	amount: string
@@ -156,7 +160,7 @@ const new_Guardian_Contract = new ethers.Contract(new_Guardian_addr, CGPNsV7_new
 const new_CONET_Faucet_COntract = new ethers.Contract(new_initCONET_faucet_addr, faucet_new_ABI, initmanagerW_4)
 const newReff_Contract = new ethers.Contract(newReffAddr, ReferralsV3ABI, initmanagerW_3)
 
-const CONETianPlanContract = new ethers.Contract (CONETianPlan, CONETianPlanABI, initmanagerW_8)
+const CONETianPlanContract = new ethers.Contract (CONETianPlan_V2, CONETianPlanABI, initmanagerW_8)
 
 
 let sendCONETPool: sendCONETObj[] = []
@@ -1184,7 +1188,7 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 	logger(Colors.magenta(`finishCONETianPlanPurchase wallet = ${wallet}`))
 	logger(inspect(purchaseData, false, 3, true))
 
-	const amount = purchaseData.amount
+	// const amount = purchaseData.amount
 	const referrer = purchaseData.referrer||'0x0000000000000000000000000000000000000000'
 	// const referrerReturn = (parseFloat(ethers.formatEther(amount)) * .2).toFixed(8)
 	// const retClaimableContractAddress = realToClaimableContractAddress(purchaseData.tokenName)
@@ -1302,18 +1306,18 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 }
 
 
-const data: ICONETianPurchaseData = {
-	amount: "222222",
-	referrer: "0x6c13339df37027cde88d0dcd6b8e9850809eda52",
-	ntfs: 250,
-	receiptTx: "0xecc1ba9432962aadc45726b4c2326d39dee50b0a607a48626cbcae9fd0049add",
-	tokenName: 'usdt'
+// const data: ICONETianPurchaseData = {
+// 	amount: "222222",
+// 	referrer: "0xf3B0D4359349cE2336edcf946011a5F7049DC587",
+// 	ntfs: 250,
+// 	receiptTx: "",
+// 	tokenName: 'usdt'
 
-}
+// }
 
-const start = async () => {
-	await finishCONETianPlanPurchase(data, "0x8f05C5CDB95Ef99e358D45920D8E87b9846C149e")
-}
+// const start = async () => {
+// 	await finishCONETianPlanPurchase(data, "")
+// }
 // start()
-// CONETianPlanPurchase(obj)
+
 

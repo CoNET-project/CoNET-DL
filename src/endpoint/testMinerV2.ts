@@ -354,9 +354,6 @@ const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: n
 			}
 			clearTimeout(time)
 
-			time = setTimeout(() => {
-				logger(Colors.magenta(`${connectingNUmber} ${wallet} listenning ${nodeInfo.index} ${nodeInfo.node.ip_addr} Timeout! *************`))
-			}, 24 * 1000)
 
 			let data: listenClient
 			try {
@@ -375,12 +372,12 @@ const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: n
 	
 			epochObj.set(walletAddress, true)
 			
-			const messageVa = {epoch: data.epoch.toString(), wallet: walletAddress}
-			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
+			// const messageVa = {epoch: data.epoch.toString(), wallet: walletAddress}
+			// const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
 
-			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
-				logger(Colors.red(`${nodeInfo.node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
-			}
+			// if (nodeWallet !== data.nodeWallet.toLowerCase()) {
+			// 	logger(Colors.red(`${nodeInfo.node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
+			// }
 
 			data.minerResponseHash = await wallet.signMessage(data.hash)
 
