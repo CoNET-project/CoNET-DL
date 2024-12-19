@@ -23,7 +23,7 @@ import faucet_new_ABI from './new_faucet.ABI.json'
 import assetOracle_ABI from './oracleAsset.ABI.json'
 import type {Response, Request } from 'express'
 import CONETianPlanABI from './CONETianPlan.ABI.json'
-
+import Christmas2024ABI from './christmas2024ABI.json'
 
 export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0])
 
@@ -1304,19 +1304,40 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	
 	return 
 }
+const christmas2024Contract_addr = '0xb188e707f4544835aEe28E4206C65edfF23221C0'
+const christmas2024SmartContract = new ethers.Contract(christmas2024Contract_addr, Christmas2024ABI, initmanagerW_6)
+
+export const christmas2024 = async (wallet: string) => {
+	try {
+		const _balance = await christmas2024SmartContract.showClaimableCNTP(wallet)
+		const balance = ethers.formatEther(_balance)
+		logger(Colors.blue (`christmas2024 ${wallet} balance = ${balance}`))
+		if (parseInt(balance) > 0) {
+			const _ts = await christmas2024SmartContract.ClaimReward(wallet)
+			const tx = await _ts.wait()
+			return {tx}
+		}
+		return false
+	} catch (ex) {
+		return false
+	}
+	
+}
+
 
 
 // const data: ICONETianPurchaseData = {
 // 	amount: "222222",
 // 	referrer: "0xf3B0D4359349cE2336edcf946011a5F7049DC587",
 // 	ntfs: 250,
-// 	receiptTx: "",
+// 	receiptTx: "0x91af87c901d3107c3332c809cf9da7ebf8bdd9a4e1fea159e3aeaf5cf905b947",
 // 	tokenName: 'usdt'
 
 // }
 
 // const start = async () => {
-// 	await finishCONETianPlanPurchase(data, "")
+// 	christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
+// 	// await finishCONETianPlanPurchase(data, "0x1be9715a6672A0699bE470d1f8A28C9B614B99dE")
 // }
 // start()
 

@@ -13,11 +13,10 @@ import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
-import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool, CONETianPlanPurchase} from './utilNew'
+import {cntpAdminWallet, GuardianPurchase, GuardianPurchasePool, CONETianPlanPurchase, christmas2024} from './utilNew'
 import {createServer} from 'node:http'
 import {readFile} from 'node:fs/promises'
 import {watch} from 'node:fs'
-import {getDailyIPAddressAndhashCheck} from '../util/dailyTaskChangeHash'
 import referralsV3ABI from './ReferralsV3.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -440,6 +439,24 @@ class conet_dl_server_v4 {
 			}
 			return res.status(403).end()
 
+		})
+
+		router.post ('/christmas2024', async (req: any, res: any) => {
+			const _wallet: string = req.body.walletAddress
+			let wallet: string 
+			try {
+				wallet = ethers.getAddress(_wallet)
+			} catch (ex) {
+				return res.status(404).end()
+			}
+			logger(`/christmas2024`)
+			const ret = await christmas2024 (wallet)
+
+			if (ret === false) {
+				return res.status(403).end()
+			}
+			return res.status(200).json(ret).end()
+		
 		})
 		
 		router.all ('*', (req: any, res: any) =>{
