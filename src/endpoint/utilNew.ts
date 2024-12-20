@@ -1305,7 +1305,7 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	return 
 }
 const christmas2024Contract_addr = '0xb188e707f4544835aEe28E4206C65edfF23221C0'
-const christmas2024SmartContract = new ethers.Contract(christmas2024Contract_addr, Christmas2024ABI, initmanagerW_6)
+const christmas2024SmartContract = new ethers.Contract(christmas2024Contract_addr, Christmas2024ABI, initmanagerW_7)
 
 export const christmas2024 = async (wallet: string) => {
 	try {
