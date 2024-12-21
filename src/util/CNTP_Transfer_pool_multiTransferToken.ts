@@ -1,16 +1,14 @@
 import {BlobLike, ethers} from 'ethers'
 import {logger} from './logger'
 import Color from 'colors/safe'
-import CNTP_ticketManager_ABI from './CNTP_ticketManager.ABI.json'
+import {abi as CONET_Point_ABI} from './conet-point.json'
 import { inspect } from 'node:util'
 import {mapLimit} from 'async'
 const rpcUrl = 'https://rpc.conet.network'
-
-const CNTP_TicketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
+const CNTP_Addr = '0x1250818e17D0bE3851E2B5769D9262a48fAB7065'
 const transferTimeout = 1000 * 180			//	3 mins
-const checkGasPrice = 1550000
-const longestWaitingTime = 1000 * 60 * 5	//	15 mins
-
+const checkGasPrice = 15000000
+const longestWaitingTime = 1000 * 60 * 15	//	5 mins
 
 interface paymentItem {
 	wallets: string[]
@@ -32,7 +30,7 @@ export default class CNTP_Transfer_Manager {
 			logger(Color.red(`transferCNTP wallets.length = ${wallets.length} !== pays length ${pays.length}`))
 			return resolve (false)
 		}
-		const CNTP_Contract = new ethers.Contract(CNTP_TicketManager_addr, CNTP_ticketManager_ABI, wallet)
+		const CNTP_Contract = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
 		let total = 0
 		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
 		pays.forEach(n => {
@@ -57,7 +55,7 @@ export default class CNTP_Transfer_Manager {
 		})
 		
 		try {
-			const tx = await CNTP_Contract.multiTransferLottery (wallets, fixedPay)
+			const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
 			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, action wallet ${wallet.address} hash = ${tx.hash} `))
 			return resolve(await transferCNTP_waitingProcess (tx))
 
@@ -101,6 +99,9 @@ export default class CNTP_Transfer_Manager {
 				this.transferProcessStatus = false
 				return logger(Color.grey(`startTransfer GAS [${gasPrice}] > ${checkGasPrice} || gasPrice === 0, waiting to Low! transferPool legnth = [${this.pool.size}]`))
 			}
+			logger(Color.grey(`startTransfer NOW GAS [${gasPrice}] vs ${checkGasPrice} because timeStamp - this.lastTransferTimeStamp < longestWaitingTime = ${timeStamp - this.lastTransferTimeStamp < longestWaitingTime} [${this.pool.size}]`))
+		} else {
+			logger(Color.grey(`startTransfer NOW GAS [${gasPrice}] vs ${checkGasPrice}  [${this.pool.size}]`))
 		}
 		this.lastTransferTimeStamp = timeStamp
 		const splitGroupNumber = Math.round (this.pool.size / this.eachTransLength + 0.5)
