@@ -5,7 +5,7 @@ import {masterSetup} from './util'
 import {inspect} from 'node:util'
 import GuardianNodesV2ABI from './GuardianNodesV2.json'
 
-import CNTP_Transfer_Manager from './CNTP_Transfer_pool_MultiTransferToken'
+import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 
 let EPOCH = 0
 let transferEposh = 0

@@ -16,7 +16,7 @@ import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
-import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool_MultiTransferToken'
+import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 

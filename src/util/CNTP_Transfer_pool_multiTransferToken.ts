@@ -15,7 +15,7 @@ interface paymentItem {
 	pays: number[]
 }
 
-export default class CNTP_Transfer_Manager {
+export class CNTP_Transfer_Manager {
 
 	private pool: Map<string, number> = new Map()
 	private rpcProvider = new ethers.JsonRpcProvider(rpcUrl)
