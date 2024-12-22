@@ -5,7 +5,7 @@ import Color from 'colors/safe'
 import { logger } from './logger'
 import { join } from 'node:path'
 import {readFile} from 'node:fs/promises'
-import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
+import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 import {inspect} from 'node:util'
 import CONET_Point_ABI from './cCNTP.json'
 
