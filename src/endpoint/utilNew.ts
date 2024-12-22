@@ -1326,20 +1326,20 @@ export const christmas2024 = async (wallet: string) => {
 
 
 
-// const data: ICONETianPurchaseData = {
-// 	amount: "100",
-// 	referrer: "",
-// 	ntfs: 1,
-// 	receiptTx: "0xc54fcfdd139da4ef94c4807395cf9da05b7dbdb3f0598e8bdc2d1aadb4161773",
-// 	tokenName: 'usdt'
+const data: ICONETianPurchaseData = {
+	amount: "100",
+	referrer: "0xf3B0D4359349cE2336edcf946011a5F7049DC587",
+	ntfs: 135,
+	receiptTx: "0x0ab8d5ade80cf69f6f6bcb723041c2a2497844e14aea135e2ff944aa5bda536a",
+	tokenName: 'usdt'
 
-// }
+}
 
-// const start = async () => {
-// 	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
-// 	const uu = await finishCONETianPlanPurchase(data, "0xf499136fef0100a09441cf2a2265876b1e2547bd")
-// 	logger(uu)
-// }
-// start()
+const start = async () => {
+	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
+	const uu = await finishCONETianPlanPurchase(data, "0xF14f0d4Fc11c565b0c4CD70Ad2598b2B70abbFEb")
+	logger(uu)
+}
+start()
 
 

@@ -8,7 +8,7 @@ import { mapLimit} from 'async'
 import { logger } from './logger'
 import { join } from 'node:path'
 import {readFile} from 'node:fs/promises'
-import CNTP_Transfer_Manager from './CNTP_Transfer_pool'
+import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 import {inspect} from 'node:util'
 
 const conet_Holesky_RPC = 'https://rpc.conet.network'
