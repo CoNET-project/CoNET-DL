@@ -442,20 +442,21 @@ class conet_dl_server_v4 {
 		})
 
 		router.post ('/christmas2024', async (req: any, res: any) => {
-			const _wallet: string = req.body.walletAddress
-			let wallet: string 
-			try {
-				wallet = ethers.getAddress(_wallet)
-			} catch (ex) {
-				return res.status(404).end()
-			}
-			logger(`/christmas2024`)
-			const ret = await christmas2024 (wallet)
+			return res.status(404).end()
+			// const _wallet: string = req.body.walletAddress
+			// let wallet: string 
+			// try {
+			// 	wallet = ethers.getAddress(_wallet)
+			// } catch (ex) {
+			// 	return res.status(404).end()
+			// }
+			// logger(`/christmas2024`)
+			// const ret = await christmas2024 (wallet)
 
-			if (ret === false) {
-				return res.status(403).end()
-			}
-			return res.status(200).json(ret).end()
+			// if (ret === false) {
+			// 	return res.status(403).end()
+			// }
+			// return res.status(200).json(ret).end()
 		
 		})
 		
