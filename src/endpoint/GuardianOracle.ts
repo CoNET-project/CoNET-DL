@@ -42,7 +42,7 @@ const testData1 = [
   537.1435821764862
 ]
 
-const linten = 1000 * 60 *10
+const linten = 1000 * 60 * 10
 const updateOracle = async (tokenNames: string[], price: number[]) => {
 	const priceArray = price.map(n => ethers.parseEther(n.toString()))
 
@@ -77,12 +77,12 @@ const process = async () => {
 		const tron: quote = data.data['883'].quote
 		const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'tron']
 		logger(inspect(tron, false, 3, true))
-		//const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price, tron.USD.price]
-		// await updateOracle(tokenNames, price)
-		// setTimeout (() => {
-		// 	process()
-		// }, linten)
+		const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price, tron.USD.price]
+		await updateOracle(tokenNames, price)
+		setTimeout (() => {
+			process()
+		}, linten)
 	})
 }
-getIDs()
-// process()
+// getIDs()
+process()
