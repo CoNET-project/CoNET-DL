@@ -75,9 +75,11 @@ const process = async () => {
 		const dai: quote = data.data['4943'].quote
 		const bnb: quote = data.data['1839'].quote
 		const tron: quote = data.data['883'].quote
-		const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'tron']
+		// const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'tron']
+        const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb']
 		logger(inspect(tron, false, 3, true))
-		const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price, tron.USD.price]
+		// const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price, tron.USD.price]
+        const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price]
 		await updateOracle(tokenNames, price)
 		setTimeout (() => {
 			process()
