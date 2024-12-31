@@ -1231,7 +1231,7 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 
 	const txObj = await checkTx (purchaseData.receiptTx, purchaseData.tokenName)
 
-	if (typeof txObj === 'boolean'|| !txObj?.tx1 || !txObj?.tx) {
+	if (typeof txObj === 'boolean' || !txObj?.tx1) {
 		logger(Colors.grey(`Router /CONETianPlanPurchase checkTx Error!`), inspect(txObj, false, 3, true))
 		return false
 	}
