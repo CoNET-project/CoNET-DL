@@ -1272,7 +1272,9 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 			logger(Colors.red(`Router /CONETianPlanPurchase ERC20 token address Error!`), inspect( txObj.tx1, false, 3, true))
 			return false
 		}
-
+		if (!txObj.tx) {
+			return false
+		}
 		const erc20Result = checkErc20Tx(txObj.tx, CONET_receiveWallet, obj.walletAddress, purchaseData.amount)
 		if (erc20Result === false) {
 			logger(Colors.red(`Router /CONETianPlanPurchase  checkErc20Tx Error!`))
