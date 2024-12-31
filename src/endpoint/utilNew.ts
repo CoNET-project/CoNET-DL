@@ -1171,8 +1171,14 @@ const checkValueOfCONETianPlan = async (purchaseData: ICONETianPurchaseData) => 
 	return true
 }
 
-const checkCONETianPlanReferrer = async (referrer: string) => {
+const checkCONETianPlanReferrer = async (data: ICONETianPurchaseData) => {
+	let referrer = data.referrer
+
 	if (!referrer) {
+		return true
+	}
+	if (referrer === 'conetagenthere') {
+		data.referrer = '0x13Ce806fDA865c3bc341a1C487C8d3F15f543807'
 		return true
 	}
 	try {
@@ -1236,7 +1242,7 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 	}
 
 		
-	const checkReferrer = await checkCONETianPlanReferrer(purchaseData.referrer)
+	const checkReferrer = await checkCONETianPlanReferrer(purchaseData)
 
 	if (checkReferrer === null || checkReferrer === false) {
 		return false
@@ -1326,20 +1332,23 @@ export const christmas2024 = async (wallet: string) => {
 
 
 
-const data: ICONETianPurchaseData = {
-	amount: "100",
-	referrer: "0xf3B0D4359349cE2336edcf946011a5F7049DC587",
-	ntfs: 135,
-	receiptTx: "0x0ab8d5ade80cf69f6f6bcb723041c2a2497844e14aea135e2ff944aa5bda536a",
-	tokenName: 'usdt'
-
+const data: minerObj = {
+	walletAddress: '0x0f9f94bcbd27e6d60f40f71d69c72ab254f05fcb',
+	uuid: '',
+	data: {
+	amount: "141243710000000000",
+	referrer: "conetagenthere",
+	ntfs: 1,
+	receiptTx: "0xd3a81795d2509c5bc1031108ea234db743c52c963bc71dca9eac6a3ad93f4a5d",
+	tokenName: 'bnb'
+	}
 }
 
-const start = async () => {
-	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
-	const uu = await finishCONETianPlanPurchase(data, "0xF14f0d4Fc11c565b0c4CD70Ad2598b2B70abbFEb")
-	logger(uu)
-}
-start()
+// const start = async () => {
+// 	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
+// 	const uu = await CONETianPlanPurchase(data)
+// 	logger(uu)
+// }
+// start()
 
 
