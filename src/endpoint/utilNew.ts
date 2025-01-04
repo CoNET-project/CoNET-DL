@@ -1338,19 +1338,18 @@ const data: minerObj = {
 	walletAddress: '0x0f9f94bcbd27e6d60f40f71d69c72ab254f05fcb',
 	uuid: '',
 	data: {
-	amount: "141243710000000000",
-	referrer: "conetagenthere",
-	ntfs: 1,
-	receiptTx: "0xd3a81795d2509c5bc1031108ea234db743c52c963bc71dca9eac6a3ad93f4a5d",
-	tokenName: 'bnb'
+		amount: "141243710000000000",
+		referrer: "0x6C13339dF37027CDE88D0DCd6B8E9850809EDA52",
+		ntfs: 1,
+		receiptTx: "0x2ae45042954c84123aa3415cb39084b8269b8a4b040085ce1b0a72c0e0a771fb",
+		tokenName: 'bnb'
 	}
 }
 
 // const start = async () => {
 // 	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
-// 	const uu = await CONETianPlanPurchase(data)
-// 	logger(uu)
+// 	await finishCONETianPlanPurchase(data.data, '0x026439cEB9c8b9Ba3b445043E1dE5815Ec076CaE')
+
 // }
 // start()
-
 

@@ -312,7 +312,7 @@ const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: n
 		return logger(Colors.red(`connectToGossipNode getRandomNodeV2 for validatorNode return null `))
 	}
 
-	logger(Colors.magenta(`connectToGossipNode started for ${nodeInfo.node.ip_addr} validatorNode ${validatorNode.node.ip_addr}`))
+	//logger(Colors.magenta(`connectToGossipNode started for ${nodeInfo.node.ip_addr} validatorNode ${validatorNode.node.ip_addr}`))
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
 	const command = {
 		command: 'mining',
@@ -381,7 +381,7 @@ const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: n
 
 			data.minerResponseHash = await wallet.signMessage(data.hash)
 
-			logger(Colors.grey(`[${connectingNUmber}:${listenningPool.size}]=>${nodeInfo.node.ip_addr}:${nodeInfo.node.nftNumber} validator [${walletAddress}] post to ${validatorNode.node.ip_addr}:${validatorNode.node.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
+			//logger(Colors.grey(`[${connectingNUmber}:${listenningPool.size}]=>${nodeInfo.node.ip_addr}:${nodeInfo.node.nftNumber} validator [${walletAddress}] post to ${validatorNode.node.ip_addr}:${validatorNode.node.nftNumber} epoch ${data.epoch} linsten clients [${epochObj.size}] miner [${data.nodeWallets.length}]:[${data.userWallets.length}]`))
 			data.isUser = isUser
 			data.userWallets = data.nodeWallets = []
 			const command = {
