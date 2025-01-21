@@ -8,7 +8,7 @@ import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
 import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc, checkClaimeToeknbalance} from '../util/util'
-import {ticket_contract} from './serverApiV3Master'
+
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
@@ -147,19 +147,6 @@ const listenEpoch = async () => {
 }
 
 const MaxCount = 1
-
-const checkTicket = async (wallet: string) => {
-	const [isApproved, balance ] = await Promise.all([
-		ticket_contract.isApprovedForAll(wallet, '0x068759bCfd929fb17258aF372c30eE6CD277B872'),
-		ticket_contract.balanceOf(wallet, 1)
-	])
-	logger(Colors.blue (`checkTicket account ${wallet} isApproved = ${isApproved} balance = ${balance}`))
-	if (isApproved && balance.toString() > '0') {
-
-		return true
-	}
-	return false
-}
 
 export const claimeToekn = async (message: string, signMessage: string ) => {
 	const obj = checkSign (message, signMessage)

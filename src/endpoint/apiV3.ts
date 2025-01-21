@@ -9,7 +9,7 @@ if (Cluster.isPrimary) {
 
 	const forkWorker = () => {
 		
-		let numCPUs = cpus().length
+		let numCPUs = cpus().length/2
 
 		for (let i = 0; i < numCPUs; i ++){
 			_forkWorker()

@@ -69,7 +69,7 @@ const listeningGuardianNodes = async (block: number) => {
 	})
 }
 
-export const checkGasPrice = 1550000
+const checkGasPrice = 1550000
 let startDailyPoolTranferProcess = false
 let lastTransferTimeStamp = new Date().getTime()
 const longestWaitingTimeForDaily = 1000 * 60 * 10
@@ -525,7 +525,7 @@ const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI,
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
-export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
+const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 
 interface faucetRequest {
 	wallet: string
@@ -828,7 +828,7 @@ const ticketPoolProcess = async (block: number) => {
 }
 
 
-export const checkGasPriceFordailyTaskPool = 25000000
+const checkGasPriceFordailyTaskPool = 25000000
 
 
 const dailyTaskPool: Map<string, string> = new Map()
@@ -879,7 +879,7 @@ const dailyTaskPoolProcess = async () => {
 }
 
 let faucetWaitingPool: faucetRequest[] = []
-export const faucet_call =  (wallet: string, ipAddress: string) => {
+const faucet_call =  (wallet: string, ipAddress: string) => {
 	try {
 		let _wallet = ethers.getAddress(wallet).toLowerCase()
 		const obj = faucet_call_pool.get(_wallet)
