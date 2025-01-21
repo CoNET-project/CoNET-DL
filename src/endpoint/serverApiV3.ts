@@ -179,7 +179,7 @@ const checkTicket = async (wallet: string) => {
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server {
 
-	private PORT = 80
+	private PORT = 8080
 	private appsPath = ''
 	private serverID = ''
 
