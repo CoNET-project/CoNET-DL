@@ -3,11 +3,6 @@ import { logger } from './logger'
 import Colors from 'colors/safe'
 import {readFileSync} from 'node:fs'
 import {join} from 'node:path'
-import {IncomingMessage} from 'node:http'
-import {ethers, Wallet} from 'ethers'
-import {inspect} from 'node:util'
-import {request as requestHttps, RequestOptions} from 'node:https'
-import Phin from 'phin'
 import TelegramBot from "node-telegram-bot-api"
 
 const chatId = '@conettest'			//'-2357293635'
@@ -74,8 +69,12 @@ const startTeleBot = async (BOT_TOKEN: string) => {
 	//		'@conettest'
 	//	bot.sendMessage('@conettest', 'hello')
 }
-
+let startProcess = false
 const start = async () => {
+	if (startProcess) {
+		return
+	}
+	startProcess = true
 	const filePath = join(__dirname,'.telegram.token')
 	logger(Colors.magenta(`filePath ${filePath}`))
 	const kk = readFileSync(filePath,'utf-8')
