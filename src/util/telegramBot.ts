@@ -70,7 +70,7 @@ const startTeleBot = async (BOT_TOKEN: string) => {
 	//	bot.sendMessage('@conettest', 'hello')
 }
 let startProcess = false
-const start = async () => {
+export const start = async () => {
 	if (startProcess) {
 		return
 	}
@@ -82,4 +82,3 @@ const start = async () => {
 	startTeleBot(account.account)
 }
 
-start()

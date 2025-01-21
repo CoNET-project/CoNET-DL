@@ -25,7 +25,7 @@ import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
 import dailyClick_ABI from './dailyClick.ABI.json'
 import maxSocialNftsABI from './maxSocialNftsABI.json'
 import {dailyTaskSC} from '../util/dailyTaskChangeHash'
-import {_searchAccount} from '../util/telegramBot'
+import {_searchAccount, start} from '../util/telegramBot'
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const dailyClickAddr = '0xDCe3FAE41Eb95eA3Be59Ca334f340bdd1799aA29'
 const maxSocialNftsAddr = '0xe94bfd8A04c6Baa3800bfE8a8870753bF71C5c9c'
@@ -1306,6 +1306,7 @@ class conet_dl_server {
 	constructor () {
 		this.initSetupData ()
 		startListeningCONET_Holesky_EPOCH()
+		start()
     }
 
 	private startServer = async () => {
