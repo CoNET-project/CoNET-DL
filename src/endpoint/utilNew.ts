@@ -1194,7 +1194,7 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 	logger(Colors.magenta(`finishCONETianPlanPurchase wallet = ${wallet}`))
 	logger(inspect(purchaseData, false, 3, true))
 
-	// const amount = purchaseData.amount
+	const amount = purchaseData.amount
 	const referrer = purchaseData.referrer||'0x0000000000000000000000000000000000000000'
 	// const referrerReturn = (parseFloat(ethers.formatEther(amount)) * .2).toFixed(8)
 	// const retClaimableContractAddress = realToClaimableContractAddress(purchaseData.tokenName)
@@ -1203,13 +1203,13 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 	const tx = ethers.id(purchaseData.receiptTx)
 
 	try {
-		const tx1 = await new_Guardian_Contract.credentialTx(tx)
-		const tx2 = await CONETianPlanContract.mint(wallet, purchaseData.receiptTx, _nfts, referrer)
-		// const [tx1, tx2] = await Promise.all([
-		// 	,
-		// 	CONETianPlanContract.mint(wallet, referrer, purchaseData.receiptTx, _nfts),
-		// 	// 
-		// ])
+		// const tx1 = await new_Guardian_Contract.credentialTx(tx)
+		// const tx2 = await CONETianPlanContract.mint(wallet, purchaseData.receiptTx, _nfts, referrer)
+		const [tx1, tx2] = await Promise.all([
+			,
+			CONETianPlanContract.mint(wallet, referrer, purchaseData.receiptTx, _nfts),
+			// 
+		])
 		logger(`finishCONETianPlanPurchase success! [${inspect(tx1, false, 3, true)}]  [${inspect(tx2, false, 3, true)}]`)
 	} catch (ex: any) {
 		return logger(`finishCONETianPlanPurchase got Error!`, ex.message)
@@ -1254,7 +1254,6 @@ export const CONETianPlanPurchase = async (obj: minerObj) => {
 		logger(Colors.red(`Router /CONETianPlanPurchase checkUsedTx [${purchaseData.receiptTx}] already used`))
 		return false
 	}
-
 
 
 	const networkName = getNetworkName(purchaseData.tokenName)
@@ -1339,16 +1338,16 @@ const data: minerObj = {
 	uuid: '',
 	data: {
 		amount: "141243710000000000",
-		referrer: "0x6C13339dF37027CDE88D0DCd6B8E9850809EDA52",
+		referrer: "0x13Ce806fDA865c3bc341a1C487C8d3F15f543807",
 		ntfs: 1,
-		receiptTx: "0x2ae45042954c84123aa3415cb39084b8269b8a4b040085ce1b0a72c0e0a771fb",
+		receiptTx: "0xdfab25d2215ee7f91bf55b63259fd8b0b4b3fd3d0600255fedec7db5af28a24a",
 		tokenName: 'bnb'
 	}
 }
 
 // const start = async () => {
 // 	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
-// 	await finishCONETianPlanPurchase(data.data, '0x026439cEB9c8b9Ba3b445043E1dE5815Ec076CaE')
+// 	await finishCONETianPlanPurchase(data.data, '0xC9E07E9CcB5199B604865a1c0A86b35F5B61aF60')
 
 // }
 // start()

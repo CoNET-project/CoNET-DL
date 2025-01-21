@@ -25,7 +25,7 @@ import tickerManagerABi from '../util/CNTP_ticketManager.ABI.json'
 import dailyClick_ABI from './dailyClick.ABI.json'
 import maxSocialNftsABI from './maxSocialNftsABI.json'
 import {dailyTaskSC} from '../util/dailyTaskChangeHash'
-
+import {_searchAccount} from '../util/telegramBot'
 const CGPNsAddr = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const dailyClickAddr = '0xDCe3FAE41Eb95eA3Be59Ca334f340bdd1799aA29'
 const maxSocialNftsAddr = '0xe94bfd8A04c6Baa3800bfE8a8870753bF71C5c9c'
@@ -901,22 +901,50 @@ let socialTaskNFTNMaximumumber = 0
 
 const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterServiceListeningPool: Map<string, Response> = new Map()
-const TGListeningPool: Map<string, Response> = new Map()
-const TGWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
+
+const TGWaitingCallbackPool: Map<string, (obk: TGResult) => void> = new Map()
 const twitterWaitingCallbackPool: Map<string, (obk: minerObj) => void> = new Map()
 const twitterNFTNumber = 2
 const TGNFTNumber = 3
+
+let TGListeningPoolProcessing = false
+const TGListeningPoolProcess = () => {
+	if (!TGWaitingCallbackPool.size) {
+		return
+	}
+	if (TGListeningPoolProcessing) {
+		return
+	}
+	TGListeningPoolProcessing = true
+
+	const poolArray: string[] = [...TGWaitingCallbackPool.keys()]
+	mapLimit(poolArray, 1, async (n, next) => {
+		const callback = TGWaitingCallbackPool.get(n)
+		if (!callback) {
+			return
+		}
+		const TGAccount = parseInt(n)
+		const result = await _searchAccount(TGAccount)
+		callback(result) 
+	}, err => {
+		TGListeningPoolProcessing = false
+		TGListeningPoolProcess()
+	})
+
+
+}
+
 
 const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Promise( async resolve => {
 	let ret: twitterResult = {
 		status: 200
 	}
 
-	const twitterAccount = obj.data[0].toUpperCase()
+	const TGAccount = obj.data[0].toUpperCase()
 	let SocialNFT: number[] = []
 	try {
 		const [tx, SocialArray] = await Promise.all ([
-			profileContract.checkSocialNFT(TGNFTNumber, twitterAccount),
+			profileContract.checkSocialNFT(TGNFTNumber, TGAccount),
 			profileContract.getSocialUser(obj.walletAddress)
 		])
 		
@@ -944,20 +972,12 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 	}
 
 
-	if (!TGListeningPool.size) {
-		ret.status = 502
-		ret.message = 'Telegram Bot Service Unavailable!'
-		return resolve (ret)
-	}
-
 	obj.uuid = v4()
 	const post = JSON.stringify(obj) + '\r\n\r\n'
 
-	const waitCallBack = async (_obj: minerObj) => {
+	const waitCallBack = async (result: TGResult) => {
 		logger(`TG wait CallBack return`)
-		logger(inspect(_obj, false, 3, true))
-
-		const result = _obj.result
+	
 		if (!result) {
 			ret.status = 500
 			ret.message = 'Telegram Bot Service Unavailable!'
@@ -970,7 +990,7 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		}
 
 		//twitterNFTPool.set(obj.walletAddress, true)
-		await profileContract.updateSocial(TGNFTNumber, twitterAccount, obj.walletAddress)
+		await profileContract.updateSocial(TGNFTNumber, TGAccount, obj.walletAddress)
 		ret.NFT_ID = TGNFTNumber
 		if (SocialNFT.length > 0) {
 			const _ticket = (ticketPool.get (obj.walletAddress)||0) + 1
@@ -980,24 +1000,8 @@ const callTGCheck: (obj: minerObj) => Promise<twitterResult> =  (obj) => new Pro
 		return resolve (ret)
 	}
 
-	TGWaitingCallbackPool.set (obj.uuid, waitCallBack)
-
-	TGListeningPool.forEach((n, key) => {
-
-		if (n.writable) {
-			return n.write(post, err => {
-				if (err) {
-					TGListeningPool.delete(key)
-					return logger(Colors.red(`TG Pool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
-				}
-
-				return logger(Colors.red(`TG Pool POST ${inspect(obj, false, 3, true)} to ${key} success!`))
-			})
-		}
-
-		TGListeningPool.delete(key)
-		return logger(Colors.red(`TG Pool ${key} got writeable = false Error remove ${key} from listening POOL!`))
-	})
+	TGWaitingCallbackPool.set (TGAccount, waitCallBack)
+	TGListeningPoolProcess()
 
 })
 
@@ -1200,11 +1204,10 @@ const callTGCheckCallback: (walletAddress: string, TGAccount: string) => Promise
 		status: 200
 	}
 
-	const waitCallBack = async (obj: minerObj) => {
+	const waitCallBack = async (result: TGResult) => {
 		logger(`TG wait CallBack return`)
-		logger(inspect(obj, false, 3, true))
+		logger(inspect(result, false, 3, true))
 
-		const result = obj.result
 		if (!result) {
 			ret.status = 500
 			ret.message = 'callTGCheckCallback Telegram Bot Service Unavailable!'
@@ -1222,26 +1225,8 @@ const callTGCheckCallback: (walletAddress: string, TGAccount: string) => Promise
 		return resolve (true)
 	}
 	
-	TGWaitingCallbackPool.set (_obj.uuid, waitCallBack)
-
-	const post = JSON.stringify(_obj) + '\r\n\r\n'
-
-	TGListeningPool.forEach((n, key) => {
-
-		if (n.writable) {
-			return n.write(post, err => {
-				if (err) {
-					TGListeningPool.delete(key)
-					return logger(Colors.red(`TG Pool POST to ${key} got write Error ${err.message} remove ${key} from listening POOL!`))
-				}
-
-				return logger(Colors.red(`TG Pool POST ${inspect(_obj, false, 3, true)} to ${key} success!`))
-			})
-		}
-
-		TGListeningPool.delete(key)
-		return logger(Colors.red(`TG Pool ${key} got writeable = false Error remove ${key} from listening POOL!`))
-	})
+	TGWaitingCallbackPool.set (TGAccount, waitCallBack)
+	TGListeningPoolProcess()
 })
 
 const findsSocialNumberName = (socialNFTs: BigInt[], socials:string[]) => {
@@ -1364,8 +1349,6 @@ class conet_dl_server {
                 { 'CoNET DL': `version ${version} startup success ${ this.PORT } Work [${workerNumber}] server key [${cntpAdminWallet.address}]` }
             ])
 		})
-		
-		
 	}
 
 	private router ( router: Router ) {
@@ -1427,35 +1410,6 @@ class conet_dl_server {
 			return logger(Colors.magenta(`/twitter-listen added ${obj.walletAddress} to TwttterServiceListeningPool ${TwttterServiceListeningPool.size}`))
 		})
 
-		router.post ('/tg-listen',  async (req, res) => {
-			const obj: minerObj = req.body.obj
-
-			logger(Colors.blue(`/tg-listen`))
-			logger(inspect(obj, false, 3, true))
-			
-			res.status(200)
-			res.setHeader('Cache-Control', 'no-cache')
-            res.setHeader('Content-Type', 'text/event-stream')
-            res.setHeader('Access-Control-Allow-Origin', '*')
-            res.setHeader('Connection', 'keep-alive')
-            res.flushHeaders() // flush the headers to establish SSE with client
-			const returnData = {status: 200}
-			res.write( JSON.stringify (returnData) + '\r\n\r\n')
-
-			res.once('error', err => {
-				TGListeningPool.delete(obj.walletAddress)
-				return logger(Colors.red(`TGPool ${obj.walletAddress} res.on ERROR ${err.message} delete from pool!`))
-			})
-			
-			res.once('end', () => {
-				TGListeningPool.delete(obj.walletAddress)
-				return logger(Colors.red(`TwttterPool ${obj.walletAddress} res.on END! delete from pool!`))
-			})
-
-			TGListeningPool.set(obj.walletAddress, res)
-
-			return logger(Colors.magenta(`/tg added ${obj.walletAddress} to TwttterServiceListeningPool ${TwttterServiceListeningPool.size}`))
-		})
 
 		router.post ('/twitter-check-follow',  async(req: any, res: any) => {
 			const obj: minerObj = req.body.obj
@@ -1519,34 +1473,6 @@ class conet_dl_server {
 			logger(Colors.magenta(`/twitter-callback return ${inspect(obj.data, false, 3, true)} success!`))
 		})
 
-		router.post ('/tg-callback',  async (req, res) => {
-			const obj: minerObj = req.body.obj
-			logger(Colors.blue(`/tg-callback`))
-			logger(inspect(obj, false, 3, true))
-			res.status(200).json({}).end()
-			if (!obj|| !obj.data) {
-				logger(inspect(obj, false, 3, true))
-				return logger(Colors.red(`/tg-callback got obj format Error`))
-			}
-			const _obj: minerObj = obj.data
-
-			if (!_obj||!_obj.uuid ) {
-
-				return logger(Colors.red(`/tg-callback got obj data format Error`))
-			}
-
-			const callback = TGWaitingCallbackPool.get(_obj.uuid)
-
-			if (!callback) {
-				return logger(Colors.red(`/tg-callback has no ${obj.uuid} RES from TGCallbackPool ${TGWaitingCallbackPool.size} !`))
-			}
-
-			TGWaitingCallbackPool.delete(_obj.uuid)
-			
-			callback(_obj)
-
-			logger(Colors.magenta(`/tg-callback return ${inspect(obj.data, false, 3, true)} success!`))
-		})
 
 		router.post ('/dailyClick',  async (req: any, res: any) => {
 			const obj: minerObj = req.body.obj

@@ -435,34 +435,6 @@ class conet_dl_server {
 			
 		})
 
-		router.post ('/tg-listen',  async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /tg-listen req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /tg-listen !message||!signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSign (message, signMessage)
-
-			if (!obj) {
-				logger (Colors.grey(`Router /tg-listen checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-
-			return postLocalhost('/api/tg-listen', {obj}, res)
-			
-		})
-
 		router.post ('/twitter-check-follow',  async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -517,37 +489,6 @@ class conet_dl_server {
 			}
 			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-callback forward to master! `))
 			return postLocalhost('/api/twitter-callback', {obj}, res)
-			
-		})
-
-
-
-		router.post ('/tg-callback',  async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /tg-callback req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-
-			if (!message||!signMessage) {
-				logger (Colors.grey(`Router /tg-callback !message|| !signMessage Error!`), inspect(req.body, false, 3, true))
-				return res.status(403).end()
-			}
-
-			const obj = checkSign (message, signMessage)
-
-			if (!obj || !obj.data ) {
-				logger (Colors.grey(`Router /tg-callback checkSignObj obj Error!`), message, signMessage)
-				return res.status(403).end()
-			}
-
-			logger(Colors.grey(`${obj.walletAddress}:${ipaddress}  POST twitter-callback forward to master! `))
-			return postLocalhost('/api/tg-callback', {obj}, res)
 			
 		})
 

@@ -371,3 +371,17 @@ interface ITotal {
 	totalUsrs: number
 	epoch: number
 }
+
+interface taskPoolObj {
+	checkAccount: string
+	uuid: string
+	result: result
+	walletAddress: string
+}
+
+interface TGResult {
+	status: number,
+	isInTGGroup?: boolean
+	message?: string
+	userID?: number|string
+}

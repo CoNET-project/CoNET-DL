@@ -349,6 +349,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
 	resolve (true)
 })
+
 let allNodeAddr: string[] = []
 const startGossipListening = () => {
 	if (!Guardian_Nodes.length) {
