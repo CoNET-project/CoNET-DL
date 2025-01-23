@@ -1205,12 +1205,11 @@ const finishCONETianPlanPurchase = async (purchaseData: ICONETianPurchaseData, w
 	try {
 		// const tx1 = await new_Guardian_Contract.credentialTx(tx)
 		// const tx2 = await CONETianPlanContract.mint(wallet, purchaseData.receiptTx, _nfts, referrer)
-		const [tx1, tx2] = await Promise.all([
-			,
+		const [tx1] = await Promise.all([
 			CONETianPlanContract.mint(wallet, referrer, purchaseData.receiptTx, _nfts),
 			// 
 		])
-		logger(`finishCONETianPlanPurchase success! [${inspect(tx1, false, 3, true)}]  [${inspect(tx2, false, 3, true)}]`)
+		logger(`finishCONETianPlanPurchase success! [${inspect(tx1, false, 3, true)}]  [${inspect(tx1, false, 3, true)}]`)
 	} catch (ex: any) {
 		return logger(`finishCONETianPlanPurchase got Error!`, ex.message)
 	}
@@ -1338,17 +1337,17 @@ const data: minerObj = {
 	uuid: '',
 	data: {
 		amount: "141243710000000000",
-		referrer: "0x13Ce806fDA865c3bc341a1C487C8d3F15f543807",
-		ntfs: 1,
-		receiptTx: "0xdfab25d2215ee7f91bf55b63259fd8b0b4b3fd3d0600255fedec7db5af28a24a",
+		referrer: "0x6C13339dF37027CDE88D0DCd6B8E9850809EDA52",
+		ntfs: 10,
+		receiptTx: "0xa0789eb3f929d0d79be7147224489ef8abf9f9e9031c42cff3c7913411346b9d",
 		tokenName: 'bnb'
 	}
 }
 
-// const start = async () => {
-// 	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
-// 	await finishCONETianPlanPurchase(data.data, '0xC9E07E9CcB5199B604865a1c0A86b35F5B61aF60')
+const start = async () => {
+	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
+	await finishCONETianPlanPurchase(data.data, '0x011516EBb79FF47EB54C6c82476263eeAA91C961')
 
-// }
-// start()
+}
+start()
 

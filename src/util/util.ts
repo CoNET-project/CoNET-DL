@@ -2461,10 +2461,19 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 /** */
 
 // const start = async () => {
-// 	const kk = await sendGuardianNodesContract(masterSetup.conetFaucetAdmin[0], ['0x9FF5FD43c959e1012A157295BD80C8FA5da040Eb', '0xCe0274D8Fc717B66B76E122EB3C6D142a059292d',
-// 		'0x43335becE23ff21A9c5962a417d4524C1afbD9eB','0xF64E4FcA1be12Ef86E0f482752e2D1bc62af7873','0x2fEE7eb5b3E0eCc09Fe407552932432250705348','0xE1B3B346A331a00d8E3E2bcf9ef670341e301b86','0x72B0524146ab9D4Ff6aabEc417c976DB2014A5C9'], '0x011516EBb79FF47EB54C6c82476263eeAA91C961', '0xeef82a90f4bfc178fec2d947d26d3d7a56b62087a183d68b987a8e3a386c0e86')
+// 	const kk = await sendGuardianNodesContract(
+// 		masterSetup.conetFaucetAdmin[0], 
+// 		[
+// 			'0xe24BC468f369bfDA7db802b62AE623cFa83005aE', 
+// 			'0x6675889c247bEd28cca7b511e83C7dD591C0C6f3',
+// 			'0x6771287b9060fEDDe72474594781ba36ac90DE42',
+// 			'0x703c0ba2a471D66d7a4D782bAE567bA6080B48c7',
+// 			'0xE5E7107EE1dd1F768585c6a39Ca5f82c911071B9',
+// 			'0x9E439389Ea6d6d348e5BC5b45e72ede3B2a95a94'
+// 		],
+// 		'0xbbaF07E57AFb413F006aa29a3486f1Bf389Ad209', 
+// 		'0xe0468d69ad1780c4fbc47d839f293a37cc76205a376058729ee05491a7835ce7')
 // 	logger(kk)
 
 // }
 
-// start ()
