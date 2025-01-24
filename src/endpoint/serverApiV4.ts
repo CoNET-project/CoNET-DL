@@ -148,6 +148,8 @@ const listenEpoch = async () => {
 
 const MaxCount = 1
 
+const fx168_Referrer = '0xd57cA74229fd96A5CB9e99DFdfd9de79940FD61D'
+
 export const claimeToekn = async (message: string, signMessage: string ) => {
 	const obj = checkSign (message, signMessage)
 	if (!obj || !obj?.data) {
@@ -407,6 +409,36 @@ class conet_dl_server_v4 {
 			return getreferralsCount(addr, res)
 		})
 
+		router.post ('/fx169HappyNewYear', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/fx169HappyNewYear`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+
+			logger(Colors.magenta(`/fx169HappyNewYear`), message, signMessage)
+			const obj = checkSign (message, signMessage)
+	
+			if ( !obj?.walletAddress ) {
+				logger (Colors.grey(`Router /fx169HappyNewYear checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(403).json(req.body).end()
+			}
+
+			getReferrer(obj.walletAddress, (err, data) => {
+				if (data?.address === '0x0000000000000000000000000000000000000000'||data?.address !== fx168_Referrer) {
+					return res.status(403).json(req.body).end()
+				}
+				
+			})
+		})
+
 		router.post ('/claimToken', async (req: any, res: any) => {
 
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -456,7 +488,50 @@ class conet_dl_server_v4 {
 	}
 }
 
+
+const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path: `/api/wallet`,
+		port: 8001,
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	const postData = {
+		wallet: address
+	}
+
+	const req = await request (option, res => {
+		let data = ''
+		res.on('data', _data => {
+			data += _data
+		})
+		res.once('end', () => {
+
+			try {
+				const ret = JSON.parse(data)
+				return callbak (null, ret)
+			} catch (ex: any) {
+				console.error(`getReferrer /api/wallet getReferrer JSON.parse(data) Error!`, data)
+				return callbak (ex)
+			}
+			
+		})
+	})
+
+	req.once('error', (e) => {
+		console.error(`getReferrer req on Error! ${e.message}`)
+		return callbak (e)
+	})
+
+	req.write(JSON.stringify(postData))
+	req.end()
+}
+
 export default conet_dl_server_v4
+
 
 
 
