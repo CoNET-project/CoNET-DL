@@ -9,14 +9,14 @@ import CGPNsV7ABI from './CGPNsV7.json'
 import {abi as CONET_Point_ABI} from '../util/conet-point.json'
 import newCNTPABI from './cCNTPv7.json'
 import { inspect } from 'util'
-const oldProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
+//const oldProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
 
 const oldGuardianNFTAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
-const oldGuardianContract = new ethers.Contract(oldGuardianNFTAddr, oldGuardianABI, oldProvider)
+// const oldGuardianContract = new ethers.Contract(oldGuardianNFTAddr, oldGuardianABI, oldProvider)
 const referralsV3Addr ='0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const oldReff = '0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
-const referralsContract = new ethers.Contract(oldReff, referralsV3ABI, oldProvider)
-const newCONETURL = 'http://207.90.195.48:8889'
+// const referralsContract = new ethers.Contract(oldReff, referralsV3ABI, oldProvider)
+// const newCONETURL = 'http://207.90.195.48:8889'
 const newRPCPublic = 'https://rpc.conet.network'
 const newRPC = new ethers.JsonRpcProvider(newRPCPublic)
 const managerWallet = new ethers.Wallet(masterSetup.guardianBuyADMIN[0], newRPC)
@@ -29,7 +29,7 @@ const newGuardianNodes = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const cCNTPAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const cCNTPOldAddr = '0x530cf1B598D716eC79aa916DD2F05ae8A0cE8ee2'
 
-const oldCntpContract =new ethers.Contract(cCNTPOldAddr, CONET_Point_ABI, oldProvider)
+// const oldCntpContract =new ethers.Contract(cCNTPOldAddr, CONET_Point_ABI, oldProvider)
 
 const GuardianNFTV7Contract = new ethers.Contract(newGuardianNodes, CGPNsV7ABI, managerWallet)
 
@@ -44,7 +44,7 @@ const start = async () => {
 	let nodeAddressArray: string[]
 	let nodeReferrerAddressArray: string[]
 	let referrerNodesNumber: string[]
-	[nodeAddressArray, boostersNumberArray, nodeReferrerAddressArray, referrerNodesNumber] = await oldGuardianContract.getAllIdOwnershipAndBooster()
+	// [nodeAddressArray, boostersNumberArray, nodeReferrerAddressArray, referrerNodesNumber] = await oldGuardianContract.getAllIdOwnershipAndBooster()
 	// logger(inspect(referrerNodesNumber, false, 3, true))
 	//[nodeAddressArray, boostersNumberArray, nodeReferrerAddressArray, referrerNodesNumber] = await GuardianNFTV4Contract.getAllIdOwnershipAndBooster()
 
@@ -257,4 +257,4 @@ const start = async () => {
 }
 
 
-start()
+// start()

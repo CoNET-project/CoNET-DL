@@ -12,7 +12,7 @@ import {logger} from '../util/logger'
 import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
 import { writeFile} from 'node:fs/promises'
-import {cntpAdminWallet, initNewCONET, startEposhTransfer} from './utilNew'
+import {cntpAdminWallet, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
@@ -373,14 +373,6 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
-
-		router.post ('/initV3',  async (req: any, res: any) => {
-			const wallet: string = req.body.wallet
-			logger(Colors.blue(`/initV3 ${wallet}`))
-			await initNewCONET(wallet)
-			res.status(200).json({}).end()
-			
-		})
 
 		router.post ('/miningData', (req: any, res: any) => {
 			miningData(req.body, res)

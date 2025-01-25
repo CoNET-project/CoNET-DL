@@ -29,8 +29,8 @@ export const cntpAdminWallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[0]
 
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 
-const veryold_ConetProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
-const old_2_ConetProvider = new ethers.JsonRpcProvider('http://74.208.39.153:8888')
+//const veryold_ConetProvider = new ethers.JsonRpcProvider('http://212.227.243.233:8000')
+// const old_2_ConetProvider = new ethers.JsonRpcProvider('http://74.208.39.153:8888')
 
 const newCONETProvider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 
@@ -129,7 +129,7 @@ interface sendCONETObj {
 }
 
 
-const old_2_watch = new ethers.Wallet(masterSetup.initManager[0], old_2_ConetProvider)
+// const old_2_watch = new ethers.Wallet(masterSetup.initManager[0], old_2_ConetProvider)
 
 
 const initmanagerW_0 = new ethers.Wallet(masterSetup.initManager[0], newCONETProvider)
@@ -142,12 +142,12 @@ const initmanagerW_6 = new ethers.Wallet(masterSetup.initManager[6], newCONETPro
 const initmanagerW_7 = new ethers.Wallet(masterSetup.initManager[7], newCONETProvider)
 const initmanagerW_8 = new ethers.Wallet(masterSetup.initManager[8], newCONETProvider)
 
-const oldReferralsContract = new ethers.Contract(oldReffAddr, ReferralsV3ABI, old_2_ConetProvider)
+// const oldReferralsContract = new ethers.Contract(oldReffAddr, ReferralsV3ABI, old_2_ConetProvider)
 
 
-const old_CNTPContract = new ethers.Contract(CNTP_old_Addr, cCNTPv7ABI, old_2_watch)
+// const old_CNTPContract = new ethers.Contract(CNTP_old_Addr, cCNTPv7ABI, old_2_watch)
 
-const initCONETContract_old = new ethers.Contract(initCONETAddr, initCONET_ABI, old_2_watch)
+// const initCONETContract_old = new ethers.Contract(initCONETAddr, initCONET_ABI, old_2_watch)
 
 const newCNTP_V1 = new ethers.Contract(newCNTP_v1, newCNTP_v1_ABI, initmanagerW_5)
 const newUSDT = new ethers.Contract(new_USDT_addr, newUSDT_ABI, initmanagerW_0)
@@ -512,73 +512,73 @@ interface oldDatObj {
 const initDataPool: Map<string, oldDatObj > = new Map()
 
 
-const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: string) => new Promise ( async resolve => {
+// const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: string) => new Promise ( async resolve => {
 
 
-	const oldCntpContract =new ethers.Contract(oldCNTPAddr, CONET_Point_ABI, veryold_ConetProvider)
-	const very_oldReferralsContract = new ethers.Contract(very_old_ReferralsV3Addr, ReferralsV3ABI, veryold_ConetProvider)
-	const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, veryold_ConetProvider)
-	const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, veryold_ConetProvider)
-	const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, veryold_ConetProvider)
-	//const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
-	const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, veryold_ConetProvider)
+// 	// const oldCntpContract =new ethers.Contract(oldCNTPAddr, CONET_Point_ABI, veryold_ConetProvider)
+// 	// const very_oldReferralsContract = new ethers.Contract(very_old_ReferralsV3Addr, ReferralsV3ABI, veryold_ConetProvider)
+// 	// const old_cUSDB = new ethers.Contract(old_cUSDBAddr, CONET_Point_ABI, veryold_ConetProvider)
+// 	// const old_cBNBUsdt = new ethers.Contract(old_cBNBUsdtAddr, CONET_Point_ABI, veryold_ConetProvider)
+// 	// const old_cUSDT = new ethers.Contract(old_cUSDTAddr, CONET_Point_ABI, veryold_ConetProvider)
+// 	//const oldCNTPv1 = new ethers.Contract(blastCNTPv1Addr, CONET_Point_ABI, blastTestnet)
+// 	// const oldGuardianContract = new ethers.Contract(oldGuardianAddr, oldGuardianABI, veryold_ConetProvider)
 
-	let CONET_very_old_Balance = BigInt(0), 
-	CONET_old_Balance = BigInt(0),
-	CNTP_very_old_Balance = BigInt(0), 
-	very_old_referrer ='0x0000000000000000000000000000000000000000', 
-	newReferrer ='0x0000000000000000000000000000000000000000', 
-	old_referrer='0x0000000000000000000000000000000000000000',
-	USDBoldB = BigInt(0),
-	cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), 
+// 	let CONET_very_old_Balance = BigInt(0), 
+// 	CONET_old_Balance = BigInt(0),
+// 	CNTP_very_old_Balance = BigInt(0), 
+// 	very_old_referrer ='0x0000000000000000000000000000000000000000', 
+// 	newReferrer ='0x0000000000000000000000000000000000000000', 
+// 	old_referrer='0x0000000000000000000000000000000000000000',
+// 	USDBoldB = BigInt(0),
+// 	cBNBUoldB = BigInt(0), cUSDToldB = BigInt(0), 
 	
-	CNTP_v1_Balance = BigInt(0), 
+// 	CNTP_v1_Balance = BigInt(0), 
 
-	oldGuardianNFT1 = BigInt(0), newGuardianNFT1_initSTatus = [], 
-	oldGuardianNFT2 = BigInt(0), newGuardianNFT2_initSTatus = false, 
+// 	oldGuardianNFT1 = BigInt(0), newGuardianNFT1_initSTatus = [false, 0], 
+// 	oldGuardianNFT2 = BigInt(0), newGuardianNFT2_initSTatus = false, 
 	
-	CNTP_old_initStats = false,
-	CONET_old_initStats = false, 
-	CONET_new_initStats = false,
-	CNTP_initStats = false,
-	CNTP_old_Balance = BigInt(0), 
+// 	CNTP_old_initStats = false,
+// 	CONET_old_initStats = false, 
+// 	CONET_new_initStats = false,
+// 	CNTP_initStats = false,
+// 	CNTP_old_Balance = BigInt(0), 
 
-	CNTP_v1_initStats = false, 
-	newUSDT_depositTx = false, 
-	newUSDB_depositTx = false, 
-	new_BNB_USDT_depositTx = false,
-	newCNTPBalance = BigInt(0)
+// 	CNTP_v1_initStats = false, 
+// 	newUSDT_depositTx = false, 
+// 	newUSDB_depositTx = false, 
+// 	new_BNB_USDT_depositTx = false,
+// 	newCNTPBalance = BigInt(0)
    
-	try {
+// 	try {
 		
-		[
-			//			for CONET
-			CONET_very_old_Balance, 
-			CONET_old_Balance,
-			CONET_old_initStats, 
-			CONET_new_initStats,
+// 		[
+// 			//			for CONET
+// 			// CONET_very_old_Balance, 
+// 			CONET_old_Balance,
+// 			CONET_old_initStats, 
+// 			CONET_new_initStats,
 
-			//			for referrer
-			very_old_referrer,
-			old_referrer,
-			newReferrer,
+// 			//			for referrer
+// 			// very_old_referrer,
+// 			old_referrer,
+// 			newReferrer,
 
 
-			//			for CNTP
-			CNTP_very_old_Balance,
-			CNTP_old_initStats,
-			CNTP_old_Balance,
-			CNTP_initStats,
+// 			//			for CNTP
+// 			CNTP_very_old_Balance,
+// 			CNTP_old_initStats,
+// 			CNTP_old_Balance,
+// 			CNTP_initStats,
 			
 
-			USDBoldB, cBNBUoldB, cUSDToldB, 
+// 			// USDBoldB, cBNBUoldB, cUSDToldB, 
 			
-			//			for old CNTP 
-			CNTP_v1_Balance,
-			//CNTP_v1_initStats,
+// 			//			for old CNTP 
+// 			// CNTP_v1_Balance,
+// 			//CNTP_v1_initStats,
 
-			oldGuardianNFT1, newGuardianNFT1_initSTatus, 
-			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
+// 			// oldGuardianNFT1, newGuardianNFT1_initSTatus, 
+// 			// oldGuardianNFT2, newGuardianNFT2_initSTatus, 
 
 			 
 
@@ -586,163 +586,165 @@ const getAllOldData: (wallet: string) => Promise<false|oldDatObj> = (wallet: str
 
 
 
-			//CNTP_v1_initStats,
-			//newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx
-		] = await Promise.all([
-			//			for CONET
-			veryold_ConetProvider.getBalance(wallet), 
-			old_2_ConetProvider.getBalance(wallet),
-			initCONETContract_old.checkInit(wallet), 
-			new_CONET_Faucet_COntract.checkInit(wallet),
+// 			//CNTP_v1_initStats,
+// 			//newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx
+// 		] = await Promise.all([
+// 			//			for CONET
+// 			// veryold_ConetProvider.getBalance(wallet), 
+// 			// old_2_ConetProvider.getBalance(wallet),
+// 			// initCONETContract_old.checkInit(wallet), 
+// 			new_CONET_Faucet_COntract.checkInit(wallet),
 
-			//			for Referrals
-			very_oldReferralsContract.getReferrer(wallet),
-			oldReferralsContract.getReferrer(wallet),
-			newReff_Contract.getReferrer(wallet),
+// 			//			for Referrals
+// 			// very_oldReferralsContract.getReferrer(wallet),
+// 			// oldReferralsContract.getReferrer(wallet),
+// 			newReff_Contract.getReferrer(wallet),
 
-			//			for CNTP
-			oldCntpContract.balanceOf(wallet),  
-			old_CNTPContract.initV2(wallet), 
-			old_CNTPContract.balanceOf(wallet),
-			newCNTPContract.initV2(wallet),
+// 			//			for CNTP
+// 			// oldCntpContract.balanceOf(wallet),  
+// 			// old_CNTPContract.initV2(wallet), 
+// 			// old_CNTPContract.balanceOf(wallet),
+// 			newCNTPContract.initV2(wallet),
 			
 
-			old_cUSDB.balanceOf(wallet), old_cBNBUsdt.balanceOf(wallet), old_cUSDT.balanceOf(wallet), 
+// 			// old_cUSDB.balanceOf(wallet), old_cBNBUsdt.balanceOf(wallet), old_cUSDT.balanceOf(wallet), 
 			
-			//			for CNTP v1
-			//oldCNTPv1.balanceOf(wallet), 
-			newCNTP_V1.initV2(wallet),
+// 			//			for CNTP v1
+// 			//oldCNTPv1.balanceOf(wallet), 
+// 			newCNTP_V1.initV2(wallet),
 
-			//			for Guardian Plan
+// 			//			for Guardian Plan
 
-			oldGuardianContract.balanceOf(wallet, 1), new_Guardian_Contract.getBUYER_Status(wallet),
-			oldGuardianContract.balanceOf(wallet, 2), new_Guardian_Contract.getREFERRER_Status (wallet),
+// 			// oldGuardianContract.balanceOf(wallet, 1), new_Guardian_Contract.getBUYER_Status(wallet),
+// 			// oldGuardianContract.balanceOf(wallet, 2), new_Guardian_Contract.getREFERRER_Status (wallet),
 
 		
 
-			//newCNTP_V1.checkInit(wallet),
+// 			//newCNTP_V1.checkInit(wallet),
 
 
 
-			//newUSDT.depositTx(walletID),newUSDB.depositTx(walletID), new_BNB_USDT.depositTx(walletID),
+// 			//newUSDT.depositTx(walletID),newUSDB.depositTx(walletID), new_BNB_USDT.depositTx(walletID),
 
-		])
+// 		])
 
-		const retObj: oldDatObj = {
-			CONET_very_old_Balance, 
-			CONET_old_Balance,
-			CNTP_very_old_Balance, very_old_referrer, USDBoldB, cBNBUoldB, cUSDToldB, 
-			CNTP_v1_Balance,
-			oldGuardianNFT1, newGuardianNFT1_initSTatus,
-			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
-			CNTP_old_initStats, CNTP_old_Balance,
-			newReferrer, 
-			CNTP_initStats,
-			old_referrer,
-			CONET_old_initStats, 
-			CONET_new_initStats,
-			CNTP_v1_initStats,
+// 		const retObj: oldDatObj = {
+// 			CONET_very_old_Balance, 
+// 			CONET_old_Balance,
+// 			CNTP_very_old_Balance, very_old_referrer, USDBoldB, cBNBUoldB, cUSDToldB, 
+// 			CNTP_v1_Balance,
+// 			oldGuardianNFT1, 
+// 			newGuardianNFT1_initSTatus,
+// 			oldGuardianNFT2, newGuardianNFT2_initSTatus, 
+// 			CNTP_old_initStats, CNTP_old_Balance,
+// 			newReferrer, 
+// 			CNTP_initStats,
+// 			old_referrer,
+// 			CONET_old_initStats, 
+// 			CONET_new_initStats,
+// 			CNTP_v1_initStats,
 
-			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx,
-			newCNTPBalance
-		}
-		return resolve(retObj)
-	} catch (ex) {
-		logger(ex)
-		return resolve (false)
-	}
-})
+// 			newUSDT_depositTx, newUSDB_depositTx, new_BNB_USDT_depositTx,
+// 			newCNTPBalance
+// 		}
+// 		return resolve(retObj)
+// 	} catch (ex) {
+// 		logger(ex)
+// 		return resolve (false)
+// 	}
+// })
 
 
-export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => new Promise(async resolve => {
+// export const initNewCONET: (wallet: string) =>Promise<boolean> = (wallet ) => new Promise(async resolve => {
 
-	let obj = initDataPool.get(wallet)
-	if (!obj) {
-		const _obj = await getAllOldData(wallet)
-		if (_obj === false) {
-			return resolve (true)
-		}
-		initDataPool.set(wallet, obj = _obj)
-	}
+// 	let obj = initDataPool.get(wallet)
+
+// 	if (!obj) {
+// 		const _obj = await getAllOldData(wallet)
+// 		if (_obj === false) {
+// 			return resolve (true)
+// 		}
+// 		initDataPool.set(wallet, obj = _obj)
+// 	}
 	
 
-	// logger(Colors.blue(`cCNTP_initStats ${wallet} CNTP old [${ethers.formatEther(obj.cntpOldB.toString())}] new [${ethers.formatEther(obj.newCNTPBalance.toString())}] [${obj.cCNTP_old_initStats}]`))
+// 	// logger(Colors.blue(`cCNTP_initStats ${wallet} CNTP old [${ethers.formatEther(obj.cntpOldB.toString())}] new [${ethers.formatEther(obj.newCNTPBalance.toString())}] [${obj.cCNTP_old_initStats}]`))
 
-	if ( ! obj.CONET_new_initStats ) {
-		let balance = obj.CONET_very_old_Balance > obj.CONET_old_Balance ? obj.CONET_very_old_Balance : obj.CONET_old_Balance
-		if (obj.CONET_old_initStats && balance < obj.CONET_very_old_Balance) {
-			balance = ethers.parseEther((parseFloat(ethers.formatEther(obj.CONET_very_old_Balance.toString())) +  parseFloat(ethers.formatEther(obj.CONET_old_Balance.toString()))).toFixed(6))
-		}
+// 	if ( ! obj.CONET_new_initStats ) {
+// 		let balance = obj.CONET_very_old_Balance > obj.CONET_old_Balance ? obj.CONET_very_old_Balance : obj.CONET_old_Balance
+// 		if (obj.CONET_old_initStats && balance < obj.CONET_very_old_Balance) {
+// 			balance = ethers.parseEther((parseFloat(ethers.formatEther(obj.CONET_very_old_Balance.toString())) +  parseFloat(ethers.formatEther(obj.CONET_old_Balance.toString()))).toFixed(6))
+// 		}
 
-		if (balance) {
-			const stats = `${obj.CONET_old_initStats}`
-			logger(Colors.magenta((`Init Wallet [${Colors.blue(wallet)}] old init stats is [${Colors.blue(stats)}] transfer CONET token ${Colors.blue(ethers.formatEther(balance.toString()))}`)))
+// 		if (balance) {
+// 			const stats = `${obj.CONET_old_initStats}`
+// 			logger(Colors.magenta((`Init Wallet [${Colors.blue(wallet)}] old init stats is [${Colors.blue(stats)}] transfer CONET token ${Colors.blue(ethers.formatEther(balance.toString()))}`)))
 
-			sendCONETPool.push({
-				wallet,
-				amount:balance.toString()
-			})
-		}
+// 			sendCONETPool.push({
+// 				wallet,
+// 				amount:balance.toString()
+// 			})
+// 		}
 		
-	}
+// 	}
 
 
-	if (obj.newReferrer === '0x0000000000000000000000000000000000000000') {
-		const referrer = obj.old_referrer === '0x0000000000000000000000000000000000000000' ? obj.very_old_referrer: obj.old_referrer
-		if (referrer !== '0x0000000000000000000000000000000000000000') {
-			refferPool.set(wallet, referrer)
-		}
-	}
+// 	if (obj.newReferrer === '0x0000000000000000000000000000000000000000') {
+// 		const referrer = obj.old_referrer === '0x0000000000000000000000000000000000000000' ? obj.very_old_referrer: obj.old_referrer
+// 		if (referrer !== '0x0000000000000000000000000000000000000000') {
+// 			refferPool.set(wallet, referrer)
+// 		}
+// 	}
 
-	if (!obj.CNTP_initStats) {
-		let CNTP_balance = obj.CNTP_very_old_Balance > obj.CNTP_old_Balance ? obj.CNTP_very_old_Balance : obj.CNTP_old_Balance
-		if (obj.CNTP_old_initStats && obj.CNTP_old_Balance < obj.CNTP_very_old_Balance) {
-			CNTP_balance = ethers.parseEther((parseFloat(ethers.formatEther(obj.CNTP_old_Balance.toString())) +  parseFloat(ethers.formatEther(obj.CNTP_very_old_Balance.toString()))).toFixed(6))
-		}
+// 	if (!obj.CNTP_initStats) {
+// 		let CNTP_balance = obj.CNTP_very_old_Balance > obj.CNTP_old_Balance ? obj.CNTP_very_old_Balance : obj.CNTP_old_Balance
+// 		if (obj.CNTP_old_initStats && obj.CNTP_old_Balance < obj.CNTP_very_old_Balance) {
+// 			CNTP_balance = ethers.parseEther((parseFloat(ethers.formatEther(obj.CNTP_old_Balance.toString())) +  parseFloat(ethers.formatEther(obj.CNTP_very_old_Balance.toString()))).toFixed(6))
+// 		}
 		
-		if (CNTP_balance) {
-			sendCNTPPool.set(wallet, CNTP_balance.toString())
-		}
-	}
+// 		if (CNTP_balance) {
+// 			sendCNTPPool.set(wallet, CNTP_balance.toString())
+// 		}
+// 	}
 
-	if (obj.CNTP_v1_Balance && !obj.CNTP_v1_initStats) {
-		logger(Colors.blue(`Wallet ${wallet} has CNTP balance ${ethers.formatEther(obj.CNTP_v1_Balance.toString())} INIT to new `))
-		sendCNTPv1Pool.set(wallet, obj.CNTP_v1_Balance.toString())
-	}
+// 	if (obj.CNTP_v1_Balance && !obj.CNTP_v1_initStats) {
+// 		logger(Colors.blue(`Wallet ${wallet} has CNTP balance ${ethers.formatEther(obj.CNTP_v1_Balance.toString())} INIT to new `))
+// 		sendCNTPv1Pool.set(wallet, obj.CNTP_v1_Balance.toString())
+// 	}
 	
 
 
-	// if (obj.cUSDToldB && !obj.newUSDT_depositTx) {
-	// 	usdtPool.set(wallet,obj.cUSDToldB.toString())
-	// }
+// 	// if (obj.cUSDToldB && !obj.newUSDT_depositTx) {
+// 	// 	usdtPool.set(wallet,obj.cUSDToldB.toString())
+// 	// }
 
-	// if (obj.cBNBUoldB && !obj.new_BNB_USDT_depositTx) {
-	// 	bnbUsdtPool.set(wallet, obj.cBNBUoldB.toString())
-	// }
+// 	// if (obj.cBNBUoldB && !obj.new_BNB_USDT_depositTx) {
+// 	// 	bnbUsdtPool.set(wallet, obj.cBNBUoldB.toString())
+// 	// }
 
-	// if (obj.USDBoldB && !obj.newUSDB_depositTx) {
-	// 	usdbPool.set(wallet, obj.USDBoldB.toString())
-	// }
+// 	// if (obj.USDBoldB && !obj.newUSDB_depositTx) {
+// 	// 	usdbPool.set(wallet, obj.USDBoldB.toString())
+// 	// }
 
-	const oldG1 = parseInt(obj.oldGuardianNFT1.toString())
+// 	const oldG1 = parseInt(obj.oldGuardianNFT1.toString())
 
-	if (oldG1 > 0 && !obj.newGuardianNFT1_initSTatus[0] ) {
-		logger(Colors.blue(`${wallet} has NFT #1 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT1_initSTatus[0]}`))
+// 	if (oldG1 > 0 && !obj.newGuardianNFT1_initSTatus[0] ) {
+// 		logger(Colors.blue(`${wallet} has NFT #1 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT1_initSTatus[0]}`))
 		
-			CGNP_no1_Pool.set(wallet, obj.oldGuardianNFT1.toString())
+// 			CGNP_no1_Pool.set(wallet, obj.oldGuardianNFT1.toString())
 		
-	}
+// 	}
 
-	const oldG2 = parseInt(obj.oldGuardianNFT2.toString())
-	if (oldG2 > 0 && !obj.newGuardianNFT2_initSTatus) {
-		logger(Colors.blue(`${wallet} has NFT #2 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT2_initSTatus}`))
+// 	const oldG2 = parseInt(obj.oldGuardianNFT2.toString())
+// 	if (oldG2 > 0 && !obj.newGuardianNFT2_initSTatus) {
+// 		logger(Colors.blue(`${wallet} has NFT #2 asset && newGuardianNFT1_initSTatus[0] = ${obj.newGuardianNFT2_initSTatus}`))
 		
-		CGNP_no2_Pool.set(wallet, obj.oldGuardianNFT2.toString())
+// 		CGNP_no2_Pool.set(wallet, obj.oldGuardianNFT2.toString())
 		
-	}
+// 	}
 
-	return resolve (true)
-})
+// 	return resolve (true)
+// })
 
 
 const checkUsedTx = async (tx: string) => {
