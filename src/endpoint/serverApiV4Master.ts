@@ -13,7 +13,6 @@ import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
 import { writeFile} from 'node:fs/promises'
 import {cntpAdminWallet, startEposhTransfer} from './utilNew'
-import {mapLimit} from 'async'
 import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
@@ -426,6 +425,8 @@ class conet_dl_server {
 			}
 			return res.status(403).end()
 		})
+
+		
 
 		
 

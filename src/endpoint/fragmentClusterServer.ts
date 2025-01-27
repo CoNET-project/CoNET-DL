@@ -7,8 +7,6 @@ import { readFile, createReadStream, stat} from 'node:fs'
 import {getIpAddressFromForwardHeader} from './help-database'
 import { inspect } from 'node:util'
 import { checkSignObj, masterSetup} from '../util/util'
-import type { RequestOptions,ServerResponse } from 'node:http'
-import {request} from 'node:http'
 import Cluster from 'node:cluster'
 import {writeFile} from 'node:fs'
 

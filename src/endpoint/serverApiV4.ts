@@ -148,7 +148,7 @@ const listenEpoch = async () => {
 
 const MaxCount = 1
 
-const fx168_Referrer = '0xd57cA74229fd96A5CB9e99DFdfd9de79940FD61D'
+const fx168_Referrer = '0xd57cA74229fd96A5CB9e99DFdfd9de79940FD61D'.toLowerCase()
 
 export const claimeToekn = async (message: string, signMessage: string ) => {
 	const obj = checkSign (message, signMessage)
@@ -409,7 +409,7 @@ class conet_dl_server_v4 {
 			return getreferralsCount(addr, res)
 		})
 
-		router.post ('/fx169HappyNewYear', async (req: any, res: any) => {
+		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/fx169HappyNewYear`))
 			let message, signMessage
@@ -422,20 +422,24 @@ class conet_dl_server_v4 {
 				return res.status(404).end()
 			}
 
-			logger(Colors.magenta(`/fx169HappyNewYear`), message, signMessage)
+			logger(Colors.magenta(`/fx168HappyNewYear`), message, signMessage)
 			const obj = checkSign (message, signMessage)
 	
 			if ( !obj?.walletAddress ) {
 				logger (Colors.grey(`Router /fx169HappyNewYear checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
 				logger(inspect(obj, false, 3, true))
-				return res.status(403).json(req.body).end()
+				return res.status(404).json(req.body).end()
 			}
 
 			getReferrer(obj.walletAddress, (err, data) => {
-				if (data?.address === '0x0000000000000000000000000000000000000000'||data?.address !== fx168_Referrer) {
-					return res.status(403).json(req.body).end()
+				if (err) {
+					return res.status(503).json({error: "Server isn't available Error"})
 				}
-				
+				if ( !data?.address || data.address === '0x0000000000000000000000000000000000000000'|| data.address?.toLowerCase() !== fx168_Referrer ) {
+					return res.status(403).json({error: "user wallet has not Fx168 referrer Error!"})
+				}
+
+				postLocalhost('/api/fx168HappyNewYear', {wallet: obj.walletAddress.toLowerCase()}, res)
 			})
 		})
 
@@ -460,24 +464,24 @@ class conet_dl_server_v4 {
 
 		})
 
-		router.post ('/christmas2024', async (req: any, res: any) => {
-			return res.status(404).end()
-			// const _wallet: string = req.body.walletAddress
-			// let wallet: string 
-			// try {
-			// 	wallet = ethers.getAddress(_wallet)
-			// } catch (ex) {
-			// 	return res.status(404).end()
-			// }
-			// logger(`/christmas2024`)
-			// const ret = await christmas2024 (wallet)
+		// router.post ('/christmas2024', async (req: any, res: any) => {
+		// 	return res.status(404).end()
+		// 	// const _wallet: string = req.body.walletAddress
+		// 	// let wallet: string 
+		// 	// try {
+		// 	// 	wallet = ethers.getAddress(_wallet)
+		// 	// } catch (ex) {
+		// 	// 	return res.status(404).end()
+		// 	// }
+		// 	// logger(`/christmas2024`)
+		// 	// const ret = await christmas2024 (wallet)
 
-			// if (ret === false) {
-			// 	return res.status(403).end()
-			// }
-			// return res.status(200).json(ret).end()
+		// 	// if (ret === false) {
+		// 	// 	return res.status(403).end()
+		// 	// }
+		// 	// return res.status(200).json(ret).end()
 		
-		})
+		// })
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
