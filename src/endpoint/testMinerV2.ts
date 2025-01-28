@@ -108,12 +108,15 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 			return resolve(false)
 		}
 		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
+		const getReferrer = await ReferrerV3SC.getReferrer(wallet.address)
+		if (getReferrer === '0x0000000000000000000000000000000000000000') {
+			const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
+			logger(tx)
+		}
 		
-		const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
-		logger(tx)
 		setTimeout(() => {
 			return resolve(true)
-		}, 500)
+		}, 1000)
 		
 
 	} catch (ex: any) {
@@ -148,6 +151,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
 		await getFaucet (n)
+		await 
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
