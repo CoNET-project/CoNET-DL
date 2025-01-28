@@ -108,6 +108,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 			return resolve(false)
 		}
 		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
+		const kk = await ReferrerV3SC.
 		const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
 		logger(tx)
 		setTimeout(() => {
@@ -139,14 +140,14 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	let i = 0
 	logger(Colors.red(`mining start total wallets from ${__start} to ${max} TOTAL = ${wallets.length}`))
-	// wallets.forEach(n => {
+	wallets.forEach(n => {
 		
-	// 	connectToGossipNode(n, i ++)
-	// })
+		connectToGossipNode(n, i ++)
+	})
 	
 	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
-		await addReferrer(n)
+		await getFaucet (n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
