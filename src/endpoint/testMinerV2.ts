@@ -15,6 +15,7 @@ import {RequestOptions, request } from 'node:http'
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
+const apiEndpoint = `https://apiv4.conet.network/api/`
 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
@@ -110,11 +111,54 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	let i = 0
 	logger(Colors.red(`mining start total wallets from ${__start} to ${max} TOTAL = ${wallets.length}`))
 	wallets.forEach(n => {
+		
 		connectToGossipNode(n, i ++)
 	})
 	
 	listenEposh()
+	mapLimit(wallets, 1, async (n, next) => {
+		logger(`Doing getFaucet for ${n}`)
+		await getFaucet(n)
+	}, err => {
+		logger(`All wallets [${wallets.length}] getFaucet success!`)
+	})
 }
+
+const httpsPostToUrl = (url: string, body: string) => new Promise(resolve =>{
+	const _url = new URL (url)
+	const option: RequestOptions = {
+		host: _url.host,
+		port: 443,
+		method: 'POST',
+		protocol: 'https:',
+		headers: {
+			'Content-Type': 'application/json;charset=UTF-8'
+		},
+		path: _url.pathname,
+	}
+	const waitingTimeout = setTimeout(() => {
+		logger(Colors.red(`httpsPostToUrl on('Timeout') [${url}!`))
+		return resolve (false)
+	}, 5 * 1000)
+
+	const kkk = request(option, res => {
+		clearTimeout(waitingTimeout)
+		resolve (true)
+		res.once('end', () => {
+			if (res.statusCode !==200) {
+				return logger(`httpsPostToUrl ${url} statusCode = [${res.statusCode}] != 200 error!`)
+			}
+		})
+		
+	})
+
+	kkk.once('error', err => {
+		logger(Colors.red(`httpsPostToUrl on('error') [${url}] requestHttps on Error! no call relaunch`), err.message)
+	})
+
+	kkk.end(body)
+
+})
 
 const postToUrl = (node: nodeInfo, POST: string) => new Promise(resolve =>{
 	const option: RequestOptions = {
@@ -296,6 +340,14 @@ const getRandomNodeV2: (exclude: number) => Promise<null|{node: nodeInfo, index 
 
 const launchMap: Map<string, boolean> = new Map()
 const listenningPool: Map<string, NodeJS.Timeout> = new Map()
+const FaucetURL = `${apiEndpoint}conet-faucet`
+
+const getFaucet = async (walletAddr: string) => {
+	const data = JSON.stringify({ walletAddr})
+	const uuu = await httpsPostToUrl(FaucetURL, data)
+
+}
+
 
 const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: number ) => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
@@ -446,6 +498,7 @@ args.forEach ((n, index ) => {
 		isUser = n.split('=')[1] === 'true' ? true : false
 	}
 })
+
 
 if ( _SRP && number > 0) {
 	getWallet (_SRP, number, _start)
