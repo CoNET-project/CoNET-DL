@@ -116,7 +116,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	req.once('error', (e) => {
 		console.error(`postLocalhost to master on Error! ${e.message}`,)
 		if (_res.writable && !_res.writableEnded) {
-			_res.status(502).end()
+			_res.status(503).json({error: "Server isn't available Error!"}).end()
 		}
 		_res.socket?.destroy()
 	})

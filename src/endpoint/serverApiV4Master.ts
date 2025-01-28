@@ -426,8 +426,15 @@ class conet_dl_server {
 			return res.status(403).end()
 		})
 
-		
 
+		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
+			const wallet = req.body.walletAddress
+			if (!wallet) {
+				logger(Colors.red(`master fx168HappyNewYear req.walletAddress is none Error! [${wallet}]`))
+				return res.status(403).end()
+			}
+			
+		})
 		
 
 		router.all ('*', (req: any, res: any) => {
