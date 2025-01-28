@@ -108,9 +108,12 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 			return resolve(false)
 		}
 		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
-		const tx = ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
+		const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
 		logger(tx)
-		return resolve(true)
+		setTimeout(() => {
+			return resolve(true)
+		}, 500)
+		
 
 	} catch (ex: any) {
 		logger(`addReferrer ${wallet.address} Error  ${ex.message}`)
