@@ -12,11 +12,14 @@ import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, 
 import {getRandomValues} from 'node:crypto'
 import {RequestOptions, request } from 'node:http'
 import {request as httpsRequest } from 'node:https'
-
+import ReferrerV3 from './ReferralsV3.json'
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
+const ReferrerV3Addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
+
+
 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
@@ -93,8 +96,25 @@ const listenEposh = async () => {
 	})
 }
 
-const addReffeer = () => new Promise (resolve => {
+const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
+	const wallet = new ethers.Wallet(privateKeyArmor, provider)
+	const ReferrerV3SC = new ethers.Contract(ReferrerV3Addr, ReferrerV3, wallet)
+	logger(Colors.blue(`addReferrer for ${wallet.address}`))
+	try {
+		const CoNETBalance = await provider.getBalance(wallet.address)
+		const eth = ethers.formatEther(CoNETBalance.toString())
+		if (eth < '0.0001') {
+			logger(`addReferrer skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
+			return resolve(false)
+		}
+		const tx = ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
+		logger(tx)
+		return resolve(true)
 
+	} catch (ex: any) {
+		logger(`addReferrer ${wallet.address} Error  ${ex.message}`)
+		return resolve(false)
+	}
 })
 
 const getWallet = async (SRP: string, max: number, __start: number) => {
@@ -122,7 +142,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	
 	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
-		await getFaucet(n)
+		await addReferrer(n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
