@@ -99,7 +99,7 @@ const listenEposh = async () => {
 const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
 	const ReferrerV3SC = new ethers.Contract(ReferrerV3Addr, ReferrerV3, wallet)
-	logger(Colors.blue(`addReferrer for ${wallet.address}`))
+	
 	try {
 		const CoNETBalance = await provider.getBalance(wallet.address)
 		const eth = ethers.formatEther(CoNETBalance.toString())
@@ -107,6 +107,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 			logger(`addReferrer skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
 			return resolve(false)
 		}
+		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
 		const tx = ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
 		logger(tx)
 		return resolve(true)
