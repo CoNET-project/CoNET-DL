@@ -18,7 +18,7 @@ import { Writable } from 'node:stream'
 import colors from 'colors/safe'
 import {ethers} from 'ethers'
 import JSBI from 'jsbi'
-import {getOraclePrice, txManager} from '../endpoint/help-database'
+
 
 import {abi as CONET_Point_ABI} from './conet-point.json'
 import {abi as CONET_Referral_ABI} from './conet-referral.json'
@@ -1787,36 +1787,7 @@ export const checkErc20Tx = (tx: ethers.TransactionReceipt, receiveWallet: strin
 
 const GuardianPlanPrice = 1250
 
-const getAmountOfNodes: (nodes: number, assetName: string) => Promise<number> = (nodes, assetName) => new Promise(async resolve => {
-	const assetPrice = await getOraclePrice ()
-	if (typeof assetPrice === 'boolean') {
-		return resolve(0)
-	}
-	const totalUsdt = nodes * GuardianPlanPrice
-	const asssetSymbol = new RegExp (/usd/i.test(assetName) ? 'usd' : /bnb/i.test(assetName) ? 'bnb' : 'eth', 'i')
-	const index = assetPrice.findIndex(n => {	
-		asssetSymbol.test(n?.currency_name)
-	})
-	if (index < 0) {
-		return resolve(totalUsdt)
-	}
-	const rate = parseFloat(assetPrice[index].usd_price)
-	return resolve (totalUsdt/rate)
-})
 
-
-export const checkValueOfGuardianPlan = async (nodes: number, tokenName: string, paymentValue: string) => {
-
-	const totalAmount = await getAmountOfNodes(nodes, tokenName)
-	if (!totalAmount) {
-		return false
-	}
-	const _total = parseFloat(ethers.formatEther(paymentValue))
-	if (_total - totalAmount > totalAmount * 0.01) {
-		return false
-	}
-	return true
-}
 
 
 export const checkReferralsV2_OnCONET_Holesky = async (wallet: string) => {

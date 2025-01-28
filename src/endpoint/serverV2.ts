@@ -10,7 +10,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger, checkErc20Tx, checkValueOfGuardianPlan, checkTx, getAssetERC20Address, checkReferralsV2_OnCONET_Holesky, newCNTP_Contract,
+import { logger, newCNTP_Contract,
 	returnGuardianPlanReferral,checkSignObj, getNetworkName, getServerIPV4Address, conet_Holesky_rpc
 } from '../util/util'
 
