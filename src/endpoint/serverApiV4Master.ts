@@ -67,8 +67,8 @@ const startFaucetProcess = () => new Promise(async resolve => {
 
 	logger(`faucetWaitingPool length = ${faucetWaitingPool.length}`)
 
-	const splited = faucetWaitingPool.slice(0, 200)
-	faucetWaitingPool = faucetWaitingPool.slice(200)
+	const splited = faucetWaitingPool.slice(0, 150)
+	faucetWaitingPool = faucetWaitingPool.slice(150)
 
 	const ipAddress = splited.map(n => n.ipAddress)
 	const wallet = splited.map(n => n.wallet)

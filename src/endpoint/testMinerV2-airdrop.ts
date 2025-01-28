@@ -96,6 +96,10 @@ const listenEposh = async () => {
 	})
 }
 
+const airdrop = async () => {
+	
+}
+
 const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
 	const ReferrerV3SC = new ethers.Contract(ReferrerV3Addr, ReferrerV3, wallet)
@@ -127,7 +131,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 
 const getWallet = async (SRP: string, max: number, __start: number) => {
 	
-	await getAllNodes()
+	// await getAllNodes()
 
 	const acc = ethers.Wallet.fromPhrase(SRP)
 	const wallets: string[] = []
@@ -143,12 +147,12 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	let i = 0
 	logger(Colors.red(`mining start total wallets from ${__start} to ${max} TOTAL = ${wallets.length}`))
-	wallets.forEach(n => {
+	// wallets.forEach(n => {
 		
-		connectToGossipNode(n, i ++)
-	})
+	// 	connectToGossipNode(n, i ++)
+	// })
 	
-	listenEposh()
+	// listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
 		await getFaucet (n)
 		await addReferrer(n)
