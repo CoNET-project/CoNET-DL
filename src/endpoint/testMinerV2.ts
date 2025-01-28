@@ -11,6 +11,7 @@ import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
 import {getRandomValues} from 'node:crypto'
 import {RequestOptions, request } from 'node:http'
+import {request as httpsRequest } from 'node:https'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
@@ -141,7 +142,7 @@ const httpsPostToUrl = (url: string, body: string) => new Promise(resolve =>{
 		return resolve (false)
 	}, 60 * 1000)
 
-	const kkk = request(option, res => {
+	const kkk = httpsRequest(option, res => {
 		clearTimeout(waitingTimeout)
 		resolve (true)
 		res.once('end', () => {
