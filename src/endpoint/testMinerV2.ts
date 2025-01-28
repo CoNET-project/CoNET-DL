@@ -151,7 +151,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
 		await getFaucet (n)
-		await 
+		await addReferrer(n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
