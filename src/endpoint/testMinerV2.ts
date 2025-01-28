@@ -93,6 +93,10 @@ const listenEposh = async () => {
 	})
 }
 
+const addReffeer = () => new Promise (resolve => {
+
+})
+
 const getWallet = async (SRP: string, max: number, __start: number) => {
 	
 	await getAllNodes()
@@ -118,7 +122,6 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	
 	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
-		logger(`Doing getFaucet for ${n}`)
 		await getFaucet(n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
@@ -350,6 +353,7 @@ const FaucetURL = `${apiEndpoint}conet-faucet`
 const getFaucet = async (privateKeyArmor: string) => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
 	const data = JSON.stringify({ walletAddr: wallet.address})
+	logger(Colors.blue(`getFaucet for ${wallet.address}`))
 	const uuu = await httpsPostToUrl(FaucetURL, data)
 
 }
