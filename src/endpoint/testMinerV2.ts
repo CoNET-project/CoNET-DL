@@ -139,7 +139,7 @@ const httpsPostToUrl = (url: string, body: string) => new Promise(resolve =>{
 	const waitingTimeout = setTimeout(() => {
 		logger(Colors.red(`httpsPostToUrl on('Timeout') [${url}!`))
 		return resolve (false)
-	}, 5 * 1000)
+	}, 60 * 1000)
 
 	const kkk = request(option, res => {
 		clearTimeout(waitingTimeout)
@@ -148,6 +148,7 @@ const httpsPostToUrl = (url: string, body: string) => new Promise(resolve =>{
 			if (res.statusCode !==200) {
 				return logger(`httpsPostToUrl ${url} statusCode = [${res.statusCode}] != 200 error!`)
 			}
+
 		})
 		
 	})
