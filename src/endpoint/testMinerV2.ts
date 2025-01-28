@@ -110,10 +110,10 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	let i = 0
 	logger(Colors.red(`mining start total wallets from ${__start} to ${max} TOTAL = ${wallets.length}`))
-	wallets.forEach(n => {
+	// wallets.forEach(n => {
 		
-		connectToGossipNode(n, i ++)
-	})
+	// 	connectToGossipNode(n, i ++)
+	// })
 	
 	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
@@ -137,7 +137,7 @@ const httpsPostToUrl = (url: string, body: string) => new Promise(resolve =>{
 		path: _url.pathname,
 	}
 	const waitingTimeout = setTimeout(() => {
-		logger(Colors.red(`httpsPostToUrl on('Timeout') [${url}!`))
+		logger(Colors.red(`httpsPostToUrl on('Timeout') [${url} ${JSON.parse(body)}!`))
 		return resolve (false)
 	}, 60 * 1000)
 
