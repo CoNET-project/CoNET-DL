@@ -120,7 +120,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		logger(`Doing getFaucet for ${n}`)
 		await getFaucet(n)
 	}, err => {
-		logger(`All wallets [${wallets.length}] getFaucet success!`)
+		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
 }
 
