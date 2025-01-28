@@ -65,10 +65,13 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	startFaucetProcessStatus = true
 	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
 
-	logger(inspect(faucetWaitingPool, false, 3, true))
-	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
-	const wallet = faucetWaitingPool.map(n => n.wallet)
-	logger(inspect(wallet, false, 3, true))
+	logger(`faucetWaitingPool length = ${faucetWaitingPool.length}`)
+
+	const splited = faucetWaitingPool.slice(0, 200)
+	faucetWaitingPool = faucetWaitingPool.slice(200)
+
+	const ipAddress = splited.map(n => n.ipAddress)
+	const wallet = splited.map(n => n.wallet)
 
 	try {
 		
@@ -92,7 +95,6 @@ const startFaucetProcess = () => new Promise(async resolve => {
 
 		logger(`startFaucetProcess `)
 		logger(inspect(tx_conform, false, 3, true))
-		faucetWaitingPool = []
 
 	} catch (ex) {
 		logger(`startFaucetProcess Error!`, ex)
