@@ -344,8 +344,9 @@ const launchMap: Map<string, boolean> = new Map()
 const listenningPool: Map<string, NodeJS.Timeout> = new Map()
 const FaucetURL = `${apiEndpoint}conet-faucet`
 
-const getFaucet = async (walletAddr: string) => {
-	const data = JSON.stringify({ walletAddr})
+const getFaucet = async (privateKeyArmor: string) => {
+	const wallet = new ethers.Wallet(privateKeyArmor)
+	const data = JSON.stringify({ walletAddr: wallet.address})
 	const uuu = await httpsPostToUrl(FaucetURL, data)
 
 }
