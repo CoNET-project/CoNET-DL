@@ -123,6 +123,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		const tx = await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
 		await tx.wait()
 		const tr = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
+		await tr.wait()
 		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
 		
 		return resolve(await addReferrer(privateKeyArmor))
