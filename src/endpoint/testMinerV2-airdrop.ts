@@ -142,7 +142,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 		const CoNETBalance = await provider.getBalance(wallet.address)
 		const eth = ethers.formatEther(CoNETBalance)
 		if (eth < '0.0001') {
-			logger(`addReferrer skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
+			logger(`addReferrer skip ${wallet.address} because CONET = ${eth}`)
 			return resolve(false)
 		}
 		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
