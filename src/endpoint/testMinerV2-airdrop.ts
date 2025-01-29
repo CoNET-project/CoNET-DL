@@ -145,16 +145,16 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 			logger(`addReferrer skip ${wallet.address} because CONET = ${eth}`)
 			return resolve(false)
 		}
-		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
+		
 		const getReferrer = await ReferrerV3SC.getReferrer(wallet.address)
 		if (getReferrer === '0x0000000000000000000000000000000000000000') {
 			const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
-			logger(tx)
+			logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth} tx = ${tx.hash}`))
 		}
 		
 		setTimeout(() => {
 			return resolve(true)
-		}, 1000)
+		}, 500)
 		
 
 	} catch (ex: any) {
