@@ -117,16 +117,16 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		const CNTP_balance = ethers.formatEther(balanceCNTP)
 		if (CNTP_balance < '100') {
 			logger(`airdrop skip ${wallet.address} because CNTP balance < 0.001 = ${balanceCNTP.toString()}`)
-			return resolve(await getFaucet (privateKeyArmor))
+			return resolve(await addReferrer(privateKeyArmor))
 		}
 
 		const tx = await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
 		await tx.wait()
 		const tr = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
 		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
-		setTimeout(() => {
-			return resolve(true)
-		}, 200)
+		
+		return resolve(await addReferrer(privateKeyArmor))
+		
 
 	} catch (ex: any) {
 		logger(`airdrop ${wallet.address} Error ${ex.message}`)
