@@ -100,7 +100,7 @@ const listenEposh = async () => {
 	})
 }
 
-const airdrop = (privateKeyArmor: string) => new Promise (async resolve =>{
+const airdrop = (privateKeyArmor: string, index: number) => new Promise (async resolve =>{
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
 	const CNTPSC = new ethers.Contract(CCNTP_addr, cCNTPABI, wallet)
 	const CoNETDePINHoleskySC = new ethers.Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, wallet)
@@ -123,7 +123,7 @@ const airdrop = (privateKeyArmor: string) => new Promise (async resolve =>{
 		const tx = await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
 		await tx.wait()
 		const tr = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
-		logger(Colors.blue(`airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
+		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
 		setTimeout(() => {
 			return resolve(true)
 		}, 1000)
@@ -187,10 +187,11 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	// })
 	
 	// listenEposh()
+	let ii = 0
 	mapLimit(wallets, 1, async (n, next) => {
 		// await getFaucet (n)
 		// await addReferrer(n)
-		await airdrop(n)
+		await airdrop(n, ++ii)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
