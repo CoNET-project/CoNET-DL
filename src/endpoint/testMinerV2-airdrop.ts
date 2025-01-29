@@ -108,7 +108,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		const CoNETBalance = await provider.getBalance(wallet.address)
 		const eth = ethers.formatEther(CoNETBalance)
 		if (eth < '0.0001') {
-			logger(`airdrop skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
+			logger(`airdrop skip ${wallet.address} because CONET = ${eth}`)
 			return resolve(await getFaucet (privateKeyArmor))
 		}
 
@@ -116,7 +116,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		const balanceCNTP = await CNTPSC.balanceOf(wallet.address)
 		const CNTP_balance = ethers.formatEther(balanceCNTP)
 		if (CNTP_balance < '200') {
-			logger(`airdrop skip ${wallet.address} because CNTP balance < 0.001 = ${balanceCNTP.toString()}`)
+			logger(`airdrop skip ${wallet.address} because CNTP balance < 0.001 = ${CNTP_balance}`)
 			return resolve(await addReferrer(privateKeyArmor))
 		}
 
