@@ -4,22 +4,26 @@ import { logger } from '../util/logger'
 import {inspect} from 'node:util'
 import {mapLimit} from 'async'
 import Colors from 'colors/safe'
+import cCNTPABI from './CNTP_V1.ABI.json'
 
 import {request as requestHttps} from 'node:https'
 import GuardianNodesV2ABI from './CGPNv7New.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
-import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
+import {createMessage, encrypt, enums, readKey} from 'openpgp'
 import {getRandomValues} from 'node:crypto'
 import {RequestOptions, request } from 'node:http'
 import {request as httpsRequest } from 'node:https'
 import ReferrerV3 from './ReferralsV3.json'
+import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
+
+
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const ReferrerV3Addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
-
-
+const CCNTP_addr = '0xa4b389994A591735332A67f3561D60ce96409347'
+const CoNETDePINHoleskySCAddress = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
@@ -96,9 +100,38 @@ const listenEposh = async () => {
 	})
 }
 
-const airdrop = async () => {
-	
-}
+const airdrop = (privateKeyArmor: string) => new Promise (async resolve =>{
+	const wallet = new ethers.Wallet(privateKeyArmor, provider)
+	const CNTPSC = new ethers.Contract(CCNTP_addr, cCNTPABI, wallet)
+	const CoNETDePINHoleskySC = new ethers.Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, wallet)
+	try {
+		const CoNETBalance = await provider.getBalance(wallet.address)
+		const eth = ethers.formatEther(CoNETBalance.toString())
+		if (eth < '0.0001') {
+			logger(`airdrop skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
+			return resolve(await getFaucet (privateKeyArmor))
+		}
+
+		
+		const balanceCNTP = CNTPSC.balanceOf(wallet.address)
+		const CNTP_balance = ethers.formatEther(balanceCNTP.toString())
+		if (CNTP_balance < '0.1') {
+			logger(`airdrop skip ${wallet.address} because CNTP balance < 0.001 = ${balanceCNTP.toString()}`)
+			return resolve(await getFaucet (privateKeyArmor))
+		}
+
+		await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
+		const tx = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
+		logger(Colors.blue(`airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tx.hash}`))
+		setTimeout(() => {
+			return resolve(true)
+		}, 1000)
+
+	} catch (ex: any) {
+		logger(`airdrop ${wallet.address} Error ${ex.message}`)
+		return resolve(false)
+	}
+})
 
 const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
@@ -154,8 +187,9 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	
 	// listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
-		await getFaucet (n)
-		await addReferrer(n)
+		// await getFaucet (n)
+		// await addReferrer(n)
+		await airdrop(n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
