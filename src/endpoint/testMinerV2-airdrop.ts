@@ -106,15 +106,15 @@ const airdrop = (privateKeyArmor: string) => new Promise (async resolve =>{
 	const CoNETDePINHoleskySC = new ethers.Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, wallet)
 	try {
 		const CoNETBalance = await provider.getBalance(wallet.address)
-		const eth = ethers.formatEther(CoNETBalance.toString())
+		const eth = ethers.formatEther(CoNETBalance)
 		if (eth < '0.0001') {
 			logger(`airdrop skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
 			return resolve(await getFaucet (privateKeyArmor))
 		}
 
 		
-		const balanceCNTP = CNTPSC.balanceOf(wallet.address)
-		const CNTP_balance = ethers.formatEther(balanceCNTP.toString())
+		const balanceCNTP = await CNTPSC.balanceOf(wallet.address)
+		const CNTP_balance = ethers.formatEther(balanceCNTP)
 		if (CNTP_balance < '0.1') {
 			logger(`airdrop skip ${wallet.address} because CNTP balance < 0.001 = ${balanceCNTP.toString()}`)
 			return resolve(await getFaucet (privateKeyArmor))
@@ -139,7 +139,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 	
 	try {
 		const CoNETBalance = await provider.getBalance(wallet.address)
-		const eth = ethers.formatEther(CoNETBalance.toString())
+		const eth = ethers.formatEther(CoNETBalance)
 		if (eth < '0.0001') {
 			logger(`addReferrer skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
 			return resolve(false)
@@ -421,7 +421,7 @@ const getFaucet = async (privateKeyArmor: string) => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
 	const data = JSON.stringify({ walletAddr: wallet.address})
 	const CoNETBalance = await provider.getBalance(wallet.address)
-	const eth = ethers.formatEther(CoNETBalance.toString())
+	const eth = ethers.formatEther(CoNETBalance)
 		if (eth > '0.0001') {
 			logger(`getFaucet skip ${wallet.address} because CONET > 0.0001 ${CoNETBalance.toString()}`)
 			return
