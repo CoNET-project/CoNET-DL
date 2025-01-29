@@ -120,9 +120,10 @@ const airdrop = (privateKeyArmor: string) => new Promise (async resolve =>{
 			return resolve(await getFaucet (privateKeyArmor))
 		}
 
-		await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
-		const tx = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
-		logger(Colors.blue(`airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tx.hash}`))
+		const tx = await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
+		await tx.wait()
+		const tr = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
+		logger(Colors.blue(`airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
 		setTimeout(() => {
 			return resolve(true)
 		}, 1000)
