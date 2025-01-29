@@ -126,7 +126,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
 		setTimeout(() => {
 			return resolve(true)
-		}, 1000)
+		}, 200)
 
 	} catch (ex: any) {
 		logger(`airdrop ${wallet.address} Error ${ex.message}`)
