@@ -157,7 +157,7 @@ const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_contractV3 = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[0], provideCONET)
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[4], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)

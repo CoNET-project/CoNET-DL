@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	conetDePINEthAdmin: string[]
 	conetDePINAdmin: string[]
 	conetFaucetAdmin_1: string[]
 	constGAMEAccount: string[]

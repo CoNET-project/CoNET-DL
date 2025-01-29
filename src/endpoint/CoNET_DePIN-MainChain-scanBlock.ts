@@ -5,7 +5,7 @@ import CoNETDePINMainnetABI from './CoNETDePINMainnet.json'
 import CONETDePIN_Airdrop from './CONETDePIN_Airdrop.json'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
-
+import {mapLimit} from 'async'
 const CoNETMainChainRPC = 'http://38.102.126.53:8000'
 const CoNETHoleskyRPC = 'https://rpc.conet.network'
 const CoNETDePINMainchainSC = '0xc4C9927516db9BBe42DC0b003A7AB0946AC649C1'
@@ -14,8 +14,9 @@ const CoNETDePINMainchainBridgeAddress = '0x242D503a29EaEF650615946A8C5eB2CD6c01
 
 const endPointHolesky = new JsonRpcProvider(CoNETHoleskyRPC)
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
-const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.conetDePINAdmin[0], endPointHolesky)
-const CoNETDePINMainnetAdmin = new Wallet(masterSetup.conetDePINAdmin[0], endPointCoNETMainnet)
+
+const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.conetDePINAdmin[1], endPointHolesky)
+const CoNETDePINMainnetAdmin = new Wallet(masterSetup.conetDePINAdmin[1], endPointCoNETMainnet)
 const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, CoNETDepinHoleskyAdmin)
 
 const CoNETDePINMainchainBridgeSC = new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, CoNETDePINMainnetAdmin)
@@ -93,11 +94,16 @@ const getTx = async (tx: string) => {
 }
 
 
-const daemondStart = () => {
-	
-	endPointHolesky.on('block', async block => {
-		holeskyBlockListenning(block)
-	})
-}
+const start_block = 1168987
+const stop_block = 1169086
+const blockArray: number[] = []
 
-daemondStart()
+// for (let i = start_block;i < stop_block; i ++) {
+// 	blockArray.push(i)
+// }
+
+// mapLimit(blockArray, 1, async (n, next) => {
+// 	await holeskyBlockListenning(n)
+// }, err => {
+// 	logger(Colors.red(`Scan end!`))
+// })
