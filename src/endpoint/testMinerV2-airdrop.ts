@@ -115,7 +115,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		
 		const balanceCNTP = await CNTPSC.balanceOf(wallet.address)
 		const CNTP_balance = ethers.formatEther(balanceCNTP)
-		if (CNTP_balance < '0.1') {
+		if (CNTP_balance < '100') {
 			logger(`airdrop skip ${wallet.address} because CNTP balance < 0.001 = ${balanceCNTP.toString()}`)
 			return resolve(await getFaucet (privateKeyArmor))
 		}
