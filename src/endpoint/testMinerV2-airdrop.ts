@@ -420,9 +420,14 @@ const FaucetURL = `${apiEndpoint}conet-faucet`
 const getFaucet = async (privateKeyArmor: string) => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
 	const data = JSON.stringify({ walletAddr: wallet.address})
+	const CoNETBalance = await provider.getBalance(wallet.address)
+	const eth = ethers.formatEther(CoNETBalance.toString())
+		if (eth > '0.0001') {
+			logger(`getFaucet skip ${wallet.address} because CONET > 0.0001 ${CoNETBalance.toString()}`)
+			return
+		}
 	logger(Colors.blue(`getFaucet for ${wallet.address}`))
 	const uuu = await httpsPostToUrl(FaucetURL, data)
-
 }
 
 

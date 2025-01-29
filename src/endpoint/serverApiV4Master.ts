@@ -124,7 +124,6 @@ const getAllDevelopAddress = async () => {
 	}
 }
 
-
 const developWalletListening = async (block: number) => {
 	
 	const blockTs = await provideCONET.getBlock(block)
