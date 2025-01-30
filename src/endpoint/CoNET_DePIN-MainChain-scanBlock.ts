@@ -93,16 +93,16 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1168987
-const stop_block = 1169086
+const start_block = 1173541
+const stop_block = 1174651
 const blockArray: number[] = []
 
-// for (let i = start_block;i < stop_block; i ++) {
-// 	blockArray.push(i)
-// }
+for (let i = start_block;i < stop_block; i ++) {
+	blockArray.push(i)
+}
 
-// mapLimit(blockArray, 1, async (n, next) => {
-// 	await holeskyBlockListenning(n)
-// }, err => {
-// 	logger(Colors.red(`Scan end!`))
-// })
+mapLimit(blockArray, 1, async (n, next) => {
+	await holeskyBlockListenning(n)
+}, err => {
+	logger(Colors.red(`Scan end!`))
+})

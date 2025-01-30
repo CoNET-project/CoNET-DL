@@ -10,6 +10,7 @@ const CoNETHoleskyRPC = 'https://rpc.conet.network'
 const CoNETDePINMainchainSC = '0xc4C9927516db9BBe42DC0b003A7AB0946AC649C1'
 const CoNETDePINHoleskySCAddress = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'.toLowerCase()
 const CoNETDePINMainchainBridgeAddress = '0x242D503a29EaEF650615946A8C5eB2CD6c0164d6'
+const CoNET_Eth_MainChain_Pool = '0x9cCb8973D172733935bEE2dAEa6D0CdEa54B353B'
 
 const CoNETDePIN_Eth_bridge = '0x3162EE237BbeA6BbB583dBec9571F4eDEf84212B'.toLowerCase()
 
