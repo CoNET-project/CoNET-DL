@@ -5,7 +5,7 @@ import CNTP_multiTransferTokenABI from './CNTP_multiTransferTokenABI.json'
 import { inspect } from 'node:util'
 import {mapLimit} from 'async'
 const rpcUrl = 'https://rpc.conet.network'
-const CNTP_multiTransfer = '0x1250818e17D0bE3851E2B5769D9262a48fAB7065'
+// const CNTP_multiTransfer = '0x1250818e17D0bE3851E2B5769D9262a48fAB7065'
 
 const CNTP_multiTransfer_new = '0x261BE4f90b84298eb84322A6Dc64ffD4D0c46D34'
 
@@ -34,7 +34,7 @@ export class CNTP_Transfer_Manager {
 			logger(Color.red(`transferCNTP wallets.length = ${wallets.length} !== pays length ${pays.length}`))
 			return resolve (false)
 		}
-		const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer, CNTP_multiTransferTokenABI, wallet)
+		const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer_new, CNTP_multiTransferTokenABI, wallet)
 		let total = 0
 		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
 		pays.forEach(n => {
@@ -221,7 +221,7 @@ export class CNTP_Transfer_Manager {
 
 const adminList = async (_wallet: string) => {
 	
-	const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer, CNTP_multiTransferTokenABI, rpcProvider)
+	const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer_new, CNTP_multiTransferTokenABI, rpcProvider)
 	const ss = await CNTP_Contract.adminList(_wallet)
 	logger(Color.magenta(`[${_wallet}] in adminList is ${ss}`))
 }
