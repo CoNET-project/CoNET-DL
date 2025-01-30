@@ -4,7 +4,6 @@ import {logger} from '../util/logger'
 import Colors from 'colors/safe'
 import {createServer} from 'node:http'
 import { readFile, createReadStream, stat} from 'node:fs'
-import {getIpAddressFromForwardHeader} from './help-database'
 import { inspect } from 'node:util'
 import { checkSignObj, masterSetup} from '../util/util'
 import Cluster from 'node:cluster'
@@ -16,6 +15,19 @@ const storagePATH = masterSetup.storagePATH
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
+//			getIpAddressFromForwardHeader(req.header(''))
+const getIpAddressFromForwardHeader = (req: Request) => {
+
+	// logger(inspect(req.headers, false, 3, true))
+	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]||req.headers['X-Forwarded-For'.toLowerCase()]||req.headers['CF-Connecting-IP'.toLowerCase()]||req.ip
+	if (!ipaddress) {
+		return ''
+	}
+	if (typeof ipaddress === 'object') {
+		return ipaddress[0]
+	}
+	return ipaddress
+}
 
 const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 	const lastChar = hashName[hashName.length-1]
