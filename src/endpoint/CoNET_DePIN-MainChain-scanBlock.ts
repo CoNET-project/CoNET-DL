@@ -1,7 +1,7 @@
 import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
-import CONETDePIN_Airdrop from './CONETAirdrop.json'
+import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import {mapLimit} from 'async'
