@@ -63,8 +63,7 @@
 		"openpgp": "^6.0.1",
 		"phin": "^3.7.1",
 		"uuid": "^11.0.3",
-		"web3": "^4.16.0",
-		"@metamask/browser-passworder": "^6.0.0"
+		"web3": "^4.16.0"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.3",
