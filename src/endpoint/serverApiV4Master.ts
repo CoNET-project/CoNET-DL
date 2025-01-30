@@ -63,7 +63,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	}
 
 	startFaucetProcessStatus = true
-	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
+	logger(`faucetWaitingPool Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
 
 	logger(`faucetWaitingPool length = ${faucetWaitingPool.length}`)
 
@@ -76,7 +76,8 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	try {
 		
 		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
-		logger(`start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
+		logger(`faucetWaitingPool start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
+		
 		const timeout= setTimeout(() => {
 			logger(`startFaucetProcess waiting tx conform TIMEOUT error! return Faucet array`)
 			startFaucetProcessStatus = false

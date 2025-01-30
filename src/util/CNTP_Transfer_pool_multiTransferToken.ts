@@ -6,6 +6,9 @@ import { inspect } from 'node:util'
 import {mapLimit} from 'async'
 const rpcUrl = 'https://rpc.conet.network'
 const CNTP_multiTransfer = '0x1250818e17D0bE3851E2B5769D9262a48fAB7065'
+
+const CNTP_multiTransfer_new = '0x261BE4f90b84298eb84322A6Dc64ffD4D0c46D34'
+
 const transferTimeout = 1000 * 180			//	3 mins
 const checkGasPrice = 15000000
 const longestWaitingTime = 1000 * 60 * 15	//	5 mins
@@ -15,10 +18,11 @@ interface paymentItem {
 	pays: number[]
 }
 
+const rpcProvider = new ethers.JsonRpcProvider(rpcUrl)
+
 export class CNTP_Transfer_Manager {
 
 	private pool: Map<string, number> = new Map()
-	private rpcProvider = new ethers.JsonRpcProvider(rpcUrl)
 	private privatePayArray: ethers.Wallet [] = []
 	private epoch = 0
 	private privateWalletCurrentPoint = 0
@@ -84,7 +88,7 @@ export class CNTP_Transfer_Manager {
 
 		this.transferProcessStatus = true
 		const timeStamp = new Date().getTime()
-		const feeData = await this.rpcProvider.getFeeData()
+		const feeData = await rpcProvider.getFeeData()
 		logger(inspect(feeData, false, 3, true))
 
 		if (!feeData.gasPrice) {
@@ -176,13 +180,13 @@ export class CNTP_Transfer_Manager {
 
 	private initCalss = async (privateKeys: string[]) => {
 		privateKeys.forEach(n => {
-			this.privatePayArray.push(new ethers.Wallet(n, this.rpcProvider))
+			this.privatePayArray.push(new ethers.Wallet(n, rpcProvider))
 		})
 
-		this.epoch = await this.rpcProvider.getBlockNumber()
+		this.epoch = await rpcProvider.getBlockNumber()
 		logger(Color.blue(`CNTP_Transfer_Manager started at EPOCH ${this.epoch}`))
 
-		this.rpcProvider.on ('block', async _block => {
+		rpcProvider.on ('block', async _block => {
 			if (_block = this.epoch + 1 ) {
 				this.epoch ++
 				logger(Color.blue(`CNTP_Transfer_Manager start EPOCH ${this.epoch} transfer`))
@@ -213,3 +217,27 @@ export class CNTP_Transfer_Manager {
 	}
 	
 }
+
+
+const adminList = async (_wallet: string) => {
+	
+	const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer, CNTP_multiTransferTokenABI, rpcProvider)
+	const ss = await CNTP_Contract.adminList(_wallet)
+	logger(Color.magenta(`[${_wallet}] in adminList is ${ss}`))
+}
+
+const testMultiTransferToken = async (_wallet: string) => {
+	const wallet = new ethers.Wallet(_wallet, rpcProvider)
+	logger(Color.blue(wallet.address))
+	const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer_new, CNTP_multiTransferTokenABI, wallet)
+	const wallets = ['0x0981275553A41E00ec1006fe074971285E00c2A3']
+	const fixedPay = [ethers.parseEther('0.1')]
+	try {
+		const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
+		logger(inspect(tx, false, 3, true))
+	} catch (ex) {
+		logger(ex)
+	}
+	
+}
+
