@@ -158,7 +158,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 const startDaemonProcess = async (block: number) => {
 	console.log('\n\n')
 	guardianMining(block)
-	// guardianReferrals(block)
+	guardianReferrals(block)
 }
 
 startListeningCONET_Holesky_EPOCH()
