@@ -138,15 +138,13 @@ const guardianMining = async (block: number) => {
 
 }
 
-const CNTP_Transfer_guardianMining = new CNTP_Transfer_Manager([masterSetup.guardianAmin[4]], 1000)
+const CNTP_Transfer_guardianMining = new CNTP_Transfer_Manager([masterSetup.guardianAmin[4]], 500)
 const CNTP_Transfer_guardianReferrals = new CNTP_Transfer_Manager(masterSetup.guardianReferralAdmin, 1000)
 
 const startListeningCONET_Holesky_EPOCH = async () => {
 	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
-
 	transferEposh = EPOCH -3
-
 	logger(Color.magenta(`startListeningCONET_Holesky_EPOCH [${EPOCH}] start!`))
 	provideCONET.on('block', async block => {
 		if (block === EPOCH + 1) {
@@ -160,7 +158,7 @@ const startListeningCONET_Holesky_EPOCH = async () => {
 const startDaemonProcess = async (block: number) => {
 	console.log('\n\n')
 	guardianMining(block)
-	guardianReferrals(block)
+	// guardianReferrals(block)
 }
 
 startListeningCONET_Holesky_EPOCH()
