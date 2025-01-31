@@ -93,8 +93,8 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1173541
-const stop_block = 1174651
+const start_block = 1175277
+const stop_block = 1175278
 const blockArray: number[] = []
 
 for (let i = start_block;i < stop_block; i ++) {
