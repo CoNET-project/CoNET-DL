@@ -381,15 +381,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 		
 		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
 		logger(`start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
-		const timeout= setTimeout(() => {
-			logger(`startFaucetProcess waiting tx conform TIMEOUT error! return Faucet array`)
-			startFaucetProcessStatus = false
-			return resolve(false)
-		}, MAX_TX_Waiting)
-
 		const tx_conform = await tx.wait()
-
-		clearTimeout(timeout)
 
 		if (!tx_conform) {
 			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
