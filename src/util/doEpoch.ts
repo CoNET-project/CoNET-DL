@@ -49,7 +49,7 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path: `/api/wallet`,
-		port: 8002,
+		port: 8003,
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -190,48 +190,6 @@ const CalculateReferrals = (walletAddress: string, totalToken: number) => new Pr
 	})
 })
 
-
-
-const sendPaymentToPool = async (totalMiner: string, walletList: string[], payList: string[], callbak: (err?: Error)=> void) => {
-	const option: RequestOptions = {
-		hostname: 'localhost',
-		path: `/api/pay`,
-		port: 8002,
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}
-	const postData = {
-		walletList, payList, totalMiner
-	}
-	
-	const req = await request (option, res => {
-		let data = ''
-		res.on('data', _data => {
-			data += _data
-		})
-		res.once('end', () => {
-
-			try {
-				const ret = JSON.parse(data)
-				return callbak ()
-			} catch (ex: any) {
-				console.error(`POST /api/pay got response JSON.parse(data) Error!`, data)
-				return callbak (ex)
-			}
-			
-		})
-	})
-
-	req.once('error', (e) => {
-		console.error(`getReferrer req on Error! ${e.message}`)
-		return callbak (e)
-	})
-
-	req.write(JSON.stringify(postData))
-	req.end()
-}
 	
 const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], totalMiner: string, minerRate: string) => {
 
