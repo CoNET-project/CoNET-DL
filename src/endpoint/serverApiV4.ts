@@ -101,7 +101,7 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	const option: RequestOptions = {
 		hostname: 'localhost',
 		path,
-		port: 8002,
+		port: 8003,
 		method: 'POST',
 		protocol: 'http:',
 		headers: {
@@ -173,8 +173,7 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server_v4 {
 
-	private PORT = 80
-	private appsPath = ''
+	private PORT = 8084
 	private serverID = ''
 
 	private initSetupData = async () => {
