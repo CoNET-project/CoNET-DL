@@ -94,7 +94,7 @@ const getTx = async (tx: string) => {
 
 
 const start_block = 1160249
-const stop_block = 1204606
+const stop_block = 1204768
 const blockArray: number[] = []
 logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block} with ${CoNETDepinHoleskyAdmin.address}`))
 for (let i = start_block;i < stop_block; i ++) {
