@@ -42,7 +42,7 @@ const _transfer = async () => {
 	try {
 		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()
-		logger(Colors.magenta(`_transfer success! tx = ${tx.hash}`))
+		logger(Colors.magenta(`_transfer success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 	}
