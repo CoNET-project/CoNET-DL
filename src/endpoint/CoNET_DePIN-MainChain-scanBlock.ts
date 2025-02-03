@@ -14,11 +14,16 @@ const CoNETDePINMainchainBridgeAddress = '0x673d6632A80eAD21ceA3B80cBc60a706F91b
 const endPointHolesky = new JsonRpcProvider(CoNETHoleskyRPC)
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
 
-const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.conetDePINAdmin[1], endPointHolesky)
-const CoNETDePINMainnetAdmin = new Wallet(masterSetup.conetDePINAdmin[1], endPointCoNETMainnet)
-const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, CoNETDepinHoleskyAdmin)
+const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.conetDePINAdmin_scan[1], endPointHolesky)
 
-const CoNETDePINMainchainBridgeSC = new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, CoNETDePINMainnetAdmin)
+const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, CoNETDepinHoleskyAdmin)
+const workSC: Contract[] = []
+
+
+for (let i = 0; i < masterSetup.conetDePINAdmin_scan.length; i ++ ) {
+	const wallet = new Wallet(masterSetup.conetDePINAdmin_scan[i], endPointCoNETMainnet)
+	workSC.push(new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, wallet))
+}
 
 interface transferData {
 	toAddress: string
@@ -26,27 +31,31 @@ interface transferData {
 	hash: string
 }
 const transferPool: transferData[] = []
-let transferProcess = false
 
 const _transfer = async () => {
-	if (transferProcess) {
+
+	const CoNETDePINMainchainBridgeSC = workSC.shift()
+
+	if (!CoNETDePINMainchainBridgeSC) {
 		return
 	}
-	transferProcess = true
+
 	const data = transferPool.shift()
 	if (!data) {
-		transferProcess = false
+		workSC.unshift(CoNETDePINMainchainBridgeSC)
 		return
 	}
+	
 	logger(inspect(data, false, 3, true))
 	try {
 		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()
 		logger(Colors.magenta(`_transfer success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
 	} catch (ex: any) {
+
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 	}
-	transferProcess = false
+	workSC.unshift(CoNETDePINMainchainBridgeSC)
 	_transfer()
 }
 
@@ -96,7 +105,8 @@ const getTx = async (tx: string) => {
 const start_block = 1162260
 const stop_block = 1204768
 const blockArray: number[] = []
-logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block} with ${CoNETDepinHoleskyAdmin.address}`))
+logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block}`))
+
 for (let i = start_block;i < stop_block; i ++) {
 	blockArray.push(i)
 }
