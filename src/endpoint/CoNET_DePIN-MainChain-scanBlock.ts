@@ -5,7 +5,7 @@ import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import {mapLimit} from 'async'
-const CoNETMainChainRPC = 'http://38.102.126.53:8000'
+const CoNETMainChainRPC = 'http://38.102.126.53:8887'
 const CoNETHoleskyRPC = 'https://rpc.conet.network'
 const CoNETDePINMainchainSC = '0xc4C9927516db9BBe42DC0b003A7AB0946AC649C1'
 const CoNETDePINHoleskySCAddress = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'.toLowerCase()
@@ -42,7 +42,7 @@ const _transfer = async () => {
 	try {
 		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()
-		logger(inspect(kk))
+		logger(Colors.magenta(`_transfer success! tx = ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 	}
@@ -93,10 +93,10 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1175277
-const stop_block = 1175278
+const start_block = 1159988
+const stop_block = 1204595
 const blockArray: number[] = []
-
+logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block} with ${CoNETDepinHoleskyAdmin.address}`))
 for (let i = start_block;i < stop_block; i ++) {
 	blockArray.push(i)
 }

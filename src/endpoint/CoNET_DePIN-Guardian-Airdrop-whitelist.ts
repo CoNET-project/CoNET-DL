@@ -15,10 +15,6 @@ const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.initManager[1], endPointHo
 
 const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, CoNETDepinHoleskyAdmin)
 const wallets: string[] = [
-	"0x50B831D33162031c40c3dC1391faa3f03423B18B",
-	"0xdFE97265765291171de6EE92f6445D3986b4dcdB",
-	"0xBea9Cf2EFE2919662862Ef9C8743cb32Ec012b8f",
-	"0x56B4B91E8E4b413A06caF977e46766c93da8b184"
 ]
 
 const start = () => {

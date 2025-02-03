@@ -14,20 +14,20 @@ const start = async (fileName: string) => {
 		const _wallets: string[] = data.toString().split('\n')
 		const wallets: string[] = []
 		logger(JSON.stringify(_wallets))
-		// _wallets.forEach(n => {
-		// 	const rr = ethers.getAddress(n)
-		// 	if (!rr) {
-		// 		return logger(`Error Wallet => ${n}`)
-		// 	}
-		// 	wallets.push(rr)
-		// })
-		// const pay = wallets.map(n => '200')
-		// transferCCNTP(masterSetup.conetCNTPAdmin[5], wallets, pay, err => {
-		// 	if (err) {
-		// 		return logger(err)
-		// 	}
-		// 	logger(`success!`)
-		// })
+		_wallets.forEach(n => {
+			const rr = ethers.getAddress(n)
+			if (!rr) {
+				return logger(`Error Wallet => ${n}`)
+			}
+			wallets.push(rr)
+		})
+		const pay = wallets.map(n => '200')
+		transferCCNTP(masterSetup.conetCNTPAdmin[5], wallets, pay, err => {
+			if (err) {
+				return logger(err)
+			}
+			logger(`success!`)
+		})
 	})
 }
 const [,,...args] = process.argv

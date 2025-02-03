@@ -5,11 +5,11 @@ import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 
-const CoNETMainChainRPC = 'http://38.102.126.53:8000'
+const CoNETMainChainRPC = 'http://38.102.126.53:8887'
 const CoNETHoleskyRPC = 'https://rpc.conet.network'
 const CoNETDePINMainchainSC = '0xc4C9927516db9BBe42DC0b003A7AB0946AC649C1'
 const CoNETDePINHoleskySCAddress = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'.toLowerCase()
-const CoNETDePINMainchainBridgeAddress = '0x242D503a29EaEF650615946A8C5eB2CD6c0164d6'
+const CoNETDePINMainchainBridgeAddress = '0x673d6632A80eAD21ceA3B80cBc60a706F91bACa8'
 
 const endPointHolesky = new JsonRpcProvider(CoNETHoleskyRPC)
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
@@ -93,7 +93,7 @@ const getTx = async (tx: string) => {
 
 
 const daemondStart = () => {
-	
+	logger(Colors.magenta(`CoNET DePIN airdrop daemon Start with ${CoNETDepinHoleskyAdmin.address}`))
 	endPointHolesky.on('block', async block => {
 		holeskyBlockListenning(block)
 	})
