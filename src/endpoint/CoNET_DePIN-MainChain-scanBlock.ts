@@ -102,7 +102,7 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1162260
+const start_block = 1164925
 const stop_block = 1204768
 const blockArray: number[] = []
 logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block}`))
