@@ -1,4 +1,4 @@
-import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt} from 'ethers'
+import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther, BigNumberish} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
 import CONETDePIN_Airdrop from './CNTPairdrop.json'
@@ -20,14 +20,14 @@ const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINH
 const workSC: Contract[] = []
 
 
-for (let i = 5; i < masterSetup.conetDePINAdmin_scan.length; i ++ ) {
+for (let i = 0; i < masterSetup.conetDePINAdmin_scan.length; i ++ ) {
 	const wallet = new Wallet(masterSetup.conetDePINAdmin_scan[i], endPointCoNETMainnet)
 	workSC.push(new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, wallet))
 }
 
 interface transferData {
 	toAddress: string
-	value: BigInt
+	value: BigNumberish
 	hash: string
 }
 const transferPool: transferData[] = []
@@ -50,7 +50,7 @@ const _transfer = async () => {
 	try {
 		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()
-		logger(Colors.magenta(`_transfer success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
+		logger(Colors.magenta(`_transfer ${ data.toAddress} => ${formatEther(data.value)} success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
 	} catch (ex: any) {
 
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
@@ -65,7 +65,7 @@ const checkTransfer = async (tR: TransactionReceipt) => {
 		const LogDescription = CoNETDePINHoleskySC.interface.parseLog(log)
 		if (LogDescription?.name === 'bridgeTo') {
 			const toAddress  = LogDescription.args[0]
-			const value: BigInt = LogDescription.args[1]
+			const value: BigNumberish = LogDescription.args[1]
 			const hash = tR.hash
 			transferPool.push ({toAddress, value, hash})
 			_transfer()
@@ -102,9 +102,9 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1185626
-//const stop_block = 1204768
-const stop_block = 1200000
+const start_block = 1200000
+const stop_block = 1204768
+
 const blockArray: number[] = []
 logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block}`))
 
