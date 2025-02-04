@@ -49,7 +49,7 @@ const _transfer = async () => {
 	logger(inspect(data, false, 3, true))
 	try {
 		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
-		//const kk = await tx.wait()
+		const kk = await tx.wait()
 		logger(Colors.magenta(`_transfer ${ data.toAddress} => ${formatEther(data.value)} success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
 	} catch (ex: any) {
 
@@ -102,7 +102,7 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1201021
+const start_block = 1202358
 const stop_block = 1204768
 
 const blockArray: number[] = []
