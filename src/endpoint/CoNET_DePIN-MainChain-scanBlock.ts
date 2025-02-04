@@ -20,7 +20,7 @@ const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINH
 const workSC: Contract[] = []
 
 
-for (let i = 0; i < masterSetup.conetDePINAdmin_scan.length; i ++ ) {
+for (let i = 5; i < masterSetup.conetDePINAdmin_scan.length; i ++ ) {
 	const wallet = new Wallet(masterSetup.conetDePINAdmin_scan[i], endPointCoNETMainnet)
 	workSC.push(new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, wallet))
 }
@@ -102,8 +102,9 @@ const getTx = async (tx: string) => {
 }
 
 
-const start_block = 1164925
-const stop_block = 1204768
+const start_block = 1185626
+//const stop_block = 1204768
+const stop_block = 1200000
 const blockArray: number[] = []
 logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block}`))
 
