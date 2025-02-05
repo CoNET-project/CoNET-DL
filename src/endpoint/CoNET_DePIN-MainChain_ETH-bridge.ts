@@ -9,7 +9,7 @@ import {mapLimit} from 'async'
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 
-const CoNET_mainnet_ETH_pool_Addr = '0xE1535C630bd9AFa420b1b300f743d8a7FD3E3864'.toLowerCase()
+const CoNET_mainnet_ETH_pool_Addr = '0xC9039A1eb88346E67879767908bF1924246430b6'.toLowerCase()
 
 const CoNETDePIN_pool_Manager_Addr = '0xB5E80a3de71931F8B0EdB1A4dF524Ad2e09D108a'
 
