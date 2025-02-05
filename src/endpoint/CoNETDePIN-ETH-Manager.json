@@ -1,7 +1,7 @@
 [
 	{
 		"inputs": [],
-		"stateMutability": "payable",
+		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
 	{
@@ -29,11 +29,27 @@
 				"internalType": "bytes32",
 				"name": "_tx",
 				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
 			}
 		],
-		"name": "_bridgeExit",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"name": "_checkFormat",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "pure",
 		"type": "function"
 	},
 	{
@@ -42,17 +58,114 @@
 				"internalType": "bytes32",
 				"name": "_tx",
 				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
 			}
 		],
-		"name": "_bridgeExitTx",
+		"name": "_getHash",
 		"outputs": [
 			{
-				"internalType": "bool",
-				"name": "isUsed",
-				"type": "bool"
+				"internalType": "bytes32",
+				"name": "hash",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "_tx",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "_getTxData",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "isUsed",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct txData",
+				"name": "data",
+				"type": "tuple"
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "_initTxData",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "bool",
+						"name": "isUsed",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct txData",
+				"name": "data",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "pure",
 		"type": "function"
 	},
 	{
@@ -72,19 +185,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "_tx",
-				"type": "bytes32"
-			}
-		],
-		"name": "bridgeExit",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -139,12 +239,86 @@
 				"type": "bytes32"
 			}
 		],
-		"name": "isExistTx",
+		"name": "getVotedAddress",
 		"outputs": [
 			{
-				"internalType": "bool",
+				"internalType": "address[]",
+				"name": "votedAddresses",
+				"type": "address[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "_tx",
+				"type": "bytes32"
+			}
+		],
+		"name": "getVotedLength",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "length",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
 				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "mintTx",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "isUsed",
 				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "addresss",
+				"type": "address[]"
+			}
+		],
+		"name": "returnVoteCost",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalVotes",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -168,7 +342,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "makeExitTx",
+		"name": "voteTx",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -179,29 +353,19 @@
 				"internalType": "bytes32",
 				"name": "",
 				"type": "bytes32"
-			}
-		],
-		"name": "mintTx",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "tx",
-				"type": "bytes32"
 			},
 			{
 				"internalType": "uint256",
-				"name": "value",
+				"name": "",
 				"type": "uint256"
-			},
+			}
+		],
+		"name": "votedTx",
+		"outputs": [
 			{
 				"internalType": "address",
-				"name": "to",
+				"name": "",
 				"type": "address"
-			},
-			{
-				"internalType": "bool",
-				"name": "isUsed",
-				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

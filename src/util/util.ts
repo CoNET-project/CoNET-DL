@@ -2435,16 +2435,10 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 // 	const kk = await sendGuardianNodesContract(
 // 		masterSetup.conetFaucetAdmin[0], 
 // 		[
-// 			'0xe24BC468f369bfDA7db802b62AE623cFa83005aE', 
-// 			'0x6675889c247bEd28cca7b511e83C7dD591C0C6f3',
-// 			'0x6771287b9060fEDDe72474594781ba36ac90DE42',
-// 			'0x703c0ba2a471D66d7a4D782bAE567bA6080B48c7',
-// 			'0xE5E7107EE1dd1F768585c6a39Ca5f82c911071B9',
-// 			'0x9E439389Ea6d6d348e5BC5b45e72ede3B2a95a94'
+// 			'0x10dEA644caee3af79016703f30d1A91f00418FF0',
 // 		],
-// 		'0xbbaF07E57AFb413F006aa29a3486f1Bf389Ad209', 
-// 		'0xe0468d69ad1780c4fbc47d839f293a37cc76205a376058729ee05491a7835ce7')
+// 		'0xcF6AD29f268f4B62a0c2d0CB9816d46e4a0F1f94', 
+// 		'0x10c0a5b28aed84371c099cd0cfb089373ff3b043ab164a6f36338ded3d331cc4')
 // 	logger(kk)
 
 // }
-
