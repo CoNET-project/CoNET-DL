@@ -14,7 +14,7 @@ const CoNET_mainnet_ETH_pool_Addr = '0xE1535C630bd9AFa420b1b300f743d8a7FD3E3864'
 const CoNETDePIN_pool_Manager_Addr = '0xB5E80a3de71931F8B0EdB1A4dF524Ad2e09D108a'
 
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
-const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager[3], endPointCoNETMainnet)
+const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager[0], endPointCoNETMainnet)
 
 
 const CONETDePIN_Eth_PoolSC = new Contract(CoNET_mainnet_ETH_pool_Addr, CONETDePIN_Eth_Pool_ABI, endPointCoNETMainnet)
