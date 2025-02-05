@@ -59,7 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
-	ETH_Manager: string
+	ETH_Manager: string[]
 	conetDePINAdmin_scan: string[]
 	conetDePINEthAdmin: string[]
 	conetDePINAdmin: string[]

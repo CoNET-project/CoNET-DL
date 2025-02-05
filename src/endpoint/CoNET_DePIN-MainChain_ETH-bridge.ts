@@ -11,10 +11,10 @@ const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 
 const CoNET_mainnet_ETH_pool_Addr = '0xE1535C630bd9AFa420b1b300f743d8a7FD3E3864'.toLowerCase()
 
-const CoNETDePIN_pool_Manager_Addr = '0xfBE7e0Fdae931d2c93A2Fe78e8638386Ab2dD252'
+const CoNETDePIN_pool_Manager_Addr = '0xB5E80a3de71931F8B0EdB1A4dF524Ad2e09D108a'
 
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
-const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager, endPointCoNETMainnet)
+const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager[3], endPointCoNETMainnet)
 
 
 const CONETDePIN_Eth_PoolSC = new Contract(CoNET_mainnet_ETH_pool_Addr, CONETDePIN_Eth_Pool_ABI, endPointCoNETMainnet)
@@ -46,7 +46,7 @@ const _transfer = async () => {
 	try {
 		const tx = await CoNETDePIN_pool_ManagerSC.voteTx(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()
-		logger(Colors.blue(`ETH Bridge [${Colors.green(data.hash)}] success $${Colors.green(formatEther(data.value))} to [${Colors.green(data.toAddress)}]`))
+		logger(Colors.blue(`ETH Bridge ${tx.hash} [${Colors.green(data.hash)}] success $${Colors.green(formatEther(data.value))} to client [${Colors.green(data.toAddress)}] with ${conetDePINEthAdmin.address}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC makeExitTx Error! ${ex.message}`))
 	}
@@ -88,7 +88,6 @@ const bridgeBlockListenning = async (block: number) => {
 		
 	}
 }
-
 
 
 const getTx = async (tx: string) => {
