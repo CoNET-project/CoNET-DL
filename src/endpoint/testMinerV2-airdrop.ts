@@ -189,7 +189,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	
 	// listenEposh()
 	let ii = 0
-	mapLimit(wallets, 1, async (n, next) => {
+	mapLimit(wallets, 10, async (n, next) => {
 		// await getFaucet (n)
 		// await addReferrer(n)
 		await airdrop(n, ++ii)
