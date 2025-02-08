@@ -9,7 +9,7 @@ import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 import {inspect} from 'node:util'
 import CONET_Point_ABI from './cCNTP.json'
 
-const conet_Holesky_RPC = 'https://rpc.conet.network'
+const conet_Holesky_RPC = 'https://cancun-rpc.conet.network'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 const CNTP_Addr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const wallet = new ethers.Wallet(masterSetup.conetFaucetAdmin[1], provider)
