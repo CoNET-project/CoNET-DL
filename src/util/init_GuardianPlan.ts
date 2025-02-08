@@ -5,12 +5,13 @@ import {masterSetup} from './util'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import {mapLimit} from 'async'
-
+import NodesInfoABI_Holesky from '../endpoint/CONET_nodeInfo.ABI.json'
+import NodesInfoABI_Cancun from './GuardNodeInfoCancunABI.json'
 const conetHoleskyRPC = 'https://rpc.conet.network'
 const GuardianNFT_holesky = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const GuardianNFT_Cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 const CONET_cancunRPC = 'https://cancun-rpc.conet.network'
-
+const GuardNodeInfoAddr_Cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 
 const conet_holesky = new ethers.JsonRpcProvider(conetHoleskyRPC)
 const conet_Cancun = new ethers.JsonRpcProvider(CONET_cancunRPC)
@@ -186,5 +187,58 @@ const addNodes = async () => {
 	}
 	processAddNode()
 }
+const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'.toLowerCase()
+const GuardianNodesInfo_Holesky = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI_Holesky, conet_holesky)
 
-addNodeReferrerAddressBatch()
+const adminWallets: ethers.Contract[] = []
+for (let i = 0; i < masterSetup.guardianAmin.length; i ++ ) {
+	const wallet = new ethers.Wallet(masterSetup.guardianAmin[i], conet_Cancun)
+	const Contract_Cancun = new ethers.Contract(GuardNodeInfoAddr_Cancun, NodesInfoABI_Cancun, wallet)
+	adminWallets.push(Contract_Cancun)
+}
+
+const getNodeInfo = (nodeID: number) => new Promise(async resolve=> {
+	let ret = true
+	const adminContract = adminWallets.shift()
+	if (!adminContract) {
+		return setTimeout(() => {
+			resolve (getNodeInfo(nodeID))
+		}, 1000)
+	}
+	
+	try {
+		const nodeInfo = await GuardianNodesInfo_Holesky.getNodeInfoById(nodeID)
+		if (nodeInfo.ipaddress) {
+			const tx = await adminContract.modify_nodes(nodeID, nodeInfo.ipaddress, nodeInfo.regionName, nodeInfo.pgp )
+			await tx.wait()
+			logger(Colors.blue(`modify_nodes [${nodeID}] => [${nodeInfo.ipaddress}] Success!`))
+		} else {
+			ret = false
+		}
+		
+	} catch (ex: any) {
+		logger(Colors.red(`getNodeInfo Error! ${ex.message}`))
+		ret = false
+	}
+	adminWallets.push(adminContract)
+	resolve(ret)
+})
+
+const initGuardNodeInfo = async () => {
+	const maxNodes = await GuardianContract_holesky.currentNodeID()
+	const scanNodes = parseInt(maxNodes.toString())
+	const nodes = []
+	for (let i = 100; i < scanNodes; i ++) {
+		nodes.push (i)
+	}
+
+	mapLimit(nodes, masterSetup.guardianAmin.length, async (n, next) => {
+		const ret = await getNodeInfo(n)
+		if (!ret) {
+			throw (new Error('success!'))
+		}
+	}, err => {
+		logger(Colors.magenta(`All success!`))
+	})
+}
+initGuardNodeInfo()

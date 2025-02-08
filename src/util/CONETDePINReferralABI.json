@@ -1,0 +1,166 @@
+[
+	{
+	  "inputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "constructor"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "referrer",
+		  "type": "address"
+		}
+	  ],
+	  "name": "addReferrer",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "",
+		  "type": "address"
+		}
+	  ],
+	  "name": "adminList",
+	  "outputs": [
+		{
+		  "internalType": "bool",
+		  "name": "",
+		  "type": "bool"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "addr",
+		  "type": "address"
+		},
+		{
+		  "internalType": "bool",
+		  "name": "status",
+		  "type": "bool"
+		}
+	  ],
+	  "name": "changeAddressInAdminlist",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "refere",
+		  "type": "address"
+		},
+		{
+		  "internalType": "address[]",
+		  "name": "referees",
+		  "type": "address[]"
+		}
+	  ],
+	  "name": "checkReferees",
+	  "outputs": [
+		{
+		  "internalType": "bool",
+		  "name": "hasAddress",
+		  "type": "bool"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "referrer",
+		  "type": "address"
+		},
+		{
+		  "internalType": "uint256",
+		  "name": "start",
+		  "type": "uint256"
+		}
+	  ],
+	  "name": "getReferees",
+	  "outputs": [
+		{
+		  "internalType": "address[]",
+		  "name": "referees",
+		  "type": "address[]"
+		},
+		{
+		  "internalType": "uint256",
+		  "name": "_total_length",
+		  "type": "uint256"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "referrer",
+		  "type": "address"
+		}
+	  ],
+	  "name": "getReferees_length",
+	  "outputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "_total_length",
+		  "type": "uint256"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "referee",
+		  "type": "address"
+		}
+	  ],
+	  "name": "getReferrer",
+	  "outputs": [
+		{
+		  "internalType": "address",
+		  "name": "referrer",
+		  "type": "address"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "referrer",
+		  "type": "address"
+		},
+		{
+		  "internalType": "address",
+		  "name": "_referee",
+		  "type": "address"
+		}
+	  ],
+	  "name": "initAddReferrer",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	}
+  ]

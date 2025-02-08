@@ -25,16 +25,16 @@ const addAdmin = () => {
 	logger(`master wallet [${adminWallet.address}]`)
 
 	const Contract = new  ethers.Contract(GuardianMiningAddr, GuardianMiningABI, adminWallet)
-	mapLimit(adminList, 1, async (n, next) => {
-		await Contract.changeAddressInAdminlist(n, true)
-	}, (err: any)=> {
-		if (err) {
-			logger(Colors.red(`addAdmin Error! ${err.message}`))
-		} else {
-			logger(Colors.blue(`addAdmin success!`))
-		}
+	// mapLimit(adminList, 1, async (n, next) => {
+	// 	await Contract.changeAddressInAdminlist(n, true)
+	// }, (err: any)=> {
+	// 	if (err) {
+	// 		logger(Colors.red(`addAdmin Error! ${err.message}`))
+	// 	} else {
+	// 		logger(Colors.blue(`addAdmin success!`))
+	// 	}
 		
-	})
+	// })
 }
 
 let EPOCH = 0

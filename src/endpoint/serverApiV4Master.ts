@@ -18,7 +18,7 @@ import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
-
+import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -307,8 +307,9 @@ class conet_dl_server {
 		this.startServer()
 
 		provideCONET.on ('block', async _block => {
-			if (_block === currentEpoch + 1 ) {
-				currentEpoch++
+			if (_block === currentEpoch + 2 ) {
+				currentEpoch ++
+				startProcess()
 				return stratlivenessV2(_block, this)
 			}
 		})
@@ -397,9 +398,14 @@ class conet_dl_server {
 			if (!address) {
 				address = '0x0000000000000000000000000000000000000000'
 			}
+
 			address = address.toLowerCase()
-			
+
+			refferInit(wallet, address)
+			initCNTP(wallet)
+
 			ReferralsMap.set(wallet, address)
+
 			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
 			return res.status(200).json({address}).end()
 		})
@@ -426,7 +432,6 @@ class conet_dl_server {
 				logger(Colors.red(`master fx168HappyNewYear req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
-			
 		})
 		
 
