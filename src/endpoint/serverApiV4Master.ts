@@ -307,7 +307,12 @@ class conet_dl_server {
 		this.startServer()
 
 		provideCONET.on ('block', async _block => {
-			if (_block === currentEpoch + 2 ) {
+
+			if (_block % 2) {
+				return
+			}
+			
+			if ( _block === currentEpoch + 2 ) {
 				currentEpoch ++
 				startProcess()
 				return stratlivenessV2(_block, this)
