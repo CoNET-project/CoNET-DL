@@ -308,7 +308,7 @@ class conet_dl_server {
 
 		provideCONET.on ('block', async _block => {
 
-			if (_block % 2) {
+			if (! (_block % 2)) {
 				return
 			}
 
