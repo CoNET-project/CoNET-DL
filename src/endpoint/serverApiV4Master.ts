@@ -224,7 +224,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalMiners += body.users.length
 	epochTotal.totalConnectNode += 1
 
-	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
+	//logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
 	return res.status(200).end()
 }
 
@@ -311,12 +311,12 @@ class conet_dl_server {
 			if (_block % 2) {
 				return
 			}
+
 			
-			if ( _block === currentEpoch + 2 ) {
 				currentEpoch ++
 				startProcess()
 				return stratlivenessV2(_block, this)
-			}
+			
 		})
 		
 	}
