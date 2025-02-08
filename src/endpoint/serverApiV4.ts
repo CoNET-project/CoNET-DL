@@ -69,7 +69,7 @@ const get_epoch_total = async () => {
 	
 	try {
 		const data = await readFile(filename1, 'utf8')
-		logger(inspect(data, false, 3, true))
+		
 		const ratedata = JSON.parse(data)
 		eposh_total.set(block, ratedata)
 		eposh_total.delete(block - 4)
