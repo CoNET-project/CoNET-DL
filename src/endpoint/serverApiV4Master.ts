@@ -238,7 +238,7 @@ const moveData = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
 
-	const block = currentEpoch - 1
+	const block = currentEpoch
 	
 	let _wallets_: Map<string, true> = new Map()
 	let _users_: Map<string, true> = new Map()
