@@ -288,7 +288,10 @@ const moveData = async () => {
 	await Promise.all ([
 		writeFile(filename, JSON.stringify([..._wallets_.keys()]), 'utf8'),
 		writeFile(filename1, JSON.stringify(jsonData), 'utf8'),
-		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8')
+		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8'),
+		writeFile(filename3, JSON.stringify([..._users_.keys()]), 'utf8'),
+		writeFile(filename4, JSON.stringify(jsonData), 'utf8'),
+		writeFile(filename5, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
