@@ -296,7 +296,7 @@ class conet_dl_server_v4 {
 
 		router.post ('/conet-faucet', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
+			//logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
 			let wallet_add = req.body?.walletAddr
 
 			if (! wallet_add ||! ipaddress) {
@@ -484,7 +484,7 @@ class conet_dl_server_v4 {
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			//logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
 			res.status(404).end()
 			return res.socket?.end().destroy()
 		})
