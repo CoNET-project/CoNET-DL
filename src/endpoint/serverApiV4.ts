@@ -64,7 +64,7 @@ const eposh_total: Map<number, epochRate> = new Map()
 const filePath = '/home/peter/.data/v2/'
 
 const get_epoch_total = async () => {
-	const block = currentEpoch -1
+	const block = currentEpoch - 3
 	const filename1 = `${filePath}${block}.total`
 	
 	try {
