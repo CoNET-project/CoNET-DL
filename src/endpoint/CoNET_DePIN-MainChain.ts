@@ -90,12 +90,18 @@ const holeskyBlockListenning = async (block: number) => {
 const getTx = async (tx: string) => {
 	return await endPointHolesky.getTransactionReceipt(tx)
 }
+let currentBlock = 0
 
-
-const daemondStart = () => {
-	logger(Colors.magenta(`CoNET DePIN airdrop daemon Start with ${CoNETDepinHoleskyAdmin.address}`))
+const daemondStart = async () => {
+	
+	currentBlock = await endPointHolesky.getBlockNumber()
+	logger(Colors.magenta(`CoNET DePIN airdrop daemon Start with ${CoNETDepinHoleskyAdmin.address} block [${currentBlock}]`))
 	endPointHolesky.on('block', async block => {
-		holeskyBlockListenning(block)
+		if (block > currentBlock) {
+			currentBlock = block
+			holeskyBlockListenning(block)
+		}
+		
 	})
 }
 

@@ -1,0 +1,191 @@
+[
+	{
+	  "inputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "constructor"
+	},
+	{
+	  "inputs": [],
+	  "name": "GuardianNodeRate",
+	  "outputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "",
+		  "type": "uint256"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "",
+		  "type": "address"
+		}
+	  ],
+	  "name": "adminList",
+	  "outputs": [
+		{
+		  "internalType": "bool",
+		  "name": "",
+		  "type": "bool"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "addr",
+		  "type": "address"
+		},
+		{
+		  "internalType": "bool",
+		  "name": "status",
+		  "type": "bool"
+		}
+	  ],
+	  "name": "changeAddressInAdminlist",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "guardianNodeRate",
+		  "type": "uint256"
+		},
+		{
+		  "internalType": "uint256",
+		  "name": "_referralsRate",
+		  "type": "uint256"
+		}
+	  ],
+	  "name": "changeRate",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	},
+	{
+	  "inputs": [],
+	  "name": "getReferrerLength",
+	  "outputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "ret",
+		  "type": "uint256"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "reff",
+		  "type": "address"
+		}
+	  ],
+	  "name": "isReffInArray",
+	  "outputs": [
+		{
+		  "internalType": "bool",
+		  "name": "ret",
+		  "type": "bool"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [],
+	  "name": "makeReffArray",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "",
+		  "type": "uint256"
+		}
+	  ],
+	  "name": "referralsAddress",
+	  "outputs": [
+		{
+		  "internalType": "address",
+		  "name": "",
+		  "type": "address"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [],
+	  "name": "referralsRate",
+	  "outputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "",
+		  "type": "uint256"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "address",
+		  "name": "",
+		  "type": "address"
+		}
+	  ],
+	  "name": "referrerAddressRate",
+	  "outputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "",
+		  "type": "uint256"
+		}
+	  ],
+	  "stateMutability": "view",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "rate",
+		  "type": "uint256"
+		}
+	  ],
+	  "name": "startGuardianReferrals",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	},
+	{
+	  "inputs": [
+		{
+		  "internalType": "uint256",
+		  "name": "rate",
+		  "type": "uint256"
+		}
+	  ],
+	  "name": "startNodeMining",
+	  "outputs": [],
+	  "stateMutability": "nonpayable",
+	  "type": "function"
+	}
+  ]

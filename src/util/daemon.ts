@@ -9,13 +9,13 @@ import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 
 let EPOCH = 0
 let transferEposh = 0
-const newGuardianNodes_ContractV4 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
+const newGuardianNodes_Cancun = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const conet_Holesky_rpc = 'https://rpc.conet.network'
 
 const nodesEachEPOCH = 304.41400304414003
 const nodeRferralsEachEPOCH = 16.742770167427702
 const CONETProvider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-const guardianSmartContract = new ethers.Contract(newGuardianNodes_ContractV4, GuardianNodesV2ABI, CONETProvider)
+const guardianSmartContract = new ethers.Contract(newGuardianNodes_Cancun, GuardianNodesV2ABI, CONETProvider)
 
 const guardianReferrals = async (block: number) => {
 
@@ -92,7 +92,7 @@ const guardianMining = async (block: number) => {
 	const node0: string[] = nodes[0].map((n: string) => n)
 	const node1: BigInt[] = nodes[1].map((n: BigInt) => n)
 
-	node1[869] = node1[868]=node1[864]
+	node1[869] = node1[868] = node1[864]
 	
 	node0.splice(864,2)
 	node1.splice(864,2)
@@ -100,7 +100,7 @@ const guardianMining = async (block: number) => {
 	
 	const _nodesAddress: string[] = node0.map((n: string) => n)
 	const __nodesBoosts: number[] = node1.map((n: BigInt) => n !== BigInt(3) ? parseInt(n.toString()) : 300)
-	const _nodesBoosts: number[] = __nodesBoosts.map(n => n === 100 ? 100 : n <298 ? n + 2 : 300)
+	const _nodesBoosts: number[] = __nodesBoosts.map(n => n === 100 ? 100 : n < 298 ? n + 2 : 300)
 
 	const NFTIds = _nodesAddress.map ((n, index) => 100 + index)
 
@@ -161,4 +161,3 @@ const startDaemonProcess = async (block: number) => {
 	guardianReferrals(block)
 }
 
-startListeningCONET_Holesky_EPOCH()
