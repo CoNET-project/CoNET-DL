@@ -16,7 +16,7 @@ import ReferrerV3 from './ReferralsV3.json'
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const ReferrerV3Addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
-const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
+const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
 
 
@@ -86,6 +86,9 @@ const listenEposh = async () => {
 	let currentEpoch = await provider.getBlockNumber()
 
 	provider.on ('block', block => {
+		if (block % 2) {
+			return
+		}
 		currentEpoch  = block
 		const obj = epochTotal.get(block-1)
 		if (!obj) {
