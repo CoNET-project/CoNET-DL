@@ -229,14 +229,14 @@ const miningData = (body: any, res: Response) => {
 }
 
 
-const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
+const rateAddr = '0xE95b13888042fBeA32BDce7Ae2F402dFce11C1ba'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
 const ReferralsMap: Map<string, string> = new Map()
 
 const moveData = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
-	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
+	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
 
 	const block = currentEpoch - 1
 	

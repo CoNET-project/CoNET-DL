@@ -111,16 +111,16 @@ const addAdmin = () => {
 	const adminWallet = new ethers.Wallet(masterSetup.guardianAmin[3], conet_Cancun)
 	logger(`master wallet [${adminWallet.address}]`)
 	const Contract = new  ethers.Contract(GuardianNFT_Cancun, GuardianNodesV2ABI, adminWallet)
-	mapLimit(adminList, 1, async (n, next) => {
-		await Contract.changeAddressInAdminlist(n, true)
-	}, (err: any)=> {
-		if (err) {
-			logger(Colors.red(`addAdmin Error! ${err.message}`))
-		} else {
-			logger(Colors.blue(`addAdmin success!`))
-		}
+	// mapLimit(adminList, 1, async (n, next) => {
+	// 	await Contract.changeAddressInAdminlist(n, true)
+	// }, (err: any)=> {
+	// 	if (err) {
+	// 		logger(Colors.red(`addAdmin Error! ${err.message}`))
+	// 	} else {
+	// 		logger(Colors.blue(`addAdmin success!`))
+	// 	}
 		
-	})
+	// })
 }
 
 const addNodeReferrerAddressBatch = async () => {
@@ -241,4 +241,4 @@ const initGuardNodeInfo = async () => {
 		logger(Colors.magenta(`All success!`))
 	})
 }
-initGuardNodeInfo()
+addAdmin()
