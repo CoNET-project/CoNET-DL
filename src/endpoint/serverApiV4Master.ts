@@ -279,6 +279,9 @@ const moveData = async () => {
 	const filename = `${filePath}${block}.wallet`
 	const filename1 = `${filePath}${block}.total`
 	const filename2 = `${filePath}${block}.users`
+	const filename3 = `${filePath}current.wallet`
+	const filename4 = `${filePath}current.total`
+	const filename5 = `${filePath}current.users`
 
 	const jsonData = {totalMiners, minerRate, totalUsrs, epoch: block}
 	logger(inspect(jsonData, false, 3, true))

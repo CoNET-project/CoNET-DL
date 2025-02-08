@@ -59,22 +59,22 @@ const getreferralsCount = async (addr: string, _res: Response) => {
 	}
 }
 
-const eposh_total: Map<number, epochRate> = new Map()
+let eposh_total:epochRate|null = null
 
 const filePath = '/home/peter/.data/v2/'
 
 const get_epoch_total = async () => {
 	const block = currentEpoch - 3
-	const filename1 = `${filePath}${block}.total`
+	const filename1 = `${filePath}current.total`
 	
 	try {
 		const data = await readFile(filename1, 'utf8')
 		
-		const ratedata = JSON.parse(data)
-		eposh_total.set(block, ratedata)
-		eposh_total.delete(block - 4)
+		const ratedata: epochRate = JSON.parse(data)
+		eposh_total = ratedata
+		
 	} catch (ex: any) {
-		eposh_total.set(block, {totalMiners: 0, minerRate: 0, totalUsers: 0})
+		eposh_total = {totalMiners: 0, minerRate: 0, totalUsers: 0}
 		logger(Colors.red(`get_epoch_total ${filename1} Error!`), ex.message)
 	}
 }
@@ -136,7 +136,10 @@ const listenEpoch = async () => {
 			const epoch = parseInt(filename.split('.')[0]) + 1
 			if (epoch > currentEpoch) {
 				currentEpoch = epoch
-				await get_epoch_total()
+				setTimeout(async () => {
+					await get_epoch_total()
+				}, 1000)
+				
 			}
 			
 		}
@@ -365,8 +368,8 @@ class conet_dl_server_v4 {
 
 			const query = req.query
 			const epoch = currentEpoch
-			let obj = eposh_total.get(epoch)||eposh_total.get(epoch-4)||{}
-			return res.status(200).json(obj).end()
+			
+			return res.status(200).json(eposh_total).end()
 		})
 
 		router.post ('/PurchaseCONETianPlan', async (req: any, res: any) => {
