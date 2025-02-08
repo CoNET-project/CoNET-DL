@@ -3,7 +3,7 @@ import type { TLSSocketOptions } from 'node:tls'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
 import { homedir, platform } from 'node:os'
-import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations, conet_Holesky_rpc, transferCCNTP, checkSignObj, checkClaimeToeknbalance, getServerIPV4Address} from '../util/util'
+import { logger, getIpaddressLocaltion, regiestCloudFlare, sendCONET, getCONETConfirmations, conet_cancun_rpc, transferCCNTP, checkSignObj, checkClaimeToeknbalance, getServerIPV4Address} from '../util/util'
 import { createHash } from 'node:crypto'
 import type {RequestOptions, } from 'node:http'
 import {v4} from 'uuid'
@@ -826,7 +826,7 @@ let transferEposh = 0
 
 
 export const regiestMiningNode = async () => {
-	const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const _provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const privateKey = masterSetup.conetFaucetAdmin[0]
 	const nodeWallet = new ethers.Wallet(privateKey, _provider).address.toLowerCase()
 	const ipaddress = getServerIPV4Address(true)[0]

@@ -11,7 +11,7 @@ import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
 import { logger, newCNTP_Contract,
-	returnGuardianPlanReferral,checkSignObj, getNetworkName, getServerIPV4Address, conet_Holesky_rpc
+	returnGuardianPlanReferral,checkSignObj, getNetworkName, getServerIPV4Address, conet_cancun_rpc
 } from '../util/util'
 
 import CNTPAbi from '../util/cCNTP.json'
@@ -103,7 +103,7 @@ const addAttackToCluster = async (ipaddress: string) => {
 
  
 const unlockCNTP = async (wallet: string, privateKey: string) => {
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const walletObj = new ethers.Wallet(privateKey, provider)
 	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CNTPAbi, walletObj)
 	let tx

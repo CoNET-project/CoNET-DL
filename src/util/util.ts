@@ -32,13 +32,14 @@ import {abi as erc20TokenABI} from './erc20.json'
 
 import {Readable} from 'node:stream'
 
-export const conet_Holesky_rpc = 'https://rpc.conet.network'
+export const conet_Holesky_rpc1 = 'https://rpc.conet.network'
+export const conet_cancun_rpc = `https://cancun-rpc.conet.network`
 const bscMainchainRPC = 'https://bsc-dataseed.bnbchain.org/'
 const balstMainchainRPC = 'https://rpc.ankr.com/blast'
 
 const ethMainchainRPC = 'https://eth-mainnet.g.alchemy.com/v2/dxNi8w6owhHdzNZPXQPeppST3CqFRO-F'
-let provide_write = new ethers.JsonRpcProvider(conet_Holesky_rpc)
-let provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+let provide_write = new ethers.JsonRpcProvider(conet_cancun_rpc)
+let provideReader = new ethers.JsonRpcProvider(conet_cancun_rpc)
 let blast_current = 0
 const blast_EndPoints = ['https://wispy-greatest-telescope.blast-sepolia.quiknode.pro/eed482657dac9ab72cc8e710fa88ab4d6462cb98/', 'https://rpc.ankr.com/blast_testnet_sepolia','https://rpc.ankr.com/blast_testnet_sepolia/5e384380ae112067a637c50b7d8f2a3050e08db459e0a40a4e56950c7a27fc76','https://divine-lingering-water.blast-sepolia.quiknode.pro/be6893e1b1f57bac9a6e1e280f5ad46fddd6c146/']
 
@@ -1058,7 +1059,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 			referrer = ethers.getAddress(_referrer)
 		} catch (ex) {
 			logger (colors.grey(`checkReferralSign ethers.getAddress(${_referee}) || ethers.getAddress(${_referrer}) Error!`))
-			provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+			provideReader = new ethers.JsonRpcProvider(conet_cancun_rpc)
 			return resolve (false)
 		}
 		
@@ -1074,7 +1075,7 @@ export const checkReferralSign: (referee: string, referrer: string, ReferralsMap
 			uu = ReferralsMap.get(referee) || await contract.getReferrer(referee)
 			tt = await contract.getReferees(referee)
 		} catch(ex) {
-			provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+			provideReader = new ethers.JsonRpcProvider(conet_cancun_rpc)
 			resolve(false)
 			return  logger (colors.grey(`checkReferralSign call getReferrals Error, Try make new provide RPC`), ex)
 		}
@@ -1194,7 +1195,7 @@ export const getCNTPMastersBalance = async (privateKey: string) => {
 		CNTPMasterBalance = ethers.formatEther(await contract.balanceOf(CNTPMasterWallet))
 		CNTPReferralBalance = ethers.formatEther(await contract.balanceOf(CNTPReferralWallet))
 	} catch (ex) {
-		provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+		provideReader = new ethers.JsonRpcProvider(conet_cancun_rpc)
 		logger(colors.red(`getCNTPMastersBalance contract.balanceOf Error`))
 		return null
 	}
@@ -1312,7 +1313,7 @@ export const ReferralsReg_Blast: (referee: string, referrer: string, ReferralsMa
 			referrer = ethers.getAddress(_referrer)
 		} catch (ex) {
 			logger (colors.grey(`ReferralsReg_Blast ethers.getAddress(${_referee}) || ethers.getAddress(${_referrer}) Error!`))
-			provideReader = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+			provideReader = new ethers.JsonRpcProvider(conet_cancun_rpc)
 			return resolve (false)
 		}
 		
@@ -1791,7 +1792,7 @@ const GuardianPlanPrice = 1250
 
 
 export const checkReferralsV2_OnCONET_Holesky = async (wallet: string) => {
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const contract = new ethers.Contract(conet_Referral_contractv3, CONET_Referral_blast_v2, provider)
 	let uu
 	try {
@@ -1981,7 +1982,7 @@ const getCONETHoleskyClaimableContractAddress = (tokenName: string) => {
 export const sendClaimableAsset = async (privateKey: string, retClaimableContractAddress: string, toAddr: string, amount: string) => new Promise(resolve => {
 
 	const trySend = async () => {
-		const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+		const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 		const wallet = new ethers.Wallet(privateKey, provider)
 		const claimableContract = new ethers.Contract(retClaimableContractAddress, claimableToken, wallet)
 
@@ -2013,7 +2014,7 @@ const getReferralNode = async (contract: ethers.Contract, referrerAddr: string, 
 
 export const sendGuardianNodesContract = async (privateKey: string, nodeAddr: string[], paymentWallet: string, _tx: string) => new Promise(async resolve =>{
 	
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract_new, GuardianPlan_new_ABI, wallet)
 	
@@ -2038,7 +2039,7 @@ export const returnGuardianPlanReferral = async (nodes: number, referrerAddress:
 		return false
 	}
 
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const wallet = new ethers.Wallet(privateKey, provider)
 	const GuardianNodesContract = new ethers.Contract(GuardianNodes_Contract_new, GuardianPlan_new_ABI, wallet)
 
@@ -2080,7 +2081,7 @@ export const transferCCNTP = (walletList: string[], amount: string, callback: ()
 	if (walletList.length < 1) {
 		return callback ()
 	}
-	const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const wallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provider)
 	const cCNTPContract = new ethers.Contract(newCNTP_Contract, CONET_Point_ABI, wallet)
 
@@ -2134,7 +2135,7 @@ export const checkClaimeToeknbalance = async (wallet: string, claimeTokenName: s
 	if (!smartContractAddress) {
 		return false
 	}
-	const provide = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provide = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const claimableAdmin = new ethers.Wallet(masterSetup.claimableAdminNew, provide)
 	const claimableContract = new ethers.Contract(smartContractAddress, claimableToken, claimableAdmin)
 	let balance = ''
@@ -2313,7 +2314,7 @@ const burnFrom = async (claimeTokenName: string, wallet: string, _balance: strin
 	if (!smartContractAddress) {
 		return false
 	}
-	const provide = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provide = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	const claimableAdmin = new ethers.Wallet(masterSetup.conetFaucetAdmin[0], provide)
 	const claimableContract = new ethers.Contract(smartContractAddress, claimableToken, claimableAdmin)
 	try {

@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_Holesky_rpc, masterSetup} from '../util/util'
+import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_cancun_rpc, masterSetup} from '../util/util'
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
 import type { RequestOptions } from 'node:http'
@@ -24,7 +24,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
-const provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -161,7 +161,7 @@ let currentEpoch = 0
 // }
 
 const MaxCount = 1
-const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)

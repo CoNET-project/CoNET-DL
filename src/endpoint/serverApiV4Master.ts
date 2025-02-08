@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { masterSetup, getServerIPV4Address, conet_Holesky_rpc} from '../util/util'
+import { masterSetup, getServerIPV4Address, conet_cancun_rpc} from '../util/util'
 import {logger} from '../util/logger'
 import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
@@ -32,7 +32,7 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
-const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
 
 export const checkGasPrice = 1550000
 let startDailyPoolTranferProcess = false

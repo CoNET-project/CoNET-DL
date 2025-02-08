@@ -11,7 +11,7 @@ import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
 import Cluster from 'node:cluster'
-import { logger,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_Holesky_rpc, sendCONET
+import { logger,checkSignObj, getNetworkName, getCNTPMastersBalance, getServerIPV4Address, conet_cancun_rpc, sendCONET
 } from '../util/util'
 import {transferPool, startTransfer} from '../util/transferManager'
 import CGPNsABI from '../util/CGPNs.json'
@@ -191,7 +191,7 @@ const launshAndDeleteAllWalletInCLuster = ( server: string, livenessListeningPoo
 
 const startListeningCONET_Holesky_EPOCH = async (server: string, livenessListeningPool: Map <string, livenessListeningPoolObj>) => {
 	
-	const provideCONET = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+	const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
 	EPOCH = await provideCONET.getBlockNumber()
 	
 	logger(Colors.magenta(`startListeningCONET_Holesky_EPOCH_v2 [${EPOCH}] start!`))
@@ -308,7 +308,7 @@ const sendMesageToCluster = (server: string, path: string, pData: any, livenessL
 	req.end()
 }
 
-const _provider = new ethers.JsonRpcProvider(conet_Holesky_rpc)
+const _provider = new ethers.JsonRpcProvider(conet_cancun_rpc)
 const nodeWallet = new ethers.Wallet(mainKey, _provider).address.toLowerCase()
 
 const checkMiner = (clusterIPaddress: string, miningIpaddress: string, minerWallet: string, livenessListeningPool: Map <string, livenessListeningPoolObj> ) => new Promise( resolve => {
@@ -352,7 +352,7 @@ interface conetData {
 
 
 
-const etherNew_Init_Admin = new ethers.Wallet (mainKey, new ethers.JsonRpcProvider(conet_Holesky_rpc))
+const etherNew_Init_Admin = new ethers.Wallet (mainKey, new ethers.JsonRpcProvider(conet_cancun_rpc))
 
 let totalminerOnline = 0
 let EPOCH = 0
