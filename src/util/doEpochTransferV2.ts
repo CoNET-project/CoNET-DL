@@ -42,7 +42,7 @@ const burnCNTP = async (valueCNTP: number) => {
 }
 
 const stratFreeMinerTransfer = async (block: number) => {
-
+	logger(Color.blue(`stratFreeMinerTransfer ${block} `))
 	const _data = await getLocalIPFS (block.toString())
 	
 	let walletArray: string[]
@@ -76,10 +76,13 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
 
 	provider.on('block', async (_block: number) => {
-		if (_block === EPOCH + 1) {
-			stratFreeMinerTransfer(_block - 2)
-			EPOCH ++
+		if (_block % 2) {
+			return
 		}
+		
+		stratFreeMinerTransfer(_block - 2)
+		EPOCH ++
+		
 	})
 }
 
