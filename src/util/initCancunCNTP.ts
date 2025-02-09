@@ -15,7 +15,7 @@ const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
 const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
-const CoNETDePINMiningContract = '0x67EFf53e453C1B6d8609114d2351fCa18BFc0a32'
+const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
 const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
 
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
@@ -164,4 +164,3 @@ export const startProcess = async () => {
 	startProcess_CNTP()
 	startProcess_Reff()
 }
-
