@@ -171,8 +171,8 @@ const getFreeReferralsData = async (block: string, tableNodes: leaderboard[], to
 const localIPFS_path = '/home/peter/.data/v2/'
 
 const getLocalIPFS = async (block: string) => {
-	const path1 = join(localIPFS_path, `${block}.wallet`)
-	const path2 = join(localIPFS_path, `${block}.total`)
+	const path1 = join(localIPFS_path, `current.wallet`)
+	const path2 = join(localIPFS_path, `current.total`)
 	logger(Color.blue(`getLocalIPFS [${path1}] [${path2}]`))
 	const [total, wallet] = await Promise.all([
 		readFile(path2, 'utf8'),
@@ -261,9 +261,12 @@ let EPOCH = 0
 const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
 	provider.on('block', async (_block: number) => {
-		if (_block === EPOCH + 1) {
+		if (_block % 2) {
+			return
+		}
+		if (_block > EPOCH + 2) {
 			stratFreeMinerReferrals((_block - 2).toString())
-			EPOCH ++
+			EPOCH += 2
 		}
 	})
 
