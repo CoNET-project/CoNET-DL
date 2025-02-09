@@ -125,20 +125,23 @@ export const refferInit = async (wallet: string, reffer: string) => {
 	if (exiest) {
 		return 
 	}
+
 	RefferPool.set(wallet, true)
 
-	if (!reffer) {
+	if (!reffer || reffer === '') {
 		reffer = await referralsV3_Holesky_Contract.getReferrer(wallet)
 	}
 
 	if (!reffer || reffer == ethers.ZeroAddress) {
+		logger(Colors.gray(`refferInit ${wallet} has ethers.ZeroAddress STOP!`))
 		return
 	}
 	
 	const newRef = await referralsV3_Cancun_Contract.getReferrer(wallet)
-	if (newRef === ethers.ZeroAddress) {
+	if (newRef !== ethers.ZeroAddress) {
 		return
 	}
+	logger(Colors.gray(`refferInit added ${wallet} Reffe ${reffer} to Process POOL! Size ${ReffeProcess.length}`))
 	ReffeProcess.push ({wallet, reffer})
 }
 
