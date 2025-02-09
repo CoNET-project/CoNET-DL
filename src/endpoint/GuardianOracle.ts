@@ -24,9 +24,9 @@ interface quote {
 	}
 }
 
-const provide = new ethers.JsonRpcProvider('https://rpc.conet.network')
+const provide = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 const apiKey = masterSetup.CoinMarketCapAPIKey
-const oracleSC_addr = '0x8A7FD0B01B9CAb2Ef1FdcEe4134e32D066895e0c'
+const oracleSC_addr = '0x0Ac28e301FeE0f60439675594141BEB53853f7b9'
 const managerWallet = new ethers.Wallet(masterSetup.oracleManager, provide)
 const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerWallet)
 const client = new CoinMarketCap(apiKey)
@@ -51,7 +51,9 @@ const updateOracle = async (tokenNames: string[], price: number[]) => {
 	logger(inspect(priceArray, false, 3, true))
 	try {
 		const tx = await oracleSC.updatePrice(tokenNames, priceArray)
+		logger(`Write to Smart Contract success! ${tx.hash}`)
 		const ts = await tx.wait()
+		
 		return ts
 	} catch (ex) {
 		logger(Colors.magenta(`updateOracle Error!`), ex)
