@@ -69,6 +69,7 @@ for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 }
 
 const startProcess_Reff = async () => {
+	logger(Colors.blue(`startProcess startProcess_Reff POOL size = ${ReffeProcess.length}`))
 	const reff = ReffeProcess.shift()
 	if (!reff) {
 		return
@@ -84,7 +85,7 @@ const startProcess_Reff = async () => {
 	ReffeProcess = []
 	try {
 		const tx = await referralsV3_Cancun.initAddReferrer(reff.reffer, reff.wallet)
-		logger(Colors.blue(`startProcess initCNTP success! ${tx.hash}`))
+		logger(Colors.blue(`startProcess initCNTP success! ${tx.hash} POOL size = ${ReffeProcess.length}`))
 	} catch (ex: any) {
 		logger(Colors.red(`startProcess initCNTP Error! ${ex.message}`))
 	}
