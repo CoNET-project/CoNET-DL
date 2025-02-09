@@ -18,8 +18,8 @@ const CNTP_holder= '0x418833b70F882C833EF0F0Fcee3FB9d89C79d47C'
 const localIPFS_path = '/home/peter/.data/v2/'
 
 const getLocalIPFS = async (block: string) => {
-	const path1 = join(localIPFS_path, `${block}.wallet`)
-	const path2 = join(localIPFS_path, `${block}.total`)
+	const path1 = join(localIPFS_path, `current.wallet`)
+	const path2 = join(localIPFS_path, `current.total`)
 	logger(Color.blue(`getLocalIPFS [${path1}] [${path2}]`))
 	const [total, wallet] = await Promise.all([
 		readFile(path2, 'utf8'),
@@ -28,6 +28,7 @@ const getLocalIPFS = async (block: string) => {
 
 	return {total, wallet}
 }
+
 
 
 
