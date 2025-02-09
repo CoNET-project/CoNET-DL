@@ -277,11 +277,11 @@ const moveData = async () => {
 	const minerRate = (rate/totalMiners)/12
 	for (let w in [..._wallets_.keys()]) {
 		// refferInit(w, '')
-		initCNTP(w)
+		// initCNTP(w)
 	}
 	for (let w in [..._users_.keys()]) {
 		// refferInit(w, '')
-		initCNTP(w)
+		// initCNTP(w)
 	}
 
 	logger(Colors.magenta(`${block} move data connecting = ${epochAll.size} total [${totalMiners}] miners [${_wallets_.size}] users [${_users_.size}] rate ${minerRate}`))
