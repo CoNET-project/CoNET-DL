@@ -145,12 +145,12 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 }
 
 
-const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
+const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_contractV3 = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
-const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
+const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
@@ -428,7 +428,6 @@ class conet_dl_server {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
-
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
 			if (tx) {
 				return res.status(200).json(tx).end()
