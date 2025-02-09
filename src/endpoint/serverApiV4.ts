@@ -70,7 +70,7 @@ const get_epoch_total = async () => {
 		if (!data) {
 			return logger(`get_epoch_total Error, data null!`)
 		}
-		logger(inspect(data, false, 3, true))
+		
 		eposh_total = data
 	})
 

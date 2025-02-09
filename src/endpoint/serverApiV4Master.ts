@@ -396,7 +396,7 @@ class conet_dl_server {
 		})
 
 		router.post ('/epoch',(req: any, res: any) => {
-			logger(`router.post ('/epoch' `,inspect(EPOCH_DATA, false, 3, true))
+			
 			res.status(200).json(EPOCH_DATA).end()
 		})
 
