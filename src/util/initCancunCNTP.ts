@@ -12,7 +12,7 @@ import CoNET_CancunRefferABI from './CONETDePINReferralABI.json'
 
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
-const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
+const CoNET_CancunRPC = 'https://207.90.195.48:8001'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
