@@ -402,7 +402,7 @@ class conet_dl_server {
 
 
 
-		router.post('initV3',async (req: any, res: any) =>{
+		router.post('/initV3',async (req: any, res: any) =>{
 			
 			let wallet: string
 			try {

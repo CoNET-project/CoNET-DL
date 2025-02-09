@@ -417,7 +417,6 @@ class conet_dl_server_v4 {
 			} catch (ex) {
 				return res.status(403).end()
 			}
-			logger(`/initV3`)
 			return postLocalhost('/api/initV3', {wallet: wallet.toLowerCase()}, res)
 			
 		})
