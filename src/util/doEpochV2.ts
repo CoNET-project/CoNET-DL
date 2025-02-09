@@ -265,6 +265,7 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 			return
 		}
 		if (_block > EPOCH + 2) {
+			logger(`stratFreeMinerReferrals start at ${_block}`)
 			stratFreeMinerReferrals((_block - 2).toString())
 			EPOCH += 2
 		}
