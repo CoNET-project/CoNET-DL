@@ -4,10 +4,11 @@ import Color from 'colors/safe'
 import CNTP_multiTransferTokenABI from './CNTP_multiTransferTokenABI.json'
 import { inspect } from 'node:util'
 import {mapLimit} from 'async'
-const rpcUrl = 'https://rpc.conet.network'
-const CNTP_multiTransfer1 = '0x1250818e17D0bE3851E2B5769D9262a48fAB7065'
+const rpcUrl = 'https://cancun-rpc.conet.network'
+import CoNETDePINMiningABI from './CoNETDePINMiningABI.json'
 
-const CNTP_multiTransfer_new = '0x261BE4f90b84298eb84322A6Dc64ffD4D0c46D34'
+const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
+
 
 const transferTimeout = 1000 * 180			//	3 mins
 const checkGasPrice = 15000000
@@ -18,23 +19,31 @@ interface paymentItem {
 	pays: number[]
 }
 
+
+
 const rpcProvider = new ethers.JsonRpcProvider(rpcUrl)
 
 export class CNTP_Transfer_Manager {
 
 	private pool: Map<string, number> = new Map()
-	private privatePayArray: ethers.Wallet [] = []
+	private privatePayArray: ethers.Contract [] = []
 	private epoch = 0
 	private privateWalletCurrentPoint = 0
 	private transferProcessStatus = false
 	private lastTransferTimeStamp = new Date().getTime()
 
-	private transferCNTP: (wallets: string[], pays: number[], wallet: ethers.Wallet) => Promise<boolean> =  (wallets, pays, wallet: ethers.Wallet) => new Promise(async resolve => {
+	private transferCNTP: (wallets: string[], pays: number[]) => Promise<boolean> =  (wallets, pays) => new Promise(async resolve => {
 		if (wallets.length !== pays.length) {
 			logger(Color.red(`transferCNTP wallets.length = ${wallets.length} !== pays length ${pays.length}`))
 			return resolve (false)
 		}
-		const CNTP_Contract = new ethers.Contract(CNTP_multiTransfer_new, CNTP_multiTransferTokenABI, wallet)
+
+		const CNTP_Contract = this.privatePayArray.shift()
+		if (!CNTP_Contract) {
+			return setTimeout(async () => {
+				resolve(await this.transferCNTP(wallets, pays))
+			}, 1000)
+		}
 		let total = 0
 		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
 		pays.forEach(n => {
@@ -60,7 +69,7 @@ export class CNTP_Transfer_Manager {
 		
 		try {
 			const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
-			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, action wallet ${wallet.address} hash = ${tx.hash} `))
+			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, hash = ${tx.hash} `))
 			return resolve(await transferCNTP_waitingProcess (tx))
 
 		} catch (ex) {
@@ -159,9 +168,8 @@ export class CNTP_Transfer_Manager {
 
 		await mapLimit(item, this.privatePayArray.length, async (n, next) => {
 			logger(Color.magenta(`start transferCNTP group [${iii_1}] wallets ${n.wallets.length} pays length = ${n.pays.length}`))
-			// logger(inspect(n.wallets, false, 3, true))
-			// logger(inspect(n.pays, false, 3, true))
-			const waitTransfer = await this.transferCNTP(n.wallets, n.pays, this.getPrivateWallet())
+			
+			const waitTransfer = await this.transferCNTP(n.wallets, n.pays)
 			if (!waitTransfer) {
 				logger(Color.red(`transferCNTP [${iii_1}] got Error return transfer group wallet length [${ n.wallets.length }] pay length [${n.pays.length}]to Pool, current Pool size = ${this.pool.size}! `))
 				this.addToPool (n.wallets,n.pays)
@@ -180,7 +188,9 @@ export class CNTP_Transfer_Manager {
 
 	private initCalss = async (privateKeys: string[]) => {
 		privateKeys.forEach(n => {
-			this.privatePayArray.push(new ethers.Wallet(n, rpcProvider))
+			const wall = new ethers.Wallet(n, rpcProvider)
+			const contract = new ethers.Contract(CoNETDePINMiningContract, CoNETDePINMiningABI, wall)
+			this.privatePayArray.push(contract)
 		})
 
 		this.epoch = await rpcProvider.getBlockNumber()

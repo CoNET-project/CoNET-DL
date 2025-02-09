@@ -9,6 +9,8 @@ import CONET_Point_ABI from './cCNTP.json'
 import rateABI from '../endpoint/conet-rate.json'
 import CoNETDePINMiningABI from './CoNETDePINMiningABI.json'
 import CoNET_CancunRefferABI from './CONETDePINReferralABI.json'
+
+
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)

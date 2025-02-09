@@ -17,6 +17,8 @@ const CNTP_SC = new ethers.Contract(CNTP_Addr, CONET_Point_ABI, wallet)
 const CNTP_holder= '0x418833b70F882C833EF0F0Fcee3FB9d89C79d47C'
 const localIPFS_path = '/home/peter/.data/v2/'
 
+const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
+
 const getLocalIPFS = async (block: string) => {
 	const path1 = join(localIPFS_path, `current.wallet`)
 	const path2 = join(localIPFS_path, `current.total`)
@@ -68,7 +70,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	const brunCNTP = total.totalUsrs * minerRate
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}] users ${total.totalUsrs} brun CNTP = ${brunCNTP}`))
 	CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
-	await burnCNTP(brunCNTP)
+	// await burnCNTP(brunCNTP)
 }
 
 let EPOCH = 0
