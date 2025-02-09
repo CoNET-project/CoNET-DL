@@ -464,7 +464,7 @@ class conet_dl_server {
 
 			ReferralsMap.set(wallet, address)
 
-			logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
+			//logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
 			return res.status(200).json({address}).end()
 		})
 		
