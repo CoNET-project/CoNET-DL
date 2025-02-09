@@ -16,7 +16,7 @@ const oldGuardianNFTAddr = '0x453701b80324C44366B34d167D40bcE2d67D6047'
 const referralsV3Addr ='0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const oldReff = '0x8f6be4704a3735024F4D2CBC5BAC3722c0C8a0BD'
 // const referralsContract = new ethers.Contract(oldReff, referralsV3ABI, oldProvider)
-// const newCONETURL = 'http://207.90.195.48:8889'
+
 const newRPCPublic = 'https://rpc.conet.network'
 const newRPC = new ethers.JsonRpcProvider(newRPCPublic)
 const managerWallet = new ethers.Wallet(masterSetup.guardianBuyADMIN[0], newRPC)

@@ -14,7 +14,7 @@ import GuardianPlan_new_ABI from './GuardianNodesV2.json'
 import GuardianInitABI from './GuardianInitABI.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
-const CoNET_CancunRPC = 'http://207.90.195.48:8001'
+const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
@@ -22,7 +22,7 @@ const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
 const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
 
-const GuardianInitAddr = '0xAA32dE55fcf35fa0A6F5ece21539E04f2ECee21c'
+const GuardianInitAddr = '0xA52cc37522e52B9CeA1aABc8Ed50De505C98d6a8'
 
 
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
@@ -204,11 +204,12 @@ const checkGroudinerNFT = async (wallet: string) => {
 		GuardianP_HoleskySC.balanceOf(wallet, 2),
 		initGuardianSC.isInit(wallet)
 	])
-
-	if (nft1 == BigInt(0) && nft2 == BigInt(0) && !isInit) {
+	logger(`isInit = ${isInit}`)
+	if ( isInit || (nft1 == BigInt(0) && nft2 == BigInt(0))) {
 		return
 	}
 
+	logger(`added ${wallet} to pool`)
 	initGroudinerNFTPool.push({
 		wallet, nft1, nft2
 	})
@@ -218,7 +219,8 @@ const checkGroudinerNFT = async (wallet: string) => {
 }
 
 export const initCNTP = async (wallet: string) => {
-
+	
+	checkGroudinerNFT(wallet)
 	if (wallet === ethers.ZeroAddress ) {
 		return
 	}
@@ -235,7 +237,7 @@ export const initCNTP = async (wallet: string) => {
 		wallet, value
 	})
 
-	//checkGroudinerNFT(wallet)
+	
 }
 
 
