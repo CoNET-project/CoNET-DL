@@ -22,7 +22,7 @@ const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
 const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
 
-const GuardianInitAddr = '0xA52cc37522e52B9CeA1aABc8Ed50De505C98d6a8'
+const Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 
 
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
@@ -33,6 +33,10 @@ const referralsV3_Holesky_Contract = new ethers.Contract(RefferV4_HoleskyAddr, C
 const referralsV3_Cancun_Contract = new ethers.Contract(RefferV4_CancunAddr, CoNET_CancunRefferABI, provode_Cancun)
 
 const GuardianP_HoleskySC = new ethers.Contract(Guardian_Holesky, GuardianPlan_new_ABI, provode_Holesky)
+
+
+
+
 const adminList=[
 	"0x6add8012d4DDb7dA736Ab713FdA13ef3827a05bf",
 	"0x068759bCfd929fb17258aF372c30eE6CD277B872",
@@ -44,8 +48,8 @@ const adminList=[
 	"0x299DF9eF2C011aaEc3587e296A78E8e75838B2F7",
 	"0x830D4476A1FdF98bd6515353073527316DC315f1"
 ]
-const GuardianInitWallet = new ethers.Wallet(masterSetup.guardianAmin[0], provode_Cancun)
-const initGuardianSC = new ethers.Contract(GuardianInitAddr, GuardianInitABI, GuardianInitWallet)
+const GuardianInitWallet = new ethers.Wallet(masterSetup.cancun_Guardiner_init, provode_Cancun)
+const GuardianP_cancunSC = new ethers.Contract(Guardian_cancun, GuardianPlan_new_ABI, GuardianInitWallet)
 
 const addAdmin = () => {
 	const adminWallet = new ethers.Wallet(masterSetup.guardianAmin[3], provode_Cancun)
@@ -168,8 +172,8 @@ export const refferInit = async (wallet: string, reffer: string) => {
 
 interface GroudinerNFTData {
 	wallet: string
-	nft1: BigInt
-	nft2: BigInt
+	nftNumber: number
+	nft: BigInt
 }
 
 const initGroudinerNFTPool: GroudinerNFTData[] = []
@@ -184,8 +188,14 @@ const processInitGroudinerNFT = async () => {
 	}
 
 	try {
-		const tx = await initGuardianSC.initGuardian(_data.wallet, _data.nft1, _data.nft2)
-		await tx.walt()
+		let tx
+		if (_data.nftNumber === 1) {
+			tx = await GuardianP_cancunSC.mintBUYER_NFT(_data.wallet, _data.nft)
+		} else {
+			tx = await GuardianP_cancunSC.mintREFERRER_NFT(_data.wallet, _data.nft)
+		}
+		
+		await tx.wait()
 		logger(Colors.gray(`processInitGroudinerNFT ${_data.wallet} Success ! hash = ${tx.hash}`))
 
 	} catch (ex: any) {
@@ -198,28 +208,36 @@ const processInitGroudinerNFT = async () => {
 const checkGroudinerNFT = async (wallet: string) => {
 
 	let nft1: BigInt, nft2: BigInt
-	let isInit: boolean
-	[nft1, nft2, isInit] = await Promise.all ([
+	let BUYER_Status: [boolean]
+	let REFERRER_Status: [boolean]
+	[nft1, nft2, BUYER_Status, REFERRER_Status] = await Promise.all ([
 		GuardianP_HoleskySC.balanceOf(wallet, 1),
 		GuardianP_HoleskySC.balanceOf(wallet, 2),
-		initGuardianSC.isInit(wallet)
+		GuardianP_cancunSC.getBUYER_Status(wallet),
+		GuardianP_cancunSC.geREFERRER_Status(wallet)
+
 	])
-	logger(`isInit = ${isInit}`)
-	if ( isInit || (nft1 == BigInt(0) && nft2 == BigInt(0))) {
-		return
+	logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
+	
+	if (parseInt(nft1.toString()) > BigInt(0) && !BUYER_Status[0]) {
+		initGroudinerNFTPool.push({
+			wallet, nftNumber: 1, nft: nft1
+		})
 	}
 
-	logger(`added ${wallet} to pool`)
-	initGroudinerNFTPool.push({
-		wallet, nft1, nft2
-	})
+	if (parseInt(nft2.toString()) > BigInt(0) && !REFERRER_Status[0]) {
+		initGroudinerNFTPool.push({
+			wallet, nftNumber: 2, nft: nft2
+		})
+	}
+	
 
 	processInitGroudinerNFT()
 	
 }
 
 export const initCNTP = async (wallet: string) => {
-	
+
 	checkGroudinerNFT(wallet)
 	if (wallet === ethers.ZeroAddress ) {
 		return

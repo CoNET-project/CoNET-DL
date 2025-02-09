@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	cancun_Guardiner_init:string
 	ETH_Manager: string[]
 	conetDePINAdmin_scan: string[]
 	conetDePINEthAdmin: string[]
