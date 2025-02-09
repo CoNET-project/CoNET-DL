@@ -139,7 +139,7 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 		startProcess(),
 		startFaucetProcess(),
 		developWalletListening(eposh),
-		moveData()
+		moveData(eposh)
 	])
 }
 
@@ -242,11 +242,11 @@ interface iEPOCH_DATA {
 }
 let EPOCH_DATA: iEPOCH_DATA
 
-const moveData = async () => {
+const moveData = async (epoch: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
 
-	const block = currentEpoch
+	const block = epoch
 	
 	let _wallets_: Map<string, true> = new Map()
 	let _users_: Map<string, true> = new Map()
