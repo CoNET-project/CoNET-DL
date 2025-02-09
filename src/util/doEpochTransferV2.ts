@@ -20,18 +20,20 @@ const localIPFS_path = '/home/peter/.data/v2/'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
 
 const getLocalIPFS = async (block: string) => {
-	const path1 = join(localIPFS_path, `current.wallet`)
-	const path2 = join(localIPFS_path, `current.total`)
-	logger(Color.blue(`getLocalIPFS [${path1}] [${path2}]`))
-	const [total, wallet] = await Promise.all([
-		readFile(path2, 'utf8'),
-		readFile(path1, 'utf8')
-	])
-
-	return {total, wallet}
+	const path1 = join(localIPFS_path, `${block}.wallet`)
+	const path2 = join(localIPFS_path, `${block}.total`)
+	try {
+		const [total, wallet] = await Promise.all([
+			readFile(path2, 'utf8'),
+			readFile(path1, 'utf8')
+		])
+		return {total, wallet}
+	} catch (ex) {
+		logger(Color.red(`getLocalIPFS ${block}.wallet ${block}.total Error!`))
+		return null
+	}
+	
 }
-
-
 
 
 const burnCNTP = async (valueCNTP: number) => {
@@ -47,6 +49,9 @@ const burnCNTP = async (valueCNTP: number) => {
 const stratFreeMinerTransfer = async (block: number) => {
 	logger(Color.blue(`stratFreeMinerTransfer ${block} `))
 	const _data = await getLocalIPFS (block.toString())
+	if (!_data) {
+		return
+	}
 	
 	let walletArray: string[]
 	let total: ITotal
