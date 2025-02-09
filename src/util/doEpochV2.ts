@@ -261,14 +261,15 @@ let EPOCH = 0
 const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
 	provider.on('block', async (_block: number) => {
-		if (_block % 2 === 0 ) {
-			return
+		if (_block % 2) {
+			return logger(Color.gray(`epoch ${_block} % 2 true! drop it.`))
 		}
-		if (_block > EPOCH + 2) {
-			logger(`stratFreeMinerReferrals start at ${_block}`)
-			stratFreeMinerReferrals((_block - 2).toString())
-			EPOCH += 2
-		}
+
+		
+		logger(`stratFreeMinerReferrals start at ${_block}`)
+		stratFreeMinerReferrals((_block - 2).toString())
+		EPOCH = _block
+		
 	})
 
 }
