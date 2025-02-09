@@ -14,7 +14,7 @@ import { writeFile} from 'node:fs/promises'
 import rateABI from '../endpoint/conet-rate.json'
 import type {Response, Request } from 'express'
 import NodesInfoABI from '../endpoint/CONET_nodeInfo.ABI.json'
-const conet_rpc = 'https://rpc.conet.network'
+const conet_rpc = 'https://cancun-rpc.conet.network'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
