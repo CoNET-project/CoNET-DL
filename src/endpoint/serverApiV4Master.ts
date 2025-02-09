@@ -232,7 +232,7 @@ const rateAddr = '0xE95b13888042fBeA32BDce7Ae2F402dFce11C1ba'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
 const ReferralsMap: Map<string, string> = new Map()
-
+const initV3Map: Map<string, boolean> = new Map()
 const moveData = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
@@ -386,6 +386,35 @@ class conet_dl_server {
 			miningData(req.body, res)
 		})
 
+		router.post('initV3',async (req: any, res: any) =>{
+			
+			let wallet: string
+			try {
+				wallet = req.body.wallet
+			} catch (ex) {
+				logger (Colors.grey(`request /wallet req.body ERROR!`), inspect(req.body, false,3, true))
+				return res.status(403).end()
+			}
+
+			wallet = wallet.toLowerCase()
+			let address = ReferralsMap.get (wallet)
+			if (!address) {
+				return res.status(200).json({err: 'no wallet'}).end()
+			}
+			const initWallet = initV3Map.get (address)
+			if (initWallet) {
+				return res.status(200).json({address}).end()
+			}
+
+			initV3Map.set(address, true)
+
+			
+			refferInit(wallet, '')
+			initCNTP(wallet)
+			return res.status(200).json({address}).end()
+
+		})
+
 		router.post ('/wallet',  async (req: any, res: any) =>{
 			
 			let wallet: string
@@ -431,6 +460,7 @@ class conet_dl_server {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
+
 			refferInit(wallet, '')
 			initCNTP(wallet)
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)

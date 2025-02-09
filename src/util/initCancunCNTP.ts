@@ -243,6 +243,3 @@ export const startProcess = async () => {
 	startProcess_CNTP()
 	startProcess_Reff()
 }
-
-
-checkGroudinerNFT('0x69237C9B639577d5F8A2A8970B76A92fCbeE3C34')
