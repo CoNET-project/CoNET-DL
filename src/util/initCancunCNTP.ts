@@ -235,7 +235,7 @@ export const initCNTP = async (wallet: string) => {
 		wallet, value
 	})
 
-	checkGroudinerNFT(wallet)
+	//checkGroudinerNFT(wallet)
 }
 
 
