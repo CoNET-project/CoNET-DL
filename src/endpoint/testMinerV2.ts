@@ -13,9 +13,9 @@ import {getRandomValues} from 'node:crypto'
 import {RequestOptions, request } from 'node:http'
 import {request as httpsRequest } from 'node:https'
 import ReferrerV3 from './ReferralsV3.json'
-const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
-const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
-const ReferrerV3Addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
+const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
+const ReferrerV3Addr = '0xbd67716ab31fc9691482a839117004497761D0b9'
 const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
 
@@ -61,7 +61,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 		})
 	}
 		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
+	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)
 	let i = 0
 	mapLimit(Guardian_Nodes, 10, async (n: nodeInfo, next) => {
 		i = n.nftNumber
@@ -219,11 +219,13 @@ const postToUrl = (node: nodeInfo, POST: string) => new Promise(resolve =>{
 
 	const kkk = request(option, res => {
 		clearTimeout(waitingTimeout)
+		if (res.statusCode !==200) {
+			//logger(`postToUrl ${node.ip_addr} statusCode = [${res.statusCode}] != 200 error!`)
+		}
 		resolve (true)
 		res.once('end', () => {
-			
 			if (res.statusCode !==200) {
-				return logger(`postToUrl ${node.ip_addr} statusCode = [${res.statusCode}] != 200 error!`)
+				return //logger(`postToUrl ${node.ip_addr} statusCode = [${res.statusCode}] != 200 error!`)
 			}
 		})
 		
