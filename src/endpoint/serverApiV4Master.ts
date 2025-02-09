@@ -397,7 +397,7 @@ class conet_dl_server {
 				logger (Colors.grey(`request /wallet req.body ERROR!`), inspect(req.body, false,3, true))
 				return res.status(403).end()
 			}
-			logger(Colors.grey(`Master got /api/wallet!`))
+			
 			wallet = wallet.toLowerCase()
 			let address = ReferralsMap.get (wallet)
 			if (address) {
