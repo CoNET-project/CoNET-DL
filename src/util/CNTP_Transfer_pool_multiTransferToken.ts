@@ -70,7 +70,7 @@ export class CNTP_Transfer_Manager {
 		})
 		
 		try {
-			const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
+			const tx = await CNTP_Contract.mining (wallets, fixedPay)
 			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, hash = ${tx.hash} `))
 			this.privatePayArray.push(CNTP_Contract)
 			return resolve(await transferCNTP_waitingProcess (tx))
