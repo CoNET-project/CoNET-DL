@@ -460,10 +460,18 @@ class conet_dl_server {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
+			const initWallet = initV3Map.get (wallet)
 
-			refferInit(wallet, '')
-			initCNTP(wallet)
+			if (!initWallet) {
+
+				initV3Map.set(wallet, true)
+				refferInit(wallet, '')
+				initCNTP(wallet)
+			}
+
+			
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
+			
 			if (tx) {
 				return res.status(200).json(tx).end()
 			}
