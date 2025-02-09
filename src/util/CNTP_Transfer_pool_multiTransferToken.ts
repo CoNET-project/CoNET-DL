@@ -190,6 +190,7 @@ export class CNTP_Transfer_Manager {
 		privateKeys.forEach(n => {
 			const wall = new ethers.Wallet(n, rpcProvider)
 			const contract = new ethers.Contract(CoNETDePINMiningContract, CoNETDePINMiningABI, wall)
+			logger(Color.magenta(`initCalss wallet${wall.address} added to POOL!`))
 			this.privatePayArray.push(contract)
 		})
 
