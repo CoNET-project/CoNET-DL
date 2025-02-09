@@ -261,7 +261,7 @@ let EPOCH = 0
 const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	EPOCH = await provider.getBlockNumber()
 	provider.on('block', async (_block: number) => {
-		if (_block % 2) {
+		if (_block % 2 === 0 ) {
 			return
 		}
 		if (_block > EPOCH + 2) {
