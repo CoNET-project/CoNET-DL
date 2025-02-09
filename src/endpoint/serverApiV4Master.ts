@@ -138,6 +138,7 @@ const developWalletListening = async (block: number) => {
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	logger
 	await Promise.all([
+		startProcess(),
 		startFaucetProcess(),
 		developWalletListening(eposh),
 		moveData()
@@ -320,7 +321,7 @@ class conet_dl_server {
 
 			
 				currentEpoch ++
-				startProcess()
+				
 				return stratlivenessV2(_block, this)
 			
 		})
@@ -412,8 +413,7 @@ class conet_dl_server {
 
 			address = address.toLowerCase()
 
-			refferInit(wallet, address)
-			initCNTP(wallet)
+			
 
 			ReferralsMap.set(wallet, address)
 
@@ -428,6 +428,8 @@ class conet_dl_server {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
+			refferInit(wallet, req.body.walletAddress)
+			initCNTP(wallet)
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
 			if (tx) {
 				return res.status(200).json(tx).end()
