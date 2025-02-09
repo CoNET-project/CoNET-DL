@@ -86,11 +86,11 @@ const startFaucetProcess = () => new Promise(async resolve => {
 			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
 		}
 
-		logger(`startFaucetProcess `)
-		logger(inspect(tx_conform, false, 3, true))
+		logger(`startFaucetProcess Success ${rx.hash}`)
 
-	} catch (ex) {
-		logger(`startFaucetProcess Error!`, ex)
+
+	} catch (ex: any) {
+		logger(`startFaucetProcess Error!`, ex.message)
 	}
 	
 	startFaucetProcessStatus = false
