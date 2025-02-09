@@ -27,6 +27,12 @@ const RefferV4_CancunAddr = '0xbd67716ab31fc9691482a839117004497761D0b9'
 const referralsV3_Holesky_Contract = new ethers.Contract(RefferV4_HoleskyAddr, CONET_Referral_ABI, provode_Holesky)
 const referralsV3_Cancun_Contract = new ethers.Contract(RefferV4_CancunAddr, CoNET_CancunRefferABI, provode_Cancun)
 const adminList=[
+	"0x6add8012d4DDb7dA736Ab713FdA13ef3827a05bf",
+	"0x068759bCfd929fb17258aF372c30eE6CD277B872",
+	"0x25a32f1321EBABe7BBE78CbD1BeB1c4C4f4f2E2B",
+	"0x779cc98eeA4aCDB3BDDb34418B79BD62261f2D33",
+	"0x42a9492B15E2f725b0798CFeF15eaD2576B7d761",
+	"0xeCfe79936753623080D8f3E99dbaE39FD335DBB5",
 	"0xB2dAD8d6d8a9755e269f4c447844327648723C94",
 	"0x299DF9eF2C011aaEc3587e296A78E8e75838B2F7",
 	"0x830D4476A1FdF98bd6515353073527316DC315f1"

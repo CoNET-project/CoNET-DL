@@ -44,6 +44,8 @@ export class CNTP_Transfer_Manager {
 				resolve(await this.transferCNTP(wallets, pays))
 			}, 1000)
 		}
+
+
 		let total = 0
 		const fixedPay = pays.map(n => ethers.parseEther(n.toFixed(6)))
 		pays.forEach(n => {
@@ -70,12 +72,14 @@ export class CNTP_Transfer_Manager {
 		try {
 			const tx = await CNTP_Contract.multiTransferToken (wallets, fixedPay)
 			logger(Color.magenta(`transferCNTP [${wallets.length}] Total CNTP ${total} Send to RPC, hash = ${tx.hash} `))
+			this.privatePayArray.push(CNTP_Contract)
 			return resolve(await transferCNTP_waitingProcess (tx))
 
 		} catch (ex) {
 			logger(Color.red(`CNTP_Transfer_Manager wallets ${wallets.length} pays [${pays.length }] Data Langth ${JSON.stringify(wallets).length + JSON.stringify(fixedPay.map(n => n.toString())).length} transferCNTP Error! `), ex)
 			console.log('\n\n',JSON.stringify(wallets), '\n\n')
 			console.log('\n\n',JSON.stringify(fixedPay.map(n => n.toString())), '\n\n')
+			this.privatePayArray.push(CNTP_Contract)
 			return resolve (false)
 		}
 		
@@ -190,7 +194,7 @@ export class CNTP_Transfer_Manager {
 		privateKeys.forEach(n => {
 			const wall = new ethers.Wallet(n, rpcProvider)
 			const contract = new ethers.Contract(CoNETDePINMiningContract, CoNETDePINMiningABI, wall)
-			logger(Color.magenta(`initCalss wallet${wall.address} added to POOL!`))
+			logger(Color.magenta(`initCalss wallet ${wall.address} added to POOL!`))
 			this.privatePayArray.push(contract)
 		})
 
