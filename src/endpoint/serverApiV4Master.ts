@@ -133,7 +133,7 @@ const developWalletListening = async (block: number) => {
 	}
 }
 
-const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
+const stratlivenessV2 = async (eposh: number) => {
 	logger
 	await Promise.all([
 		startProcess(),
@@ -199,9 +199,9 @@ const epochTotalData:  Map<number, IGossipStatus > = new Map()
 
 const miningData = (body: any, res: Response) => {
 	
-	const ephchKey = parseInt(body.epoch)
+	const ephchKey = currentEpoch
 
-	let eposh = epochNodeData.get(ephchKey)
+	let eposh = epochNodeData.get(currentEpoch)
 	if (!eposh) {
 		eposh = new Map()
 		epochNodeData.set(ephchKey, eposh)
@@ -246,7 +246,7 @@ const moveData = async (epoch: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
 
-	const block = epoch
+	const block = epoch-2
 	
 	let _wallets_: Map<string, true> = new Map()
 	let _users_: Map<string, true> = new Map()
@@ -333,8 +333,9 @@ class conet_dl_server {
 			if (_block % 2) {
 				return
 			}
-			currentEpoch ++
-			return stratlivenessV2(_block, this)
+
+			currentEpoch = _block
+			return stratlivenessV2(_block)
 			
 		})
 		
