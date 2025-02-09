@@ -428,7 +428,7 @@ class conet_dl_server {
 				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
 				return res.status(403).end()
 			}
-			refferInit(wallet, req.body.walletAddress)
+			refferInit(wallet, '')
 			initCNTP(wallet)
 			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
 			if (tx) {
