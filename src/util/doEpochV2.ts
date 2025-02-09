@@ -41,7 +41,6 @@ const store_Leaderboard_Free_referrals = async (epoch: string, data: {referrals:
 	
 }
 
-
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	if (!address) {
 		const err = `Call getReferrer address null error!`
@@ -87,7 +86,6 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 	req.write(JSON.stringify(postData))
 	req.end()
 }
-
 
 const countReword = (reword: number, wallet: string, totalToken: number, callback: (data: null|{wallet: string,pay: string}) => void) => {
 	return getReferrer(wallet, async (err, data: any) => {
