@@ -149,10 +149,10 @@ export const refferInit = async (wallet: string, reffer: string) => {
 		return
 	}
 	
-	const newRef = await referralsV3_Cancun_Contract.getReferrer(wallet)
-	if (newRef !== ethers.ZeroAddress) {
-		return
-	}
+	// const newRef = await referralsV3_Cancun_Contract.getReferrer(wallet)
+	// if (newRef !== ethers.ZeroAddress) {
+	// 	return
+	// }
 	logger(Colors.gray(`refferInit added ${wallet} Reffe ${reffer} to Process POOL! Size ${ReffeProcess.length}`))
 	ReffeProcess.push ({wallet, reffer})
 }
