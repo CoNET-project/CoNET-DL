@@ -16,8 +16,8 @@ import type {Response, Request } from 'express'
 import NodesInfoABI from '../endpoint/CONET_nodeInfo.ABI.json'
 const conet_rpc = 'https://cancun-rpc.conet.network'
 
-const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
-const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
+const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
+const CONET_Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 const provider = new ethers.JsonRpcProvider(conet_rpc)
 const launchMap: Map<string, boolean> = new Map()
 const epochTotal: Map<string, number> = new Map()
@@ -300,7 +300,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 	getAllNodesProcess = true
 
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
+	const GuardianNodes = new ethers.Contract(CONET_Guardian_cancun, GuardianNodesV2ABI, provider)
 	let scanNodes = 0
 	try {
 		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
@@ -327,7 +327,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 		})
 	}
 		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
+	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)
 	let i = 0
 	
 	await mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
