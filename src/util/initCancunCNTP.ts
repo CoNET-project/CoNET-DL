@@ -79,16 +79,20 @@ const startProcess_Reff = async () => {
 		ReffeProcess.unshift(reff)
 		return
 	}
+
 	startProcess_Reff()
 	const referralsV3_Cancun = new ethers.Contract(RefferV4_CancunAddr, CoNET_CancunRefferABI, admin)
 
 	ReffeProcess = []
 	try {
 		const tx = await referralsV3_Cancun.initAddReferrer(reff.reffer, reff.wallet)
-		logger(Colors.blue(`startProcess initCNTP success! ${tx.hash} POOL size = ${ReffeProcess.length}`))
+		await tx.wait()
+		logger(Colors.blue(`startProcess startProcess_Reff success! ${tx.hash} POOL size = ${ ReffeProcess.length }`))
 	} catch (ex: any) {
-		logger(Colors.red(`startProcess initCNTP Error! ${ex.message}`))
+		logger(Colors.red(`startProcess startProcess_Reff Error! ${ex.message}`))
 	}
+
+	adminWalletPool.push(admin)
 	startProcess_Reff()
 }
 
@@ -133,7 +137,7 @@ export const refferInit = async (wallet: string, reffer: string) => {
 	}
 
 	if (!reffer || reffer == ethers.ZeroAddress) {
-		logger(Colors.gray(`refferInit ${wallet} has ethers.ZeroAddress STOP!`))
+		logger(Colors.gray(`refferInit ${wallet} has ethers.ZeroAddress STOP! ${reffer}`))
 		return
 	}
 	
