@@ -148,7 +148,7 @@ const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 
 const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
-const conet_Referral_contractV3 = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
@@ -156,7 +156,7 @@ const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_A
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
-const contract_Referral = new ethers.Contract(conet_Referral_contractV3, CONET_Referral_ABI, provideCONET)
+const contract_Referral = new ethers.Contract(conet_Referral_cancun, CONET_Referral_ABI, provideCONET)
 
 interface faucetRequest {
 	wallet: string
