@@ -233,6 +233,15 @@ const filePath = '/home/peter/.data/v2/'
 
 const ReferralsMap: Map<string, string> = new Map()
 const initV3Map: Map<string, boolean> = new Map()
+
+interface iEPOCH_DATA {
+	totalMiners: number
+	minerRate: number
+	totalUsrs: number
+	epoch: number
+}
+let EPOCH_DATA: iEPOCH_DATA
+
 const moveData = async () => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
@@ -290,14 +299,14 @@ const moveData = async () => {
 	const filename4 = `${filePath}current.total`
 	const filename5 = `${filePath}current.users`
 
-	const jsonData = {totalMiners, minerRate, totalUsrs, epoch: block}
-	logger(inspect(jsonData, false, 3, true))
+	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block}
+	logger(inspect(EPOCH_DATA, false, 3, true))
 	await Promise.all ([
 		writeFile(filename, JSON.stringify([..._wallets_.keys()]), 'utf8'),
-		writeFile(filename1, JSON.stringify(jsonData), 'utf8'),
+		writeFile(filename1, JSON.stringify(EPOCH_DATA), 'utf8'),
 		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8'),
 		writeFile(filename3, JSON.stringify([..._wallets_.keys()]), 'utf8'),
-		writeFile(filename4, JSON.stringify(jsonData), 'utf8'),
+		writeFile(filename4, JSON.stringify(EPOCH_DATA), 'utf8'),
 		writeFile(filename5, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
@@ -385,6 +394,12 @@ class conet_dl_server {
 		router.post ('/miningData', (req: any, res: any) => {
 			miningData(req.body, res)
 		})
+
+		router.post ('/epoch',(req: any, res: any) => {
+			res.status(200).json(EPOCH_DATA).end()
+		})
+
+
 
 		router.post('initV3',async (req: any, res: any) =>{
 			

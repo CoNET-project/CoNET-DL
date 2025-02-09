@@ -62,21 +62,32 @@ const getreferralsCount = async (addr: string, _res: Response) => {
 let eposh_total:epochRate|null = null
 
 const filePath = '/home/peter/.data/v2/'
+const epochPath = '/api/epoch'
 
 const get_epoch_total = async () => {
-	const block = currentEpoch - 3
-	const filename1 = `${filePath}current.total`
+
+	getLocalhostData(epochPath, {}, data => {
+		if (!data) {
+			return logger(`get_epoch_total Error, data null!`)
+		}
+		logger(inspect(data, false, 3, true))
+		eposh_total = data
+	})
+
+
+	// const block = currentEpoch - 3
+	// const filename1 = `${filePath}current.total`
 	
-	try {
-		const data = await readFile(filename1, 'utf8')
+	// try {
+	// 	const data = await readFile(filename1, 'utf8')
 		
-		const ratedata: epochRate = JSON.parse(data)
-		eposh_total = ratedata
+	// 	const ratedata: epochRate = JSON.parse(data)
+	// 	eposh_total = ratedata
 		
-	} catch (ex: any) {
-		eposh_total = {totalMiners: 0, minerRate: 0, totalUsers: 0}
-		logger(Colors.red(`get_epoch_total ${filename1} Error!`), ex.message)
-	}
+	// } catch (ex: any) {
+	// 	eposh_total = {totalMiners: 0, minerRate: 0, totalUsers: 0}
+	// 	logger(Colors.red(`get_epoch_total ${filename1} Error!`), ex.message)
+	// }
 }
 
 
@@ -94,6 +105,51 @@ const unlockCNTP = async (wallet: string, privateKey: string) => {
 		}, Math.round( 10 * Math.random()) * 1000)
 	}
 	logger(Colors.gray(`unlockCNTP [${wallet}] success! tx = ${tx.hash}`) )
+}
+
+const getLocalhostData = async (path: string, obj: any, callback: (data: any) => void)=> {
+	
+	const option: RequestOptions = {
+		hostname: 'localhost',
+		path,
+		port: 8003,
+		method: 'POST',
+		protocol: 'http:',
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	}
+	
+	const req = await request (option, res => {
+		if (res.statusCode!=200) {
+			logger(`getLocalhostData res != 200 Error!`)
+			return callback(null)
+		}
+		let data = ''
+		res.on('data', _data => {
+			data += _data.toString()
+		})
+		res.once('end', () => {
+			try {
+				const ret = JSON.parse(data)
+				callback(ret)
+			} catch (ex) {
+				logger(`getLocalhostData JSON parse Error!`)
+				logger(inspect(data))
+				return callback(null)
+			}
+
+		})
+		
+		
+	})
+
+	req.once('error', (e) => {
+		console.error(`postLocalhost to master on Error! ${e.message}`)
+	})
+
+	req.write(JSON.stringify(obj))
+	req.end()
 }
 
 const postLocalhost = async (path: string, obj: any, _res: Response)=> {
@@ -349,6 +405,8 @@ class conet_dl_server_v4 {
 			GuardianPurchase()
 			
 		})
+
+
 
 		router.post ('/initV3',  async (req: any, res: any) => {
 

@@ -90,7 +90,7 @@ for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 }
 
 const startProcess_Reff = async () => {
-	logger(Colors.blue(`startProcess startProcess_Reff POOL size = ${ReffeProcess.length}`))
+	//logger(Colors.blue(`startProcess startProcess_Reff POOL size = ${ReffeProcess.length}`))
 	const reff = ReffeProcess.shift()
 	if (!reff) {
 		return
@@ -108,9 +108,9 @@ const startProcess_Reff = async () => {
 	try {
 		const tx = await referralsV3_Cancun.initAddReferrer(reff.reffer, reff.wallet)
 		await tx.wait()
-		logger(Colors.blue(`startProcess startProcess_Reff success! ${tx.hash} POOL size = ${ ReffeProcess.length }`))
+		//logger(Colors.blue(`startProcess startProcess_Reff success! ${tx.hash} POOL size = ${ ReffeProcess.length }`))
 	} catch (ex: any) {
-		logger(Colors.red(`startProcess startProcess_Reff Error! ${ex.message}`))
+		//logger(Colors.red(`startProcess startProcess_Reff Error! ${ex.message}`))
 	}
 
 	adminWalletPool.push(admin)
@@ -166,7 +166,7 @@ export const refferInit = async (wallet: string, reffer: string) => {
 	// if (newRef !== ethers.ZeroAddress) {
 	// 	return
 	// }
-	logger(Colors.gray(`refferInit added ${wallet} Reffe ${reffer} to Process POOL! Size ${ReffeProcess.length}`))
+	//logger(Colors.gray(`refferInit added ${wallet} Reffe ${reffer} to Process POOL! Size ${ReffeProcess.length}`))
 	ReffeProcess.push ({wallet, reffer})
 }
 
@@ -217,7 +217,7 @@ const checkGroudinerNFT = async (wallet: string) => {
 		GuardianP_cancunSC.geREFERRER_Status(wallet)
 
 	])
-	logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
+	//logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
 	
 	if (parseInt(nft1.toString()) > BigInt(0) && !BUYER_Status[0]) {
 		initGroudinerNFTPool.push({
