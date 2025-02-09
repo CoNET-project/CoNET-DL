@@ -171,19 +171,28 @@ const localIPFS_path = '/home/peter/.data/v2/'
 const getLocalIPFS = async (block: string) => {
 	const path1 = join(localIPFS_path, `${block}.wallet`)
 	const path2 = join(localIPFS_path, `${block}.total`)
-	//logger(Color.blue(`getLocalIPFS [${path1}] [${path2}]`))
-	const [total, wallet] = await Promise.all([
-		readFile(path2, 'utf8'),
-		readFile(path1, 'utf8')
-	])
+	logger(Color.blue(`getLocalIPFS [${path1}] [${path2}]`))
+	try {
+		const [total, wallet] = await Promise.all([
+			readFile(path2, 'utf8'),
+			readFile(path1, 'utf8')
+		])
+		return {total, wallet}
+	} catch (ex) {
+		logger(Color.red(`doEpochV2 getLocalIPFS ${path1} ${path2} Error!`))
+		return null
+	}
+	
 
-	return {total, wallet}
+	
 }
 
 
 const stratFreeMinerReferrals = (block: string) => new Promise(async resolve => {
 	const _data = await getLocalIPFS (block.toString())
-	
+	if (!_data) {
+		return 
+	}
 	let walletArray: string[]
 	let total: ITotal
 	

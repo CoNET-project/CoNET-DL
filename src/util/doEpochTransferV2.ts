@@ -29,7 +29,7 @@ const getLocalIPFS = async (block: string) => {
 		])
 		return {total, wallet}
 	} catch (ex) {
-		logger(Color.red(`getLocalIPFS ${block}.wallet ${block}.total Error!`))
+		logger(Color.red(`doEpochTransferV2 getLocalIPFS ${path1} ${path2} Error!`))
 		return null
 	}
 	
@@ -52,7 +52,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	if (!_data) {
 		return
 	}
-	
+
 	let walletArray: string[]
 	let total: ITotal
 	
