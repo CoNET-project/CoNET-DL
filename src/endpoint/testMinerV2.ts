@@ -249,13 +249,13 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 
 	const relaunch = () => setTimeout(() => {
 		if (++relaunchCount > 5) {
-			const err = `startGossip relaunchCount over 5 times STOP relaunchCount !`
+			const err = `startGossip relaunchCount ${node.ip_addr} over 5 times STOP relaunchCount !`
 			if (typeof callback === 'function') {
 				callback (err)
 			}
 			return
 		}
-		logger(Colors.magenta(`startGossip do relaunch relaunchCount = ${relaunchCount} `))
+		logger(Colors.magenta(`startGossip do ${node.ip_addr} relaunch relaunchCount = ${relaunchCount} `))
 		startGossip(connectHash, node, POST, relaunchCount, callback)
 	}, 1000)
 
