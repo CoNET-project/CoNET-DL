@@ -207,13 +207,14 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			let total = epochTotal.get (data.epoch.toString())||0
 
 			if (!total) {
-				logger('******************************************* didResponseNode ', inspect(didResponseNode, false, 3, true), '*******************************************')
+				logger(`******************************************* didResponseNode Total send to local ${sendCount}`, inspect(didResponseNode, false, 3, true), '*******************************************')
 				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
 			}
 			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
 			didResponseNode.splice(index, 1)
 			epochTotal.set(data.epoch.toString(), total +1 )
 			if (epoch != data.epoch) {
+				epoch = data.epoch
 				sendCount = 0
 			}
 			sendCount ++
