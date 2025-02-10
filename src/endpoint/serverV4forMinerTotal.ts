@@ -223,7 +223,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalMiners += body.users.length
 	epochTotal.totalConnectNode += 1
 
-	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
+	//logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
 	return res.status(200).end()
 }
 

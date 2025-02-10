@@ -7,15 +7,23 @@ import Colors from 'colors/safe'
 import {mapLimit} from 'async'
 import NodesInfoABI_Holesky from '../endpoint/CONET_nodeInfo.ABI.json'
 import NodesInfoABI_Cancun from './GuardNodeInfoCancunABI.json'
+
+
+
 const conetHoleskyRPC = 'https://rpc.conet.network'
 const GuardianNFT_holesky = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const GuardianNFT_Cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 const CONET_cancunRPC = 'https://cancun-rpc.conet.network'
 const GuardNodeInfoAddr_Cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 
+
+
+
+
 const conet_holesky = new ethers.JsonRpcProvider(conetHoleskyRPC)
 const conet_Cancun = new ethers.JsonRpcProvider(CONET_cancunRPC)
 const GuardianContract_holesky = new ethers.Contract(GuardianNFT_holesky, GuardianNodesV2ABI, conet_holesky)
+
 
 const wallets: ethers.Wallet[]  = []
 for (let i = 0; i < masterSetup.guardianAmin.length; i ++) {
@@ -107,6 +115,7 @@ const adminList = [
 	"0x2125ee19468555fe10FcCa595824A56d2a0870E6",
 	"0xCCfA8Dafd4343c7B8cb11c38F515a873c0DFcA92"
 ]
+
 const addAdmin = () => {
 	const adminWallet = new ethers.Wallet(masterSetup.guardianAmin[3], conet_Cancun)
 	logger(`master wallet [${adminWallet.address}]`)
@@ -241,4 +250,3 @@ const initGuardNodeInfo = async () => {
 		logger(Colors.magenta(`All success!`))
 	})
 }
-addAdmin()

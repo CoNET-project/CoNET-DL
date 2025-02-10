@@ -60,6 +60,7 @@ interface nodeInfo {
 
 interface ICoNET_DL_masterSetup {
 	cancun_Guardiner_init:string
+	cancun_CONETian_Init: string
 	ETH_Manager: string[]
 	conetDePINAdmin_scan: string[]
 	conetDePINEthAdmin: string[]
@@ -388,4 +389,15 @@ interface TGResult {
 	isInTGGroup?: boolean
 	message?: string
 	userID?: number|string
+}
+
+
+interface initCNTP {
+	wallet: string
+	value: BigInt
+}
+
+interface initReffer {
+	wallet: string
+	reffer: string
 }

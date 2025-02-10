@@ -12,6 +12,9 @@ import CoNET_CancunRefferABI from './CONETDePINReferralABI.json'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import GuardianPlan_new_ABI from './GuardianNodesV2.json'
 import GuardianInitABI from './GuardianInitABI.json'
+import CONETianPlanABI from '../endpoint/CONETianPlan.ABI.json'
+import CONETian_cancun_ABI from './CONETian_cancun_ABI.json'
+
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -22,19 +25,23 @@ const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
 const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
 
-const Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 
 
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const RefferV4_CancunAddr = '0xbd67716ab31fc9691482a839117004497761D0b9'
 const Guardian_Holesky = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
+const Guardian_cancun = '0x6a179f7eAc9D48dd9c835Db20ba9a11bb2EB7711'
+
+const CONETian_holesky_addr = '0x4F1F5c25429Ea458C9e4363F05110f668f20D58B'
+const CONETian_cancun_addr = '0x6a179f7eAc9D48dd9c835Db20ba9a11bb2EB7711'
 
 const referralsV3_Holesky_Contract = new ethers.Contract(RefferV4_HoleskyAddr, CONET_Referral_ABI, provode_Holesky)
 const referralsV3_Cancun_Contract = new ethers.Contract(RefferV4_CancunAddr, CoNET_CancunRefferABI, provode_Cancun)
 
 const GuardianP_HoleskySC = new ethers.Contract(Guardian_Holesky, GuardianPlan_new_ABI, provode_Holesky)
-
-
+const CONETian_holesky_SC = new ethers.Contract(CONETian_holesky_addr, CONETianPlanABI, provode_Holesky)
+const CONETian_cancun_initWallet = new ethers.Wallet(masterSetup.cancun_CONETian_Init, provode_Cancun)
+const CONETian_cancun_SC = new ethers.Contract(CONETian_cancun_addr, CONETian_cancun_ABI, CONETian_cancun_initWallet)
 
 
 const adminList=[
@@ -68,15 +75,49 @@ const addAdmin = () => {
 	})
 }
 
-interface initCNTP {
-	wallet: string
-	value: BigInt
+const initCONETianNFTPool: ConetinerNFTData[] = []
+
+const checkCONETian = async (wallet: string) => {
+	let CONETian: BigInt, CONETianeferrer: BigInt
+	let eferrer: string
+	try {
+		Promise.all([
+			CONETian = await CONETian_holesky_SC.balanceOf (wallet, 0),
+			CONETianeferrer = await CONETian_holesky_SC.balanceOf (wallet, 10)
+		])
+		
+	} catch (ex: any) {
+		return logger(`checkCONETian got Error! ${ex.message}`)
+	}
+
+	if (parseInt(CONETian.toString()) > 0) {
+		initCONETianNFTPool.push({
+			wallet, CONETian, CONETianeferrer
+		})
+	}
+	processCONETian()
 }
 
-interface initReffer {
-	wallet: string
-	reffer: string
+const processCONETian = async () => {
+	if (!initCONETianNFTPool.length) {
+		return
+	}
+	const _data = initCONETianNFTPool.shift()
+	if (!_data) {
+		return
+	}
+	
+	try {
+		
+		const tx = await CONETian_cancun_SC.initMint(_data.wallet, _data.CONETian, _data.CONETianeferrer)
+		tx.wait()
+		logger(`processCONETian success! [${tx.hash}]`)
+	} catch (ex: any) {
+		logger(`processCONETian error ${ex.message}`)
+	}
+
 }
+
 
 const walletPool: Map<string, boolean> = new Map()
 let walletProcess: initCNTP[] = []
@@ -176,6 +217,12 @@ interface GroudinerNFTData {
 	nft: BigInt
 }
 
+interface ConetinerNFTData {
+	wallet: string
+	CONETian: BigInt
+	CONETianeferrer: BigInt
+}
+
 const initGroudinerNFTPool: GroudinerNFTData[] = []
 
 const processInitGroudinerNFT = async () => {
@@ -219,13 +266,13 @@ const checkGroudinerNFT = async (wallet: string) => {
 	])
 	//logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
 	
-	if (parseInt(nft1.toString()) > BigInt(0) && !BUYER_Status[0]) {
+	if (parseInt(nft1.toString()) > 0 && !BUYER_Status[0]) {
 		initGroudinerNFTPool.push({
 			wallet, nftNumber: 1, nft: nft1
 		})
 	}
 
-	if (parseInt(nft2.toString()) > BigInt(0) && !REFERRER_Status[0]) {
+	if (parseInt(nft2.toString()) > 0 && !REFERRER_Status[0]) {
 		initGroudinerNFTPool.push({
 			wallet, nftNumber: 2, nft: nft2
 		})
@@ -236,9 +283,12 @@ const checkGroudinerNFT = async (wallet: string) => {
 	
 }
 
+
+
 export const initCNTP = async (wallet: string) => {
 
 	checkGroudinerNFT(wallet)
+	checkCONETian(wallet)
 	if (wallet === ethers.ZeroAddress ) {
 		return
 	}
