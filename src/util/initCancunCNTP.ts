@@ -198,7 +198,7 @@ export const refferInit = async (wallet: string, reffer: string) => {
 	}
 
 	if (!reffer || reffer == ethers.ZeroAddress) {
-		logger(Colors.gray(`refferInit ${wallet} has ethers.ZeroAddress STOP! ${reffer}`))
+		//logger(Colors.gray(`refferInit ${wallet} has ethers.ZeroAddress STOP! ${reffer}`))
 		return
 	}
 	
