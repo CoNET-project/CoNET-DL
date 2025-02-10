@@ -30,7 +30,7 @@ const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, prov
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const RefferV4_CancunAddr = '0xbd67716ab31fc9691482a839117004497761D0b9'
 const Guardian_Holesky = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
-const Guardian_cancun = '0x6a179f7eAc9D48dd9c835Db20ba9a11bb2EB7711'
+const Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 
 const CONETian_holesky_addr = '0x4F1F5c25429Ea458C9e4363F05110f668f20D58B'
 const CONETian_cancun_addr = '0x6a179f7eAc9D48dd9c835Db20ba9a11bb2EB7711'
@@ -108,7 +108,6 @@ const processCONETian = async () => {
 	}
 	
 	try {
-		
 		const tx = await CONETian_cancun_SC.initMint(_data.wallet, _data.CONETian, _data.CONETianeferrer)
 		tx.wait()
 		logger(`processCONETian success! [${tx.hash}]`)
