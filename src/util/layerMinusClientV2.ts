@@ -161,6 +161,8 @@ const postLocalhost = (path: string, obj: any)=> new Promise(async resolve =>{
 	req.end()
 })
 
+let sendCount = 0
+let epoch = 0
 const connectToGossipNode = async (node: nodeInfo ) => {
 	const walletAddress = wallet.address.toLowerCase()
 	
@@ -211,17 +213,20 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
 			didResponseNode.splice(index, 1)
 			epochTotal.set(data.epoch.toString(), total +1 )
-
-			
-			
+			if (epoch != data.epoch) {
+				sendCount = 0
+			}
+			sendCount ++
 			const kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
-			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} sendLocalhost ${kk ? 'SUCCESS' : 'ERROR'}`))
+			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} sendLocalhost count ${sendCount} ${kk ? 'SUCCESS' : 'ERROR'}`))
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
 			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
 		}
 	})
 }
+
+
 let didResponseNode: string[] = []
 
 
