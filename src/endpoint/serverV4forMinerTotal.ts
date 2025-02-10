@@ -199,9 +199,9 @@ const epochTotalData:  Map<number, IGossipStatus > = new Map()
 
 const miningData = (body: any, res: Response) => {
 	
-	const ephchKey = currentEpoch
+	const ephchKey = parseInt(body.epoch)
 
-	let eposh = epochNodeData.get(currentEpoch)
+	let eposh = epochNodeData.get(ephchKey)
 	if (!eposh) {
 		eposh = new Map()
 		epochNodeData.set(ephchKey, eposh)
@@ -223,7 +223,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalMiners += body.users.length
 	epochTotal.totalConnectNode += 1
 
-	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
+	logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
 	return res.status(200).end()
 }
 
@@ -276,7 +276,6 @@ const moveData = async (epoch: number) => {
 		})
 	})
 	
-	
 
 	
 	const totalUsrs = _users_.size
@@ -291,7 +290,7 @@ const moveData = async (epoch: number) => {
 		// initCNTP(w)
 	}
 
-	logger(Colors.magenta(`${block} move data connecting = ${epochAll.size} total [${totalMiners}] miners [${_wallets_.size}] users [${_users_.size}] rate ${minerRate}`))
+	logger(Colors.magenta(`move data connecting [${block}]= ${epochAll.size} total [${totalMiners}] miners [${_wallets_.size}] users [${_users_.size}] rate ${minerRate}`))
 	const filename = `${filePath}${block}.wallet`
 	const filename1 = `${filePath}${block}.total`
 	const filename2 = `${filePath}${block}.users`
