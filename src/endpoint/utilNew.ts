@@ -1346,10 +1346,5 @@ const data: minerObj = {
 	}
 }
 
-const start = async () => {
-	//christmas2024('0x04534971487dA41C1b46D972415e4295CDB897e4')
-	await finishCONETianPlanPurchase(data.data, '0x011516EBb79FF47EB54C6c82476263eeAA91C961')
 
-}
-start()
 
