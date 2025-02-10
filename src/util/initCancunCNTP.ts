@@ -256,13 +256,18 @@ const checkGroudinerNFT = async (wallet: string) => {
 	let nft1: BigInt, nft2: BigInt
 	let BUYER_Status: [boolean]
 	let REFERRER_Status: [boolean]
-	[nft1, nft2, BUYER_Status, REFERRER_Status] = await Promise.all ([
-		GuardianP_HoleskySC.balanceOf(wallet, 1),
-		GuardianP_HoleskySC.balanceOf(wallet, 2),
-		GuardianP_cancunSC.getBUYER_Status(wallet),
-		GuardianP_cancunSC.geREFERRER_Status(wallet)
-
-	])
+	try {
+		[nft1, nft2, BUYER_Status, REFERRER_Status] = await Promise.all ([
+			GuardianP_HoleskySC.balanceOf(wallet, 1),
+			GuardianP_HoleskySC.balanceOf(wallet, 2),
+			GuardianP_cancunSC.getBUYER_Status(wallet),
+			GuardianP_cancunSC.geREFERRER_Status(wallet)
+	
+		])
+	} catch (ex: any ) {
+		return logger(`checkGroudinerNFT Error ${ex.message}`)
+	}
+	
 	//logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
 	
 	if (parseInt(nft1.toString()) > 0 && !BUYER_Status[0]) {
