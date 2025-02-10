@@ -138,7 +138,8 @@ const stratlivenessV2 = async (eposh: number) => {
 	await Promise.all([
 		startProcess(),
 		startFaucetProcess(),
-		developWalletListening(eposh)
+		developWalletListening(eposh),
+		moveData(eposh)
 	])
 }
 
@@ -193,6 +194,38 @@ interface InodeEpochData {
 }
 
 
+const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
+const epochTotalData:  Map<number, IGossipStatus > = new Map()
+
+const miningData = (body: any, res: Response) => {
+	
+	const ephchKey = currentEpoch
+
+	let eposh = epochNodeData.get(currentEpoch)
+	if (!eposh) {
+		eposh = new Map()
+		epochNodeData.set(ephchKey, eposh)
+	}
+
+	eposh.set (body.ipaddress, {wallets: body.wallets, users: body.users})
+
+	let epochTotal = epochTotalData.get (ephchKey)
+	if (!epochTotal) {
+		epochTotal = {
+			totalConnectNode: 0,
+			epoch: ephchKey,
+			totalMiners: 0,
+			totalUsers: 0
+		}
+		epochTotalData.set(ephchKey, epochTotal)
+	}
+	epochTotal.totalMiners += body.wallets.length
+	epochTotal.totalMiners += body.users.length
+	epochTotal.totalConnectNode += 1
+
+	//logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size}`))
+	return res.status(200).end()
+}
 
 
 const rateAddr = '0xE95b13888042fBeA32BDce7Ae2F402dFce11C1ba'.toLowerCase()
@@ -209,10 +242,82 @@ interface iEPOCH_DATA {
 }
 let EPOCH_DATA: iEPOCH_DATA
 
+const moveData = async (epoch: number) => {
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
+	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
+
+	const block = epoch-2
+	
+	let _wallets_: Map<string, true> = new Map()
+	let _users_: Map<string, true> = new Map()
+
+	const epochTotal = epochTotalData.get (block)
+	const epochAll =  epochNodeData.get (block)
+
+	if (!epochTotal) {
+		return logger (Colors.red(`moveData can't get epochTotal ${block}`))
+	}
+
+	if (!epochAll) {
+		return logger (Colors.red(`moveData can't get epochAll ${block}`))
+	}
+
+
+
+	epochAll.forEach((v, keys) => {
+		v.wallets.forEach(n => _wallets_.set(n.toLowerCase(), true))
+	})
+
+	epochAll.forEach((v, keys) => {
+		v.users.forEach(n => {
+			const k = n.toLowerCase()
+			_users_.set(k, true)
+			_wallets_.delete(k)
+		})
+	})
+	
+	
+
+	
+	const totalUsrs = _users_.size
+	const totalMiners = _wallets_.size + totalUsrs
+	const minerRate = (rate/totalMiners)/12
+	for (let w in [..._wallets_.keys()]) {
+		// refferInit(w, '')
+		// initCNTP(w)
+	}
+	for (let w in [..._users_.keys()]) {
+		// refferInit(w, '')
+		// initCNTP(w)
+	}
+
+	logger(Colors.magenta(`${block} move data connecting = ${epochAll.size} total [${totalMiners}] miners [${_wallets_.size}] users [${_users_.size}] rate ${minerRate}`))
+	const filename = `${filePath}${block}.wallet`
+	const filename1 = `${filePath}${block}.total`
+	const filename2 = `${filePath}${block}.users`
+	const filename3 = `${filePath}current.wallet`
+	const filename4 = `${filePath}current.total`
+	const filename5 = `${filePath}current.users`
+
+	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block}
+	logger(inspect(EPOCH_DATA, false, 3, true))
+	await Promise.all ([
+		writeFile(filename, JSON.stringify([..._wallets_.keys()]), 'utf8'),
+		writeFile(filename1, JSON.stringify(EPOCH_DATA), 'utf8'),
+		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8'),
+		writeFile(filename3, JSON.stringify([..._wallets_.keys()]), 'utf8'),
+		writeFile(filename4, JSON.stringify(EPOCH_DATA), 'utf8'),
+		writeFile(filename5, JSON.stringify([..._users_.keys()]), 'utf8')
+	])
+
+	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
+	
+}
+
 
 class conet_dl_server {
 
-	private PORT = 8003
+	private PORT = 8004
 	private serverID = ''
 
 	public CNTP_manager = new CNTP_TicketManager_class ([masterSetup.gameCNTPAdmin[0]], 1000)
@@ -249,9 +354,9 @@ class conet_dl_server {
 		app.use(Cors ())
 		app.use(Express.json())
 
-		app.use( '/api', router )
+		app.use('/api', router )
 
-		app.once ( 'error', ( err: any ) => {
+		app.once('error', ( err: any ) => {
 			/**
 			 * https://stackoverflow.com/questions/60372618/nodejs-listen-eacces-permission-denied-0-0-0-080
 			 * > sudo apt-get install libcap2-bin 
@@ -282,112 +387,17 @@ class conet_dl_server {
             ])
 		})
 		
-		
 	}
 
 	private router ( router: Router ) {
 
-		router.post('/initV3',async (req: any, res: any) =>{
-			
-			let wallet: string
-			try {
-				wallet = req.body.wallet
-			} catch (ex) {
-				logger (Colors.grey(`request /wallet req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-
-			wallet = wallet.toLowerCase()
-			let address = ReferralsMap.get (wallet)
-			if (!address) {
-				return res.status(200).json({err: 'no wallet'}).end()
-			}
-			const initWallet = initV3Map.get (address)
-			if (initWallet) {
-				return res.status(200).json({address}).end()
-			}
-
-			initV3Map.set(address, true)
-
-			
-			refferInit(wallet, '')
-			initCNTP(wallet)
-			return res.status(200).json({address}).end()
-
+		router.post ('/epoch',(req: any, res: any) => {
+			res.status(200).json(EPOCH_DATA).end()
 		})
 
-		router.post ('/wallet',  async (req: any, res: any) =>{
-			
-			let wallet: string
-			try {
-				wallet = req.body.wallet
-			} catch (ex) {
-				logger (Colors.grey(`request /wallet req.body ERROR!`), inspect(req.body, false,3, true))
-				return res.status(403).end()
-			}
-			
-			wallet = wallet.toLowerCase()
-			let address = ReferralsMap.get (wallet)
-			if (address) {
-				return res.status(200).json({address}).end()
-			}
-
-			try {
-				
-				address = await contract_Referral.getReferrer(wallet)
-			} catch (ex){
-				logger(Colors.red(`contract.getReferrer Error!`))
-				return res.status(200).json({}).end()
-			}
-
-			if (!address) {
-				address = '0x0000000000000000000000000000000000000000'
-			}
-
-			address = address.toLowerCase()
-
-			
-
-			ReferralsMap.set(wallet, address)
-
-			//logger(Colors.grey(`address = [${address}] ReferralsMap Total Length = [${ReferralsMap.size}]`))
-			return res.status(200).json({address}).end()
+		router.post ('/miningData', (req: any, res: any) => {
+			miningData(req.body, res)
 		})
-		
-		router.post ('/conet-faucet', async (req: any, res: any) => {
-			const wallet = req.body.walletAddress
-			const ipaddress = req.body.ipaddress
-			if (!wallet) {
-				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
-				return res.status(403).end()
-			}
-			const initWallet = initV3Map.get (wallet)
-
-			if (!initWallet) {
-
-				initV3Map.set(wallet, true)
-				refferInit(wallet, '')
-				initCNTP(wallet)
-			}
-
-			
-			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
-			
-			if (tx) {
-				return res.status(200).json(tx).end()
-			}
-			return res.status(403).end()
-		})
-
-
-		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
-			const wallet = req.body.walletAddress
-			if (!wallet) {
-				logger(Colors.red(`master fx168HappyNewYear req.walletAddress is none Error! [${wallet}]`))
-				return res.status(403).end()
-			}
-		})
-		
 
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
