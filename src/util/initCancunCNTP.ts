@@ -303,12 +303,26 @@ const checkGroudinerNFT = async (wallet: string) => {
 const initCoNETDePIN_address: Map<string, boolean> = new Map()
 const initCoNETDePIN_Pool: initCNTP[] = []
 
-const processCoNETDePIN = () => {
+const processCoNETDePIN = async () => {
 	const processData = initCoNETDePIN_Pool.shift()
 	if (!processData) {
 		return
 	}
+	const SC = CoNETDePIN_managerSc_Pool.shift()
+	if (!SC) {
+		initCoNETDePIN_Pool.unshift(processData)
+		return
+	}
+	try {
+		const tx = await SC.airdrop(processData.wallet, processData.value)
+		tx.wait()
+		logger(`processCoNETDePIN success! [${processData.wallet}] => [${ethers.formatEther(processData.value)}]`)
 
+	} catch (ex: any) {
+		logger(`processCoNETDePIN SC.airdrop Error! [${ex.message}]`)
+	}
+	CoNETDePIN_managerSc_Pool.push(SC)
+	processCoNETDePIN()
 }
 
 const initCoNETDePIN = async (wallet: string) => {
@@ -325,7 +339,7 @@ const initCoNETDePIN = async (wallet: string) => {
 		initCoNETDePIN_Pool.push({
 			wallet, value
 		})
-
+		processCoNETDePIN()
 	}
 }
 
@@ -358,3 +372,5 @@ export const startProcess = async () => {
 	startProcess_Reff()
 }
 
+
+initCoNETDePIN('0x89F5435256804EB2Cbcf366b6dB322677eF54d46')

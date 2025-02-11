@@ -394,7 +394,7 @@ interface TGResult {
 
 interface initCNTP {
 	wallet: string
-	value: BigInt
+	value: BigNumberish
 }
 
 interface initReffer {
