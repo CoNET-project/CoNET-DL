@@ -18,8 +18,8 @@ import CoNETDePIN_mainnet_airdropABI from './CoNETDePIN_Mainnet_airdrop.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
-const CoNET_Mainnet_oldRPC = 'https://mainnet-rpc.conet.network'
-const CoNET_Mainnet_RPC = 'http://38.102.126.30:8000'
+const CoNET_Mainnet_oldRPC = 'http://38.102.126.53:8000'
+const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
