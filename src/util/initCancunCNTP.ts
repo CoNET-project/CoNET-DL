@@ -347,6 +347,7 @@ export const initCNTP = async (wallet: string) => {
 
 	checkGroudinerNFT(wallet)
 	checkCONETian(wallet)
+	initCoNETDePIN(wallet)
 	if (wallet === ethers.ZeroAddress ) {
 		return
 	}
@@ -371,6 +372,3 @@ export const startProcess = async () => {
 	startProcess_CNTP()
 	startProcess_Reff()
 }
-
-
-initCoNETDePIN('0x89F5435256804EB2Cbcf366b6dB322677eF54d46')
