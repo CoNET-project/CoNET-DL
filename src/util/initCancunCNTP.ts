@@ -327,6 +327,7 @@ const processCoNETDePIN = async () => {
 
 const initCoNETDePIN = async (wallet: string) => {
 
+	wallet = wallet.toLowerCase()
 	const address = initCoNETDePIN_address.get(wallet)
 	if (address) {
 		return
@@ -335,6 +336,10 @@ const initCoNETDePIN = async (wallet: string) => {
 	const value = await checkMainnetCoNETDePIN (wallet)
 	initCoNETDePIN_address.set(wallet, true)
 
+	if (wallet === '0x8d484689dfa27dE5F7d0eAD05C591586A5983254' || wallet === '0x0599f544e7ca21f2D19D1216c888edBC988941E7') {
+		return
+	}
+	
 	if (value > BigInt(0)) {
 		initCoNETDePIN_Pool.push({
 			wallet, value
