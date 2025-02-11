@@ -401,3 +401,15 @@ interface initReffer {
 	wallet: string
 	reffer: string
 }
+
+interface GroudinerNFTData {
+	wallet: string
+	nftNumber: number
+	nft: BigInt
+}
+
+interface ConetinerNFTData {
+	wallet: string
+	CONETian: BigInt
+	CONETianeferrer: BigInt
+}

@@ -14,18 +14,18 @@ import GuardianPlan_new_ABI from './GuardianNodesV2.json'
 import GuardianInitABI from './GuardianInitABI.json'
 import CONETianPlanABI from '../endpoint/CONETianPlan.ABI.json'
 import CONETian_cancun_ABI from './CONETian_cancun_ABI.json'
-
+import CoNETDePIN_mainnet_airdropABI from './CoNETDePIN_Mainnet_airdrop.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
+const CoNET_Mainnet_oldRPC = 'https://mainnet-rpc.conet.network'
+const CoNET_Mainnet_RPC = 'http://38.102.126.30:8000'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
 const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
 const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
-
-
 
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const RefferV4_CancunAddr = '0xbd67716ab31fc9691482a839117004497761D0b9'
@@ -43,6 +43,23 @@ const CONETian_holesky_SC = new ethers.Contract(CONETian_holesky_addr, CONETianP
 const CONETian_cancun_initWallet = new ethers.Wallet(masterSetup.cancun_CONETian_Init, provode_Cancun)
 const CONETian_cancun_SC = new ethers.Contract(CONETian_cancun_addr, CONETian_cancun_ABI, CONETian_cancun_initWallet)
 
+const mainnet_old = new ethers.JsonRpcProvider(CoNET_Mainnet_oldRPC)
+const mainnet = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
+const conetDePIN_mainnet_old_addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const conetDePIN_mainnet_airdrop_addr = '0xf093e5534dBd1E1fB52E29E5432C503876E658C2'
+
+const CoNETDePIN_mainnet_old = new ethers.Contract(conetDePIN_mainnet_old_addr, CONET_Point_ABI, mainnet_old)
+const CoNETDePIN_Airdrop_SC = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CONET_Point_ABI, mainnet_old)
+
+const checkMainnetCoNETDePIN = async (wallet: string) => {
+	try {
+		const ba = await CoNETDePIN_mainnet_old.balanceOf(wallet)
+		return ba
+	} catch (ex: any) {
+		logger(`checkMainnetCoNETDePIN Error! ${ex.message}`)
+	}
+	return BigInt(0)
+}
 
 const adminList=[
 	"0x6add8012d4DDb7dA736Ab713FdA13ef3827a05bf",
@@ -123,10 +140,16 @@ let walletProcess: initCNTP[] = []
 const RefferPool: Map<string, boolean> = new Map()
 let ReffeProcess: initReffer[] = []
 const adminWalletPool: ethers.Wallet[] = []
+const CoNETDePIN_managerSc_Pool: ethers.Contract[] = []
 
 for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 	const CNTP_refe_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], provode_Cancun)
 	adminWalletPool.push(CNTP_refe_manager)
+	const CoNETDePIN_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], mainnet)
+	const  CoNETDePIN_Manager = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CoNETDePIN_mainnet_airdropABI, CoNETDePIN_manager)
+	CoNETDePIN_managerSc_Pool.push(CoNETDePIN_Manager)
+	logger(`added wallet ${CoNETDePIN_manager.address}`)
+
 }
 
 const startProcess_Reff = async () => {
@@ -210,17 +233,7 @@ export const refferInit = async (wallet: string, reffer: string) => {
 	ReffeProcess.push ({wallet, reffer})
 }
 
-interface GroudinerNFTData {
-	wallet: string
-	nftNumber: number
-	nft: BigInt
-}
 
-interface ConetinerNFTData {
-	wallet: string
-	CONETian: BigInt
-	CONETianeferrer: BigInt
-}
 
 const initGroudinerNFTPool: GroudinerNFTData[] = []
 
@@ -287,7 +300,34 @@ const checkGroudinerNFT = async (wallet: string) => {
 	
 }
 
+const initCoNETDePIN_address: Map<string, boolean> = new Map()
+const initCoNETDePIN_Pool: initCNTP[] = []
 
+const processCoNETDePIN = () => {
+	const processData = initCoNETDePIN_Pool.shift()
+	if (!processData) {
+		return
+	}
+
+}
+
+const initCoNETDePIN = async (wallet: string) => {
+
+	const address = initCoNETDePIN_address.get(wallet)
+	if (address) {
+		return
+	}
+
+	const value = await checkMainnetCoNETDePIN (wallet)
+	initCoNETDePIN_address.set(wallet, true)
+
+	if (value > BigInt(0)) {
+		initCoNETDePIN_Pool.push({
+			wallet, value
+		})
+
+	}
+}
 
 export const initCNTP = async (wallet: string) => {
 
@@ -317,3 +357,4 @@ export const startProcess = async () => {
 	startProcess_CNTP()
 	startProcess_Reff()
 }
+

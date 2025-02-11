@@ -37,7 +37,7 @@ const _transfer = async () => {
 		transferProcess = false
 		return
 	}
-	logger(inspect(data, false, 3, true))
+	
 	try {
 		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()

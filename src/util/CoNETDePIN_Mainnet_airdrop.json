@@ -26,11 +26,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "_tx",
-				"type": "string"
-			},
-			{
 				"internalType": "address",
 				"name": "to",
 				"type": "address"
@@ -41,7 +36,30 @@
 				"type": "uint256"
 			}
 		],
-		"name": "airDrop",
+		"name": "airdrop",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "_tx",
+				"type": "bytes32"
+			}
+		],
+		"name": "airdrop",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -62,53 +80,6 @@
 		"name": "changeAddressInAdminlist",
 		"outputs": [],
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_tx",
-				"type": "string"
-			}
-		],
-		"name": "checkTx",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			},
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "cnContract",
-		"outputs": [
-			{
-				"internalType": "contract CoNET",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
 		"type": "function"
 	}
 ]
