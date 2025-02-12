@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	constGAMEAccount: string[]
 	cancun_Guardiner_init:string
 	cancun_CONETian_Init: string
 	ETH_Manager: string[]
