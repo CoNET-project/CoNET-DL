@@ -65,11 +65,11 @@ for (let _wa of masterSetup.constGAMEAccount) {
 	const wa = new ethers.Wallet(_wa, provode_Cancun)
 	const sc = new ethers.Contract(Cancun_Init_SC_addr, Cancun_Init_ABI, wa)
 	cancunInitSC_Pool.push (sc)
-	logger(`cancunInitSC_Pool added ${wa.address}`)
 }
+
 for (let _wa of masterSetup.conetCNTPAdmin) {
 	const wa = new ethers.Wallet(_wa, provode_Cancun)
-	logger(`cancunInitSC_Pool added ${wa.address}`)
+	logger(`Cancun_CNTP_airdrop_SC added ${wa.address}`)
 }
 
 
