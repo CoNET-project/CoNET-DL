@@ -1,4 +1,4 @@
-import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt} from 'ethers'
+import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
@@ -23,7 +23,7 @@ const CoNETDePINMainchainBridgeSC = new Contract(CoNETDePINMainchainBridgeAddres
 
 interface transferData {
 	toAddress: string
-	value: BigInt
+	value: BigNumberish
 	hash: string
 }
 
@@ -52,7 +52,7 @@ const _transfer = async () => {
 	try {
 		const tx = await SC.airdrop(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
-		logger(inspect(kk, false, 3, true))
+		logger(Colors.blue(`airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 	}
