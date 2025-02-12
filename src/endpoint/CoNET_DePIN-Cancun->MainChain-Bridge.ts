@@ -9,7 +9,7 @@ import CoNETDePIN_mainnet_airdropABI from './CoNET_DePIN_Mainnet_airdrop_SC.json
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const CoNETDePINMainchainSC = '0xc4C9927516db9BBe42DC0b003A7AB0946AC649C1'
-const CoNETDePINMainchainBridgeAddress = '0x673d6632A80eAD21ceA3B80cBc60a706F91bACa8'
+const CoNETDePINMainchainBridgeAddress = '0xf093e5534dBd1E1fB52E29E5432C503876E658C2'
 
 const CoNETDePINCancunSCAddress = '0x8A8898960B45AEa683b36EB214422740cb19fD06'.toLowerCase()
 
