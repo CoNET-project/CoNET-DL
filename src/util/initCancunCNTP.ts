@@ -18,7 +18,7 @@ import CoNETDePIN_mainnet_airdropABI from './CoNETDePIN_Mainnet_airdrop.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
-const CoNET_Mainnet_oldRPC = 'http://38.102.126.53:8000'
+const CoNET_Mainnet_oldRPC = 'http://66.179.255.8:8000'
 const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
@@ -50,6 +50,7 @@ const conetDePIN_mainnet_airdrop_addr = '0xf093e5534dBd1E1fB52E29E5432C503876E65
 
 const CoNETDePIN_mainnet_old = new ethers.Contract(conetDePIN_mainnet_old_addr, CONET_Point_ABI, mainnet_old)
 const CoNETDePIN_Airdrop_SC = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CONET_Point_ABI, mainnet_old)
+
 
 const checkMainnetCoNETDePIN = async (wallet: string) => {
 	try {
