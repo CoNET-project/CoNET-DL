@@ -4,7 +4,7 @@ import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
-import CoNETDePIN_mainnet_airdropABI from '../util/CoNETDePIN_Mainnet_airdrop.json'
+import CoNETDePIN_mainnet_airdropABI from './CoNET_DePIN_Mainnet_airdrop_SC.json'
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
