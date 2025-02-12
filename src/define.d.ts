@@ -59,7 +59,6 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
-	guardianReferralAdmin: string
 	constGAMEAccount: string[]
 	cancun_Guardiner_init:string
 	cancun_CONETian_Init: string
