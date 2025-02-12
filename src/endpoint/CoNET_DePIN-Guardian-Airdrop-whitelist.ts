@@ -1,20 +1,20 @@
 import { JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt } from 'ethers'
 import { logger, masterSetup } from '../util/util'
-import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
 import { mapLimit } from 'async'
 import Colors from 'colors/safe'
+import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
+
+const CoNETCancunRPC = 'https://cancun-rpc.conet.network'
+
+const CoNETDePINCancunSCAddress = '0x8A8898960B45AEa683b36EB214422740cb19fD06'
 
 
-const CoNETHoleskyRPC = 'https://rpc.conet.network'
+const endPointHolesky = new JsonRpcProvider(CoNETCancunRPC)
+const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.guardianReferralAdmin, endPointHolesky)
 
-const CoNETDePINHoleskySCAddress = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'.toLowerCase()
-
-
-const endPointHolesky = new JsonRpcProvider(CoNETHoleskyRPC)
-const CoNETDepinHoleskyAdmin = new Wallet(masterSetup.initManager[1], endPointHolesky)
-
-const CoNETDePINHoleskySC = new Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, CoNETDepinHoleskyAdmin)
+const CoNETDePINHoleskySC = new Contract(CoNETDePINCancunSCAddress, Cancun_CNTP_airdorpABI, CoNETDepinHoleskyAdmin)
 const wallets: string[] = [
+
 ]
 
 const start = () => {

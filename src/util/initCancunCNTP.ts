@@ -55,7 +55,7 @@ const conetDePIN_mainnet_airdrop_addr = '0xf093e5534dBd1E1fB52E29E5432C503876E65
 const Cancun_Init_SC_addr = '0x3Bd44B7b89838c901339b0A8DFF45CC839Af6AA9'
 
 const Holesky_CNTP_airdrop_addr = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
-const Cancun_CNTP_airdrop_addr = '0xAFf7Cda9d82dcA2F8407cC4EF40886CFC40cB78e'
+const Cancun_CNTP_airdrop_addr = '0x8A8898960B45AEa683b36EB214422740cb19fD06'
 
 const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
 const Cancun_CNTP_airdrop_SC = new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
@@ -338,7 +338,7 @@ const processCoNETDePIN = async () => {
 		logger(`processCoNETDePIN success! [${processData.wallet}] => [${ethers.formatEther(processData.value)}]`)
 
 	} catch (ex: any) {
-		logger(`processCoNETDePIN SC.airdrop Error! [${ex.message}]`)
+		//logger(`processCoNETDePIN SC.airdrop Error! [${ex.message}]`)
 	}
 	CoNETDePIN_managerSc_Pool.push(SC)
 	processCoNETDePIN()
