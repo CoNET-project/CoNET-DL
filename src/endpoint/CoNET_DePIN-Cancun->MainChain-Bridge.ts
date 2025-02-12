@@ -1,10 +1,10 @@
 import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt} from 'ethers'
 import {logger, masterSetup} from '../util/util'
-import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
 import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
+import CoNETDePIN_mainnet_airdropABI from '../util/CoNETDePIN_Mainnet_airdrop.json'
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -32,7 +32,7 @@ const transferPool: transferData[] = []
 const ecPool: Contract[] = []
 for (let _wa of masterSetup.newFaucetAdmin) {
 	const wa = new Wallet(_wa, endPointCoNETMainnet)
-	const sc = new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, wa)
+	const sc = new Contract(CoNETDePINMainchainBridgeAddress, CoNETDePIN_mainnet_airdropABI, wa)
 	ecPool.push(sc)
 }
 
