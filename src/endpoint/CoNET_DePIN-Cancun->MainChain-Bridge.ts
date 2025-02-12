@@ -50,7 +50,7 @@ const _transfer = async () => {
 	}
 	
 	try {
-		const tx = await SC.airDrop(data.toAddress, data.value, data.hash)
+		const tx = await SC.airdrop(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
 		logger(inspect(kk, false, 3, true))
 	} catch (ex: any) {
