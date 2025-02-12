@@ -361,44 +361,43 @@ const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_TicketM
 	LotteryWinnerPool.set(winnObj.wallet, winnObj)
 }
 
-let startFaucetProcessStatus = false
 const MAX_TX_Waiting = 1000 * 60 * 3
 
+
+
 const startFaucetProcess = () => new Promise(async resolve => {
-	if (!faucetWaitingPool.length || startFaucetProcessStatus) {
+	if (!faucetWaitingPool.length) {
 		return resolve (false)
 	}
 
-	startFaucetProcessStatus = true
+	const SC = FaucetProcessSCPOOL.shift()
+	if (!SC) {
+		return resolve (false)
+	}
+
 	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
 
 	logger(inspect(faucetWaitingPool, false, 3, true))
 	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
 	const wallet = faucetWaitingPool.map(n => n.wallet)
+	faucetWaitingPool = []
 	logger(inspect(wallet, false, 3, true))
 
 	try {
 		
-		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
+		const tx = await SC.getFaucet(wallet, ipAddress)
 		logger(`start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
 		const tx_conform = await tx.wait()
 
-		if (!tx_conform) {
-			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
-			startFaucetProcessStatus = false
-			return resolve(false)
-		}
-
-		logger(`startFaucetProcess `)
+		logger(`startFaucetProcess wallets = ${wallet.length} ${tx.hash}`)
 		logger(inspect(tx_conform, false, 3, true))
-		faucetWaitingPool = []
+		
 
 	} catch (ex) {
 		logger(`startFaucetProcess Error!`, ex)
 
 	}
-
-	startFaucetProcessStatus = false
+	FaucetProcessSCPOOL.push(SC)
 	return resolve(true)
 })
 
@@ -513,7 +512,7 @@ const ticketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
-
+const FaucetProcessSCPOOL: ethers.Contract[] = [faucet_v3_Contract]
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
