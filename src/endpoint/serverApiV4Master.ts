@@ -76,15 +76,13 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	try {
 		
 		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
-		logger(`faucetWaitingPool start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
+		logger(`faucetWaitingPool start Faucet Total wallets ${wallet.length} Process tx = ${tx.hash} used manager wallet ${faucetWallet.address} `)
 
 		const tx_conform = await tx.wait()
 
 		if (!tx_conform) {
 			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
 		}
-
-		logger(`startFaucetProcess Success ${tx_conform.hash}`)
 
 
 	} catch (ex: any) {
