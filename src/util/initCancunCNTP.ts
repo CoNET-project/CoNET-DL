@@ -58,9 +58,8 @@ const Holesky_CNTP_airdrop_addr = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
 const Cancun_CNTP_airdrop_addr = '0xAFf7Cda9d82dcA2F8407cC4EF40886CFC40cB78e'
 
 const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
-const Cancun_CNTP_airdrop_SC= new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
+const Cancun_CNTP_airdrop_SC = new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
 
-logger(`Cancun_CNTP_AirdropStatus_manager = ${Cancun_CNTP_AirdropStatus_manager.address}`)
 
 const cancunInitSC_Pool: ethers.Contract[] = []
 
@@ -346,14 +345,27 @@ const processCoNETDePIN = async () => {
 }
 
 const ConetianStatusPool: string[] = []
+const processConetianInitStatusSC: ethers.Contract[] = [Cancun_CNTP_airdrop_SC]
+
 
 const processConetianInitStatus = async () => {
 	const wallet = ConetianStatusPool.shift()
 	if (!wallet) {
 		return
 	}
-
-
+	const sc = processConetianInitStatusSC.shift()
+	if (!sc) {
+		return
+	}
+	try {
+		const tx = await sc.changeCONETianDidMint(wallet)
+		tx.wait ()
+		logger(`processConetianInitStatus [${wallet}] => TRUE! success ${tx.hash}`)
+	} catch (ex: any) {
+		logger(`processConetianInitStatus Error! ${ex.message}`)
+	}
+	processConetianInitStatusSC.push(sc)
+	processConetianInitStatus()
 }
 
 const checkConetianInitStatus = async (wallet: string) => {
