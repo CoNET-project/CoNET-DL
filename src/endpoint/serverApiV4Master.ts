@@ -54,44 +54,8 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 process.on('unhandledRejection', (reason) => { throw reason; })
 
 
-let startFaucetProcessStatus = false
 const MAX_TX_Waiting = 1000 * 60 * 3
 
-const startFaucetProcess = () => new Promise(async resolve => {
-	if (!faucetWaitingPool.length || startFaucetProcessStatus) {
-		return resolve (false)
-	}
-
-	startFaucetProcessStatus = true
-	logger(`faucetWaitingPool Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
-
-	logger(`faucetWaitingPool length = ${faucetWaitingPool.length}`)
-
-	const splited = faucetWaitingPool.slice(0, 500)
-	faucetWaitingPool = faucetWaitingPool.slice(500)
-
-	const ipAddress = splited.map(n => n.ipAddress)
-	const wallet = splited.map(n => n.wallet)
-
-	try {
-		
-		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
-		logger(`faucetWaitingPool start Faucet Total wallets ${wallet.length} Process tx = ${tx.hash} used manager wallet ${faucetWallet.address} `)
-
-		const tx_conform = await tx.wait()
-
-		if (!tx_conform) {
-			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
-		}
-
-
-	} catch (ex: any) {
-		logger(`startFaucetProcess Error!`, ex.message)
-	}
-	
-	startFaucetProcessStatus = false
-	return resolve(true)
-})
 
 const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
@@ -146,19 +110,49 @@ const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[6], provideCONET)
-const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 const contract_Referral = new ethers.Contract(conet_Referral_cancun, CONET_Referral_ABI, provideCONET)
-
+const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
+const FaucetProcessSCPOOL: ethers.Contract[] = [faucet_v3_Contract]
 interface faucetRequest {
 	wallet: string
 	ipAddress: string
 }
 
 export const checkGasPriceFordailyTaskPool = 25000000
+
+const startFaucetProcess = () => new Promise(async resolve => {
+	if (!faucetWaitingPool.length) {
+		return resolve (false)
+	}
+	const SC = FaucetProcessSCPOOL.shift()
+	if (!SC) {
+		return resolve (false)
+	}
+
+
+	const splited = faucetWaitingPool.slice(0, 500)
+	faucetWaitingPool = faucetWaitingPool.slice(500)
+
+	const ipAddress = splited.map(n => n.ipAddress)
+	const wallet = splited.map(n => n.wallet)
+
+	try {
+		
+		const tx = await SC.getFaucet(wallet, ipAddress)
+		logger(`faucetWaitingPool start Faucet Total wallets ${wallet.length} Process tx = ${tx.hash} used manager wallet ${faucetWallet.address} `)
+
+		await tx.wait()
+	} catch (ex: any) {
+		logger(`startFaucetProcess Error!`, ex.message)
+	}
+	FaucetProcessSCPOOL.push(SC)
+
+	return resolve(true)
+})
 
 
 let faucetWaitingPool: faucetRequest[] = []
