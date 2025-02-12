@@ -414,3 +414,4 @@ interface ConetinerNFTData {
 	CONETian: BigInt
 	CONETianeferrer: BigInt
 }
+

@@ -16,6 +16,8 @@ import CONETianPlanABI from '../endpoint/CONETianPlan.ABI.json'
 import CONETian_cancun_ABI from './CONETian_cancun_ABI.json'
 import CoNETDePIN_mainnet_airdropABI from './CoNETDePIN_Mainnet_airdrop.json'
 import Cancun_Init_ABI from './initCancunABI.json'
+import Cancun_CNTP_airdorpABI from './Cancun_CNTP_airdorpABI.json'
+import CoNETDePINHoleskyABI from '../endpoint/CoNETDePINHolesky.json' //'..//CoNETDePINHolesky.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -49,8 +51,13 @@ const mainnet = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
 
 const conetDePIN_mainnet_old_addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const conetDePIN_mainnet_airdrop_addr = '0xf093e5534dBd1E1fB52E29E5432C503876E658C2'
-const Cancun_Init_SC_addr = '0x272EA964C4bFde77338055d41a4197DDF7E2c796'
+const Cancun_Init_SC_addr = '0x3Bd44B7b89838c901339b0A8DFF45CC839Af6AA9'
 
+const Holesky_CNTP_airdrop_addr = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
+const Cancun_CNTP_airdrop_addr = '0xAFf7Cda9d82dcA2F8407cC4EF40886CFC40cB78e'
+
+const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
+const Cancun_CNTP_airdrop_SC_readonly = new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, provode_Cancun)
 const cancunInitSC_Pool: ethers.Contract[] = []
 
 const CoNETDePIN_mainnet_old = new ethers.Contract(conetDePIN_mainnet_old_addr, CONET_Point_ABI, mainnet_old)
@@ -60,6 +67,11 @@ for (let _wa of masterSetup.constGAMEAccount) {
 	cancunInitSC_Pool.push (sc)
 	logger(`cancunInitSC_Pool added ${wa.address}`)
 }
+for (let _wa of masterSetup.conetCNTPAdmin) {
+	const wa = new ethers.Wallet(_wa, provode_Cancun)
+	logger(`cancunInitSC_Pool added ${wa.address}`)
+}
+
 
 
 const checkMainnetCoNETDePIN = async (wallet: string) => {
@@ -159,8 +171,8 @@ for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 	const CoNETDePIN_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], mainnet)
 	const  CoNETDePIN_Manager = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CoNETDePIN_mainnet_airdropABI, CoNETDePIN_manager)
 	CoNETDePIN_managerSc_Pool.push(CoNETDePIN_Manager)
-
 }
+
 
 
 
@@ -334,6 +346,36 @@ const processCoNETDePIN = async () => {
 	processCoNETDePIN()
 }
 
+const ConetianStatusPool: string[] = []
+
+const processConetianInitStatus = async () => {
+	const wallet = ConetianStatusPool.shift()
+	if (!wallet) {
+		return
+	}
+
+
+}
+
+const checkConetianInitStatus = async (wallet: string) => {
+	try {
+		let statusHolesky: boolean
+		let statusCancun: boolean
+		[statusHolesky, statusCancun] = await Promise.all([
+			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
+			Cancun_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet)
+		])
+		if (statusHolesky && !statusCancun) {
+			ConetianStatusPool.push(wallet)
+			processConetianInitStatus()
+		}
+		
+	} catch (ex: any) {
+		logger(`checkConetianInitStatus got Error! ${ex.message}`)
+	}
+	
+}
+
 const initCoNETDePIN = async (wallet: string) => {
 
 	wallet = wallet.toLowerCase()
@@ -359,17 +401,22 @@ const initCoNETDePIN = async (wallet: string) => {
 
 export const initCNTP = async (wallet: string) => {
 
-	checkGroudinerNFT(wallet)
-	checkCONETian(wallet)
-	initCoNETDePIN(wallet)
+
 	if (wallet === ethers.ZeroAddress ) {
 		return
 	}
+
+
 	const _walletISInit = walletPool.get(wallet)
 	if ( _walletISInit ) {
 		return
 	}
-	
+
+	checkGroudinerNFT(wallet)
+	checkCONETian(wallet)
+	initCoNETDePIN(wallet)
+	checkConetianInitStatus(wallet)
+
 	const value = await cntpHolesky.balanceOf(wallet)
 	if (value !== BigInt(0)) {
 		walletPool.set(wallet, true)
