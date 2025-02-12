@@ -386,12 +386,8 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	try {
 		
 		const tx = await SC.getFaucet(wallet, ipAddress)
-		logger(`start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
-		const tx_conform = await tx.wait()
-
-		logger(`startFaucetProcess wallets = ${wallet.length} ${tx.hash}`)
-		logger(inspect(tx_conform, false, 3, true))
-		
+		logger(`start Faucet Process tx = ${tx.hash} used manager wallet is ${faucetWallet.address}  Total wallets = ${wallet.length} ${tx.hash}`)
+		await tx.wait()
 
 	} catch (ex) {
 		logger(`startFaucetProcess Error!`, ex)

@@ -236,7 +236,7 @@ class conet_dl_server {
 				count.push(timeStamp)
 				const _count = count.sort((a,b) => b-a).filter(v => v > timeStamp -1000)
 				if (_count.length > MaxCount) {
-					logger(`${ipaddress} _count.length ${_count.length} > MaxCount ${MaxCount} => ${req.method} return 503!!!!!!!!`)
+					//logger(`${ipaddress} _count.length ${_count.length} > MaxCount ${MaxCount} => ${req.method} return 503!!!!!!!!`)
 					res.status(503).end()
 					return res.socket?.end().destroy()
 				}

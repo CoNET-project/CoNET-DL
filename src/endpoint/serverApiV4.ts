@@ -283,7 +283,7 @@ class conet_dl_server_v4 {
 				const newCount = _count.slice(0, 10)
 				countAccessPool.set(ipaddress, newCount)
 				if (_count.length > MaxCount) {
-					logger(`${ipaddress} _count.length ${_count.length} > MaxCount ${MaxCount} => ${req.method} return 503!!!!!!!!`)
+					//logger(`${ipaddress} _count.length ${_count.length} > MaxCount ${MaxCount} => ${req.method} return 503!!!!!!!!`)
 					res.status(503).end()
 					return res.socket?.end().destroy()
 				}
