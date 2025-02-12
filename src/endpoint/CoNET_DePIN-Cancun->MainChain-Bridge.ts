@@ -30,7 +30,8 @@ const transferPool: transferData[] = []
 let transferProcess = false
 
 for (let _wa of masterSetup.newFaucetAdmin) {
-	
+	const wa = new Wallet(_wa, endPointCoNETMainnet)
+	logger(`wallet ${wa.address}`)
 }
 
 
