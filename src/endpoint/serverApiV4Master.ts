@@ -147,7 +147,7 @@ const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
 
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[6], provideCONET)
 const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
