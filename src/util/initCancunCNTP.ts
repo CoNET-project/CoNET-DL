@@ -15,6 +15,7 @@ import GuardianInitABI from './GuardianInitABI.json'
 import CONETianPlanABI from '../endpoint/CONETianPlan.ABI.json'
 import CONETian_cancun_ABI from './CONETian_cancun_ABI.json'
 import CoNETDePIN_mainnet_airdropABI from './CoNETDePIN_Mainnet_airdrop.json'
+import Cancun_Init_ABI from './initCancunABI.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -45,11 +46,20 @@ const CONETian_cancun_SC = new ethers.Contract(CONETian_cancun_addr, CONETian_ca
 
 const mainnet_old = new ethers.JsonRpcProvider(CoNET_Mainnet_oldRPC)
 const mainnet = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
+
 const conetDePIN_mainnet_old_addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const conetDePIN_mainnet_airdrop_addr = '0xf093e5534dBd1E1fB52E29E5432C503876E658C2'
+const Cancun_Init_SC_addr = '0x272EA964C4bFde77338055d41a4197DDF7E2c796'
+
+const cancunInitSC_Pool: ethers.Contract[] = []
 
 const CoNETDePIN_mainnet_old = new ethers.Contract(conetDePIN_mainnet_old_addr, CONET_Point_ABI, mainnet_old)
-const CoNETDePIN_Airdrop_SC = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CONET_Point_ABI, mainnet_old)
+for (let _wa of masterSetup.initManager.slice(1)) {
+	const wa = new ethers.Wallet(_wa, provode_Cancun)
+	const sc = new ethers.Contract(Cancun_Init_SC_addr, Cancun_Init_ABI, wa)
+	cancunInitSC_Pool.push (sc)
+	logger(`cancunInitSC_Pool added ${wa.address}`)
+}
 
 
 const checkMainnetCoNETDePIN = async (wallet: string) => {
@@ -149,9 +159,10 @@ for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 	const CoNETDePIN_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], mainnet)
 	const  CoNETDePIN_Manager = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CoNETDePIN_mainnet_airdropABI, CoNETDePIN_manager)
 	CoNETDePIN_managerSc_Pool.push(CoNETDePIN_Manager)
-	logger(`added wallet ${CoNETDePIN_manager.address}`)
 
 }
+
+
 
 const startProcess_Reff = async () => {
 	//logger(Colors.blue(`startProcess startProcess_Reff POOL size = ${ReffeProcess.length}`))
@@ -180,7 +191,6 @@ const startProcess_Reff = async () => {
 	adminWalletPool.push(admin)
 	startProcess_Reff()
 }
-
 
 const startProcess_CNTP = async () => {
 	if (!walletProcess.length) {
@@ -233,8 +243,6 @@ export const refferInit = async (wallet: string, reffer: string) => {
 	//logger(Colors.gray(`refferInit added ${wallet} Reffe ${reffer} to Process POOL! Size ${ReffeProcess.length}`))
 	ReffeProcess.push ({wallet, reffer})
 }
-
-
 
 const initGroudinerNFTPool: GroudinerNFTData[] = []
 
