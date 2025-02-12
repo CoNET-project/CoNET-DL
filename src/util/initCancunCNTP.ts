@@ -358,7 +358,7 @@ const processConetianInitStatus = async () => {
 		return
 	}
 	try {
-		const tx = await sc.changeCONETianDidMint(wallet)
+		const tx = await sc.changeCONETianDidMint(wallet, true)
 		tx.wait ()
 		logger(`processConetianInitStatus [${wallet}] => TRUE! success ${tx.hash}`)
 	} catch (ex: any) {
