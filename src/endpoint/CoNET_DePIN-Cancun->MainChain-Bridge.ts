@@ -1,4 +1,4 @@
-import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther} from 'ethers'
+import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther, BigNumberish} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
@@ -68,7 +68,7 @@ const checkTransfer = async (tR: TransactionReceipt) => {
 		logger(`${LogDescription?.name}`)
 		if (LogDescription?.name === 'bridgeTo') {
 			const toAddress  = LogDescription.args[0]
-			const value: BigInt = LogDescription.args[1]
+			const value: BigNumberish = LogDescription.args[1]
 			const hash = tR.hash
 			const obj = {toAddress, value, hash}
 			transferPool.push (obj)
