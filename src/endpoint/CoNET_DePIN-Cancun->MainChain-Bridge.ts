@@ -26,34 +26,37 @@ interface transferData {
 	value: BigInt
 	hash: string
 }
-const transferPool: transferData[] = []
-let transferProcess = false
 
+const transferPool: transferData[] = []
+
+const ecPool: Contract[] = []
 for (let _wa of masterSetup.newFaucetAdmin) {
 	const wa = new Wallet(_wa, endPointCoNETMainnet)
-	logger(`wallet ${wa.address}`)
+	const sc = new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, wa)
+	ecPool.push(sc)
 }
 
 
 const _transfer = async () => {
-	if (transferProcess) {
-		return
-	}
-	transferProcess = true
 	const data = transferPool.shift()
 	if (!data) {
-		transferProcess = false
+		return
+	}
+
+	const SC = ecPool.shift()
+	if (!SC) {
+		transferPool.unshift(data) 
 		return
 	}
 	
 	try {
-		const tx = await CoNETDePINMainchainBridgeSC.airDrop(data.hash, data.toAddress, data.value)
+		const tx = await SC.airDrop(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
 		logger(inspect(kk, false, 3, true))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 	}
-	transferProcess = false
+	ecPool.push(SC)
 	_transfer()
 }
 
@@ -121,4 +124,4 @@ const daemondStart = async () => {
 
 // daemondStart()
 
-// CancunBlockListenning(72123)
+CancunBlockListenning(72123)
