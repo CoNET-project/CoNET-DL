@@ -45,6 +45,7 @@ const GuardianP_HoleskySC = new ethers.Contract(Guardian_Holesky, GuardianPlan_n
 const CONETian_holesky_SC = new ethers.Contract(CONETian_holesky_addr, CONETianPlanABI, provode_Holesky)
 const CONETian_cancun_initWallet = new ethers.Wallet(masterSetup.cancun_CONETian_Init, provode_Cancun)
 const CONETian_cancun_SC = new ethers.Contract(CONETian_cancun_addr, CONETian_cancun_ABI, CONETian_cancun_initWallet)
+const Cancun_CNTP_AirdropStatus_manager =  new ethers.Wallet(masterSetup.conetPointAdmin, provode_Cancun)
 
 const mainnet_old = new ethers.JsonRpcProvider(CoNET_Mainnet_oldRPC)
 const mainnet = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
@@ -57,7 +58,10 @@ const Holesky_CNTP_airdrop_addr = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
 const Cancun_CNTP_airdrop_addr = '0xAFf7Cda9d82dcA2F8407cC4EF40886CFC40cB78e'
 
 const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
-const Cancun_CNTP_airdrop_SC_readonly = new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, provode_Cancun)
+const Cancun_CNTP_airdrop_SC= new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
+
+logger(`Cancun_CNTP_AirdropStatus_manager = ${Cancun_CNTP_AirdropStatus_manager.address}`)
+
 const cancunInitSC_Pool: ethers.Contract[] = []
 
 const CoNETDePIN_mainnet_old = new ethers.Contract(conetDePIN_mainnet_old_addr, CONET_Point_ABI, mainnet_old)
@@ -65,11 +69,6 @@ for (let _wa of masterSetup.constGAMEAccount) {
 	const wa = new ethers.Wallet(_wa, provode_Cancun)
 	const sc = new ethers.Contract(Cancun_Init_SC_addr, Cancun_Init_ABI, wa)
 	cancunInitSC_Pool.push (sc)
-}
-
-for (let _wa of masterSetup.conetCNTPAdmin) {
-	const wa = new ethers.Wallet(_wa, provode_Cancun)
-	logger(`Cancun_CNTP_airdrop_SC added ${wa.address}`)
 }
 
 
@@ -363,7 +362,7 @@ const checkConetianInitStatus = async (wallet: string) => {
 		let statusCancun: boolean
 		[statusHolesky, statusCancun] = await Promise.all([
 			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
-			Cancun_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet)
+			Cancun_CNTP_airdrop_SC.CONETianDidMint(wallet)
 		])
 		if (statusHolesky && !statusCancun) {
 			ConetianStatusPool.push(wallet)
