@@ -54,7 +54,7 @@ const Cancun_Init_SC_addr = '0x272EA964C4bFde77338055d41a4197DDF7E2c796'
 const cancunInitSC_Pool: ethers.Contract[] = []
 
 const CoNETDePIN_mainnet_old = new ethers.Contract(conetDePIN_mainnet_old_addr, CONET_Point_ABI, mainnet_old)
-for (let _wa of masterSetup.initManager.slice(1)) {
+for (let _wa of masterSetup.ETH_Manager) {
 	const wa = new ethers.Wallet(_wa, provode_Cancun)
 	const sc = new ethers.Contract(Cancun_Init_SC_addr, Cancun_Init_ABI, wa)
 	cancunInitSC_Pool.push (sc)
