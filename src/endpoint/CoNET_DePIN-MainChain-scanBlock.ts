@@ -53,7 +53,7 @@ const _transfer = async () => {
 		logger(Colors.magenta(`_transfer ${ data.toAddress} => ${formatEther(data.value)} success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
 	} catch (ex: any) {
 
-		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
+		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error!  waiting list has ${Colors.green(transferPool.length.toString())}, ${ex.message} `))
 	}
 	workSC.unshift(CoNETDePINMainchainBridgeSC)
 	_transfer()

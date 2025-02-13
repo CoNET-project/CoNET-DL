@@ -137,6 +137,7 @@ const checkCONETian = async (wallet: string) => {
 			wallet, CONETian, CONETianeferrer
 		})
 	}
+	
 	processCONETian()
 }
 
@@ -430,7 +431,7 @@ export const initCNTP = async (wallet: string) => {
 	}
 
 	walletPool.set(wallet, true)
-	
+
 	checkGroudinerNFT(wallet)
 	checkCONETian(wallet)
 	initCoNETDePIN(wallet)
