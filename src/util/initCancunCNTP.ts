@@ -377,11 +377,11 @@ const checkConetianInitStatus = async (wallet: string) => {
 		let statusHolesky: boolean
 		let statusCancun: boolean
 		[statusHolesky, statusCancun] = await Promise.all([
-			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
-			Cancun_CNTP_airdrop_SC.CONETianDidMint(wallet)
-		])
 
-		logger(`checkConetianInitStatus ${wallet} statusHolesky = [${statusHolesky}] = [${statusCancun}]`)
+			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
+			Cancun_CNTP_airdrop_SC.CONETianDidMint(wallet),
+			
+		])
 
 		if (statusHolesky && !statusCancun) {
 			ConetianStatusPool.push(wallet)
@@ -420,17 +420,17 @@ const initCoNETDePIN = async (wallet: string) => {
 
 export const initCNTP = async (wallet: string) => {
 
-
 	if (wallet === ethers.ZeroAddress ) {
 		return
 	}
-
 
 	const _walletISInit = walletPool.get(wallet)
 	if ( _walletISInit ) {
 		return
 	}
+
 	walletPool.set(wallet, true)
+	
 	checkGroudinerNFT(wallet)
 	checkCONETian(wallet)
 	initCoNETDePIN(wallet)

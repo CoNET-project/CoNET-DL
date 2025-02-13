@@ -6,6 +6,7 @@ import {inspect} from 'node:util'
 import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
 import CoNETDePIN_mainnet_airdropABI from './CoNET_DePIN_Mainnet_airdrop_SC.json'
 import CONET_Point_ABI from '../util/cCNTP.json'
+import {mapLimit} from 'async'
 
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
@@ -57,9 +58,9 @@ const _transfer = async () => {
 	try {
 		const tx = await SC.airdrop(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
-		logger(Colors.blue(`airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}`))
+		logger(Colors.blue(`waitingList $${transferPool.length} airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}` ))
 	} catch (ex: any) {
-		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
+		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDropairDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${data.hash}  Error! ${ex.message}`))
 	}
 	ecPool.push(SC)
 	_transfer()
@@ -98,8 +99,7 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 			const value: BigNumberish = LogDescription.args[2]
 			const hash = tR.hash
 			const obj = {toAddress, value, hash}
-			
-			logger(inspect(obj, false, 3, true))
+
 			transferPool.push (obj)
 			_transfer()
 			
@@ -134,24 +134,26 @@ const CancunBlockListenning = async (block: number) => {
 const getTx = async (tx: string) => {
 	return await endPointCancun.getTransactionReceipt(tx)
 }
+//		71534
+const start_block = 91196
+const stop_block = 71534
 
+const blockArray: number[] = []
+logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block}`))
+if (start_block > stop_block) {
+	for (let i = start_block; i > stop_block; i --) {
+		blockArray.push(i)
+	}
 
-
-let currentBlock = 0
-
-const daemondStart = async () => {
-	
-	currentBlock = await endPointCancun.getBlockNumber()
-	logger(Colors.magenta(`CoNET DePIN airdrop daemon Start from block [${currentBlock}]`))
-	endPointCancun.on('block', async block => {
-		if (block > currentBlock) {
-			currentBlock = block
-			CancunBlockListenning(block)
-		}
-		
-	})
+} else {
+	for (let i = start_block; i < stop_block; i ++) {
+		blockArray.push(i)
+	}
 }
 
 
-daemondStart()
-
+mapLimit(blockArray, 1, async (n, next) => {
+	await CancunBlockListenning(n)
+}, err => {
+	logger(Colors.red(`Scan end!`))
+})
