@@ -8,6 +8,10 @@ import CoNETDePIN_mainnet_airdropABI from './CoNET_DePIN_Mainnet_airdrop_SC.json
 import CONET_Point_ABI from '../util/cCNTP.json'
 import {mapLimit} from 'async'
 
+import CoNET_DePIN_ABI from './CoNET_DePIN.json'
+
+const CoNET_DePIN_addr = '0xc4D5cc27026F52dc357cccD293549076a6b7757D'
+
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -38,8 +42,9 @@ const transferPool: transferData[] = []
 const ecPool: Contract[] = []
 for (let _wa of masterSetup.newFaucetAdmin) {
 	const wa = new Wallet(_wa, endPointCoNETMainnet)
-	const sc = new Contract(CoNETDePINMainchainBridgeAddress, CoNETDePIN_mainnet_airdropABI, wa)
+	const sc = new Contract(CoNET_DePIN_addr, CoNET_DePIN_ABI, wa)
 	ecPool.push(sc)
+	logger(`manager address ${wa.address}`)
 }
 
 
@@ -95,8 +100,9 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 		
 		if (LogDescription?.name === 'Transfer' && LogDescription.args[1] == '0x0000000000000000000000000000000000000000') {
 			const toAddress  = LogDescription.args[0]
-			const value: BigNumberish = LogDescription.args[2]
+			const _value: BigNumberish = LogDescription.args[2]
 			const hash = tR.hash
+			const value = ethers.parseEther((parseFloat(ethers.formatEther(_value))/200).toString())
 			const obj = {toAddress, value, hash}
 
 			transferPool.push (obj)
@@ -151,9 +157,9 @@ if (start_block > stop_block) {
 }
 
 
-mapLimit(blockArray, 1, async (n, next) => {
-	await CancunBlockListenning(n)
-}, err => {
-	logger(Colors.red(`Scan end!`))
-})
+// mapLimit(blockArray, 1, async (n, next) => {
+// 	await CancunBlockListenning(n)
+// }, err => {
+// 	logger(Colors.red(`Scan end!`))
+// })
 
