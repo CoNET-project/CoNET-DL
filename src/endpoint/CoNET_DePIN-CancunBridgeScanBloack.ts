@@ -93,7 +93,6 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 	for (let log of tR.logs) {
 		const LogDescription = CNTP_Sc_readonly.interface.parseLog(log)
 		
-		logger(inspect(LogDescription, false, 3, true))
 		if (LogDescription?.name === 'Transfer' && LogDescription.args[1] == '0x0000000000000000000000000000000000000000') {
 			const toAddress  = LogDescription.args[0]
 			const value: BigNumberish = LogDescription.args[2]
