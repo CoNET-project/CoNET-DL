@@ -1,4 +1,4 @@
-import ethers, {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther, BigNumberish} from 'ethers'
+import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther, BigNumberish, ethers} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import CONETDePIN_Airdrop from './CNTPairdrop.json'
 import Colors from 'colors/safe'
