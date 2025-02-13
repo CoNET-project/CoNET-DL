@@ -422,7 +422,7 @@ export const initCNTP = async (wallet: string) => {
 	if ( _walletISInit ) {
 		return
 	}
-
+	walletPool.set(wallet, true)
 	checkGroudinerNFT(wallet)
 	checkCONETian(wallet)
 	initCoNETDePIN(wallet)
@@ -430,12 +430,10 @@ export const initCNTP = async (wallet: string) => {
 
 	const value = await cntpHolesky.balanceOf(wallet)
 	if (value !== BigInt(0)) {
-		walletPool.set(wallet, true)
+		walletProcess.push({
+			wallet, value
+		})
 	}
-	walletProcess.push({
-		wallet, value
-	})
-
 	
 }
 
