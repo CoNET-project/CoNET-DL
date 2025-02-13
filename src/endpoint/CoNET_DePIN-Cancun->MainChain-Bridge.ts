@@ -57,7 +57,6 @@ const _transfer = async () => {
 	try {
 		const tx = await SC.airdrop(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
-		ethers.parseEther
 		logger(Colors.blue(`airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
@@ -101,8 +100,8 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 			const obj = {toAddress, value, hash}
 			
 			logger(inspect(obj, false, 3, true))
-			transferPool.push (obj)
-			_transfer()
+			// transferPool.push (obj)
+			// _transfer()
 			
 		} else {
 			logger(LogDescription?.name)
@@ -157,6 +156,6 @@ const daemondStart = async () => {
 }
 
 
-// CancunBlockListenning(86772)
-daemondStart()
+CancunBlockListenning(87224)
+// daemondStart()
 
