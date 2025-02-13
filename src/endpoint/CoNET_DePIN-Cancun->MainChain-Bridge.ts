@@ -5,6 +5,8 @@ import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
 import CoNETDePIN_mainnet_airdropABI from './CoNET_DePIN_Mainnet_airdrop_SC.json'
+import CONET_Point_ABI from '../util/cCNTP.json'
+
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -13,6 +15,8 @@ const CoNETDePINMainchainBridgeAddress = '0xf093e5534dBd1E1fB52E29E5432C503876E6
 
 const CoNETDePINCancunSCAddress = '0x8A8898960B45AEa683b36EB214422740cb19fD06'.toLowerCase()
 
+const CNTPCancun_addr = '0x6C7C575010F86A311673432319299F3D68e4b522'.toLowerCase()
+
 const endPointCancun = new JsonRpcProvider(CoNET_CancunRPC)
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
 
@@ -20,6 +24,7 @@ const CoNETDePINMainnetAdmin = new Wallet(masterSetup.conetDePINAdmin[0], endPoi
 const CoNETDePIN_CNTP_Bridge_Event_readonly = new Contract(CoNETDePINCancunSCAddress, Cancun_CNTP_airdorpABI, endPointCancun)
 
 const CoNETDePINMainchainBridgeSC = new Contract(CoNETDePINMainchainBridgeAddress, CONETDePIN_Airdrop, CoNETDePINMainnetAdmin)
+const CNTP_Sc_readonly = new Contract(CNTPCancun_addr, CONET_Point_ABI, endPointCancun)
 
 interface transferData {
 	toAddress: string
@@ -83,6 +88,28 @@ const checkTransfer = async (tR: TransactionReceipt) => {
 	
 }
 
+const checkCNTPTransfer = async (tR: TransactionReceipt) => {
+	
+	for (let log of tR.logs) {
+		const LogDescription = CNTP_Sc_readonly.interface.parseLog(log)
+		
+		logger(inspect(LogDescription, false, 3, true))
+		if (LogDescription?.name === 'Transfer' && LogDescription.args[1] == '0x0000000000000000000000000000000000000000') {
+			const toAddress  = LogDescription.args[0]
+			const value: BigNumberish = LogDescription.args[2]
+			const hash = tR.hash
+			const obj = {toAddress, value, hash}
+			
+			logger(inspect(obj, false, 3, true))
+			transferPool.push (obj)
+			_transfer()
+			
+		} else {
+			logger(LogDescription?.name)
+		}
+	}
+}
+
 const CancunBlockListenning = async (block: number) => {
 	
 	const blockTs = await endPointCancun.getBlock(block)
@@ -96,10 +123,14 @@ const CancunBlockListenning = async (block: number) => {
 	for (let tx of blockTs.transactions) {
 
 		const event = await getTx(tx)
-		
-		if ( event?.to?.toLowerCase() === CoNETDePINCancunSCAddress) {
-			checkTransfer(event)
-		} 
+		// if ( event?.to?.toLowerCase() === CoNETDePINCancunSCAddress) {
+		// 	checkTransfer(event)
+		// }
+
+		if ( event?.to?.toLowerCase() === CNTPCancun_addr) {
+			
+			checkCNTPTransfer(event)
+		}
 		
 	}
 }
@@ -107,6 +138,8 @@ const CancunBlockListenning = async (block: number) => {
 const getTx = async (tx: string) => {
 	return await endPointCancun.getTransactionReceipt(tx)
 }
+
+
 
 let currentBlock = 0
 
@@ -123,5 +156,7 @@ const daemondStart = async () => {
 	})
 }
 
+
+// CancunBlockListenning(86772)
 daemondStart()
 

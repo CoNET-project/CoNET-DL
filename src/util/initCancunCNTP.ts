@@ -18,6 +18,8 @@ import CoNETDePIN_mainnet_airdropABI from './CoNETDePIN_Mainnet_airdrop.json'
 import Cancun_Init_ABI from './initCancunABI.json'
 import Cancun_CNTP_airdorpABI from './Cancun_CNTP_airdorpABI.json'
 import CoNETDePINHoleskyABI from '../endpoint/CoNETDePINHolesky.json' //'..//CoNETDePINHolesky.json'
+import CoNETDePIN_MainnetABI from './CoNETDePIN_Mainnet-ABI.json'
+
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -60,6 +62,8 @@ const Cancun_CNTP_airdrop_addr = '0x8A8898960B45AEa683b36EB214422740cb19fD06'
 const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
 const Cancun_CNTP_airdrop_SC = new ethers.Contract(Cancun_CNTP_airdrop_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
 
+const conetDePIN_mainnet_addr = '0xC6edDb4Bc6161259325cf56AEf8b0D4fb289898A'
+const conetDePIN_mainnet_SC_readonly = new ethers.Contract(conetDePIN_mainnet_addr, CoNETDePIN_MainnetABI, mainnet)
 
 const cancunInitSC_Pool: ethers.Contract[] = []
 
@@ -218,7 +222,7 @@ const startProcess_CNTP = async () => {
 	walletProcess = []
 	try {
 		const tx = await CNTP_initContract.initCNTP(wallet, values)
-		logger(Colors.blue(`startProcess initCNTP success! ${tx.hash}`))
+		logger(Colors.blue(`startProcess initCNTP success! ${wallet.length} ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`startProcess initCNTP Error! ${ex.message}`))
 	}
@@ -376,8 +380,12 @@ const checkConetianInitStatus = async (wallet: string) => {
 			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
 			Cancun_CNTP_airdrop_SC.CONETianDidMint(wallet)
 		])
+
+		logger(`checkConetianInitStatus ${wallet} statusHolesky = [${statusHolesky}] = [${statusCancun}]`)
+
 		if (statusHolesky && !statusCancun) {
 			ConetianStatusPool.push(wallet)
+			logger(`checkConetianInitStatus processConetianInitStatus ${wallet}`)
 			processConetianInitStatus()
 		}
 		
@@ -441,4 +449,21 @@ export const initCNTP = async (wallet: string) => {
 export const startProcess = async () => {
 	startProcess_CNTP()
 	startProcess_Reff()
+}
+
+const checkCNTPInHolesky = async (wallet: string) => {
+	const value = await cntpHolesky.balanceOf(wallet)
+	logger(value)
+}
+
+const checkCoNETDePIN_in_mainnet_both_old_new = async(wallet: string) => {
+	let oldValue: ethers.BigNumberish
+	let newValue: ethers.BigNumberish
+	[oldValue, newValue] = await 
+	Promise.all([
+		CoNETDePIN_mainnet_old.balanceOf(wallet),
+		conetDePIN_mainnet_SC_readonly.balanceOf(wallet)
+	])
+
+	logger(`wallet ${wallet} old balance = ${ethers.formatEther(oldValue)} new balance = ${ethers.formatEther(newValue)}`)
 }
