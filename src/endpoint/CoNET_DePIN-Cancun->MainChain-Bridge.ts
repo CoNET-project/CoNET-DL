@@ -156,6 +156,5 @@ const daemondStart = async () => {
 }
 
 
-CancunBlockListenning(87224)
-// daemondStart()
+daemondStart()
 
