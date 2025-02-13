@@ -123,7 +123,7 @@ if (start_block > stop_block) {
 		blockArray.push(i)
 	}
 }
-CancunBlockListenning(92357)
+CancunBlockListenning(93662)
 
 // mapLimit(blockArray, 1, async (n, next) => {
 // 	await CancunBlockListenning(n)
