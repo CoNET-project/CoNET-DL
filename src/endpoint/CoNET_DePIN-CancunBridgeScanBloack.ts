@@ -134,7 +134,7 @@ const getTx = async (tx: string) => {
 	return await endPointCancun.getTransactionReceipt(tx)
 }
 //		71534
-const start_block = 88317
+const start_block = 92007
 const stop_block = 71534
 
 const blockArray: number[] = []

@@ -100,8 +100,8 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 			const obj = {toAddress, value, hash}
 			
 			logger(inspect(obj, false, 3, true))
-			// transferPool.push (obj)
-			// _transfer()
+			transferPool.push (obj)
+			_transfer()
 			
 		} else {
 			logger(LogDescription?.name)
