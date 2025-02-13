@@ -58,7 +58,7 @@ const _transfer = async () => {
 	try {
 		const tx = await SC.airdrop(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
-		logger(Colors.blue(`waitingList $${transferPool.length} airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}` ))
+		logger(Colors.blue(`waitingList ${transferPool.length} airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}` ))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDropairDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${data.hash}  Error! ${ex.message}`))
 	}
@@ -134,7 +134,7 @@ const getTx = async (tx: string) => {
 	return await endPointCancun.getTransactionReceipt(tx)
 }
 //		71534
-const start_block = 91196
+const start_block = 89522
 const stop_block = 71534
 
 const blockArray: number[] = []
