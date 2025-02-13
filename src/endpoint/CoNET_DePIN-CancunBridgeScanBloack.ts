@@ -151,8 +151,10 @@ if (start_block > stop_block) {
 }
 
 
-mapLimit(blockArray, 1, async (n, next) => {
-	await CancunBlockListenning(n)
-}, err => {
-	logger(Colors.red(`Scan end!`))
-})
+// mapLimit(blockArray, 1, async (n, next) => {
+// 	await CancunBlockListenning(n)
+// }, err => {
+// 	logger(Colors.red(`Scan end!`))
+// })
+
+CancunBlockListenning(91194)
