@@ -19,6 +19,9 @@ import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
+
+
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -39,7 +42,6 @@ let startDailyPoolTranferProcess = false
 let lastTransferTimeStamp = new Date().getTime()
 const longestWaitingTimeForDaily = 1000 * 60 * 10
 const longestWaitingTimeForTicket = 1000 * 60 * 5
-
 
 //			getIpAddressFromForwardHeader(req.header(''))
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -105,6 +107,7 @@ const stratlivenessV2 = async (eposh: number) => {
 }
 
 
+
 const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
@@ -134,8 +137,8 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	}
 
 
-	const splited = faucetWaitingPool.slice(0, 500)
-	faucetWaitingPool = faucetWaitingPool.slice(500)
+	const splited = faucetWaitingPool.slice(0, 50)
+	faucetWaitingPool = faucetWaitingPool.slice(50)
 
 	const ipAddress = splited.map(n => n.ipAddress)
 	const wallet = splited.map(n => n.wallet)
@@ -214,7 +217,6 @@ class conet_dl_server {
 		currentEpoch = await provideCONET.getBlockNumber()
 		await getAllDevelopAddress()
 		this.startServer()
-
 		provideCONET.on ('block', async _block => {
 
 			if (_block % 2) {

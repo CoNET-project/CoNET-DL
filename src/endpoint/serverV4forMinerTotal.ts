@@ -19,6 +19,12 @@ import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
+import GuardianNodesV2ABI from '../util/GuardianNodesV2.json'
+import NodesInfoABI from './CONET_nodeInfo.ABI.json'
+import {readKey} from 'openpgp'
+import {mapLimit} from 'async'
+
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -35,10 +41,6 @@ const version = packageJson.version
 const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
 
 export const checkGasPrice = 1550000
-let startDailyPoolTranferProcess = false
-let lastTransferTimeStamp = new Date().getTime()
-const longestWaitingTimeForDaily = 1000 * 60 * 10
-const longestWaitingTimeForTicket = 1000 * 60 * 5
 
 
 //			getIpAddressFromForwardHeader(req.header(''))
@@ -96,8 +98,15 @@ const startFaucetProcess = () => new Promise(async resolve => {
 })
 
 const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
+
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
 const developWalletPool: Map<string, boolean> = new Map()
+
+
+
+const CONET_Guardian_cancun_addr = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
+const GuardianNodesInfoV6_cancun_addr = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
+
 
 const getAllDevelopAddress = async () => {
 	let ret: any []
@@ -223,7 +232,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalMiners += body.users.length
 	epochTotal.totalConnectNode += 1
 
-	//logger(Colors.grey(`/miningData eposh ${body.epoch}  nodes ${body.ipaddress} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
+	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
 	return res.status(200).end()
 }
 

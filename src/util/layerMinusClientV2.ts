@@ -218,6 +218,7 @@ const postLocalhost = (path: string, obj: any)=> new Promise(async resolve =>{
 let sendCount = 0
 let epoch = 0
 let faucetProcess = false
+let  PassportPoolProcessCount = 0
 const nodeDate: Map<string, string> = new Map()
 const connectToGossipNode = async (node: nodeInfo ) => {
 	const walletAddress = wallet.address.toLowerCase()
@@ -298,10 +299,11 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			if (!didU) {
 				didToPassportPool.set (data.nodeWallet, true)
 				addNodeToPassportPool.push(data.nodeWallet)
+				PassportPoolProcessCount ++
 				PassportPoolProcess()
 			}
 
-			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
+			logger(Colors.grey(`PassportPoolProcessCount = [${PassportPoolProcessCount}]startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
 			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
