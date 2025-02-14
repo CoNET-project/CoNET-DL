@@ -292,16 +292,16 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			sendCount ++
 			let kk = null
 			if (postLocal) {
-				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
+				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: data.nodeWallet})
 			}
-			nodeDate.set(node.ip_addr, data.nodeWallet)
-			const didU = didToPassportPool.get(data.nodeWallet)
-			if (!didU) {
-				didToPassportPool.set (data.nodeWallet, true)
-				addNodeToPassportPool.push(data.nodeWallet)
-				PassportPoolProcessCount ++
-				PassportPoolProcess()
-			}
+			// nodeDate.set(node.ip_addr, data.nodeWallet)
+			// const didU = didToPassportPool.get(data.nodeWallet)
+			// if (!didU) {
+			// 	didToPassportPool.set (data.nodeWallet, true)
+			// 	addNodeToPassportPool.push(data.nodeWallet)
+			// 	PassportPoolProcessCount ++
+			// 	PassportPoolProcess()
+			// }
 
 			logger(Colors.grey(`PassportPoolProcessCount = [${PassportPoolProcessCount}]startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
 		} catch (ex) {
