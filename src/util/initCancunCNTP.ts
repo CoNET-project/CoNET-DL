@@ -19,7 +19,7 @@ import Cancun_Init_ABI from './initCancunABI.json'
 import Cancun_CNTP_airdorpABI from './Cancun_CNTP_airdorpABI.json'
 import CoNETDePINHoleskyABI from '../endpoint/CoNETDePINHolesky.json' //'..//CoNETDePINHolesky.json'
 import CoNETDePIN_MainnetABI from './CoNETDePIN_Mainnet-ABI.json'
-
+import CoNET_DePIN_ABI from '../endpoint/CoNET_DePIN.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
@@ -74,6 +74,7 @@ for (let _wa of masterSetup.constGAMEAccount) {
 	cancunInitSC_Pool.push (sc)
 }
 
+const CoNETDePIN_mainnet_addr = '0xc4D5cc27026F52dc357cccD293549076a6b7757D'
 
 
 const checkMainnetCoNETDePIN = async (wallet: string) => {
@@ -172,9 +173,8 @@ for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 	const CNTP_refe_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], provode_Cancun)
 	adminWalletPool.push(CNTP_refe_manager)
 	const CoNETDePIN_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], mainnet)
-	const  CoNETDePIN_Manager = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CoNETDePIN_mainnet_airdropABI, CoNETDePIN_manager)
+	const  CoNETDePIN_Manager = new ethers.Contract(CoNETDePIN_mainnet_addr, CoNET_DePIN_ABI, CoNETDePIN_manager)
 	CoNETDePIN_managerSc_Pool.push(CoNETDePIN_Manager)
-	logger(`CoNETDePIN_managerSc_Pool ${CoNETDePIN_manager.address}`)
 }
 
 
