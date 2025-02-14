@@ -339,12 +339,12 @@ const processCoNETDePIN = async () => {
 		return
 	}
 	try {
-		const tx = await SC.airdrop(processData.wallet, processData.value)
+		const tx = await SC.airdropFromCancun(processData.wallet, processData.value, ethers.id(processData.wallet))
 		tx.wait()
 		logger(`processCoNETDePIN success! [${processData.wallet}] => [${ethers.formatEther(processData.value)}]`)
 
 	} catch (ex: any) {
-		//logger(`processCoNETDePIN SC.airdrop Error! [${ex.message}]`)
+		logger(`processCoNETDePIN SC.airdrop Error! [${ex.message}]`)
 	}
 	CoNETDePIN_managerSc_Pool.push(SC)
 	processCoNETDePIN()
