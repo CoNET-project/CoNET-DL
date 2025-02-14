@@ -12,15 +12,69 @@ import NodesInfo from '../endpoint/CONET_nodeInfo.ABI.json'
 import {getRandomValues} from 'node:crypto'
 import { writeFile} from 'node:fs/promises'
 import rateABI from '../endpoint/conet-rate.json'
-import type {Response, Request } from 'express'
 import NodesInfoABI from '../endpoint/CONET_nodeInfo.ABI.json'
+import {masterSetup} from './util'
+import faucet_v3_ABI from '../endpoint/faucet_v3.abi.json'
+import CONETPassportABI from './CoNET_Cancun_passportABI.json'
 const conet_rpc = 'https://cancun-rpc.conet.network'
 
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const CONET_Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
+
 const provider = new ethers.JsonRpcProvider(conet_rpc)
 const launchMap: Map<string, boolean> = new Map()
 const epochTotal: Map<string, number> = new Map()
+
+const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
+const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
+const CoNET_passport_SC: ethers.Contract[] = []
+
+const getFaucet = async (nodeWallets: string[], ipAddress: string[]) => {
+
+
+	const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, wallet)
+	logger(inspect(wallet))
+	logger(inspect(ipAddress))
+	try {
+		const tx = await faucet_v3_Contract.getFaucet(nodeWallets, ipAddress)
+		await tx.wait()
+		logger(Colors.blue(`getFaucet for all nodes success ${tx.hash}`))
+	} catch (ex: any) {
+		logger(Colors.red(`getFaucet error! ${ex.message}`))
+	}
+
+}
+
+const addNodeToPassportPool: string[] = []
+const didToPassportPool: Map<string, boolean> = new Map()
+const PassportPoolProcess = async () => {
+	const node = addNodeToPassportPool.shift()
+	if (!node) {
+		return
+	}
+	const sc = CoNET_passport_SC.shift()
+	if (!sc) {
+		addNodeToPassportPool.unshift(node)
+		return
+	}
+	try {
+		const isAd = await sc._guardianList(node)
+		if (!isAd) {
+			const tx = await sc.changeAddressInGuardianList(node, true)
+			await tx.wait()
+			logger(Colors.magenta(`PassportPoolProcess ${node} waiting list = [${addNodeToPassportPool.length}] success! `))
+		}
+		
+		
+	} catch(ex:any) {
+		logger(Colors.red(`PassportPoolProcess Error, $${ex.message}`))
+	}
+	CoNET_passport_SC.unshift(sc)
+	PassportPoolProcess()
+}
+
+
+
 
 
 const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
@@ -163,6 +217,8 @@ const postLocalhost = (path: string, obj: any)=> new Promise(async resolve =>{
 
 let sendCount = 0
 let epoch = 0
+let faucetProcess = false
+const nodeDate: Map<string, string> = new Map()
 const connectToGossipNode = async (node: nodeInfo ) => {
 	const walletAddress = wallet.address.toLowerCase()
 	
@@ -201,7 +257,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
 
 			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
-				logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
+				return logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
 			}
 
 			let total = epochTotal.get (data.epoch.toString())||0
@@ -209,6 +265,21 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			if (!total) {
 				logger(`******************************************* didResponseNode Total send to local ${sendCount}`, inspect(didResponseNode, false, 3, true), '*******************************************')
 				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
+				// if (!faucetProcess && nodeDate.size == _end - _start) {
+				// 	logger(Colors.magenta(`Start node getFaucet for all node ${nodeDate.size}`))
+				// 	faucetProcess = true
+				// 	const _wallets: string[] = []
+				// 	const ipaddress: string[] = []
+				// 	nodeDate.forEach((v, key) => {
+				// 		ipaddress.push(key)
+				// 		_wallets.push(v)
+				// 	})
+				// 	getFaucet(_wallets, ipaddress)
+
+				// } else{
+				// 	logger(Colors.magenta(`nodes = ${nodeDate.size}`))
+				// }
+
 			}
 			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
 			didResponseNode.splice(index, 1)
@@ -218,8 +289,19 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 				sendCount = 0
 			}
 			sendCount ++
-			const kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
-			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} ${node.ip_addr} Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} sendLocalhost count ${sendCount} ${kk ? 'SUCCESS' : 'ERROR'}`))
+			let kk = null
+			if (postLocal) {
+				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch})
+			}
+			nodeDate.set(node.ip_addr, data.nodeWallet)
+			const didU = didToPassportPool.get(data.nodeWallet)
+			if (!didU) {
+				didToPassportPool.set (data.nodeWallet, true)
+				addNodeToPassportPool.push(data.nodeWallet)
+				PassportPoolProcess()
+			}
+
+			logger(Colors.grey(`startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
 			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
@@ -381,16 +463,26 @@ const start = async () => {
 	wallet = ethers.Wallet.createRandom()
 	await getAllNodes()
 	startGossipListening()
+	managerWallet = Math.round(_start / 100)
+
+	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], provider)
+	const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
+	CoNET_passport_SC.push(sc)
 }
 
 
 const [,,...args] = process.argv
 let _start = 0
 let _end = 1
-
+let postLocal = true
+let managerWallet = 0
 args.forEach ((n, index ) => {
 	if (/^N\=/i.test(n)) {
 		_end = parseInt(n.split('=')[1])
+	}
+
+	if (/^P/i.test(n)) {
+		postLocal = false
 	}
 
 	if (/^S\=/i.test(n)) {
