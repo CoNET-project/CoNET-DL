@@ -244,7 +244,7 @@ const updateEpochToSC = async (epoch: iEPOCH_DATA) => {
 	//	uint256 totalMiners, uint256 minerRate, uint256 totalUsrs, uint256 epoch
 	try {
 
-		const tx = await epoch_mining_sc.updateInfo(epoch.totalMiners, ethers.parseEther(epoch.minerRate.toString()), epoch.totalUsrs, epoch.epoch)
+		const tx = await epoch_mining_sc.updateInfo(epoch.totalMiners, ethers.parseEther(epoch.minerRate.toFixed(10)), epoch.totalUsrs, epoch.epoch)
 		await tx.wait()
 		logger(Colors.blue(`updateEpochToSC current data to epoch info success! ${tx.hash}`))
 	} catch (ex: any) {
