@@ -1,6 +1,7 @@
 import {JsonRpcProvider, Contract, Wallet, TransactionReceipt, formatEther, BigNumberish, ethers} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import Colors from 'colors/safe'
+import {inspect} from 'node:util'
 import CONET_Point_ABI from '../util/cCNTP.json'
 import {mapLimit} from 'async'
 
@@ -72,7 +73,7 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 			const hash = tR.hash
 			const value = ethers.parseEther((parseFloat(ethers.formatEther(_value))/200).toFixed(10))
 			const obj = {toAddress, value, hash}
-
+			logger(inspect(obj, false, 3, true))
 			transferPool.push (obj)
 			_transfer()
 			
@@ -123,7 +124,7 @@ if (start_block > stop_block) {
 		blockArray.push(i)
 	}
 }
-// CancunBlockListenning(93662)
+// CancunBlockListenning(85523)
 
 mapLimit(blockArray, 1, async (n, next) => {
 	await CancunBlockListenning(n)
