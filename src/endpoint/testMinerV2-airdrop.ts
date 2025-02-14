@@ -135,7 +135,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 })
 
 const Referrer = '0x454428D883521C8aF9E88463e97e4D343c600914'.toLowerCase()
-const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
+const addReferrer = (privateKeyArmor: string, index: number) => new Promise (async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
 	const ReferrerV3SC = new ethers.Contract(ReferrerV3Addr, ReferrerV3, wallet)
 	
@@ -150,7 +150,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 		const getReferrer = await ReferrerV3SC.getReferrer(wallet.address)
 		if (getReferrer === '0x0000000000000000000000000000000000000000' && wallet.address.toLowerCase() !== Referrer) {
 			const tx = await ReferrerV3SC.addReferrer(Referrer)
-			logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth} tx = ${tx.hash}`))
+			logger(Colors.blue(`[${index}] addReferrer for ${wallet.address} SUCCESS! tx = ${tx.hash}`))
 		}
 		
 		setTimeout(() => {
@@ -159,7 +159,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 		
 
 	} catch (ex: any) {
-		logger(`addReferrer ${wallet.address} Error  ${ex.message}`)
+		logger(`[${index}] addReferrer ${wallet.address}  ${privateKeyArmor} Error!\n  ${ex.message}`)
 		return resolve(false)
 	}
 })
@@ -188,7 +188,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		await Promise.all([
 			getFaucet (n),
 			airdrop(n, ++ii),
-			addReferrer(n)
+			// addReferrer(n, ii)
 		])
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
