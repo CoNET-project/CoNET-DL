@@ -188,9 +188,9 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	let ii = 0
 	mapLimit(wallets, 10, async (n, next) => {
-		// await getFaucet (n)
-		// await addReferrer(n)
-		await airdrop(n, ++ii)
+		await getFaucet (n)
+		//await addReferrer(n)
+		//await airdrop(n, ++ii)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})

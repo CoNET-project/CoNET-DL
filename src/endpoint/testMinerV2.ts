@@ -80,8 +80,6 @@ const getAllNodes = () => new Promise(async resolve=> {
 	})
 })
 
-
-
 const listenEposh = async () => {
 	let currentEpoch = await provider.getBlockNumber()
 
@@ -127,6 +125,10 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 		return resolve(false)
 	}
 })
+
+const Airdrop = () => {
+	
+}
 
 const getWallet = async (SRP: string, max: number, __start: number) => {
 	
