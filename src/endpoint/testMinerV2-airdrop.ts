@@ -15,14 +15,14 @@ import {RequestOptions, request } from 'node:http'
 import {request as httpsRequest } from 'node:https'
 import ReferrerV3 from './ReferralsV3.json'
 import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
-
+import CONET_Point_ABI from '../util/cCNTP.json'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
 const ReferrerV3Addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
-const provider = new ethers.JsonRpcProvider('https://rpc.conet.network')
+const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
-const CCNTP_addr = '0xa4b389994A591735332A67f3561D60ce96409347'
+const CCNTP_addr = '0x6C7C575010F86A311673432319299F3D68e4b522'
 const CoNETDePINHoleskySCAddress = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
 
 let getAllNodesProcess = false
@@ -102,7 +102,7 @@ const listenEposh = async () => {
 
 const airdrop = (privateKeyArmor: string, index: number) => new Promise (async resolve =>{
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
-	const CNTPSC = new ethers.Contract(CCNTP_addr, cCNTPABI, wallet)
+	const CNTPSC = new ethers.Contract(CCNTP_addr, CONET_Point_ABI, wallet)
 	const CoNETDePINHoleskySC = new ethers.Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, wallet)
 	try {
 		const CoNETBalance = await provider.getBalance(wallet.address)
@@ -123,11 +123,9 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 		
 
 		logger(Colors.gray(`Process ${ethers.formatEther(avaAirdrop)} to [${wallet.address}]`))
-		const tx = await CNTPSC.approve(CoNETDePINHoleskySCAddress, balanceCNTP)
+		const tx = await CNTPSC.bronCNTP(balanceCNTP)
 		await tx.wait()
-		const tr = await CoNETDePINHoleskySC.CNTPAirBridgeAirdrop()
-		// await tr.wait()
-		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tr.hash}`))
+		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tx.hash}`))
 		
 		return resolve(await addReferrer(privateKeyArmor))
 		
@@ -190,7 +188,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 	mapLimit(wallets, 10, async (n, next) => {
 		await getFaucet (n)
 		//await addReferrer(n)
-		//await airdrop(n, ++ii)
+		await airdrop(n, ++ii)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
