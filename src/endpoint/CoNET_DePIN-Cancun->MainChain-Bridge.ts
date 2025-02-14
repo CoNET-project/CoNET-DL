@@ -29,6 +29,7 @@ interface transferData {
 const transferPool: transferData[] = []
 
 const ecPool: Contract[] = []
+
 for (let _wa of masterSetup.newFaucetAdmin) {
 	const wa = new Wallet(_wa, endPointCoNETMainnet)
 	const sc = new Contract(CoNET_DePIN_addr, CoNET_DePIN_ABI, wa)
