@@ -19,7 +19,7 @@ import CONET_Point_ABI from '../util/cCNTP.json'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
-const ReferrerV3Addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
+const ReferrerV3Addr = '0xbd67716ab31fc9691482a839117004497761D0b9'
 const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
 const CCNTP_addr = '0x6C7C575010F86A311673432319299F3D68e4b522'
@@ -103,31 +103,29 @@ const listenEposh = async () => {
 const airdrop = (privateKeyArmor: string, index: number) => new Promise (async resolve =>{
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
 	const CNTPSC = new ethers.Contract(CCNTP_addr, CONET_Point_ABI, wallet)
-	const CoNETDePINHoleskySC = new ethers.Contract(CoNETDePINHoleskySCAddress, CoNETDePINHoleskyABI, wallet)
 	try {
 		const CoNETBalance = await provider.getBalance(wallet.address)
 		const eth = parseFloat(ethers.formatEther(CoNETBalance))
 		if (eth < 0.0001) {
 			logger(`[${index}] airdrop skip ${wallet.address} because CONET = ${eth}`)
-			return resolve(await getFaucet (privateKeyArmor))
+			return resolve(true)
 		}
 
 		
 		const balanceCNTP = await CNTPSC.balanceOf(wallet.address)
-		const avaAirdrop = await CoNETDePINHoleskySC.availableCNTPAirDrop(wallet.address)
+		
 		const CNTP_balance = parseInt(ethers.formatEther(balanceCNTP))
-		if (CNTP_balance < 200 ) {
+		if (CNTP_balance < 10 ) {
 			logger(`[${index}] airdrop skip ${wallet.address} because CONET = ${eth} because CNTP balance < 0.001 = ${CNTP_balance}`)
-			return resolve(await addReferrer(privateKeyArmor))
+			return resolve(true)
 		}
 		
 
-		logger(Colors.gray(`Process ${ethers.formatEther(avaAirdrop)} to [${wallet.address}]`))
 		const tx = await CNTPSC.bronCNTP(balanceCNTP)
 		await tx.wait()
-		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${eth} CNTPAirBridgeAirdrop hash = ${tx.hash}`))
+		logger(Colors.blue(`[${index}] airdrop CNTP for ${wallet.address} balance = ${ethers.formatEther(balanceCNTP)} CNTPAirBridgeAirdrop hash = ${tx.hash}`))
 		
-		return resolve(await addReferrer(privateKeyArmor))
+		return resolve(true)
 		
 
 	} catch (ex: any) {
@@ -136,6 +134,7 @@ const airdrop = (privateKeyArmor: string, index: number) => new Promise (async r
 	}
 })
 
+const Referrer = '0x454428D883521C8aF9E88463e97e4D343c600914'.toLowerCase()
 const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 	const wallet = new ethers.Wallet(privateKeyArmor, provider)
 	const ReferrerV3SC = new ethers.Contract(ReferrerV3Addr, ReferrerV3, wallet)
@@ -149,8 +148,8 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 		}
 		
 		const getReferrer = await ReferrerV3SC.getReferrer(wallet.address)
-		if (getReferrer === '0x0000000000000000000000000000000000000000') {
-			const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
+		if (getReferrer === '0x0000000000000000000000000000000000000000' && wallet.address.toLowerCase() !== Referrer) {
+			const tx = await ReferrerV3SC.addReferrer(Referrer)
 			logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth} tx = ${tx.hash}`))
 		}
 		
@@ -186,9 +185,11 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	let ii = 0
 	mapLimit(wallets, 10, async (n, next) => {
-		await getFaucet (n)
-		//await addReferrer(n)
-		await airdrop(n, ++ii)
+		await Promise.all([
+			getFaucet (n),
+			airdrop(n, ++ii),
+			addReferrer(n)
+		])
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
 	})
@@ -418,14 +419,9 @@ const FaucetURL = `${apiEndpoint}conet-faucet`
 const getFaucet = async (privateKeyArmor: string) => {
 	const wallet = new ethers.Wallet(privateKeyArmor)
 	const data = JSON.stringify({ walletAddr: wallet.address})
-	const CoNETBalance = await provider.getBalance(wallet.address)
-	const eth = ethers.formatEther(CoNETBalance)
-		if (eth > '0.0001') {
-			logger(`getFaucet skip ${wallet.address} because CONET > 0.0001 ${CoNETBalance.toString()}`)
-			return
-		}
+
 	logger(Colors.blue(`getFaucet for ${wallet.address}`))
-	const uuu = await httpsPostToUrl(FaucetURL, data)
+	await httpsPostToUrl(FaucetURL, data)
 }
 
 
