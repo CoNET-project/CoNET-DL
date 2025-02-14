@@ -70,7 +70,7 @@ const checkCNTPTransfer = async (tR: TransactionReceipt) => {
 			const toAddress  = LogDescription.args[0]
 			const _value: BigNumberish = LogDescription.args[2]
 			const hash = tR.hash
-			const value = ethers.parseEther((parseFloat(ethers.formatEther(_value))/200).toString())
+			const value = ethers.parseEther((parseFloat(ethers.formatEther(_value))/200).toFixed(10))
 			const obj = {toAddress, value, hash}
 
 			transferPool.push (obj)
