@@ -137,7 +137,7 @@ const checkCONETian = async (wallet: string) => {
 			wallet, CONETian, CONETianeferrer
 		})
 	}
-	
+
 	processCONETian()
 }
 
@@ -174,6 +174,7 @@ for (let i = 0; i < masterSetup.conetNodeAdmin.length; i ++) {
 	const CoNETDePIN_manager = new ethers.Wallet(masterSetup.conetNodeAdmin[i], mainnet)
 	const  CoNETDePIN_Manager = new ethers.Contract(conetDePIN_mainnet_airdrop_addr, CoNETDePIN_mainnet_airdropABI, CoNETDePIN_manager)
 	CoNETDePIN_managerSc_Pool.push(CoNETDePIN_Manager)
+	logger(`CoNETDePIN_managerSc_Pool ${CoNETDePIN_manager.address}`)
 }
 
 
