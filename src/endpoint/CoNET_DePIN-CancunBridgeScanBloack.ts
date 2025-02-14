@@ -108,7 +108,7 @@ const getTx = async (tx: string) => {
 	return await endPointCancun.getTransactionReceipt(tx)
 }
 //		71534
-const start_block = 93598
+const start_block = 88382
 const stop_block = 71534
 
 const blockArray: number[] = []
@@ -123,11 +123,11 @@ if (start_block > stop_block) {
 		blockArray.push(i)
 	}
 }
-CancunBlockListenning(93662)
+// CancunBlockListenning(93662)
 
-// mapLimit(blockArray, 1, async (n, next) => {
-// 	await CancunBlockListenning(n)
-// }, err => {
-// 	logger(Colors.red(`Scan end!`))
-// })
+mapLimit(blockArray, 1, async (n, next) => {
+	await CancunBlockListenning(n)
+}, err => {
+	logger(Colors.red(`Scan end!`))
+})
 
