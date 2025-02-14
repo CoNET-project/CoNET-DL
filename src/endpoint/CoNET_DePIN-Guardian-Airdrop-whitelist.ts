@@ -32,7 +32,8 @@ const start = () => {
 	let i = 0
 	mapLimit(wallets, 1, async (n, next) => {
 		try {
-			const tx = await CoNETDePINHoleskySC.changeWhiteList(n, true)
+			const tx = await CoNETDePINHoleskySC.changeBlackList(n, true)
+			//const tx = await CoNETDePINHoleskySC.changeWhiteList(n, true)
 			const ts = await tx.wait()
 			logger(Colors.blue(`[${++i}] => ${n} success!`))
 		} catch (ex: any) {

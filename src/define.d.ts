@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	epochManagre: string
 	LayerMinus: []
 	constGAMEAccount: string[]
 	cancun_Guardiner_init:string

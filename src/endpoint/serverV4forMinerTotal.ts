@@ -23,6 +23,8 @@ import GuardianNodesV2ABI from '../util/GuardianNodesV2.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {readKey} from 'openpgp'
 import {mapLimit} from 'async'
+import epoch_info_ABI from './epoch_info_managerABI.json'
+
 
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -102,7 +104,9 @@ const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
 const developWalletPool: Map<string, boolean> = new Map()
 
-
+const epoch_mining_info_cancun_addr = '0xbd7Ffe8a04AbDE761D3ab4724E8b7f83d802e036'
+const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provideCONET)
+const epoch_mining_sc = new ethers.Contract(epoch_mining_info_cancun_addr, epoch_info_ABI, epoch_mining_manager)
 
 const CONET_Guardian_cancun_addr = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 const GuardianNodesInfoV6_cancun_addr = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
@@ -236,6 +240,18 @@ const miningData = (body: any, res: Response) => {
 	return res.status(200).end()
 }
 
+const updateEpochToSC = async (epoch: iEPOCH_DATA) => {
+	//	uint256 totalMiners, uint256 minerRate, uint256 totalUsrs, uint256 epoch
+	try {
+
+		const tx = await epoch_mining_sc.updateInfo(epoch.totalMiners, ethers.parseEther(epoch.minerRate.toString()), epoch.totalUsrs, epoch.epoch)
+		await tx.wait()
+		logger(Colors.blue(`updateEpochToSC current data to epoch info success! ${tx.hash}`))
+	} catch (ex: any) {
+		logger(Colors.red(`updateEpochToSC store Cancun Error! ${ex.message}`))
+	}
+	
+}
 
 const rateAddr = '0xE95b13888042fBeA32BDce7Ae2F402dFce11C1ba'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
@@ -250,6 +266,10 @@ interface iEPOCH_DATA {
 	epoch: number
 }
 let EPOCH_DATA: iEPOCH_DATA
+
+
+
+
 
 const moveData = async (epoch: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
@@ -308,8 +328,10 @@ const moveData = async (epoch: number) => {
 	const filename5 = `${filePath}current.users`
 
 	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block}
+	
 	logger(inspect(EPOCH_DATA, false, 3, true))
 	await Promise.all ([
+		updateEpochToSC(EPOCH_DATA),
 		writeFile(filename, JSON.stringify([..._wallets_.keys()]), 'utf8'),
 		writeFile(filename1, JSON.stringify(EPOCH_DATA), 'utf8'),
 		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8'),
