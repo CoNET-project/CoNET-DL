@@ -292,7 +292,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			sendCount ++
 			let kk = null
 			if (postLocal) {
-				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: data.nodeWallet})
+				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: nodeWallet})
 			}
 			// nodeDate.set(node.ip_addr, data.nodeWallet)
 			// const didU = didToPassportPool.get(data.nodeWallet)

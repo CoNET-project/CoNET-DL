@@ -22,7 +22,7 @@ import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
 import GuardianNodesV2ABI from '../util/GuardianNodesV2.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {readKey} from 'openpgp'
-import {mapLimit} from 'async'
+import {mapLimit, retry} from 'async'
 import epoch_info_ABI from './epoch_info_managerABI.json'
 
 
@@ -57,16 +57,17 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 
 process.on('unhandledRejection', (reason) => { throw reason; })
 
-
-let startFaucetProcessStatus = false
 const MAX_TX_Waiting = 1000 * 60 * 3
 
 const startFaucetProcess = () => new Promise(async resolve => {
-	if (!faucetWaitingPool.length || startFaucetProcessStatus) {
+	if (!faucetWaitingPool.length) {
 		return resolve (false)
 	}
+	const sc = faucet_v3_Contract_Pool.shift()
+	if (!sc) {
+		return
+	}
 
-	startFaucetProcessStatus = true
 	logger(`faucetWaitingPool Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
 
 	logger(`faucetWaitingPool length = ${faucetWaitingPool.length}`)
@@ -79,23 +80,15 @@ const startFaucetProcess = () => new Promise(async resolve => {
 
 	try {
 		
-		const tx = await faucet_v3_Contract.getFaucet(wallet, ipAddress)
-		logger(`faucetWaitingPool start Faucet Process tx = ${tx.hash} wallet ${faucetWallet.address}`)
+		const tx = await sc.getFaucet(wallet, ipAddress)
+		await tx.wait()
 
-		const tx_conform = await tx.wait()
-
-		if (!tx_conform) {
-			logger(`startFaucetProcess ${tx.hash} failed tx.wait() return NULL!`)
-		}
-
-		logger(`startFaucetProcess Success ${tx_conform.hash}`)
-
+		logger(`startFaucetProcess Success ${tx.hash}`)
 
 	} catch (ex: any) {
 		logger(`startFaucetProcess Error!`, ex.message)
 	}
-	
-	startFaucetProcessStatus = false
+	faucet_v3_Contract_Pool.unshift(sc)
 	return resolve(true)
 })
 
@@ -147,7 +140,7 @@ const developWalletListening = async (block: number) => {
 }
 
 const stratlivenessV2 = async (eposh: number) => {
-	logger
+
 	await Promise.all([
 		startProcess(),
 		startFaucetProcess(),
@@ -162,7 +155,10 @@ const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
 
 const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
-const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
+logger(Colors.magenta(`faucetWallet = ${faucetWallet.address}`))
+const faucetContract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
+const faucet_v3_Contract_Pool = [faucetContract]
+
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
@@ -177,35 +173,32 @@ interface faucetRequest {
 export const checkGasPriceFordailyTaskPool = 25000000
 
 
+
 let faucetWaitingPool: faucetRequest[] = []
 
-export const faucet_call =  (wallet: string, ipAddress: string) => {
-	try {
-		let _wallet = ethers.getAddress(wallet).toLowerCase()
-		const obj = faucet_call_pool.get(_wallet)
-		if (obj) {
-			return false
-		}
-		faucet_call_pool.set(wallet, true)
-		faucetWaitingPool.push({wallet, ipAddress})
-		
-	} catch (ex) {
-		return false
-	}
-
-	return true
-}
-
 let currentEpoch = 0
-
-const faucet_call_pool: Map<string, boolean> = new Map()
-
 
 interface InodeEpochData {
 	wallets: string[]
 	users: string[]
 }
 
+const addTofaucetPool = async (wallet: string, ipAddress: string) => {
+	const index = faucetWaitingPool.findIndex(n => n.wallet === wallet)
+	if (index > -1) {
+		return
+	}
+
+	try {
+		const balance: BigInt = await provideCONET.getBalance(wallet)
+		if (!balance) {
+			faucetWaitingPool.push({wallet, ipAddress})
+			startFaucetProcess()
+		}
+	} catch (ex:any) {
+		logger(Colors.red(`addTofaucetPool catch error, ${ex.message}`))
+	}
+}
 
 const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
 const epochTotalData:  Map<number, IGossipStatus > = new Map()
@@ -237,6 +230,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalConnectNode += 1
 
 	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
+	addTofaucetPool(body.nodeWallet, body.ipaddress)
 	return res.status(200).end()
 }
 
@@ -266,9 +260,6 @@ interface iEPOCH_DATA {
 	epoch: number
 }
 let EPOCH_DATA: iEPOCH_DATA
-
-
-
 
 
 const moveData = async (epoch: number) => {
