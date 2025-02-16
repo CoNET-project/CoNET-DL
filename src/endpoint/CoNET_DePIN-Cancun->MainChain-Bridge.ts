@@ -55,6 +55,7 @@ const _transfer = async () => {
 		logger(Colors.blue(`airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
+		transferPool.unshift(data)
 	}
 	ecPool.push(SC)
 	_transfer()

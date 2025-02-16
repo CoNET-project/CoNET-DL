@@ -52,7 +52,7 @@ const _transfer = async () => {
 		const kk = await tx.wait()
 		logger(Colors.magenta(`_transfer ${ data.toAddress} => ${formatEther(data.value)} success! tx = ${tx.hash} waiting list has ${Colors.green(transferPool.length.toString())}`))
 	} catch (ex: any) {
-
+		transferPool.unshift(data)
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error!  waiting list has ${Colors.green(transferPool.length.toString())}, ${ex.message} `))
 	}
 	workSC.unshift(CoNETDePINMainchainBridgeSC)

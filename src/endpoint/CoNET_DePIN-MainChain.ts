@@ -43,6 +43,7 @@ const _transfer = async () => {
 		const kk = await tx.wait()
 		logger(inspect(kk))
 	} catch (ex: any) {
+		transferPool.unshift(data)
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 	}
 	transferProcess = false
