@@ -131,7 +131,7 @@ const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
 const getWallet = async (SRP: string, max: number, __start: number) => {
 	
 	await getAllNodes()
-
+	listenEposh()
 	const acc = ethers.Wallet.fromPhrase(SRP)
 	const wallets: string[] = []
 	if (__start === 0) {
@@ -151,7 +151,7 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		connectToGossipNode(n, i ++)
 	})
 	
-	listenEposh()
+	
 	mapLimit(wallets, 1, async (n, next) => {
 		await getFaucet (n)
 		// await addReferrer(n)
