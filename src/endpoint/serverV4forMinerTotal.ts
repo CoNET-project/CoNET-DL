@@ -97,7 +97,7 @@ const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
 const developWalletPool: Map<string, boolean> = new Map()
 
-const epoch_mining_info_cancun_addr = '0xbd7Ffe8a04AbDE761D3ab4724E8b7f83d802e036'
+const epoch_mining_info_cancun_addr = '0x31680dc539cb1835d7C1270527bD5D209DfBC547'
 const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provideCONET)
 const epoch_mining_sc = new ethers.Contract(epoch_mining_info_cancun_addr, epoch_info_ABI, epoch_mining_manager)
 
@@ -238,7 +238,7 @@ const updateEpochToSC = async (epoch: iEPOCH_DATA) => {
 	//	uint256 totalMiners, uint256 minerRate, uint256 totalUsrs, uint256 epoch
 	try {
 
-		const tx = await epoch_mining_sc.updateInfo(epoch.totalMiners, ethers.parseEther(epoch.minerRate.toFixed(10)), epoch.totalUsrs, epoch.epoch)
+		const tx = await epoch_mining_sc.updateInfo(epoch.totalMiners, ethers.parseEther(epoch.minerRate.toFixed(10)), epoch.totalUsrs)
 		await tx.wait()
 		logger(Colors.blue(`updateEpochToSC current data to epoch info success! ${tx.hash}`))
 	} catch (ex: any) {
