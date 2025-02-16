@@ -229,7 +229,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalMiners += body.users.length
 	epochTotal.totalConnectNode += 1
 
-	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} Count [${epochTotal.totalConnectNode}]`))
+	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} [${body.wallets.length}:${ body.users.length}]`))
 	addTofaucetPool(body.nodeWallet, body.ipaddress)
 	return res.status(200).end()
 }
