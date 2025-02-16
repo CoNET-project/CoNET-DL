@@ -83,18 +83,19 @@ const getAllNodes = () => new Promise(async resolve=> {
 const listenEposh = async () => {
 	let currentEpoch = await provider.getBlockNumber()
 	logger(Colors.magenta(`listenEposh EPOCH ${currentEpoch} Started!`))
-	provider.on ('block', block => {
+	provider.on('block', block => {
 		if (block % 2) {
 			return
 		}
-
+		
 		currentEpoch  = block
-		const obj = epochTotal.get(block-1)
+		const obj = epochTotal.get(block-2)
 		if (!obj) {
+			logger(Colors.magenta(`EPOCH ${block-2}  epochTotal.get(block-1) got null Error!`))
 			return 
 		}
-		logger(Colors.magenta(`EPOCH ${block-1} Total connecting ${obj.size}`))
-		epochTotal.delete(block-1)
+		logger(Colors.magenta(`EPOCH ${block-2} Total connecting ${obj.size}`))
+		epochTotal.delete(block-2)
 	})
 }
 
@@ -256,12 +257,12 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 			}
 			return
 		}
-		logger(Colors.magenta(`startGossip do ${node.ip_addr} relaunch relaunchCount = ${relaunchCount} `))
+		//logger(Colors.magenta(`startGossip do ${node.ip_addr} relaunch relaunchCount = ${relaunchCount} `))
 		startGossip(connectHash, node, POST, relaunchCount, callback)
 	}, 1000)
 
 	const waitingTimeout = setTimeout(() => {
-		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		//logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
 		launchMap.set(connectHash, false)
 		relaunch()
 	}, 5 * 1000)
@@ -338,7 +339,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 		res.once('end', () => {
 			
 			if (typeof callback === 'function') {
-				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
+				//logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
 				res._destroy(null, () => {
 					relaunch()
 				})
