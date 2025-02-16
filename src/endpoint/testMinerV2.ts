@@ -151,12 +151,13 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		connectToGossipNode(n, i ++)
 	})
 	
-	listenEposh()
+	
 	mapLimit(wallets, 1, async (n, next) => {
 		await getFaucet (n)
 		// await addReferrer(n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
+		listenEposh()
 	})
 }
 
