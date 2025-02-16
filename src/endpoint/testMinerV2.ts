@@ -151,13 +151,13 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		connectToGossipNode(n, i ++)
 	})
 	
-	
+	listenEposh()
 	mapLimit(wallets, 1, async (n, next) => {
 		await getFaucet (n)
 		// await addReferrer(n)
 	}, err => {
 		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
-		listenEposh()
+		
 	})
 }
 
@@ -434,7 +434,7 @@ const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: n
 	.then (postData => {
 		
 		let time = setTimeout(() => {
-			logger(Colors.magenta(`${connectingNUmber} ${wallet} listenning ${nodeInfo.index} ${nodeInfo.node.ip_addr} Timeout! *************`))
+			logger(Colors.magenta(`${connectingNUmber} ${wallet.address} listenning ${nodeInfo.index} ${nodeInfo.node.ip_addr} Timeout! *************`))
 		}, 24 * 1000)
 
 		listenningPool.set (walletAddress, time)
