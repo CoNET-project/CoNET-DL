@@ -82,11 +82,12 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 const listenEposh = async () => {
 	let currentEpoch = await provider.getBlockNumber()
-
+	logger(Colors.magenta(`listenEposh EPOCH ${currentEpoch} Started!`))
 	provider.on ('block', block => {
 		if (block % 2) {
 			return
 		}
+
 		currentEpoch  = block
 		const obj = epochTotal.get(block-1)
 		if (!obj) {
@@ -334,7 +335,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, relaunch
 		})
 
 		res.once('end', () => {
-			logger(`startGossip res on 'end'`)
+			
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
 				res._destroy(null, () => {
