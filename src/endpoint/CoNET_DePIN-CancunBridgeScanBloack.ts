@@ -109,8 +109,8 @@ const getTx = async (tx: string) => {
 	return await endPointCancun.getTransactionReceipt(tx)
 }
 //		71534
-const start_block = 82299
-const stop_block = 71534
+const start_block = 122160
+const stop_block = 270000
 
 const blockArray: number[] = []
 logger(Colors.magenta(`Scan started from ${start_block} ~ ${stop_block}`))
