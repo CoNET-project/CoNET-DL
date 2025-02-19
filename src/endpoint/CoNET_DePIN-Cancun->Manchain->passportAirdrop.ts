@@ -11,7 +11,7 @@ const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const cancun_passport_airdrop_addr = '0xe996e897bc088b840283cadafd75a856bea44730'.toLocaleLowerCase()
 const endPointCoNETMainnet = new ethers.JsonRpcProvider(CoNETMainChainRPC)
-const mainnet_passport_airdrop_addr = '0x8cE7429C3de0C424C4089ba9cFEdfbE7A90Fe79A'
+const mainnet_passport_airdrop_addr = '0x03519B529017E09345506a212c0D4B2bAD503686'
 
 
 const cancun_passport_airdrop_readonly = new ethers.Contract(cancun_passport_airdrop_addr, cancun_passport_airdrop_ABI, endPointCancun)
@@ -22,7 +22,7 @@ const getTx = async (tx: string) => {
 
 interface transferData {
 	toAddress: string
-	value: ethers.BigNumberish
+	value: number
 	expiresDayes: number
 }
 
@@ -54,10 +54,13 @@ const _transfer = async () => {
 		}
 		
 		await tx.wait()
-		logger(Colors.blue(`Passport airDrop ${data.toAddress} ${data.value} success! hash = ${tx.hash}`))
+		logger(Colors.blue(`Passport airDrop ${data.toAddress} ${data.value} success! hash = ${tx.hash}  waiting list = [${transferPool.length}]`))
 	} catch (ex: any) {
-		logger(Colors.red(`Passport airDrop Error! ${ex.message}`))
-		transferPool.unshift(data)
+		if (!/hasn't available/.test(ex.message) ) {
+			logger(Colors.red(`Passport airDrop Error! ${ex.message}`))
+			transferPool.unshift(data)
+		}
+		
 	}
 	ecPool.push(SC)
 	_transfer()
@@ -70,9 +73,9 @@ const checkCNTPTransfer = async (tR: ethers.TransactionReceipt) => {
 		
 		if (LogDescription?.name === '_GuardianAirdrop') {
 			const toAddress  = LogDescription.args[0]
-			const value: ethers.BigNumberish = LogDescription.args[1]
+			const _value: ethers.BigNumberish = LogDescription.args[1]
 			const expiresDayes = 0
-			
+			const value = parseInt(_value.toString())/5
 			
 			const obj: transferData = {toAddress, value, expiresDayes}
 			logger(inspect(obj, false, 3, true))
@@ -80,8 +83,9 @@ const checkCNTPTransfer = async (tR: ethers.TransactionReceipt) => {
 			
 		} else if (LogDescription?.name === '_CONETianAirdrop') {
 			const toAddress  = LogDescription.args[0]
-			const value: ethers.BigNumberish = LogDescription.args[1]
+			const _value: ethers.BigNumberish = LogDescription.args[1]
 			const expiresDayes = 365
+			const value = parseInt(_value.toString())/5
 			const obj: transferData = {toAddress, value, expiresDayes}
 			transferPool.push (obj)
 		}
@@ -110,20 +114,20 @@ const CancunBlockListenning = async (block: number) => {
 		
 	}
 }
-CancunBlockListenning(178699)
-// let currentBlock = 0
 
-// const daemondStart = async () => {
+let currentBlock = 0
+
+const daemondStart = async () => {
 	
-// 	currentBlock = await endPointCancun.getBlockNumber()
-// 	logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
-// 	endPointCancun.on('block', async block => {
-// 		if (block > currentBlock) {
-// 			currentBlock = block
-// 			CancunBlockListenning(block)
-// 		}
+	currentBlock = await endPointCancun.getBlockNumber()
+	logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
+	endPointCancun.on('block', async block => {
+		if (block > currentBlock) {
+			currentBlock = block
+			CancunBlockListenning(block)
+		}
 		
-// 	})
-// }
-
+	})
+}
+CancunBlockListenning(178699)
 // daemondStart()

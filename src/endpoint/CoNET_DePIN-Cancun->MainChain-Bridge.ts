@@ -52,7 +52,7 @@ const _transfer = async () => {
 	try {
 		const tx = await SC.airdropFromCancun(data.toAddress, data.value, data.hash)
 		const kk = await tx.wait()
-		logger(Colors.blue(`airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash}`))
+		logger(Colors.blue(`airDrop ${data.toAddress} ${formatEther(data.value)} success! hash = ${tx.hash} waiting list = [${transferPool.length}]` ))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC.airDrop Error! ${ex.message}`))
 		transferPool.unshift(data)
