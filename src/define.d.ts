@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	mainnet_passport_airdrop: string
 	conetian_eth_airdrop: string
 	epochManagre: string
 	LayerMinus: []
