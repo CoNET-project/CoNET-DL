@@ -85,7 +85,7 @@ const checkCNTPTransfer = async (tR: ethers.TransactionReceipt) => {
 			const obj: transferData = {toAddress, value, expiresDayes}
 			transferPool.push (obj)
 		}
-		
+		_transfer()
 	}
 }
 
