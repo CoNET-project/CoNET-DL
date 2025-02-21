@@ -25,19 +25,15 @@ interface transferData {
 }
 
 const transferPool: transferData[] = []
-let transferProcess = false
 
 const SC_pool: Contract[] = []
 const _transfer = async () => {
-	if (transferProcess) {
-		return
-	}
-	transferProcess = true
+
 	const data = transferPool.shift()
 	if (!data) {
-		transferProcess = false
 		return
 	}
+
 	const SC = SC_pool.shift()
 	if (!SC) {
 		transferPool.unshift(data)
@@ -53,7 +49,7 @@ const _transfer = async () => {
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC makeExitTx Error! ${ex.message}`))
 	}
-	transferProcess = false
+	SC_pool.push(SC)
 	_transfer()
 }
 
@@ -67,7 +63,7 @@ const checkTransfer = async (tR: TransactionReceipt) => {
 			const hash = tR.hash
 			transferPool.push ({toAddress, value, hash})
 			_transfer()
-		} 
+		}
 	}
 	
 }
