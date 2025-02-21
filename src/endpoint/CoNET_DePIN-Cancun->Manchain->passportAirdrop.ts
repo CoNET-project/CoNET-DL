@@ -11,7 +11,7 @@ const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const cancun_passport_airdrop_addr = '0xe996e897bc088b840283cadafd75a856bea44730'.toLocaleLowerCase()
 const endPointCoNETMainnet = new ethers.JsonRpcProvider(CoNETMainChainRPC)
-const mainnet_passport_airdrop_addr = '0x81b6f44fAeED65Ca19d159d5a1376A66F0Dac41F'
+const mainnet_passport_airdrop_addr = '0x07D54Ff876ed773a89e633372edB29ed1eB811d6'
 
 
 const cancun_passport_airdrop_readonly = new ethers.Contract(cancun_passport_airdrop_addr, cancun_passport_airdrop_ABI, endPointCancun)
@@ -129,5 +129,5 @@ const daemondStart = async () => {
 		
 	})
 }
-// CancunBlockListenning(178699)
+
 daemondStart()
