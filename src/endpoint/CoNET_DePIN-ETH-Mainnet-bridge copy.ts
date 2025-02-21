@@ -1,4 +1,4 @@
-import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther, BigNumberish, WebSocketProvider} from 'ethers'
+import {JsonRpcProvider, Contract, Wallet, TransactionResponse, TransactionReceipt, formatEther, BigNumberish} from 'ethers'
 import {logger, masterSetup} from '../util/util'
 import CONETDePIN_Eth_Bridge_ABI from './CoNETDePIN_Eth_bridge.json'
 import CONETDePIN_Eth_Pool_ABI from './CoNET_DePIN-ETH-pool.json'
@@ -9,14 +9,17 @@ import {mapLimit} from 'async'
 
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 
-const CoNET_mainnet_ETH_pool_Addr = '0x82b056fEd31974e024e94b829bCe1986D912DFb8'.toLowerCase()
+const CoNET_mainnet_ETH_pool_Addr = '0xC9039A1eb88346E67879767908bF1924246430b6'.toLowerCase()
 
-const CoNETDePIN_pool_Manager_Addr = '0x98F981930357B76b3520584616DC3Dbb166B84F9'
+const CoNETDePIN_pool_Manager_Addr = '0xB5E80a3de71931F8B0EdB1A4dF524Ad2e09D108a'
 
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
+const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager[0], endPointCoNETMainnet)
 
 
 const CONETDePIN_Eth_PoolSC = new Contract(CoNET_mainnet_ETH_pool_Addr, CONETDePIN_Eth_Pool_ABI, endPointCoNETMainnet)
+
+const CoNETDePIN_pool_ManagerSC = new Contract(CoNETDePIN_pool_Manager_Addr, CONETDePIN_Eth_Pool_ManagerABI, conetDePINEthAdmin)
 
 interface transferData {
 	toAddress: string
@@ -27,7 +30,6 @@ interface transferData {
 const transferPool: transferData[] = []
 let transferProcess = false
 
-const SC_pool: Contract[] = []
 const _transfer = async () => {
 	if (transferProcess) {
 		return
@@ -38,18 +40,13 @@ const _transfer = async () => {
 		transferProcess = false
 		return
 	}
-	const SC = SC_pool.shift()
-	if (!SC) {
-		transferPool.unshift(data)
-		return logger(Colors.magenta(`_transfer has no SC to start SC_pool = ${SC_pool.length} Pool length = ${transferPool.length}\n`))
-	}
 
 	logger(Colors.magenta(`_transfer Pool length = ${transferPool.length}\n`), inspect(data, false, 3, true))
 
 	try {
-		const tx = await SC.voteTx(data.hash, data.toAddress, data.value)
+		const tx = await CoNETDePIN_pool_ManagerSC.voteTx(data.hash, data.toAddress, data.value)
 		const kk = await tx.wait()
-		logger(Colors.blue(`ETH Bridge ${tx.hash} [${Colors.green(data.hash)}] success $${Colors.green(formatEther(data.value))} to client [${Colors.green(data.toAddress)}]`))
+		logger(Colors.blue(`ETH Bridge ${tx.hash} [${Colors.green(data.hash)}] success $${Colors.green(formatEther(data.value))} to client [${Colors.green(data.toAddress)}] with ${conetDePINEthAdmin.address}`))
 	} catch (ex: any) {
 		logger(Colors.red(`CoNETDePINMainchainBridgeSC makeExitTx Error! ${ex.message}`))
 	}
@@ -97,26 +94,11 @@ const getTx = async (tx: string) => {
 }
 
 const daemondStart = () => {
-	const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager[voteAccount], endPointCoNETMainnet)
-	const CoNETDePIN_pool_ManagerSC = new Contract(CoNETDePIN_pool_Manager_Addr, CONETDePIN_Eth_Pool_ManagerABI, conetDePINEthAdmin)
-	SC_pool.push(CoNETDePIN_pool_ManagerSC)
 	logger(Colors.magenta(`ETH Bridge start with manager wallet ${conetDePINEthAdmin.address}`))
-
 	endPointCoNETMainnet.on('block', block => {
 		bridgeBlockListenning (block)
 	})
 }
 
 
-let voteAccount = -1
-
-const [,,...args] = process.argv
-args.forEach ((n, index ) => {
-	if (/^n\=/i.test(n)) {
-		voteAccount = parseInt(n.split('=')[1])
-		if ( !isNaN(voteAccount) && voteAccount > -1 ) {
-			daemondStart()
-		}
-		
-	}
-})
+daemondStart()
