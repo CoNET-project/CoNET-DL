@@ -54,7 +54,6 @@ const _transfer = async () => {
 	_transfer()
 }
 
-
 const checkTransfer = async (tR: TransactionReceipt) => {
 	
 	for (let log of tR.logs) {
