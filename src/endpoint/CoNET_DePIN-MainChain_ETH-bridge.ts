@@ -7,16 +7,16 @@ import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import {mapLimit} from 'async'
 
+const ethEndpoint = masterSetup.ethEndpoint
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 
-const CoNET_mainnet_ETH_pool_Addr = '0x82b056fEd31974e024e94b829bCe1986D912DFb8'.toLowerCase()
+const CoNET_mainnet_ETH_manager = '0x5E85A3D29eb6bAEf922810df1938807eb28cE124'.toLowerCase()
 
-const CoNETDePIN_pool_Manager_Addr = '0x98F981930357B76b3520584616DC3Dbb166B84F9'
 
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
+const ethProvider = new JsonRpcProvider(ethEndpoint)
 
-
-const CONETDePIN_Eth_PoolSC = new Contract(CoNET_mainnet_ETH_pool_Addr, CONETDePIN_Eth_Pool_ABI, endPointCoNETMainnet)
+const CONETDePIN_Eth_PoolSC_readonly = new Contract(CoNET_mainnet_ETH_manager, CONETDePIN_Eth_Pool_ABI, endPointCoNETMainnet)
 
 interface transferData {
 	toAddress: string
@@ -27,6 +27,25 @@ interface transferData {
 const transferPool: transferData[] = []
 
 const SC_pool: Contract[] = []
+
+const voteGasprice = (gasPrice: number, block: number) => new Promise(async resolve=> {
+	const SC = SC_pool.shift()
+	if (!SC) {
+		resolve(false)
+		return logger(Colors.magenta(`voteGasprice has no SC to start SC_pool = ${SC_pool.length} Pool length = ${transferPool.length}\n`))
+	}
+	try {
+		const tx = await SC.voteGasFees(gasPrice, block)
+		await tx.wait()
+		logger(Colors.magenta(`voteGasprice success! ${tx.hash}`))
+	} catch (ex: any) {
+		logger(Colors.red(`voteGasprice Error! ${ex.message}`))
+	}
+
+	SC_pool.unshift(SC)
+	resolve (true)
+})
+
 const _transfer = async () => {
 
 	const data = transferPool.shift()
@@ -56,7 +75,7 @@ const _transfer = async () => {
 const checkTransfer = async (tR: TransactionReceipt) => {
 	
 	for (let log of tR.logs) {
-		const LogDescription = CONETDePIN_Eth_PoolSC.interface.parseLog(log)
+		const LogDescription = CONETDePIN_Eth_PoolSC_readonly.interface.parseLog(log)
 		if (LogDescription?.name === 'Received') {
 			const toAddress  = LogDescription.args[0]
 			const value: BigNumberish = LogDescription.args[1]
@@ -80,7 +99,7 @@ const bridgeBlockListenning = async (block: number) => {
 	for (let tx of blockTs.transactions) {
 
 		const event = await getTx(tx)
-		if ( event?.to?.toLowerCase() === CoNET_mainnet_ETH_pool_Addr) {
+		if ( event?.to?.toLowerCase() === CoNET_mainnet_ETH_manager) {
 			checkTransfer(event)
 		}
 		
@@ -92,15 +111,34 @@ const getTx = async (tx: string) => {
 	return await endPointCoNETMainnet.getTransactionReceipt(tx)
 }
 
-const daemondStart = () => {
+let gasPrice = 0
+const daemondStart = async () => {
 	const conetDePINEthAdmin = new Wallet (masterSetup.ETH_Manager[voteAccount], endPointCoNETMainnet)
-	const CoNETDePIN_pool_ManagerSC = new Contract(CoNETDePIN_pool_Manager_Addr, CONETDePIN_Eth_Pool_ManagerABI, conetDePINEthAdmin)
+	const CoNETDePIN_pool_ManagerSC = new Contract(CoNET_mainnet_ETH_manager, CONETDePIN_Eth_Pool_ManagerABI, conetDePINEthAdmin)
+	gasPrice = parseInt((await CoNETDePIN_pool_ManagerSC.otherSideGAS()).toString())
 	SC_pool.push(CoNETDePIN_pool_ManagerSC)
-	logger(Colors.magenta(`ETH Bridge start with manager wallet ${conetDePINEthAdmin.address}`))
+	logger(Colors.magenta(`ETH Bridge start with manager wallet ${conetDePINEthAdmin.address} gasFee = ${gasPrice}`))
 
 	endPointCoNETMainnet.on('block', block => {
 		bridgeBlockListenning (block)
 	})
+
+	ethProvider.on('block', async block => {
+		const feeObj = await ethProvider.getFeeData()
+		
+		if (!feeObj.gasPrice) {
+			
+			return logger(Colors.red(`transferProcess start with GAS NULL ERROR `), inspect(feeObj, false, 3, true))
+		}
+
+		logger(inspect(feeObj, false, 3, true))
+		const _gasPrice = parseInt(feeObj.gasPrice.toString())
+		if (Math.abs( _gasPrice - gasPrice)*100/gasPrice > 1) {
+			logger(Colors.magenta(`Gas price over ${Math.abs( _gasPrice - gasPrice)*100/gasPrice} block number = ${block}`))
+			voteGasprice(_gasPrice, block)
+		}
+	})
+
 }
 
 

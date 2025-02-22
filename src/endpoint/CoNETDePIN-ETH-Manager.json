@@ -1,6 +1,12 @@
 [
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "gas",
+				"type": "uint256"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -49,7 +55,7 @@
 				"type": "bool"
 			}
 		],
-		"stateMutability": "pure",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -58,45 +64,6 @@
 				"internalType": "bytes32",
 				"name": "_tx",
 				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"name": "_getHash",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "hash",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "pure",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "_tx",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
 			}
 		],
 		"name": "_getTxData",
@@ -117,6 +84,21 @@
 						"internalType": "bool",
 						"name": "isUsed",
 						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "fee",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalOtherGas",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "transferValue",
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct txData",
@@ -158,6 +140,21 @@
 						"internalType": "bool",
 						"name": "isUsed",
 						"type": "bool"
+					},
+					{
+						"internalType": "uint256",
+						"name": "fee",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalOtherGas",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "transferValue",
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct txData",
@@ -165,7 +162,7 @@
 				"type": "tuple"
 			}
 		],
-		"stateMutability": "pure",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -182,6 +179,19 @@
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "bridgeFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -234,17 +244,121 @@
 	{
 		"inputs": [
 			{
-				"internalType": "bytes32",
-				"name": "_tx",
-				"type": "bytes32"
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
 			}
 		],
-		"name": "getVotedAddress",
+		"name": "changeBridgeFee",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_returnSuccessVoteFirst",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_returnSuccessVote",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_returnSuccessVoteLast",
+				"type": "uint256"
+			}
+		],
+		"name": "changeReturnGas",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "currentOtherSideBlock",
 		"outputs": [
 			{
-				"internalType": "address[]",
-				"name": "votedAddresses",
-				"type": "address[]"
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "currentOtherSideBlockNumber",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "getFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getGasFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "getQuote",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "gas",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "fees",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_receive",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -258,12 +372,12 @@
 				"type": "bytes32"
 			}
 		],
-		"name": "getVotedLength",
+		"name": "getVotedAddress",
 		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "length",
-				"type": "uint256"
+				"internalType": "address[]",
+				"name": "votedAddresses",
+				"type": "address[]"
 			}
 		],
 		"stateMutability": "view",
@@ -293,27 +407,29 @@
 				"internalType": "bool",
 				"name": "isUsed",
 				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "fee",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalOtherGas",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "transferValue",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address[]",
-				"name": "addresss",
-				"type": "address[]"
-			}
-		],
-		"name": "returnVoteCost",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
-		"name": "totalVotes",
+		"name": "otherSideGAS",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -322,6 +438,89 @@
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "returnSuccessVote",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "returnSuccessVoteFirst",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "returnSuccessVoteLast",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalFees",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalGas",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "blockNumber",
+				"type": "uint256"
+			}
+		],
+		"name": "voteGasFees",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
