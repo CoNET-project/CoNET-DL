@@ -35,6 +35,7 @@ const voteGasprice = (gasPrice: number, block: number) => new Promise(async reso
 		return logger(Colors.magenta(`voteGasprice has no SC to start SC_pool = ${SC_pool.length} Pool length = ${transferPool.length}\n`))
 	}
 	try {
+		const gas = await SC.voteGasFees.estimateGas(gasPrice, block)
 		const tx = await SC.voteGasFees(gasPrice, block)
 		await tx.wait()
 		logger(Colors.magenta(`voteGasprice success! ${tx.hash}`))
