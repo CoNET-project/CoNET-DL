@@ -133,7 +133,7 @@ const daemondStart = async () => {
 
 		logger(inspect(feeObj, false, 3, true))
 		const _gasPrice = parseInt(feeObj.gasPrice.toString())
-		if (Math.abs( _gasPrice - gasPrice)*100/gasPrice > 1) {
+		if (Math.abs( _gasPrice - gasPrice)*100/gasPrice > 2) {
 			gasPrice = _gasPrice
 			logger(Colors.magenta(`Gas price over ${Math.abs( _gasPrice - gasPrice)*100/gasPrice} block number = ${block}`))
 			voteGasprice(_gasPrice, block)
