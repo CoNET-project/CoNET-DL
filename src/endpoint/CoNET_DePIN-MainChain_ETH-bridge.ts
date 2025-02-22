@@ -140,7 +140,7 @@ const daemondStart = async () => {
 			logger(Colors.magenta(`Gas price over _gasPrice = ${_gasPrice} gasPrice = ${gasPrice} Math.abs( _gasPrice - gasPrice )* 100 / gasPrice) = ${changed} block number = ${block}`))
 			setTimeout(() => {
 				voteGasprice(_gasPrice, block)
-			}, Math.round(Math.random() * 5000))
+			}, Math.round(Math.random() * 15000))
 			
 		}
 	})
