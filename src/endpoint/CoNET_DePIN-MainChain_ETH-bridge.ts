@@ -10,7 +10,7 @@ import {mapLimit} from 'async'
 const ethEndpoint = masterSetup.ethEndpoint
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 
-const CoNET_mainnet_ETH_manager = '0xB706Defd56604b40DbCfECd8958EfF24006e7f39'.toLowerCase()
+const CoNET_mainnet_ETH_manager = '0x15e028915f755E6D871b08B30eBC1F3c20F80bD6'.toLowerCase()
 
 
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
@@ -134,7 +134,7 @@ const daemondStart = async () => {
 		logger(inspect(feeObj, false, 3, true))
 		const _gasPrice = parseInt(feeObj.gasPrice.toString())
 		const changed = (Math.abs( _gasPrice - gasPrice ) * 100) / gasPrice
-		if (changed !== 0 && changed >= 4) {
+		if (changed !== 0 && changed >= 6) {
 			gasPrice = _gasPrice
 			logger(Colors.magenta(`Gas price over _gasPrice = ${_gasPrice} gasPrice = ${gasPrice} Math.abs( _gasPrice - gasPrice )* 100 / gasPrice) = ${changed} block number = ${block}`))
 			voteGasprice(_gasPrice, block)
