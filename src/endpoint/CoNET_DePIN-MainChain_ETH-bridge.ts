@@ -10,7 +10,7 @@ import {mapLimit} from 'async'
 const ethEndpoint = masterSetup.ethEndpoint
 const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
 
-const CoNET_mainnet_ETH_manager = '0x15e028915f755E6D871b08B30eBC1F3c20F80bD6'.toLowerCase()
+const CoNET_mainnet_ETH_manager = '0xaAF4C727E1153758AeC4750235bE3FE0862Fff04'.toLowerCase()
 
 
 const endPointCoNETMainnet = new JsonRpcProvider(CoNETMainChainRPC)
