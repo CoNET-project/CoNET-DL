@@ -203,7 +203,7 @@ const daemondStart = async () => {
 	endPointCancun.on('block', async block => {
 		if (block > currentBlock) {
 			currentBlock = block
-			if (block % 2) {
+			if (block % 10 === 0) {
 				return
 			}
 			startOracle()
