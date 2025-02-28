@@ -51,8 +51,7 @@ const mining = async () => {
 			ContractNode.startNodeMining(rate),
 			ContractReffer.startGuardianReferrals(rate)
 		])
-		
-
+		logger(`mining ${a.hash} ${b.hash}`)
 	} catch (ex: any) {
 		logger(`mining Error ${ex.message}`)
 	}
