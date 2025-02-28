@@ -8,14 +8,21 @@ import {webcrypto} from 'node:crypto'
 import { createJupiterApiClient, QuoteGetRequest } from '@jup-ag/api'
 import SP_Oracle_ABI from './SP_OracleABI.json'
 import Bs58 from 'bs58'
+import SP_purchase_eventABI from './SP_purchase_eventABI.json'
+import SP_mainnetABI from './CoNET_DEPIN-mainnet_SP-API.json'
 
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
-const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
-const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
-const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, endPointCancun)
+const CoNETMainnetRPC = 'https://mainnet-rpc.conet.network'
 const SOLANA_CONNECTION = new Connection(
 	"https://api.mainnet-beta.solana.com" // We only support mainnet.
 )
+const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
+const endPointMainnet = new ethers.JsonRpcProvider(CoNETMainnetRPC)
+const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
+const SP_purchase_Addr = '0xb28166ce6Aa4b548F05B5ec54b79a7b97e4A41a1'
+
+const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, endPointCancun)
+
 const solana_account = masterSetup.solanaManager
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
 const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
@@ -23,6 +30,19 @@ const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privateke
 const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 const sp_team = '2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q'
 const spDecimalPlaces = 6
+
+const mainnet_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
+
+const SP_purchaseWallet = new ethers.Wallet(masterSetup.SP_purchase, endPointCancun)
+const SP_purchase_event_SC = new ethers.Contract(SP_purchase_Addr, SP_purchase_eventABI, SP_purchaseWallet)
+
+const SP_NFT_SC_pool: ethers.Contract[]= []
+const SP_NFT_managerWallet = new ethers.Wallet(masterSetup.SP_purchase, endPointMainnet)
+const SP_NFT_SC = new ethers.Contract(mainnet_passport_addr, SP_mainnetABI, SP_NFT_managerWallet)
+SP_NFT_SC_pool.push(SP_NFT_SC)
+
+
+logger(SP_purchaseWallet.address)
 
 interface OracleData {
 	timeStamp: number
@@ -129,7 +149,7 @@ const returnSP = async () => {
 	tx.recentBlockhash = await latestBlockHash.blockhash
 	const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
 	logger(inspect(signature, false, 3, true))
-	
+	returnSP()
 }
 
 const checkts = async (solanaTx: string) => {
@@ -148,17 +168,20 @@ const checkts = async (solanaTx: string) => {
 			if (from && preTokenBalances[0].mint === SP_address && preTokenBalances[1].owner === sp_team) {
 				
 				const _transferAmount = parseFloat(postTokenBalances[1].uiTokenAmount.amount) - parseFloat(preTokenBalances[1].uiTokenAmount.amount)
-				const amount = ethers.formatUnits(_transferAmount.toFixed(0), spDecimalPlaces)
-				logger(Colors.blue(`transferAmount = ${amount}`))
-				const check = await checkPrice(amount)
+				const _amount = ethers.formatUnits(_transferAmount.toFixed(0), spDecimalPlaces)
+				logger(Colors.blue(`transferAmount = ${_amount}`))
+				const check = await checkPrice(_amount)
 				
 				if (!check) {
+					const amount = (parseFloat(_amount) * 0.97).toString()
 					returnPool.push ({
 						from, amount
 					})
 					returnSP()
-					return logger(Colors.magenta(`check = false back! ${amount}`))
+					return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
 				}
+
+
 			}
 
 		}
@@ -176,5 +199,8 @@ const checkts = async (solanaTx: string) => {
 	// )
 	
 }
-//	'2ZmJLrTCxAuoDQg2zoKSy6AhDLTHzVS65dhHAoR89k5qs3ddftAc7BwmWbtCLco1r6TBoxWeNdR1thNHMNaaqYdP'
-checkts('2ZmJLrTCxAuoDQg2zoKSy6AhDLTHzVS65dhHAoR89k5qs3ddftAc7BwmWbtCLco1r6TBoxWeNdR1thNHMNaaqYdP')
+
+
+const mintPurchaseNFT = (to: string, type: string) => {
+	
+}

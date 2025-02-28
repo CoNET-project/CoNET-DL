@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	SP_purchase: string
 	solanaManager: string
 	SP_Oracle: string
 	ethEndpoint: string

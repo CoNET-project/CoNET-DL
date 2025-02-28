@@ -45,21 +45,13 @@ const mining = async () => {
 	
 	const feeData = await conet_Cancun.getFeeData()
 	logger(inspect(feeData, false, 3, true))
-	if (!feeData.gasPrice) {
-		return logger(Colors.red(`transferProcess start with GAS NULL ERROR`))
-	}
-	const gasPrice = parseFloat(feeData.gasPrice.toString())
-	if ( gasPrice > checkGasPrice) {
-		rate += 1
-		return logger(`Gas Rate high, wait ing low!`)
-	}
 
 	try {
 		const [a, b] = await Promise.all([
 			ContractNode.startNodeMining(rate),
 			ContractReffer.startGuardianReferrals(rate)
 		])
-		logger(Colors.blue(`EPOCH ${EPOCH} GuardianMining Success ${gasPrice}`))
+		
 
 	} catch (ex: any) {
 		logger(`mining Error ${ex.message}`)
