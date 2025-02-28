@@ -59,7 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
-	SP_purchase: string
+	SP_purchase: string[]
 	solanaManager: string
 	SP_Oracle: string
 	ethEndpoint: string
@@ -67,7 +67,7 @@ interface ICoNET_DL_masterSetup {
 	mainnet_passport_airdrop: string
 	conetian_eth_airdrop: string
 	epochManagre: string
-	LayerMinus: []
+	LayerMinus: string[]
 	constGAMEAccount: string[]
 	cancun_Guardiner_init:string
 	cancun_CONETian_Init: string

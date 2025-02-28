@@ -18,8 +18,13 @@ const SOLANA_CONNECTION = new Connection(
 )
 const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const endPointMainnet = new ethers.JsonRpcProvider(CoNETMainnetRPC)
+
 const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
-const SP_purchase_Addr = '0xb28166ce6Aa4b548F05B5ec54b79a7b97e4A41a1'
+const SP_purchase_Addr = '0xE111F88A0204eE1F5DFE2cF5796F9C2179EeBBDd'.toLowerCase()
+const mainnet_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
+
+
+
 
 const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, endPointCancun)
 
@@ -31,18 +36,24 @@ const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 const sp_team = '2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q'
 const spDecimalPlaces = 6
 
-const mainnet_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 
-const SP_purchaseWallet = new ethers.Wallet(masterSetup.SP_purchase, endPointCancun)
+const SP_purchaseWallet = new ethers.Wallet(masterSetup.SP_purchase[0], endPointCancun)
 const SP_purchase_event_SC = new ethers.Contract(SP_purchase_Addr, SP_purchase_eventABI, SP_purchaseWallet)
 
 const SP_NFT_SC_pool: ethers.Contract[]= []
-const SP_NFT_managerWallet = new ethers.Wallet(masterSetup.SP_purchase, endPointMainnet)
+const SP_NFT_managerWallet = new ethers.Wallet(masterSetup.SP_purchase[0], endPointMainnet)
 const SP_NFT_SC = new ethers.Contract(mainnet_passport_addr, SP_mainnetABI, SP_NFT_managerWallet)
 SP_NFT_SC_pool.push(SP_NFT_SC)
 
+const SP_purchase_event_SCPool: ethers.Contract[] = []
+SP_purchase_event_SCPool.push(SP_purchase_event_SC)
 
-logger(SP_purchaseWallet.address)
+
+const SP_purchase_Success: string[] = []
+const SP_purchase_Failed: {
+	tx: string
+	amount: string
+}[] = []
 
 interface OracleData {
 	timeStamp: number
@@ -78,7 +89,9 @@ const getOracle = async () => {
 	}
 }
 
-const checkPrice = async (_amount: string) => {
+type nftType = 'sp9999'| 'sp2499'| 'sp999'| 'sp249'|''
+
+const checkPrice: (_amount: string) => Promise<nftType> = async (_amount: string) => new Promise( async resolve=>{
 	await getOracle()
 	
 
@@ -92,21 +105,23 @@ const checkPrice = async (_amount: string) => {
 	const sp999 = parseFloat(oracleData.data.sp999)
 	const sp2499 = parseFloat(oracleData.data.sp2499)
 	const sp9999 = parseFloat(oracleData.data.sp9999)
-	if (Math.abs(amount - sp249) < sp249 * 0.1) {
+
+	
+	if (Math.abs(amount - sp9999) < sp9999 * 0.05) {
+		return 'sp9999'
+	}
+	if (Math.abs(amount - sp2499) < sp2499 * 0.05) {
+		return 'sp2499'
+	}
+	if (Math.abs(amount - sp999) < sp999 * 0.05) {
+		return 'sp999'
+	}
+	if (Math.abs(amount - sp249) < sp249 * 0.05) {
 		return 'sp249'
-	}
-	if (Math.abs(amount - sp999) < sp999 * 0.1) {
-		return 'sp999'
-	}
-	if (Math.abs(amount - sp2499) < sp2499 * 0.1) {
-		return 'sp999'
-	}
-	if (Math.abs(amount - sp9999) < sp9999 * 0.1) {
-		return 'sp999'
 	}
 
 	return ''
-}
+})
 
 const returnPool: {
 	from: string
@@ -123,7 +138,6 @@ const returnSP = async () => {
 	if (!returnData) {
 		return
 	}
-
 
 	let sourceAccount = await getOrCreateAssociatedTokenAccount(
         SOLANA_CONNECTION, 
@@ -152,7 +166,63 @@ const returnSP = async () => {
 	returnSP()
 }
 
-const checkts = async (solanaTx: string) => {
+const process_SP_purchase__Failed = async () => {
+	const obj = SP_purchase_Failed.shift()
+	if (!obj) {
+		return
+	}
+	const SC = SP_purchase_event_SCPool.shift()
+	if (!SC) {
+		SP_purchase_Failed.unshift(obj)
+		return setTimeout(() => {
+			process_SP_purchase__Failed()
+		})
+	}
+	try {
+		const tx = await SC._purchaseSuccess(obj)
+		await tx.wait()
+		logger(Colors.magenta(`process_SP_purchase_Success success! ${tx.hash}`))
+
+	} catch (ex: any) {
+		logger(Colors.magenta(`process_SP_purchase_Success Error! [${ex.message}]`))
+	}
+	SP_purchase_event_SCPool.push(SC)
+
+	setTimeout(() => {
+		process_SP_purchase__Failed()
+	}, 1000)
+
+}
+
+const process_SP_purchase_Success = async () => {
+	const obj = SP_purchase_Success.shift()
+	if (!obj) {
+		return
+	}
+	const SC = SP_purchase_event_SCPool.shift()
+
+	if (!SC) {
+		SP_purchase_Success.unshift(obj)
+		return setTimeout(() => {
+			process_SP_purchase_Success()
+		}, 1000)
+	}
+	try {
+		const tx = await SC._purchaseSuccess(obj)
+		await tx.wait()
+		logger(Colors.magenta(`process_SP_purchase_Success success! ${tx.hash}`))
+
+	} catch (ex: any) {
+		logger(Colors.magenta(`process_SP_purchase_Success Error! [${ex.message}]`))
+	}
+	SP_purchase_event_SCPool.push(SC)
+	setTimeout(() => {
+		process_SP_purchase_Success()
+	}, 1000)
+
+}
+
+const checkts = async (solanaTx: string, ethWallet: string) => {
 
 	//		from: J3qsMcDnE1fSmWLd1WssMBE5wX77kyLpyUxckf73w9Cs
 	//		to: 2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q
@@ -170,18 +240,30 @@ const checkts = async (solanaTx: string) => {
 				const _transferAmount = parseFloat(postTokenBalances[1].uiTokenAmount.amount) - parseFloat(preTokenBalances[1].uiTokenAmount.amount)
 				const _amount = ethers.formatUnits(_transferAmount.toFixed(0), spDecimalPlaces)
 				logger(Colors.blue(`transferAmount = ${_amount}`))
-				const check = await checkPrice(_amount)
+				const nftType = await checkPrice(_amount)
 				
-				if (!check) {
-					const amount = (parseFloat(_amount) * 0.97).toString()
+				if (nftType === '') {
+					const amount = (parseFloat(_amount) * 0.97).toFixed(4)
 					returnPool.push ({
 						from, amount
 					})
+					SP_purchase_Failed.push({
+						tx: solanaTx,
+						amount
+					})
+					process_SP_purchase__Failed()
 					returnSP()
 					return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
 				}
 
-
+				logger(Colors.magenta(`Purchase ${ethWallet} NFT ${nftType}`))
+				process_mintNFT_pool.push(
+					{
+						to: ethWallet,
+						nftType
+					}
+				)
+				mintNFT()
 			}
 
 		}
@@ -200,7 +282,88 @@ const checkts = async (solanaTx: string) => {
 	
 }
 
+const checkCNTPTransfer = async (tR: ethers.TransactionReceipt) => {
+	for (let log of tR.logs) {
+			const LogDescription = SP_purchase_event_SC.interface.parseLog(log)
+			
+			if (LogDescription?.name === 'purchaseNFT') {
 
-const mintPurchaseNFT = (to: string, type: string) => {
-	
+				const toAddress  = LogDescription.args[0]
+				const solanaTx = LogDescription.args[1]
+				checkts(solanaTx, toAddress)
+			}
+		}
 }
+
+const process_mintNFT_pool: {
+	to: string
+	nftType: nftType
+}[] = []
+
+const mintNFT = async () => {
+	const obj = process_mintNFT_pool.shift()
+	if (!obj) {
+		return
+	}
+	const SC = SP_NFT_SC_pool.shift()
+	if (!SC) {
+		process_mintNFT_pool.unshift(obj)
+		return setTimeout(() => {
+			mintNFT ()
+		}, 1000)
+	}
+	const premium = (obj.nftType === 'sp2499'|| obj.nftType === 'sp9999') ? true : false
+	const expiresDayes = premium ? 365 : 31
+	try {
+		const tx = await SC.mintPassport(obj.to, expiresDayes, premium)
+		await tx.wait()
+		const __transfer = {
+            to: obj.to,
+            value: ethers.parseEther('0.00001')
+        }
+
+		const tx1 = await SP_NFT_managerWallet.sendTransaction(__transfer)
+		await tx1.wait()
+
+		logger(Colors.magenta(`process_mintNFT_pool [${obj.to}]ETh = ${tx1.hash}`))
+	} catch (ex: any) {
+		logger(Colors.red(`mintNFT got Error! ${ex.message}`))
+	}
+
+	SP_NFT_SC_pool.push(SC)
+	setTimeout(() => {
+		mintNFT ()
+	}, 2000)
+
+}
+
+let currentBlock = 0
+
+const daemondStart = async () => {
+	
+	currentBlock = await endPointCancun.getBlockNumber()
+	logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
+	endPointCancun.on('block', async block => {
+		if (block > currentBlock) {
+			currentBlock = block
+			const blockTs = await endPointCancun.getBlock(block)
+			if (!blockTs?.transactions) {
+				return logger(Colors.gray(`holeskyBlockListenning ${block} has none`))
+			}
+			logger(Colors.gray(`holeskyBlockListenning ${block} has process now!`))
+			for (let tx of blockTs.transactions) {
+
+				const event = await endPointCancun.getTransactionReceipt(tx)
+		
+				if ( event?.to?.toLowerCase() === SP_purchase_Addr) {
+					
+					checkCNTPTransfer(event)
+				}
+				
+			}
+		}
+		
+	})
+}
+
+daemondStart()
