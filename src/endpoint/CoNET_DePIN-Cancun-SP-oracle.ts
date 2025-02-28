@@ -204,9 +204,9 @@ const daemondStart = async () => {
 		if (block > currentBlock) {
 			currentBlock = block
 			if (block % 10 === 0) {
-				return
+				startOracle()
 			}
-			startOracle()
+			
 		}
 		
 	})
