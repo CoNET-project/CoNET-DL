@@ -35,7 +35,6 @@ const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privateke
 const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 const sp_team = '2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q'
 const sp_NGO = '6g5CHuv3tUHMupdccP6s7jRbEPjks2DAM5T5GYfrqvWz'
-
 const spDecimalPlaces = 6
 
 
@@ -164,36 +163,8 @@ const returnSP = async () => {
 	const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
 	tx.recentBlockhash = await latestBlockHash.blockhash
 	const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
-	logger(Colors.magenta(`returnSP to ${returnData.from} success ${signature}`))
+	logger(inspect(signature, false, 3, true))
 	returnSP()
-}
-
-
-const transferTo_SPNGO = async (amount: string) => {
-	let sourceAccount = await getOrCreateAssociatedTokenAccount(
-        SOLANA_CONNECTION, 
-        solana_account_privatekey,
-        new PublicKey(SP_address),
-        solana_account_privatekey.publicKey
-    )
-	let destinationAccount = await getOrCreateAssociatedTokenAccount(
-        SOLANA_CONNECTION, 
-        solana_account_privatekey,
-        new PublicKey(SP_address),
-        new PublicKey(sp_NGO)
-    )
-	const tx = new Transaction()
-	tx.add (createTransferInstruction(
-        sourceAccount.address,
-        destinationAccount.address,
-        solana_account_privatekey.publicKey,
-        ethers.parseUnits(amount, spDecimalPlaces)
-    ))
-
-	const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
-	tx.recentBlockhash = await latestBlockHash.blockhash
-	const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
-	logger(Colors.magenta(`transferTo_SPNGO success ${signature}`))
 }
 
 const process_SP_purchase__Failed = async () => {
@@ -268,7 +239,7 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 			if (from && preTokenBalances[0].mint === SP_address && preTokenBalances[1].owner === sp_team) {
 				
 				const _transferAmount = parseFloat(postTokenBalances[1].uiTokenAmount.amount) - parseFloat(preTokenBalances[1].uiTokenAmount.amount)
-				const _amount = ethers.formatUnits(_transferAmount.toFixed(4), spDecimalPlaces)
+				const _amount = ethers.formatUnits(_transferAmount.toFixed(0), spDecimalPlaces)
 				logger(Colors.blue(`transferAmount = ${_amount}`))
 				const nftType = await checkPrice(_amount)
 				
@@ -293,10 +264,7 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 						nftType
 					}
 				)
-				const brunAmount = ethers.formatUnits((_transferAmount * 0.1).toFixed(4), spDecimalPlaces)
 				mintNFT()
-				await brunSP(brunAmount)
-				await transferTo_SPNGO (brunAmount)
 			}
 
 		}
@@ -369,108 +337,3 @@ const mintNFT = async () => {
 	}, 2000)
 
 }
-
-
-const confirmTransaction = async (
-    connection: Connection,
-    signature: TransactionSignature,
-    desiredConfirmationStatus: TransactionConfirmationStatus = 'confirmed',
-    timeout: number = 30000,
-    pollInterval: number = 1000,
-    searchTransactionHistory: boolean = false
-): Promise<SignatureStatus>  => {
-    const start = Date.now()
-
-    while (Date.now() - start < timeout) {
-        const { value: statuses } = await connection.getSignatureStatuses([signature], { searchTransactionHistory })
-
-        if (!statuses || statuses.length === 0) {
-            throw new Error('Failed to get signature status')
-        }
-
-        const status = statuses[0];
-
-        if (status === null) {
-            await new Promise(resolve => setTimeout(resolve, pollInterval))
-            continue
-        }
-
-        if (status.err) {
-            throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`)
-        }
-
-        if (status.confirmationStatus && status.confirmationStatus === desiredConfirmationStatus) {
-            return status;
-        }
-
-        if (status.confirmationStatus === 'finalized') {
-            return status;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, pollInterval))
-    }
-
-    throw new Error(`Transaction confirmation timeout after ${timeout}ms`)
-}
-
-
-
-const brunSP = async (brunNUmber: string) => {
-	const account = await getAssociatedTokenAddress(new PublicKey(SP_address), solana_account_privatekey.publicKey)
-	logger(inspect(account, false, 3, true))
-	const burnIx = createBurnCheckedInstruction(
-		account, // PublicKey of Owner's Associated Token Account
-		new PublicKey(SP_address), // Public Key of the Token Mint Address
-		solana_account_privatekey.publicKey, // Public Key of Owner's Wallet
-		ethers.parseUnits(brunNUmber, spDecimalPlaces), // Number of tokens to burn
-		spDecimalPlaces // Number of Decimals of the Token Mint
-	)
-	const { blockhash, lastValidBlockHeight } = await SOLANA_CONNECTION.getLatestBlockhash('finalized')
-	const messageV0 = new TransactionMessage({
-		payerKey: solana_account_privatekey.publicKey,
-		recentBlockhash: blockhash,
-		instructions: [burnIx]
-	  }).compileToV0Message()
-	const transaction = new VersionedTransaction(messageV0)
-    transaction.sign([solana_account_privatekey])
-	const txid = await SOLANA_CONNECTION.sendTransaction(transaction)
-	
-	try {
-		const confirmation = await confirmTransaction(SOLANA_CONNECTION, txid)
-		logger(Colors.magenta(`brunSP success ${txid}`))
-		logger(inspect(confirmation, false, 3, true))
-	} catch (ex:any) {
-		logger(Colors.red(`brunSP Error ${ex.message}`))
-	}
-}
-
-let currentBlock = 0
-
-const daemondStart = async () => {
-	
-	currentBlock = await endPointCancun.getBlockNumber()
-	logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
-	endPointCancun.on('block', async block => {
-		if (block > currentBlock) {
-			currentBlock = block
-			const blockTs = await endPointCancun.getBlock(block)
-			if (!blockTs?.transactions) {
-				return logger(Colors.gray(`holeskyBlockListenning ${block} has none`))
-			}
-			logger(Colors.gray(`holeskyBlockListenning ${block} has process now!`))
-			for (let tx of blockTs.transactions) {
-
-				const event = await endPointCancun.getTransactionReceipt(tx)
-		
-				if ( event?.to?.toLowerCase() === SP_purchase_Addr) {
-					
-					checkCNTPTransfer(event)
-				}
-				
-			}
-		}
-		
-	})
-}
-
-daemondStart()
