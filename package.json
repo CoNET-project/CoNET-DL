@@ -63,7 +63,9 @@
 		"openpgp": "^6.1.0",
 		"phin": "^3.7.1",
 		"uuid": "^11.0.5",
-		"web3": "^4.16.0"
+		"web3": "^4.16.0",
+		"@solana/web3.js": "^1.98.0",
+		"@jup-ag/api": "^6.0.40"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.3",

@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	SP_Oracle: string
 	ethEndpoint: string
 	SilentPassAirdrop: string[]
 	mainnet_passport_airdrop: string
