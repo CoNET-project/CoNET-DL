@@ -65,7 +65,9 @@
 		"uuid": "^11.0.5",
 		"web3": "^4.16.0",
 		"@solana/web3.js": "^1.98.0",
-		"@jup-ag/api": "^6.0.40"
+		"@jup-ag/api": "^6.0.40",
+		"bs58": "^6.0.0",
+		"@solana/spl-token": "^0.4.12"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.3",

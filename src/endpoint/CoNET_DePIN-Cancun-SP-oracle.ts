@@ -141,13 +141,7 @@ const getSOlanaPrice = async () => {
 	return usdt
 }
 
-interface spOracle {
-	sp249: string
-	sp2499: string
-	sp999: string
-	sp9999: string
-	so: string
-}
+
 const startOracle = async () => {
 	const price1 = '2.49'
 	const price2 = '24.99'

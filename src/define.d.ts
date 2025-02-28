@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	solanaManager: string
 	SP_Oracle: string
 	ethEndpoint: string
 	SilentPassAirdrop: string[]
@@ -422,3 +423,10 @@ interface ConetinerNFTData {
 	CONETianeferrer: BigInt
 }
 
+interface spOracle {
+	sp249: string
+	sp2499: string
+	sp999: string
+	sp9999: string
+	so: string
+}
