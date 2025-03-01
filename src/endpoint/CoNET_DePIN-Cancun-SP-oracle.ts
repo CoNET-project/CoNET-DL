@@ -176,11 +176,12 @@ const storeOracle = async (data: spOracle) => {
 	}
 	try {
 		const sp249 = ethers.parseEther(data.sp249)
-		const sp999 = ethers.parseEther(data.sp999)
-		const sp2499 = ethers.parseEther(data.sp2499)
+		const sp999 = ethers.parseEther(data.sp2499)
+		const sp2499 = ethers.parseEther(data.sp999)
 		const sp9999 = ethers.parseEther(data.sp9999)
 		const so = ethers.parseEther(data.so)
 		const tx = await SC.updatePrice(sp249, sp999, sp2499, sp9999, so)
+		logger(data)
 		await tx.wait()
 		logger(Colors.blue(`storeOracle success! ${tx.hash}`))
 	} catch (ex: any) {
