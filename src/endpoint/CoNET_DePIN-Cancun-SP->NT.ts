@@ -465,6 +465,7 @@ const brunSP = async (brunNUmber: string) => {
 		logger(inspect(confirmation, false, 3, true))
 	} catch (ex:any) {
 		logger(Colors.red(`brunSP Error ${ex.message}`))
+		return brunSP (brunNUmber)
 	}
 }
 
