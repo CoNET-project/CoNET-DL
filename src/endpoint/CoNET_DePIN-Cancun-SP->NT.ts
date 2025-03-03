@@ -267,11 +267,13 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 		const preTokenBalances = meta.preTokenBalances
 		if (preTokenBalances?.length == 2 && postTokenBalances?.length == 2) {
 			const from = postTokenBalances[0].owner
-			if (from && preTokenBalances[0].mint === SP_address && preTokenBalances[0].owner === sp_team) {
-				if (postTokenBalances[1].uiTokenAmount && preTokenBalances[1].uiTokenAmount) {
-					const preAmount = parseFloat(preTokenBalances[1].uiTokenAmount.uiAmount ? preTokenBalances[1].uiTokenAmount.uiAmount.toString() : "0")
-					const postAmount = parseFloat( postTokenBalances[1].uiTokenAmount.uiAmount ? postTokenBalances[1].uiTokenAmount.uiAmount.toString() : "0")
-					const _amount =  preAmount - postAmount
+			if (from && preTokenBalances[0].mint === SP_address && (preTokenBalances[0].owner === sp_team || preTokenBalances[1].owner === sp_team)) {
+				const index = preTokenBalances[0].owner === sp_team ? 0 : 1
+
+				if (postTokenBalances[index].uiTokenAmount && preTokenBalances[index].uiTokenAmount) {
+					const preAmount = parseFloat(preTokenBalances[index].uiTokenAmount.uiAmount ? preTokenBalances[index].uiTokenAmount.uiAmount.toString() : "0")
+					const postAmount = parseFloat( postTokenBalances[index].uiTokenAmount.uiAmount ? postTokenBalances[index].uiTokenAmount.uiAmount.toString() : "0")
+					const _amount = postAmount - preAmount
 					logger(Colors.blue(`transferAmount = ${_amount}`))
 					const nftType = await checkPrice(_amount.toFixed(4))
 					
@@ -287,7 +289,7 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 								tx: solanaTx,
 								amount: amount.toFixed(4)
 							})
-							
+
 							returnSP()
 						}
 						
