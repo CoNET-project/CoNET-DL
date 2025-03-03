@@ -100,6 +100,7 @@ const checkPrice: (_amount: string) => Promise<nftType> = async (_amount: string
 	logger(inspect(oracleData, false, 3, true))
 	const amount = parseFloat(_amount)
 	if (oracleData.data == null) {
+		resolve('')
 		return logger(`checkPrice oracleData?.data is NULL Error!`)
 	}
 	// check sp9999
@@ -110,19 +111,19 @@ const checkPrice: (_amount: string) => Promise<nftType> = async (_amount: string
 
 	
 	if (Math.abs(amount - sp9999) < sp9999 * 0.05) {
-		return 'sp9999'
+		return resolve('sp9999')
 	}
 	if (Math.abs(amount - sp2499) < sp2499 * 0.05) {
-		return 'sp2499'
+		return resolve('sp2499')
 	}
 	if (Math.abs(amount - sp999) < sp999 * 0.05) {
-		return 'sp999'
+		return resolve('sp999')
 	}
 	if (Math.abs(amount - sp249) < sp249 * 0.05) {
-		return 'sp249'
+		return resolve('sp249')
 	}
 
-	return ''
+	return resolve('')
 })
 
 const returnPool: {
@@ -208,6 +209,7 @@ const process_SP_purchase__Failed = async () => {
 			process_SP_purchase__Failed()
 		})
 	}
+
 	try {
 		const tx = await SC._purchaseSuccess(obj)
 		await tx.wait()
@@ -225,20 +227,20 @@ const process_SP_purchase__Failed = async () => {
 }
 
 const process_SP_purchase_Success = async () => {
-	const obj = SP_purchase_Success.shift()
-	if (!obj) {
+	const solanaTx = SP_purchase_Success.shift()
+	if (!solanaTx) {
 		return
 	}
 	const SC = SP_purchase_event_SCPool.shift()
 
 	if (!SC) {
-		SP_purchase_Success.unshift(obj)
+		SP_purchase_Success.unshift(solanaTx)
 		return setTimeout(() => {
 			process_SP_purchase_Success()
 		}, 1000)
 	}
 	try {
-		const tx = await SC._purchaseSuccess(obj)
+		const tx = await SC._purchaseSuccess(solanaTx)
 		await tx.wait()
 		logger(Colors.magenta(`process_SP_purchase_Success success! ${tx.hash}`))
 
@@ -265,43 +267,55 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 		const preTokenBalances = meta.preTokenBalances
 		if (preTokenBalances?.length == 2 && postTokenBalances?.length == 2) {
 			const from = postTokenBalances[0].owner
-			if (from && preTokenBalances[0].mint === SP_address && preTokenBalances[1].owner === sp_team) {
-				
-				const _transferAmount = parseFloat(postTokenBalances[1].uiTokenAmount.amount) - parseFloat(preTokenBalances[1].uiTokenAmount.amount)
-				const _amount = ethers.formatUnits(_transferAmount.toFixed(4), spDecimalPlaces)
-				logger(Colors.blue(`transferAmount = ${_amount}`))
-				const nftType = await checkPrice(_amount)
-				
-				if (nftType === '') {
-					const amount = (parseFloat(_amount) * 0.97).toFixed(4)
-					returnPool.push ({
-						from, amount
-					})
-					SP_purchase_Failed.push({
-						tx: solanaTx,
-						amount
-					})
-					process_SP_purchase__Failed()
-					returnSP()
-					return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
+			if (from && preTokenBalances[0].mint === SP_address && preTokenBalances[0].owner === sp_team) {
+				if (postTokenBalances[1].uiTokenAmount && preTokenBalances[1].uiTokenAmount) {
+					const preAmount = parseFloat(preTokenBalances[1].uiTokenAmount.uiAmount ? preTokenBalances[1].uiTokenAmount.uiAmount.toString() : "0")
+					const postAmount = parseFloat( postTokenBalances[1].uiTokenAmount.uiAmount ? postTokenBalances[1].uiTokenAmount.uiAmount.toString() : "0")
+					const _amount =  preAmount - postAmount
+					logger(Colors.blue(`transferAmount = ${_amount}`))
+					const nftType = await checkPrice(_amount.toFixed(4))
+					
+					if (nftType === '') {
+						const amount = (parseFloat(_amount.toFixed(4)) * 0.97).toFixed(4)
+						returnPool.push ({
+							from, amount
+						})
+						SP_purchase_Failed.push({
+							tx: solanaTx,
+							amount
+						})
+						process_SP_purchase__Failed()
+						returnSP()
+						return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
+					}
+
+					logger(Colors.magenta(`Purchase ${ethWallet} NFT ${nftType}`))
+					process_mintNFT_pool.push(
+						{
+							to: ethWallet,
+							nftType
+						}
+					)
+					const brunAmount = (_amount * 0.1).toFixed(4)
+					mintNFT()
+					SP_purchase_Success.push(solanaTx)
+					process_SP_purchase_Success()
+					await brunSP(brunAmount)
+					await transferTo_SPNGO (brunAmount)
+					return logger(Colors.magenta(`NFT success! for ${solanaTx} [${ethWallet}]`))
 				}
 
-				logger(Colors.magenta(`Purchase ${ethWallet} NFT ${nftType}`))
-				process_mintNFT_pool.push(
-					{
-						to: ethWallet,
-						nftType
-					}
-				)
-				const brunAmount = ethers.formatUnits((_transferAmount * 0.1).toFixed(4), spDecimalPlaces)
-				mintNFT()
-				await brunSP(brunAmount)
-				await transferTo_SPNGO (brunAmount)
-			}
+				logger(inspect(preTokenBalances, false, 3, true))
+				logger(inspect(postTokenBalances, false, 3, true))
+				return logger(Colors.red(`NFT Errot! from ${from} postTokenBalances[1].uiTokenAmount && preTokenBalances[1].uiTokenAmount [${postTokenBalances[1].uiTokenAmount && preTokenBalances[1].uiTokenAmount}]`))
 
+			}
+			logger(inspect(preTokenBalances, false, 3, true))
+			logger(inspect(postTokenBalances, false, 3, true))
+			return logger(Colors.magenta(`NFT Errot! from ${from} preTokenBalances[0].mint === SP_address ${preTokenBalances[0].mint === SP_address} preTokenBalances[0].owner === sp_team ${preTokenBalances[0].owner === sp_team}`))
 		}
 		
-		
+		return logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length}postTokenBalances?.length ${postTokenBalances?.length} Error!`))
 	}
 	
 	// const ACCOUNT_TO_WATCH = new PublicKey('2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q')
@@ -316,16 +330,17 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 }
 
 const checkCNTPTransfer = async (tR: ethers.TransactionReceipt) => {
+	
 	for (let log of tR.logs) {
-			const LogDescription = SP_purchase_event_SC.interface.parseLog(log)
-			
-			if (LogDescription?.name === 'purchaseNFT') {
-
-				const toAddress  = LogDescription.args[0]
-				const solanaTx = LogDescription.args[1]
-				checkts(solanaTx, toAddress)
-			}
+		const LogDescription = SP_purchase_event_SC.interface.parseLog(log)
+		
+		if (LogDescription?.name === 'purchaseNFT') {
+			logger(Colors.magenta(`holeskyBlockListenning purchaseNFT ${LogDescription?.name}`))
+			const toAddress  = LogDescription.args[0]
+			const solanaTx = LogDescription.args[1]
+			checkts(solanaTx, toAddress)
 		}
+	}
 }
 
 const process_mintNFT_pool: {
@@ -371,6 +386,7 @@ const mintNFT = async () => {
 }
 
 
+
 const confirmTransaction = async (
     connection: Connection,
     signature: TransactionSignature,
@@ -414,7 +430,6 @@ const confirmTransaction = async (
 }
 
 
-
 const brunSP = async (brunNUmber: string) => {
 	const account = await getAssociatedTokenAddress(new PublicKey(SP_address), solana_account_privatekey.publicKey)
 	logger(inspect(account, false, 3, true))
@@ -446,6 +461,24 @@ const brunSP = async (brunNUmber: string) => {
 
 let currentBlock = 0
 
+const getBlock = async (block: number) => {
+	const blockTs = await endPointCancun.getBlock(block)
+	if (!blockTs?.transactions) {
+		return logger(Colors.gray(`holeskyBlockListenning ${block} has none`))
+	}
+	logger(Colors.gray(`holeskyBlockListenning ${block} has process now!`))
+	for (let tx of blockTs.transactions) {
+
+		const event = await endPointCancun.getTransactionReceipt(tx)
+		
+		if ( event?.to?.toLowerCase() === SP_purchase_Addr) {
+			
+			checkCNTPTransfer(event)
+		}
+		
+	}
+}
+
 const daemondStart = async () => {
 	
 	currentBlock = await endPointCancun.getBlockNumber()
@@ -453,21 +486,7 @@ const daemondStart = async () => {
 	endPointCancun.on('block', async block => {
 		if (block > currentBlock) {
 			currentBlock = block
-			const blockTs = await endPointCancun.getBlock(block)
-			if (!blockTs?.transactions) {
-				return logger(Colors.gray(`holeskyBlockListenning ${block} has none`))
-			}
-			logger(Colors.gray(`holeskyBlockListenning ${block} has process now!`))
-			for (let tx of blockTs.transactions) {
-
-				const event = await endPointCancun.getTransactionReceipt(tx)
-		
-				if ( event?.to?.toLowerCase() === SP_purchase_Addr) {
-					
-					checkCNTPTransfer(event)
-				}
-				
-			}
+			getBlock(block)
 		}
 		
 	})
