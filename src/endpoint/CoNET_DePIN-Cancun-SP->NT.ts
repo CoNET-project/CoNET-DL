@@ -211,7 +211,7 @@ const process_SP_purchase__Failed = async () => {
 	}
 
 	try {
-		const tx = await SC._purchaseSuccess(obj)
+		const tx = await SC._purchaseFailed(obj.tx,  ethers.parseUnits(obj.amount, spDecimalPlaces))
 		await tx.wait()
 		logger(Colors.magenta(`process_SP_purchase_Success success! ${tx.hash}`))
 
@@ -276,16 +276,23 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 					const nftType = await checkPrice(_amount.toFixed(4))
 					
 					if (nftType === '') {
-						const amount = (parseFloat(_amount.toFixed(4)) * 0.97).toFixed(4)
-						returnPool.push ({
-							from, amount
-						})
-						SP_purchase_Failed.push({
-							tx: solanaTx,
-							amount
-						})
+
+						const amount = parseFloat(_amount.toFixed(4)) * 0.97
+						if (amount > 0.1) {
+							returnPool.push ({
+								from, amount: amount.toFixed(4)
+							})
+	
+							SP_purchase_Failed.push({
+								tx: solanaTx,
+								amount: amount.toFixed(4)
+							})
+							
+							returnSP()
+						}
+						
 						process_SP_purchase__Failed()
-						returnSP()
+						
 						return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
 					}
 
