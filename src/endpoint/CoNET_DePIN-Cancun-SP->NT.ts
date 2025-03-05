@@ -309,8 +309,8 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 					mintNFT()
 					SP_purchase_Success.push(solanaTx)
 					process_SP_purchase_Success()
-					await brunSP(brunAmount)
-					await transferTo_SPNGO (brunAmount)
+					brunSP(brunAmount)
+					transferTo_SPNGO (brunAmount)
 					return logger(Colors.magenta(`NFT success! for ${solanaTx} [${ethWallet}]`))
 				}
 
@@ -504,5 +504,3 @@ const daemondStart = async () => {
 
 daemondStart()
 
-
-// getBlock(357120)
