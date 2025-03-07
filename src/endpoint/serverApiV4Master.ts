@@ -20,7 +20,7 @@ import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
 
-
+import SPClub_ABI from './SP_Club_ABI.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -157,6 +157,16 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	return resolve(true)
 })
 
+const spclub_addr = '0x1FB1E32E801D240C9727c954ff93614Baa933702'
+const mainnet_rpc = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+
+const SPClub_admin_SC: ethers.Contract[] = []
+for (let wallet of masterSetup.SPClub_admin_mainnet) {
+	const _wallet = new ethers.Wallet(wallet, mainnet_rpc)
+	const sc = new ethers.Contract(spclub_addr, SPClub_ABI, _wallet)
+	SPClub_admin_SC.push(sc)
+}
+
 
 let faucetWaitingPool: faucetRequest[] = []
 
@@ -220,7 +230,6 @@ class conet_dl_server {
 
 			currentEpoch = _block
 			return stratlivenessV2(_block)
-			
 		})
 		
 	}
@@ -369,7 +378,8 @@ class conet_dl_server {
 		})
 
 		router.post('/spclub', async (req: any, res: any) => {
-
+			const obj:minerObj = req.body
+			SPClub(obj)
 		})
 
 
@@ -391,7 +401,48 @@ class conet_dl_server {
 	}
 }
 
-const SPClub = (to: string, toSolana: string, referees: string) => {
-	
+
+interface SPClubProcessObj {
+	walletAddress: string
+	solanaWallet: string
+	referrer: string
 }
+
+const SPClubProcess: SPClubProcessObj[] = []
+const SPClub = (obj: minerObj) => {
+	if (!obj?.solanaWallet||!obj?.referrer) {
+		return false
+	}
+	const objProcess: SPClubProcessObj = {
+		walletAddress: obj.walletAddress,
+		solanaWallet: obj.solanaWallet,
+		referrer: obj?.referrer
+	}
+	SPClubProcess.push (objProcess)
+
+}
+
+const doing_SPClubProcess = async () => {
+	const obj = SPClubProcess.shift()
+	if (!obj) {
+		return
+	}
+
+	const SC = SPClub_admin_SC.shift()
+	if (!SC) {
+		SPClubProcess.unshift(obj)
+		return setTimeout(() => {
+			return doing_SPClubProcess()
+		}, 1000)
+	}
+	try {
+		const tx = await SC.mint(obj.walletAddress, obj.referrer, obj.solanaWallet)
+		await tx.wait()
+		logger(Colors.blue(`doing_SPClubProcess success ${tx.hash}`))
+	} catch (ex: any) {
+		logger(Colors.red(`doing_SPClubProcess Error ${ex.message}`))
+	}
+	doing_SPClubProcess()
+}
+
 export default conet_dl_server

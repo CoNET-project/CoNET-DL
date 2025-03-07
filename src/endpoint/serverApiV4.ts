@@ -497,7 +497,7 @@ class conet_dl_server_v4 {
 				logger(inspect(obj, false, 3, true))
 
 				return res.status(403).json({
-					error: 'message & signMessage Object Error!'
+					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
 				}).end()
 			}
 
@@ -507,8 +507,24 @@ class conet_dl_server_v4 {
 					error: 'Service temporarily unavailable'
 				}).end()
 			}
+
 			if (check === false) {
+				obj.referrer = obj.referrer||'0x0000000000000000000000000000000000000000'
+				try {
+					obj.referrer = ethers.getAddress(obj.referrer)
+				} catch(ex) {
+					return res.status(403).json({
+						error: 'referrer address Error!'
+					}).end()
+				}
+
 				return postLocalhost('/api/spclub', obj, res)
+			}
+
+			if (check === true) {
+				return res.status(403).json({
+					error: 'You have no valid Silent Pass Passport'
+				}).end()
 			}
 
 			if (check > 0) {
@@ -672,8 +688,7 @@ const SPClub_SC_readonly = new ethers.Contract(SPClub_SC_addr, SPClub_ABI, mainn
 const proCheckSPClubMember = async (obj: minerObj) => {
 	try {
 		
-		const [cancun, mainnet, _memberID] = await Promise.all([
-			PassportSC_cancun_readonly.getCurrentPassport(obj.walletAddress),
+		const [mainnet, _memberID] = await Promise.all([
 			PassportSC_mainnet_readonly.getCurrentPassport(obj.walletAddress),
 			SPClub_SC_readonly.membership(obj.walletAddress)
 		])
@@ -681,12 +696,10 @@ const proCheckSPClubMember = async (obj: minerObj) => {
 		if (memberID > 0) {
 			return memberID
 		}
-		const [nftCancun, nftmainnet] = await Promise.all([
-			_checkNFT_expires(cancun),
-			_checkNFT_expires(mainnet),
-		])
 
-		if (nftCancun|| nftmainnet) {
+		const nftmainnet = await _checkNFT_expires(mainnet)
+
+		if (nftmainnet) {
 			return false
 		}
 		
@@ -694,7 +707,7 @@ const proCheckSPClubMember = async (obj: minerObj) => {
 		logger(Colors.red(`proCheckSPClub got Error!`))
 		return null
 	}
-	return false
+	return true
 }
 
 export default conet_dl_server_v4
