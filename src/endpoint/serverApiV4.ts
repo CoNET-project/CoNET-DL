@@ -483,7 +483,7 @@ class conet_dl_server_v4 {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
 				return res.status(404).json({
 					error: 'message & signMessage Object Error!'
 				}).end()
@@ -492,8 +492,8 @@ class conet_dl_server_v4 {
 			logger(Colors.magenta(`/spclub`), message, signMessage)
 			const obj = checkSign (message, signMessage)
 	
-			if (!obj || !obj?.data ) {
-				logger (Colors.grey(`Router /PurchaseCONETianPlan checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet ) {
+				logger (Colors.grey(`Router /spclub checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
 				logger(inspect(obj, false, 3, true))
 
 				return res.status(403).json({
@@ -513,7 +513,7 @@ class conet_dl_server_v4 {
 
 			if (check > 0) {
 				return res.status(403).json({
-					error: `You are already has membership ${check}`
+					error: `You are already membership ${check}`
 				}).end()
 			}
 

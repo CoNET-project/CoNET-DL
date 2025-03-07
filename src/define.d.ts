@@ -265,6 +265,7 @@ interface minerObj {
 	uuid: string
 	serverIPAddress?: string
 	result?: twitterResult
+	solanaWallet?: string
 }
 
 interface nodeType {
