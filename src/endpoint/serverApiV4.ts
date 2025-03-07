@@ -18,9 +18,15 @@ import {createServer} from 'node:http'
 import {readFile} from 'node:fs/promises'
 import {watch} from 'node:fs'
 import referralsV3ABI from './ReferralsV3.json'
+import SPClub_ABI from './SP_Club_ABI.json'
+import SPPassportABI from './SPPassportABI.json'
+
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
+
+
+const mainnetEndpoint = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
@@ -468,6 +474,51 @@ class conet_dl_server_v4 {
 			return getreferralsCount(addr, res)
 		})
 
+		router.post('/spclub', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/spclub`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(404).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			logger(Colors.magenta(`/spclub`), message, signMessage)
+			const obj = checkSign (message, signMessage)
+	
+			if (!obj || !obj?.data ) {
+				logger (Colors.grey(`Router /PurchaseCONETianPlan checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+
+				return res.status(403).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			const check = await proCheckSPClubMember (obj)
+			if (check === null) {
+				return res.status(403).json({
+					error: 'Service temporarily unavailable'
+				}).end()
+			}
+			if (check === false) {
+				return postLocalhost('/api/spclub', obj, res)
+			}
+
+			if (check > 0) {
+				return res.status(403).json({
+					error: `You are already has membership ${check}`
+				}).end()
+			}
+
+		})
+
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/fx169HappyNewYear`))
@@ -501,6 +552,8 @@ class conet_dl_server_v4 {
 				postLocalhost('/api/fx168HappyNewYear', {wallet: obj.walletAddress.toLowerCase()}, res)
 			})
 		})
+
+
 
 		router.post ('/claimToken', async (req: any, res: any) => {
 
@@ -591,6 +644,57 @@ const getReferrer = async (address: string, callbak: (err: Error|null, data?: an
 
 	req.write(JSON.stringify(postData))
 	req.end()
+}
+const CoNETDePIN_PassportSC_cancun_addr = '0xb889F14b557C2dB610f283055A988952953E0E94'
+const CoNETDePIN_PassportSC_mainnet_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
+const PassportSC_cancun_readonly = new ethers.Contract(CoNETDePIN_PassportSC_cancun_addr, SPPassportABI, provider)
+const PassportSC_mainnet_readonly = new ethers.Contract(CoNETDePIN_PassportSC_mainnet_addr, SPPassportABI, mainnetEndpoint)
+
+
+const _checkNFT_expires = (nftObj: any[]) => {
+	let _nftIDs: ethers.BigNumberish
+	let _expires: ethers.BigNumberish
+	let _expiresDays: ethers.BigNumberish
+	let _premium: boolean
+	[_nftIDs, _expires, _expiresDays, _premium] = nftObj
+	logger(inspect(nftObj, false, 3, true))
+	const today = parseFloat(new Date().getTime().toString())
+
+	const expires =  parseFloat(_expires.toString()) * 1000			//		Convert to milliseconds
+
+	if (!_nftIDs|| expires < today) {
+		return false
+	}
+	return true
+}
+const SPClub_SC_addr = `0x1FB1E32E801D240C9727c954ff93614Baa933702`
+const SPClub_SC_readonly = new ethers.Contract(SPClub_SC_addr, SPClub_ABI, mainnetEndpoint)
+const proCheckSPClubMember = async (obj: minerObj) => {
+	try {
+		
+		const [cancun, mainnet, _memberID] = await Promise.all([
+			PassportSC_cancun_readonly.getCurrentPassport(obj.walletAddress),
+			PassportSC_mainnet_readonly.getCurrentPassport(obj.walletAddress),
+			SPClub_SC_readonly.membership(obj.walletAddress)
+		])
+		const memberID: number = parseInt (_memberID.toString())
+		if (memberID > 0) {
+			return memberID
+		}
+		const [nftCancun, nftmainnet] = await Promise.all([
+			_checkNFT_expires(cancun),
+			_checkNFT_expires(mainnet),
+		])
+
+		if (nftCancun|| nftmainnet) {
+			return false
+		}
+		
+	} catch (ex) {
+		logger(Colors.red(`proCheckSPClub got Error!`))
+		return null
+	}
+	return false
 }
 
 export default conet_dl_server_v4

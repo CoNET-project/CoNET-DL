@@ -188,11 +188,6 @@ interface InodeEpochData {
 }
 
 
-
-
-const rateAddr = '0xE95b13888042fBeA32BDce7Ae2F402dFce11C1ba'.toLowerCase()
-const filePath = '/home/peter/.data/v2/'
-
 const ReferralsMap: Map<string, string> = new Map()
 const initV3Map: Map<string, boolean> = new Map()
 
@@ -373,6 +368,10 @@ class conet_dl_server {
 			return res.status(403).end()
 		})
 
+		router.post('/spclub', async (req: any, res: any) => {
+
+		})
+
 
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress
@@ -392,4 +391,7 @@ class conet_dl_server {
 	}
 }
 
+const SPClub = (to: string, toSolana: string, referees: string) => {
+	
+}
 export default conet_dl_server

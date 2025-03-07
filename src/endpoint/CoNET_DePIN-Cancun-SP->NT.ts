@@ -164,8 +164,13 @@ const returnSP = async () => {
 
 	const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
 	tx.recentBlockhash = await latestBlockHash.blockhash
-	const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
-	logger(Colors.magenta(`returnSP to ${returnData.from} success ${signature}`))
+	try {
+		const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
+		logger(Colors.magenta(`returnSP to ${returnData.from} success ${signature}`))
+	} catch (ex: any) {
+		logger(Colors.red(`returnSP Error! ${ex.message}`))
+	}
+	
 	returnSP()
 }
 
@@ -193,8 +198,14 @@ const transferTo_SPNGO = async (amount: string) => {
 
 	const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
 	tx.recentBlockhash = await latestBlockHash.blockhash
-	const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
-	logger(Colors.magenta(`transferTo_SPNGO success ${signature}`))
+	try {
+		const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
+		logger(Colors.magenta(`transferTo_SPNGO success ${signature}`))
+	} catch (ex: any) {
+		logger(Colors.magenta(`transferTo_SPNGO Error${ex.message}`))
+	}
+	
+	
 }
 
 const process_SP_purchase__Failed = async () => {
@@ -502,5 +513,6 @@ const daemondStart = async () => {
 	})
 }
 
-daemondStart()
+// daemondStart()
 
+getBlock(379326)
