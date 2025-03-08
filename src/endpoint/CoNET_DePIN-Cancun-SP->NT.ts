@@ -513,6 +513,5 @@ const daemondStart = async () => {
 	})
 }
 
-// daemondStart()
+daemondStart()
 
-getBlock(379326)

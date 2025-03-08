@@ -13,6 +13,16 @@ const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
 const SP_Oracle_Wallet = new ethers.Wallet(masterSetup.SP_Oracle, endPointCancun)
 const SP_Oracle_SC = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, SP_Oracle_Wallet)
 logger(SP_Oracle_Wallet.address)
+const solanaDecimalPlaces = 9
+const usdtDecimalPlaces = 6
+const usdcDecimalPlaces = 6
+const spDecimalPlaces = 6
+
+const usdtAddr = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+const solanaAddr = "So11111111111111111111111111111111111111112"
+const usdcAddr = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+const spAddr = "Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump"
+
 const SC_Pool:  ethers.Contract[] = []
 
 SC_Pool.push (SP_Oracle_SC)
@@ -20,16 +30,14 @@ SC_Pool.push (SP_Oracle_SC)
 const jupiterQuoteApi = createJupiterApiClient()
 
 const solana_usdc = async (solona: string) => {
-	const connection = new Connection(
-		"https://api.mainnet-beta.solana.com" // We only support mainnet.
-	)
+
 	const solanaDecimalPlaces = 9
 	const usdcDecimalPlaces = 6
 	const solanaNumber = ethers.parseUnits(solona, solanaDecimalPlaces).toString()
 	// logger(Colors.blue(`solanaNumber = ${solanaNumber}`))
 	const params: QuoteGetRequest = {
-		inputMint: "So11111111111111111111111111111111111111112",
-		outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+		inputMint: solanaAddr,
+		outputMint: usdcAddr, // USDC
 		amount: parseFloat(solanaNumber),
 		slippageBps: 100, // 1%
 	}
@@ -40,16 +48,13 @@ const solana_usdc = async (solona: string) => {
 }
 
 const solana_usdt = async (solona: string) => {
-	const connection = new Connection(
-		"https://api.mainnet-beta.solana.com" // We only support mainnet.
-	)
-	const solanaDecimalPlaces = 9
-	const usdtDecimalPlaces = 6
+
+
 	const solanaNumber = ethers.parseUnits(solona, solanaDecimalPlaces).toString()
 	// logger(Colors.blue(`solanaNumber = ${solanaNumber}`))
 	const params: QuoteGetRequest = {
-		inputMint: "So11111111111111111111111111111111111111112",
-		outputMint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
+		inputMint: solanaAddr,
+		outputMint: usdtAddr,
 		amount: parseFloat(solanaNumber),
 		slippageBps: 100, // 1%
 	}
@@ -60,14 +65,26 @@ const solana_usdt = async (solona: string) => {
 	return price_USDT
 }
 
+const usdt_sp = async (usdt: string) => {
+	const usdtNumber = ethers.parseUnits(usdt, usdtDecimalPlaces).toString()
+	const params: QuoteGetRequest = {
+		inputMint: usdtAddr,
+		outputMint: spAddr,
+		amount: parseFloat(usdtNumber),
+		slippageBps: 100, // 1%
+	}
+	const quote = await jupiterQuoteApi.quoteGet(params)
+	const price_sp = ethers.formatUnits(quote.outAmount, spDecimalPlaces)
+	return price_sp
+}
+
 const usdt_solana = async (usdt: string) => {
-	const solanaDecimalPlaces = 9
-	const usdtDecimalPlaces = 6
+
 	const usdtNumber = ethers.parseUnits(usdt, usdtDecimalPlaces).toString()
 	// logger(Colors.blue(`solanaNumber = ${usdtNumber}`))
 	const params: QuoteGetRequest = {
-		inputMint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-		outputMint: "So11111111111111111111111111111111111111112", // USDT
+		inputMint: usdtAddr,
+		outputMint: solanaAddr,
 		amount: parseFloat(usdtNumber),
 		slippageBps: 100, // 1%
 	}
@@ -80,13 +97,12 @@ const usdt_solana = async (usdt: string) => {
 
 
 const usdc_solana = async (usdc: string) => {
-	const solanaDecimalPlaces = 9
-	const usdcDecimalPlaces = 6
+
 	const usdcNumber = ethers.parseUnits(usdc, usdcDecimalPlaces).toString()
 	// logger(Colors.blue(`solanaNumber = ${usdcNumber}`))
 	const params: QuoteGetRequest = {
-		inputMint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
-		outputMint: "So11111111111111111111111111111111111111112", // USDT
+		inputMint: usdcAddr,
+		outputMint: solanaAddr,
 		amount: parseFloat(usdcNumber),
 		slippageBps: 100, // 1%
 	}
@@ -99,13 +115,12 @@ const usdc_solana = async (usdc: string) => {
 
 
 const solana_sp = async (so: string) => {
-	const solanaDecimalPlaces = 9
-	const spDecimalPlaces = 6
+
 	const usdcNumber = ethers.parseUnits(so, solanaDecimalPlaces).toString()
 	// logger(Colors.blue(`solanaNumber = ${usdcNumber}`))
 	const params: QuoteGetRequest = {
-		inputMint: "So11111111111111111111111111111111111111112",
-		outputMint: "Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump", //	$SP
+		inputMint: solanaAddr,
+		outputMint: spAddr, //	$SP
 		amount: parseFloat(usdcNumber),
 		slippageBps: 100, // 1%
 	}
@@ -190,7 +205,9 @@ const storeOracle = async (data: spOracle) => {
 	SC_Pool.unshift(SC)
 
 }
+
 let currentBlock = 0
+
 const daemondStart = async () => {
 	
 	currentBlock = await endPointCancun.getBlockNumber()
