@@ -23,7 +23,7 @@ import CoNET_DePIN_ABI from '../endpoint/CoNET_DePIN.json'
 
 const CONET_HoleskyRPC = 'https://rpc.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
-const CoNET_Mainnet_oldRPC = 'https://mainnet-rpc.conet.network'
+const CoNET_Mainnet_oldRPC = 'http://66.179.255.8:8000'
 const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
