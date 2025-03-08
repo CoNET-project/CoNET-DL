@@ -43,7 +43,7 @@ const getSoBalance = async (publicKey: string) => {
 //		curl -v -H "Origin: https://vpn.conet.network" -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["mDisFS7gA9Ro8QZ9tmHhKa961Z48hHRv2jXqc231uTF"]}' https://solana-rpc.conet.network 
 //		
 //		curl -d 'service=vpn.conet.network' -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["mDisFS7gA9Ro8QZ9tmHhKa961Z48hHRv2jXqc231uTF"]}' https://api.mainnet-beta.solana.com 
-//		curl -H "Origin: https://vpn.conet.network" -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id": 1,"method": "getBalance","params": ["mDisFS7gA9Ro8QZ9tmHhKa961Z48hHRv2jXqc231uTF"]}' https://node.histori.xyz/neon-devnet/8ry9f6t9dct1se2hlagxnd9n2a
+//		curl -H "Origin: https://vpn.conet.network" -s -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x99dF30a8ddDAd8a96A920aB9B5e31eF0161217b4\",\"solanaWallet\":\"BSHs8zgFd2PEbQEpcV3v9t9XDH55pBPys41cfDmXiC5N\",\"referrer\":\"\"}","signMessage":"0xd8c0942e063cb696febf782956879c72f6e72f0be3f55006af33f0e789e2ed570a30ae4071deffdb57e67f3fc467a9c56e6d1ed2a9a038ff70264f294ecc85541c"}' 
 // 		transferSP('0x15c2c6b16b968ba2823031dae29143cfb4ab360579722e07722f6be6c1370b5b', '0x7Ee561508ef8ddA4063A4215c05b7E9D962a45ed', '116')
 
 //	curl -d 'service=vpn.conet.network' -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id": 1, "method":"getAccountInfo", "jsonrpc":"2.0", "params":["EzozEmk2pcroo7a7FvpPXppP6Q9vX8EgUYegLH3d6ghP",{"encoding":"base64"}],"id":"787975a4-366a-4ffd-b25e-38444b43c38a"}' https://solana-rpc.conet.network  
