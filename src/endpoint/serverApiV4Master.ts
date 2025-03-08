@@ -379,7 +379,9 @@ class conet_dl_server {
 
 		router.post('/spclub', async (req: any, res: any) => {
 			const obj:minerObj = req.body
+			logger(`/spclub`, inspect(obj, false, 3, true))
 			SPClub(obj)
+			return res.status(200).end()
 		})
 
 
@@ -419,7 +421,7 @@ const SPClub = (obj: minerObj) => {
 		referrer: obj?.referrer
 	}
 	SPClubProcess.push (objProcess)
-
+	return
 }
 
 const doing_SPClubProcess = async () => {
