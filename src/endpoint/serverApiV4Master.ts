@@ -19,9 +19,10 @@ import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
-
+import { Connection, PublicKey, Keypair,Transaction, sendAndConfirmTransaction, TransactionMessage, VersionedTransaction, TransactionSignature, TransactionConfirmationStatus, SignatureStatus } from "@solana/web3.js"
+import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createTransferInstruction, getAssociatedTokenAddress } from "@solana/spl-token"
 import SPClub_ABI from './SP_Club_ABI.json'
-
+import Bs58 from 'bs58'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -443,6 +444,7 @@ const doing_SPClubProcess = async () => {
 		}, 1000)
 	}
 	try {
+		transferSP(obj.solanaWallet)
 		const tx = await SC.mint(obj.walletAddress, obj.referrer, obj.solanaWallet)
 		await tx.wait()
 		logger(Colors.blue(`doing_SPClubProcess success ${tx.hash}`))
@@ -450,6 +452,47 @@ const doing_SPClubProcess = async () => {
 		logger(Colors.red(`doing_SPClubProcess Error ${ex.message}`))
 	}
 	doing_SPClubProcess()
+}
+
+const SOLANA_CONNECTION = new Connection(
+	"https://api.mainnet-beta.solana.com" // We only support mainnet.
+)
+const solana_account = masterSetup.solanaSPReword
+const solana_account_privatekeyArray = Bs58.decode(solana_account)
+const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
+const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
+const spDecimalPlaces = 6
+const SPClubReward = "10"
+
+const transferSP = async (to: string) => {
+	let sourceAccount = await getOrCreateAssociatedTokenAccount(
+        SOLANA_CONNECTION, 
+        solana_account_privatekey,
+        new PublicKey(SP_address),
+        solana_account_privatekey.publicKey
+    )
+	let destinationAccount = await getOrCreateAssociatedTokenAccount(
+        SOLANA_CONNECTION, 
+        solana_account_privatekey,
+        new PublicKey(SP_address),
+        new PublicKey(to)
+    )
+	const tx = new Transaction()
+	tx.add (createTransferInstruction(
+        sourceAccount.address,
+        destinationAccount.address,
+        solana_account_privatekey.publicKey,
+        ethers.parseUnits(SPClubReward, spDecimalPlaces)
+    ))
+
+	const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
+	tx.recentBlockhash = await latestBlockHash.blockhash
+	try {
+		const signature = await sendAndConfirmTransaction ( SOLANA_CONNECTION, tx,[solana_account_privatekey])
+		logger(Colors.magenta(`transfer To SP Club member success ${signature}`))
+	} catch (ex: any) {
+		logger(Colors.magenta(`transfer To SP Club member Error${ex.message}`))
+	}
 }
 
 export default conet_dl_server
