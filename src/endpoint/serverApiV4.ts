@@ -502,7 +502,9 @@ class conet_dl_server_v4 {
 			}
 
 			const check = await proCheckSPClubMember (obj)
+			logger(`check = await proCheckSPClubMember (obj) == ${check}`)
 			if (check === null) {
+				
 				return res.status(403).json({
 					error: 'Service temporarily unavailable'
 				}).end()
@@ -517,7 +519,7 @@ class conet_dl_server_v4 {
 						error: 'referrer address Error!'
 					}).end()
 				}
-
+				logger(Colors.blue(`/api/spclub POST to local master!`))
 				return postLocalhost('/api/spclub', obj, res)
 			}
 
