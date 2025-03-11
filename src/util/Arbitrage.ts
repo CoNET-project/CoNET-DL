@@ -6,10 +6,9 @@ import { masterSetup} from './util'
 import Https from 'node:https'
 import {inspect} from 'node:util'
 import ArbitrageABI from './ArbitrageABI.json'
-import { Connect\
 import Bs58 from 'bs58'
 import {getMint} from "@solana/spl-token"
-
+import { Connection, PublicKey, Keypair, VersionedTransaction } from "@solana/web3.js"
 
 const solana_account_privatekeyArray = Bs58.decode(masterSetup.solanaA)
 const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
@@ -17,6 +16,48 @@ const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privateke
 const SOLANA_CONNECTION = new Connection(
 	"https://api.mainnet-beta.solana.com" // We only support mainnet.
 )
+
+const swapTokens = async (from: string, to: string, privateKey: string, fromEthAmount: string ) => {
+	const wallet = Keypair.fromSecretKey(Bs58.decode(privateKey))
+	const amount = ethers.formatUnits(fromEthAmount, tokenDecimal(from))
+	const quoteResponse = await (
+		await fetch(`https://quote-api.jup.ag/v6/quote?inputMint=${from}\
+			&outputMint=${to}\
+			&amount=${amount}\
+			&slippageBps=100`)).json()
+	const { swapTransaction } = await (
+		await fetch('https://quote-api.jup.ag/v6/swap', {
+			method: 'POST',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify({
+				// quoteResponse from /quote api
+				quoteResponse,
+				// user public key to be used for the swap
+				userPublicKey: wallet.publicKey.toString(),
+				// auto wrap and unwrap SOL. default is true
+				wrapAndUnwrapSol: true,
+				// Optional, use if you want to charge a fee.  feeBps must have been passed in /quote API.
+				// feeAccount: "fee_account_public_key"
+			})
+		})).json()
+	const swapTransactionBuf = Buffer.from(swapTransaction, 'base64')
+	const transaction = VersionedTransaction.deserialize(swapTransactionBuf)
+	// get the latest block hash
+	const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash()
+	// Execute the transaction
+	const rawTransaction = transaction.serialize()
+	const txid = await SOLANA_CONNECTION.sendRawTransaction(rawTransaction, {
+		skipPreflight: true,
+		maxRetries: 2
+	})
+	await SOLANA_CONNECTION.confirmTransaction({
+		blockhash: latestBlockHash.blockhash,
+		lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+		signature: txid
+	})
+
+	return txid
+}
 
 const jupiterQuoteApi = createJupiterApiClient()
 const mainnetRPC = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')

@@ -451,6 +451,7 @@ const doing_SPClubProcess = async () => {
 	} catch (ex: any) {
 		logger(Colors.red(`doing_SPClubProcess Error ${ex.message}`))
 	}
+	SPClub_admin_SC.push(SC)
 	doing_SPClubProcess()
 }
 
