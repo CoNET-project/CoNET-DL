@@ -19,7 +19,7 @@ import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
 import rateABI from './conet-rate.json'
 import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
-import { Connection, PublicKey, Keypair,Transaction, sendAndConfirmTransaction, TransactionMessage, VersionedTransaction, TransactionSignature, TransactionConfirmationStatus, SignatureStatus } from "@solana/web3.js"
+import { Connection, PublicKey, Keypair, Transaction, sendAndConfirmTransaction, TransactionMessage, VersionedTransaction, TransactionSignature, TransactionConfirmationStatus, SignatureStatus } from "@solana/web3.js"
 import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createTransferInstruction, getAssociatedTokenAddress } from "@solana/spl-token"
 import SPClub_ABI from './SP_Club_ABI.json'
 import Bs58 from 'bs58'
@@ -440,7 +440,7 @@ const doing_SPClubProcess = async () => {
 		}, 1000)
 	}
 	try {
-		transferSP(obj.solanaWallet)
+		//transferSP(obj.solanaWallet)
 		const tx = await SC.mint(obj.walletAddress, obj.referrer, obj.solanaWallet)
 		await tx.wait()
 		obj.res.status(200).json({tx}).end()
