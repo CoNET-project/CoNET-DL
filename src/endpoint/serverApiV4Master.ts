@@ -381,7 +381,7 @@ class conet_dl_server {
 		router.post('/spclub', async (req: any, res: any) => {
 			const obj:minerObj = req.body
 			logger(`/spclub`, inspect(obj, false, 3, true))
-			const result = await SPClub(obj)
+			const result = await SPClub(obj, res)
 			if (!result) {
 				return res.status(403).json({error:'Data format error'}).end()
 			}
@@ -413,17 +413,19 @@ interface SPClubProcessObj {
 	walletAddress: string
 	solanaWallet: string
 	referrer: string
+	res: any
 }
 
 const SPClubProcess: SPClubProcessObj[] = []
-const SPClub = (obj: minerObj) => {
+const SPClub = (obj: minerObj, res: any) => {
 	if (!obj?.solanaWallet||!obj?.referrer) {
 		return false
 	}
 	const objProcess: SPClubProcessObj = {
 		walletAddress: obj.walletAddress,
 		solanaWallet: obj.solanaWallet,
-		referrer: obj?.referrer
+		referrer: obj?.referrer,
+		res
 	}
 	SPClubProcess.push (objProcess)
 	doing_SPClubProcess()
@@ -447,10 +449,12 @@ const doing_SPClubProcess = async () => {
 		transferSP(obj.solanaWallet)
 		const tx = await SC.mint(obj.walletAddress, obj.referrer, obj.solanaWallet)
 		await tx.wait()
+		obj.res.json({tx}).end()
 		logger(Colors.blue(`doing_SPClubProcess success ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`doing_SPClubProcess Error ${ex.message}`))
 	}
+	
 	SPClub_admin_SC.push(SC)
 	doing_SPClubProcess()
 }
