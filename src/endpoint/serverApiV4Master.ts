@@ -158,7 +158,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 	return resolve(true)
 })
 
-const spclub_addr = '0x1FB1E32E801D240C9727c954ff93614Baa933702'
+const spclub_addr = '0xe1949263B338D8c1eD7d4CbDE2026eb82DB78D3a'
 const mainnet_rpc = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 
 const SPClub_admin_SC: ethers.Contract[] = []
