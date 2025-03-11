@@ -381,12 +381,7 @@ class conet_dl_server {
 		router.post('/spclub', async (req: any, res: any) => {
 			const obj:minerObj = req.body
 			logger(`/spclub`, inspect(obj, false, 3, true))
-			const result = await SPClub(obj, res)
-			if (!result) {
-				return res.status(403).json({error:'Data format error'}).end()
-			}
-
-			return res.status(200).json({}).end()
+			return SPClub(obj, res)
 		})
 
 
@@ -419,7 +414,7 @@ interface SPClubProcessObj {
 const SPClubProcess: SPClubProcessObj[] = []
 const SPClub = (obj: minerObj, res: any) => {
 	if (!obj?.solanaWallet||!obj?.referrer) {
-		return false
+		return res.status(403).json({error:'Data format error'}).end()
 	}
 	const objProcess: SPClubProcessObj = {
 		walletAddress: obj.walletAddress,
@@ -429,7 +424,6 @@ const SPClub = (obj: minerObj, res: any) => {
 	}
 	SPClubProcess.push (objProcess)
 	doing_SPClubProcess()
-	return true
 }
 
 const doing_SPClubProcess = async () => {
@@ -449,12 +443,16 @@ const doing_SPClubProcess = async () => {
 		transferSP(obj.solanaWallet)
 		const tx = await SC.mint(obj.walletAddress, obj.referrer, obj.solanaWallet)
 		await tx.wait()
-		obj.res.json({tx}).end()
+		obj.res.status(200).json({tx}).end()
 		logger(Colors.blue(`doing_SPClubProcess success ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`doing_SPClubProcess Error ${ex.message}`))
+		obj.res.status(403).json({
+			error: 'Service temporarily unavailable'
+		}).end()
+
 	}
-	
+
 	SPClub_admin_SC.push(SC)
 	doing_SPClubProcess()
 }
