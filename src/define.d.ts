@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	solanaA: string
 	solanaSPReword: string
 	SPClub_admin_mainnet: string[]
 	SP_purchase: string[]

@@ -68,7 +68,8 @@
 		"@solana/web3.js": "^1.98.0",
 		"@jup-ag/api": "^6.0.40",
 		"bs58": "^6.0.0",
-		"@solana/spl-token": "^0.4.12"
+		"@solana/spl-token": "^0.4.12",
+		"gill": "^0.6.0"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.3",
