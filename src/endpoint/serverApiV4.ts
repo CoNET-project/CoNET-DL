@@ -685,7 +685,7 @@ const _checkNFT_expires = (nftObj: any[]) => {
 	}
 	return true
 }
-const SPClub_SC_addr = `0x1FB1E32E801D240C9727c954ff93614Baa933702`
+const SPClub_SC_addr = `0xe1949263B338D8c1eD7d4CbDE2026eb82DB78D3a`
 const SPClub_SC_readonly = new ethers.Contract(SPClub_SC_addr, SPClub_ABI, mainnetEndpoint)
 const proCheckSPClubMember = async (obj: minerObj) => {
 	try {
