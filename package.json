@@ -63,13 +63,13 @@
 		"node-telegram-bot-api": "^0.66.0",
 		"openpgp": "^6.1.0",
 		"phin": "^3.7.1",
-		"uuid": "^11.0.5",
+		"uuid": "^11.1.0",
 		"web3": "^4.16.0",
 		"@solana/web3.js": "^1.98.0",
 		"@jup-ag/api": "^6.0.40",
 		"bs58": "^6.0.0",
-		"@solana/spl-token": "^0.4.12",
-		"gill": "^0.6.0"
+		"@solana/spl-token": "^0.4.13",
+		"gill": "^0.8.0"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.3",
