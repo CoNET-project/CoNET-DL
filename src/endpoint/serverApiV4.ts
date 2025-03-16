@@ -582,13 +582,15 @@ class conet_dl_server_v4 {
 				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
-			logger(Colors.magenta(`/getTestNFTs`), message, signMessage)
+			logger(Colors.magenta(`/getTestNFTs`))
 			const obj = checkSign (message, signMessage)
 	
 			if ( !obj?.walletAddress ) {
 				logger (Colors.grey(`Router /getTestNFTs checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
 				logger(inspect(obj, false, 3, true))
-				return res.status(404).json(req.body).end()
+				return res.status(404).json({
+					error: "SignObj Error!"
+				}).end()
 			}
 			return createTestNft(obj, res)
 
@@ -720,23 +722,31 @@ const passport_distributor_addr = '0x673396a153132BfFCBD03eF5e8f484A7F0EF694c'
 const passport_distributor_manager = new ethers.Wallet (masterSetup.distributor, provider)
 const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
 
-const createTestNft = async (obj: minerObj, res: any) => {
+const createNFTs = async (wallet: string) => {
+	let tx
 	try {
-		const tx = await passport_distributor_SC.betchMintToDistributor(obj.walletAddress, 10, true)
+		tx = await passport_distributor_SC.betchMintToDistributor(wallet, 10, true)
 		await tx.wait()
-		const ts = await passport_distributor_SC.betchMintToDistributor(obj.walletAddress, 10, false)
+		const ts = await passport_distributor_SC.betchMintToDistributor(wallet, 10, false)
 		await ts.wait()
-		return res.status(200).json({
-			tx: ts.hash
-		}).end()
-	} catch (ex) {
-		return res.status(404).json({
-			error: ''
+		
+	} catch (ex: any) {
+		logger(`createTestNft Error! ${ex.message}`)
+		return false
+	}
+	logger(`createNFTs tx = ${tx.hash}`)
+	return tx.hash
+}
+const createTestNft = async (obj: minerObj, res: any) => {
+	const tx = await createNFTs(obj.walletAddress)
+	if (!tx) {
+		return res.status(403).json({
+			error: 'API system error, please contact CONET team'
 		}).end()
 	}
-	
+	return res.status(200).json({
+		success: tx
+	}).end()
 }
 
 export default conet_dl_server_v4
-	
-// }
