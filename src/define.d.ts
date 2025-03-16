@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	distributor: string
 	solanaA: string
 	solanaSPReword: string
 	SPClub_admin_mainnet: string[]

@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_cancun_rpc, checkClaimeToeknbalance} from '../util/util'
+import { logger, checkSign, newCNTP_Contract, getServerIPV4Address, conet_cancun_rpc, checkClaimeToeknbalance, masterSetup} from '../util/util'
 
 import CNTPAbi from '../util/cCNTP.json'
 import {ethers} from 'ethers'
@@ -20,7 +20,7 @@ import {watch} from 'node:fs'
 import referralsV3ABI from './ReferralsV3.json'
 import SPClub_ABI from './SP_Club_ABI.json'
 import SPPassportABI from './SPPassportABI.json'
-
+import passport_distributor_ABI from './passport_distributor-ABI.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -571,6 +571,29 @@ class conet_dl_server_v4 {
 			})
 		})
 
+		router.post ('/getTestNFTs', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			logger(Colors.magenta(`/getTestNFTs`), message, signMessage)
+			const obj = checkSign (message, signMessage)
+	
+			if ( !obj?.walletAddress ) {
+				logger (Colors.grey(`Router /getTestNFTs checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(404).json(req.body).end()
+			}
+			return createTestNft(obj, res)
+
+		})
+
 
 
 		router.post ('/claimToken', async (req: any, res: any) => {
@@ -593,25 +616,6 @@ class conet_dl_server_v4 {
 			return res.status(403).end()
 
 		})
-
-		// router.post ('/christmas2024', async (req: any, res: any) => {
-		// 	return res.status(404).end()
-		// 	// const _wallet: string = req.body.walletAddress
-		// 	// let wallet: string 
-		// 	// try {
-		// 	// 	wallet = ethers.getAddress(_wallet)
-		// 	// } catch (ex) {
-		// 	// 	return res.status(404).end()
-		// 	// }
-		// 	// logger(`/christmas2024`)
-		// 	// const ret = await christmas2024 (wallet)
-
-		// 	// if (ret === false) {
-		// 	// 	return res.status(403).end()
-		// 	// }
-		// 	// return res.status(200).json(ret).end()
-		
-		// })
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -710,6 +714,27 @@ const proCheckSPClubMember = async (obj: minerObj) => {
 		return null
 	}
 	return true
+}
+
+const passport_distributor_addr = '0x673396a153132BfFCBD03eF5e8f484A7F0EF694c'
+const passport_distributor_manager = new ethers.Wallet (masterSetup.distributor, provider)
+const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
+
+const createTestNft = async (obj: minerObj, res: any) => {
+	try {
+		const tx = await passport_distributor_SC.betchMintToDistributor(obj.walletAddress, 10, true)
+		await tx.wait()
+		const ts = await passport_distributor_SC.betchMintToDistributor(obj.walletAddress, 10, false)
+		await ts.wait()
+		return res.status(200).json({
+			tx: ts.hash
+		}).end()
+	} catch (ex) {
+		return res.status(404).json({
+			error: ''
+		}).end()
+	}
+	
 }
 
 export default conet_dl_server_v4
