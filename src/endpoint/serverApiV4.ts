@@ -718,7 +718,7 @@ const proCheckSPClubMember = async (obj: minerObj) => {
 	return true
 }
 
-const passport_distributor_addr = '0x3ab4fb4867278bd8c0ab26c69cffec33d1284ef6'
+const passport_distributor_addr = '0x147385a07Cf222Aee0e7FAe0746fed7a4d45C740'
 const passport_distributor_manager = new ethers.Wallet (masterSetup.distributor, provider)
 const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
 
