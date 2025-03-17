@@ -747,7 +747,7 @@ const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, p
 
 const passport_distributor_addr1 = '0x0c0f13c0F336A369142Bd12Ba268BC36e36E3684'
 const passport_distributor_manager1 = new ethers.Wallet (masterSetup.distributor, provider)
-const passport_distributor_SC1 = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
+const passport_distributor_SC1 = new ethers.Contract(passport_distributor_addr1, passport_distributor_ABI, passport_distributor_manager1)
 
 const createNFTs1 = async (wallet: string) => {
 	let tx
