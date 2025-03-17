@@ -596,7 +596,30 @@ class conet_dl_server_v4 {
 
 		})
 
+		router.post ('/getTestNFTsNew', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
 
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			logger(Colors.magenta(`/getTestNFTsNew`))
+			const obj = checkSign (message, signMessage)
+	
+			if ( !obj?.walletAddress ) {
+				logger (Colors.grey(`Router /getTestNFTsNew checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(404).json({
+					error: "SignObj Error!"
+				}).end()
+			}
+			return createTestNft_new(obj, res)
+
+		})
 
 		router.post ('/claimToken', async (req: any, res: any) => {
 
@@ -722,6 +745,26 @@ const passport_distributor_addr = '0x147385a07Cf222Aee0e7FAe0746fed7a4d45C740'
 const passport_distributor_manager = new ethers.Wallet (masterSetup.distributor, provider)
 const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
 
+const passport_distributor_addr1 = '0x0c0f13c0F336A369142Bd12Ba268BC36e36E3684'
+const passport_distributor_manager1 = new ethers.Wallet (masterSetup.distributor, provider)
+const passport_distributor_SC1 = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
+
+const createNFTs1 = async (wallet: string) => {
+	let tx
+	try {
+		tx = await passport_distributor_SC1.betchMintToDistributor(wallet, 10, true)
+		await tx.wait()
+		const ts = await passport_distributor_SC1.betchMintToDistributor(wallet, 10, false)
+		await ts.wait()
+		
+	} catch (ex: any) {
+		logger(`createTestNft Error! ${ex.message}`)
+		return false
+	}
+	logger(`createNFTs tx = ${tx.hash}`)
+	return tx.hash
+}
+
 const createNFTs = async (wallet: string) => {
 	let tx
 	try {
@@ -737,6 +780,7 @@ const createNFTs = async (wallet: string) => {
 	logger(`createNFTs tx = ${tx.hash}`)
 	return tx.hash
 }
+
 const createTestNft = async (obj: minerObj, res: any) => {
 	const tx = await createNFTs(obj.walletAddress)
 	if (!tx) {
@@ -748,5 +792,18 @@ const createTestNft = async (obj: minerObj, res: any) => {
 		success: tx
 	}).end()
 }
+
+const createTestNft_new = async (obj: minerObj, res: any) => {
+	const tx = await createNFTs1(obj.walletAddress)
+	if (!tx) {
+		return res.status(403).json({
+			error: 'API system error, please contact CONET team'
+		}).end()
+	}
+	return res.status(200).json({
+		success: tx
+	}).end()
+}
+
 
 export default conet_dl_server_v4
