@@ -745,16 +745,16 @@ const passport_distributor_addr = '0x147385a07Cf222Aee0e7FAe0746fed7a4d45C740'
 const passport_distributor_manager = new ethers.Wallet (masterSetup.distributor, provider)
 const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
 
-const passport_distributor_addr1 = '0x0c0f13c0F336A369142Bd12Ba268BC36e36E3684'
-const passport_distributor_manager1 = new ethers.Wallet (masterSetup.distributor, provider)
-const passport_distributor_SC1 = new ethers.Contract(passport_distributor_addr1, passport_distributor_ABI, passport_distributor_manager1)
+const passport_distributor_addr_mainnet = '0x2D78C8D56fF4c38a8dA05729Bf0DbA10F638ED29'
+const passport_distributor_manager1 = new ethers.Wallet (masterSetup.distributor, mainnetEndpoint)
+const passport_distributor_SC1 = new ethers.Contract(passport_distributor_addr_mainnet, passport_distributor_ABI, passport_distributor_manager1)
 
 const createNFTs1 = async (wallet: string) => {
 	let tx
 	try {
-		tx = await passport_distributor_SC1.betchMintToDistributor(wallet, 10, true)
+		tx = await passport_distributor_SC1.betchMintToDistributor(wallet, 1, true)
 		await tx.wait()
-		const ts = await passport_distributor_SC1.betchMintToDistributor(wallet, 10, false)
+		const ts = await passport_distributor_SC1.betchMintToDistributor(wallet, 1, false)
 		await ts.wait()
 		
 	} catch (ex: any) {
