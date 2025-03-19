@@ -26,11 +26,11 @@ const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const CoNET_Mainnet_oldRPC = 'http://66.179.255.8:8000'
 const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
-const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
+// const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
 const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
-const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
+// const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
 
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const RefferV4_CancunAddr = '0xbd67716ab31fc9691482a839117004497761D0b9'
@@ -40,11 +40,11 @@ const Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 const CONETian_holesky_addr = '0x4F1F5c25429Ea458C9e4363F05110f668f20D58B'
 const CONETian_cancun_addr = '0x6a179f7eAc9D48dd9c835Db20ba9a11bb2EB7711'
 
-const referralsV3_Holesky_Contract = new ethers.Contract(RefferV4_HoleskyAddr, CONET_Referral_ABI, provode_Holesky)
+// const referralsV3_Holesky_Contract = new ethers.Contract(RefferV4_HoleskyAddr, CONET_Referral_ABI, provode_Holesky)
 const referralsV3_Cancun_Contract = new ethers.Contract(RefferV4_CancunAddr, CoNET_CancunRefferABI, provode_Cancun)
 
-const GuardianP_HoleskySC = new ethers.Contract(Guardian_Holesky, GuardianPlan_new_ABI, provode_Holesky)
-const CONETian_holesky_SC = new ethers.Contract(CONETian_holesky_addr, CONETianPlanABI, provode_Holesky)
+// const GuardianP_HoleskySC = new ethers.Contract(Guardian_Holesky, GuardianPlan_new_ABI, provode_Holesky)
+// const CONETian_holesky_SC = new ethers.Contract(CONETian_holesky_addr, CONETianPlanABI, provode_Holesky)
 const CONETian_cancun_initWallet = new ethers.Wallet(masterSetup.cancun_CONETian_Init, provode_Cancun)
 const CONETian_cancun_SC = new ethers.Contract(CONETian_cancun_addr, CONETian_cancun_ABI, CONETian_cancun_initWallet)
 const Cancun_CNTP_AirdropStatus_manager =  new ethers.Wallet(masterSetup.conetPointAdmin, provode_Cancun)
@@ -59,7 +59,7 @@ const Cancun_Init_SC_addr = '0x3Bd44B7b89838c901339b0A8DFF45CC839Af6AA9'
 const Holesky_CNTP_airdrop_addr = '0xa0822b9fe34f81dd926ff1c182cb17baf50004f7'
 const Cancun_CNTP_airdrop_updated_addr = '0x41B2e6da821066bf99C30058C91ea5b2A80888E7'
 
-const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
+// const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
 const Cancun_CNTP_airdrop_SC = new ethers.Contract(Cancun_CNTP_airdrop_updated_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
 
 const conetDePIN_mainnet_addr = '0xC6edDb4Bc6161259325cf56AEf8b0D4fb289898A'
@@ -120,27 +120,27 @@ const addAdmin = () => {
 
 const initCONETianNFTPool: ConetinerNFTData[] = []
 
-const checkCONETian = async (wallet: string) => {
-	let CONETian: BigInt, CONETianeferrer: BigInt
-	let eferrer: string
-	try {
-		Promise.all([
-			CONETian = await CONETian_holesky_SC.balanceOf (wallet, 0),
-			CONETianeferrer = await CONETian_holesky_SC.balanceOf (wallet, 10)
-		])
+// const checkCONETian = async (wallet: string) => {
+// 	let CONETian: BigInt, CONETianeferrer: BigInt
+// 	let eferrer: string
+// 	try {
+// 		Promise.all([
+// 			CONETian = await CONETian_holesky_SC.balanceOf (wallet, 0),
+// 			CONETianeferrer = await CONETian_holesky_SC.balanceOf (wallet, 10)
+// 		])
 		
-	} catch (ex: any) {
-		return logger(`checkCONETian got Error! ${ex.message}`)
-	}
+// 	} catch (ex: any) {
+// 		return logger(`checkCONETian got Error! ${ex.message}`)
+// 	}
 
-	if (parseInt(CONETian.toString()) > 0) {
-		initCONETianNFTPool.push({
-			wallet, CONETian, CONETianeferrer
-		})
-	}
+// 	if (parseInt(CONETian.toString()) > 0) {
+// 		initCONETianNFTPool.push({
+// 			wallet, CONETian, CONETianeferrer
+// 		})
+// 	}
 
-	processCONETian()
-}
+// 	processCONETian()
+// }
 
 const processCONETian = async () => {
 	if (!initCONETianNFTPool.length) {
@@ -243,9 +243,9 @@ export const refferInit = async (wallet: string, reffer: string) => {
 
 	RefferPool.set(wallet, true)
 
-	if (!reffer || reffer === '') {
-		reffer = await referralsV3_Holesky_Contract.getReferrer(wallet)
-	}
+	// if (!reffer || reffer === '') {
+	// 	reffer = await referralsV3_Holesky_Contract.getReferrer(wallet)
+	// }
 
 	if (!reffer || reffer == ethers.ZeroAddress) {
 		//logger(Colors.gray(`refferInit ${wallet} has ethers.ZeroAddress STOP! ${reffer}`))
@@ -289,41 +289,41 @@ const processInitGroudinerNFT = async () => {
 }
 
 
-const checkGroudinerNFT = async (wallet: string) => {
+// const checkGroudinerNFT = async (wallet: string) => {
 
-	let nft1: BigInt, nft2: BigInt
-	let BUYER_Status: [boolean]
-	let REFERRER_Status: [boolean]
-	try {
-		[nft1, nft2, BUYER_Status, REFERRER_Status] = await Promise.all ([
-			GuardianP_HoleskySC.balanceOf(wallet, 1),
-			GuardianP_HoleskySC.balanceOf(wallet, 2),
-			GuardianP_cancunSC.getBUYER_Status(wallet),
-			GuardianP_cancunSC.geREFERRER_Status(wallet)
+// 	let nft1: BigInt, nft2: BigInt
+// 	let BUYER_Status: [boolean]
+// 	let REFERRER_Status: [boolean]
+// 	try {
+// 		[BUYER_Status, REFERRER_Status] = await Promise.all ([
+// 			// GuardianP_HoleskySC.balanceOf(wallet, 1),
+// 			// GuardianP_HoleskySC.balanceOf(wallet, 2),
+// 			GuardianP_cancunSC.getBUYER_Status(wallet),
+// 			GuardianP_cancunSC.geREFERRER_Status(wallet)
 	
-		])
-	} catch (ex: any ) {
-		return logger(`checkGroudinerNFT Error ${ex.message}`)
-	}
+// 		])
+// 	} catch (ex: any ) {
+// 		return logger(`checkGroudinerNFT Error ${ex.message}`)
+// 	}
 	
-	//logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
+// 	//logger(`BUYER_Status = ${BUYER_Status}, REFERRER_Status = ${REFERRER_Status} , nft1 = ${nft1} nft2 = ${nft2}`)
 	
-	if (parseInt(nft1.toString()) > 0 && !BUYER_Status[0]) {
-		initGroudinerNFTPool.push({
-			wallet, nftNumber: 1, nft: nft1
-		})
-	}
+// 	// if (parseInt(nft1.toString()) > 0 && !BUYER_Status[0]) {
+// 	// 	initGroudinerNFTPool.push({
+// 	// 		wallet, nftNumber: 1, nft: nft1
+// 	// 	})
+// 	// }
 
-	if (parseInt(nft2.toString()) > 0 && !REFERRER_Status[0]) {
-		initGroudinerNFTPool.push({
-			wallet, nftNumber: 2, nft: nft2
-		})
-	}
+// 	// if (parseInt(nft2.toString()) > 0 && !REFERRER_Status[0]) {
+// 	// 	initGroudinerNFTPool.push({
+// 	// 		wallet, nftNumber: 2, nft: nft2
+// 	// 	})
+// 	// }
 	
 
-	processInitGroudinerNFT()
+// 	processInitGroudinerNFT()
 	
-}
+// }
 
 const initCoNETDePIN_address: Map<string, boolean> = new Map()
 const initCoNETDePIN_Pool: initCNTP[] = []
@@ -374,28 +374,28 @@ const processConetianInitStatus = async () => {
 	processConetianInitStatus()
 }
 
-const checkConetianInitStatus = async (wallet: string) => {
-	try {
-		let statusHolesky: boolean
-		let statusCancun: boolean
-		[statusHolesky, statusCancun] = await Promise.all([
+// const checkConetianInitStatus = async (wallet: string) => {
+// 	try {
+// 		let statusHolesky: boolean
+// 		let statusCancun: boolean
+// 		[statusHolesky, statusCancun] = await Promise.all([
 
-			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
-			Cancun_CNTP_airdrop_SC.CONETianDidMint(wallet),
+// 			Holesky_CNTP_airdrop_SC_readonly.CONETianDidMint(wallet),
+// 			Cancun_CNTP_airdrop_SC.CONETianDidMint(wallet),
 			
-		])
+// 		])
 
-		if (statusHolesky && !statusCancun) {
-			ConetianStatusPool.push(wallet)
-			logger(`checkConetianInitStatus processConetianInitStatus ${wallet}`)
-			processConetianInitStatus()
-		}
+// 		if (statusHolesky && !statusCancun) {
+// 			ConetianStatusPool.push(wallet)
+// 			logger(`checkConetianInitStatus processConetianInitStatus ${wallet}`)
+// 			processConetianInitStatus()
+// 		}
 		
-	} catch (ex: any) {
-		logger(`checkConetianInitStatus got Error! ${ex.message}`)
-	}
+// 	} catch (ex: any) {
+// 		logger(`checkConetianInitStatus got Error! ${ex.message}`)
+// 	}
 	
-}
+// }
 
 const initCoNETDePIN = async (wallet: string) => {
 
@@ -433,17 +433,17 @@ export const initCNTP = async (wallet: string) => {
 
 	walletPool.set(wallet, true)
 
-	checkGroudinerNFT(wallet)
-	checkCONETian(wallet)
+	// checkGroudinerNFT(wallet)
+	// checkCONETian(wallet)
 	initCoNETDePIN(wallet)
-	checkConetianInitStatus(wallet)
+	// checkConetianInitStatus(wallet)
 
-	const value = await cntpHolesky.balanceOf(wallet)
-	if (value !== BigInt(0)) {
-		walletProcess.push({
-			wallet, value
-		})
-	}
+	// const value = await cntpHolesky.balanceOf(wallet)
+	// if (value !== BigInt(0)) {
+	// 	walletProcess.push({
+	// 		wallet, value
+	// 	})
+	// }
 	
 }
 
@@ -453,10 +453,10 @@ export const startProcess = async () => {
 	startProcess_Reff()
 }
 
-const checkCNTPInHolesky = async (wallet: string) => {
-	const value = await cntpHolesky.balanceOf(wallet)
-	logger(value)
-}
+// const checkCNTPInHolesky = async (wallet: string) => {
+// 	const value = await cntpHolesky.balanceOf(wallet)
+// 	logger(value)
+// }
 
 const checkCoNETDePIN_in_mainnet_both_old_new = async(wallet: string) => {
 	let oldValue: ethers.BigNumberish
