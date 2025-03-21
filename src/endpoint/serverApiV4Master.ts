@@ -394,6 +394,7 @@ class conet_dl_server {
 			}
 			freePassportPool.set(obj.walletAddress, true)
 			freePassportwaitingPool.push(obj.walletAddress)
+			logger(`processFreePassport!!`)
 			return res.status(200).json({}).end()
 		})
 
@@ -533,6 +534,7 @@ const processFreePassport = async () => {
 	try {
 		const ts = await SC.freePassport(poolData)
 		await ts.wait()
+		logger(Colors.blue(`processFreePassport success ${ts.hash}`))
 		freePassportwaitingPool = []
 	} catch (ex: any) {
 		freePassportwaitingPool = [...freePassportwaitingPool, ...poolData]
