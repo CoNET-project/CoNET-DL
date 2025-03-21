@@ -571,7 +571,57 @@ class conet_dl_server_v4 {
 			})
 		})
 
-		router.post ('/getTestNFTs', async (req: any, res: any) => {
+		// router.post ('/getTestNFTs', async (req: any, res: any) => {
+		// 	const ipaddress = getIpAddressFromForwardHeader(req)
+		// 	let message, signMessage
+		// 	try {
+		// 		message = req.body.message
+		// 		signMessage = req.body.signMessage
+
+		// 	} catch (ex) {
+		// 		logger (Colors.grey(`${ipaddress} request /getTestNFTs req.body ERROR!`), inspect(req.body))
+		// 		return res.status(404).end()
+		// 	}
+		// 	logger(Colors.magenta(`/getTestNFTs`))
+		// 	const obj = checkSign (message, signMessage)
+	
+		// 	if ( !obj?.walletAddress ) {
+		// 		logger (Colors.grey(`Router /getTestNFTs checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+		// 		logger(inspect(obj, false, 3, true))
+		// 		return res.status(404).json({
+		// 			error: "SignObj Error!"
+		// 		}).end()
+		// 	}
+		// 	return createTestNft(obj, res)
+
+		// })
+
+		// router.post ('/getTestNFTsNew', async (req: any, res: any) => {
+		// 	const ipaddress = getIpAddressFromForwardHeader(req)
+		// 	let message, signMessage
+		// 	try {
+		// 		message = req.body.message
+		// 		signMessage = req.body.signMessage
+
+		// 	} catch (ex) {
+		// 		logger (Colors.grey(`${ipaddress} request /getTestNFTsNew req.body ERROR!`), inspect(req.body))
+		// 		return res.status(404).end()
+		// 	}
+		// 	logger(Colors.magenta(`/getTestNFTsNew`))
+		// 	const obj = checkSign (message, signMessage)
+	
+		// 	if ( !obj?.walletAddress ) {
+		// 		logger (Colors.grey(`Router /getTestNFTsNew checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+		// 		logger(inspect(obj, false, 3, true))
+		// 		return res.status(404).json({
+		// 			error: "SignObj Error!"
+		// 		}).end()
+		// 	}
+		// 	return createTestNft_new(obj, res)
+
+		// })
+
+		router.post('/freePassport', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -579,46 +629,30 @@ class conet_dl_server_v4 {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /freePassport req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
-			logger(Colors.magenta(`/getTestNFTs`))
+			logger(Colors.magenta(`/freePassport`))
 			const obj = checkSign (message, signMessage)
-	
 			if ( !obj?.walletAddress ) {
-				logger (Colors.grey(`Router /getTestNFTs checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger (Colors.grey(`Router /freePassport checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
 				logger(inspect(obj, false, 3, true))
 				return res.status(404).json({
 					error: "SignObj Error!"
 				}).end()
 			}
-			return createTestNft(obj, res)
-
-		})
-
-		router.post ('/getTestNFTsNew', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-			logger(Colors.magenta(`/getTestNFTsNew`))
-			const obj = checkSign (message, signMessage)
-	
-			if ( !obj?.walletAddress ) {
-				logger (Colors.grey(`Router /getTestNFTsNew checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
-				return res.status(404).json({
-					error: "SignObj Error!"
+			const result = await checkFreePassport(obj?.walletAddress)
+			if (result === null) {
+				return res.status(403).json({
+					error: "system Error!"
 				}).end()
 			}
-			return createTestNft_new(obj, res)
-
+			if (!result) {
+				return res.status(404).json({
+					error: "Already finished!"
+				}).end()
+			}
+			return postLocalhost('/api/initV3', obj, res)
 		})
 
 		router.post ('/claimToken', async (req: any, res: any) => {
@@ -745,7 +779,7 @@ const passport_distributor_addr = '0x147385a07Cf222Aee0e7FAe0746fed7a4d45C740'
 const passport_distributor_manager = new ethers.Wallet (masterSetup.distributor, provider)
 const passport_distributor_SC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, passport_distributor_manager)
 
-const passport_distributor_addr_mainnet = '0x2D78C8D56fF4c38a8dA05729Bf0DbA10F638ED29'
+const passport_distributor_addr_mainnet = '0x40d64D88A86D6efb721042225B812379dc97bc89'
 const passport_distributor_manager1 = new ethers.Wallet (masterSetup.distributor, mainnetEndpoint)
 const passport_distributor_SC1 = new ethers.Contract(passport_distributor_addr_mainnet, passport_distributor_ABI, passport_distributor_manager1)
 
@@ -803,6 +837,15 @@ const createTestNft_new = async (obj: minerObj, res: any) => {
 	return res.status(200).json({
 		success: tx
 	}).end()
+}
+
+const checkFreePassport = async (wallet: string) => {
+	try {
+		const freeUser = await passport_distributor_SC1._freeUserOwnerShip(wallet)
+		return freeUser
+	} catch (ex: any) {
+		return null
+	}
 }
 
 

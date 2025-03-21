@@ -23,6 +23,7 @@ import { Connection, PublicKey, Keypair, Transaction, sendAndConfirmTransaction,
 import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createTransferInstruction, getAssociatedTokenAddress } from "@solana/spl-token"
 import SPClub_ABI from './SP_Club_ABI.json'
 import Bs58 from 'bs58'
+import passport_distributor_ABI from './passport_distributor-ABI.json'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -99,11 +100,12 @@ const developWalletListening = async (block: number) => {
 }
 
 const stratlivenessV2 = async (eposh: number) => {
-	logger
+
 	await Promise.all([
 		startProcess(),
 		startFaucetProcess(),
-		developWalletListening(eposh)
+		developWalletListening(eposh),
+		processFreePassport()
 	])
 }
 
@@ -384,6 +386,17 @@ class conet_dl_server {
 			return SPClub(obj, res)
 		})
 
+		router.post('/freePassport', async (req: any, res: any) => {
+			const obj: minerObj = req.body
+			const isInpool = freePassportPool.get(obj.walletAddress)
+			if (isInpool) {
+				return res.status(200).json({}).end()
+			}
+			freePassportPool.set(obj.walletAddress, true)
+			freePassportwaitingPool.push(obj.walletAddress)
+			return res.status(200).json({}).end()
+		})
+
 
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress
@@ -496,6 +509,37 @@ const transferSP = async (to: string) => {
 	} catch (ex: any) {
 		logger(Colors.magenta(`transfer To SP Club member Error${ex.message}`))
 	}
+}
+
+const SPPaasportAdmin = new ethers.Wallet(masterSetup.forSPPassportFreeUser, mainnet_rpc)
+const passport_distributor_addr = '0x40d64D88A86D6efb721042225B812379dc97bc89'
+const SPManagermentSC = new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, SPPaasportAdmin)
+const freePassportPool: Map<string, boolean> = new Map()
+let freePassportwaitingPool: string[] = []
+const SPManagermentSCPool: ethers.Contract[] = []
+SPManagermentSCPool.push(SPManagermentSC)
+
+const processFreePassport = async () => {
+	if (!freePassportwaitingPool.length) {
+		return
+	}
+
+	const SC = SPManagermentSCPool.shift()
+	const poolData = JSON.parse(JSON.stringify(freePassportwaitingPool))
+	freePassportwaitingPool = []
+	if (!SC) {
+		return
+	}
+	try {
+		const ts = await SC.freePassport(poolData)
+		await ts.wait()
+		freePassportwaitingPool = []
+	} catch (ex: any) {
+		freePassportwaitingPool = [...freePassportwaitingPool, ...poolData]
+		logger(Colors.red(`processFreePassport Error!`), ex.message)
+	}
+
+	SPManagermentSCPool.push(SC)
 }
 
 export default conet_dl_server

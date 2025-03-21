@@ -1025,7 +1025,7 @@ export const checkSign = (message: string, signMess: string) => {
 	let wallet = ''
 	try {
 		obj = JSON.parse(message)
-		wallet = obj.walletAddress
+		wallet = obj.walletAddress.toLowerCase()
 		digest = ethers.id(message)
 		recoverPublicKey = ethers.recoverAddress(digest, signMess)
 		verifyMessage = ethers.verifyMessage(message, signMess)
@@ -1037,13 +1037,12 @@ export const checkSign = (message: string, signMess: string) => {
 	}
 	
 
-	if (wallet && (verifyMessage.toLowerCase() === wallet.toLowerCase() || recoverPublicKey.toLowerCase() === wallet.toLowerCase())) {
-		obj.walletAddress = wallet.toLowerCase()
+	if (wallet && (verifyMessage.toLowerCase() === wallet || recoverPublicKey.toLowerCase() === wallet)) {
+		obj.walletAddress = wallet
 		return obj
-		
 	}
 	
-	logger (colors.red(`checkSignObj recoveredAddress (${verifyMessage.toLowerCase()}) or recoverPublicKey ${recoverPublicKey.toLowerCase()} !== wallet (${wallet.toLowerCase()})`))
+	logger (colors.red(`checkSignObj recoveredAddress (${verifyMessage.toLowerCase()}) or recoverPublicKey ${recoverPublicKey.toLowerCase()} !== wallet (${wallet})`))
 	return null
 	
 }

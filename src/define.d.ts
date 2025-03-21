@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	forSPPassportFreeUser: string
 	distributor: string
 	solanaA: string
 	solanaSPReword: string
