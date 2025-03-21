@@ -538,6 +538,7 @@ const SPManagermentSCPool: ethers.Contract[] = []
 SPManagermentSCPool.push(SPManagermentSC)
 
 const SPPaasport_codeToClient = new ethers.Wallet(masterSetup.passport_codeToClient, mainnet_rpc)
+logger(Colors.magenta(`SPPaasport_codeToClient ${SPPaasport_codeToClient.address}`))
 const SPManagermentcodeToClient= new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, SPPaasport_codeToClient)
 const SPCodeToClient: ethers.Contract[] = [SPManagermentcodeToClient]
 interface ICodeToClient {
