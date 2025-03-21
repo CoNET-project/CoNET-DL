@@ -632,7 +632,7 @@ class conet_dl_server_v4 {
 				logger (Colors.grey(`${ipaddress} request /freePassport req.body ERROR!`), inspect(req.body))
 				return res.status(404).end()
 			}
-			logger(Colors.magenta(`/freePassport`))
+			
 			const obj = checkSign (message, signMessage)
 			if ( !obj?.walletAddress ) {
 				logger (Colors.grey(`Router /freePassport checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
@@ -647,7 +647,7 @@ class conet_dl_server_v4 {
 					error: "system Error!"
 				}).end()
 			}
-			if (!result) {
+			if (result) {
 				return res.status(404).json({
 					error: "Already finished!"
 				}).end()
