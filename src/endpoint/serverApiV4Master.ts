@@ -587,8 +587,7 @@ const startCodeToClientProcess = async () => {
 		await tx.wait()
 		obj.res.status(200).json({success:tx.hash}).end()
 	} catch(ex:any) {
-		CodeToClientWaiting.push(obj)
-		logger(Colors.red(`startCodeToClientProcess ${ex.message}`))
+		obj.res.status(404).json({error: 'Redeem Code Error!'}).end()
 	}
 	SPCodeToClient.push(SC)
 
