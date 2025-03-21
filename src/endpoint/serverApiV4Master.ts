@@ -398,6 +398,23 @@ class conet_dl_server {
 			return res.status(200).json({}).end()
 		})
 
+		router.post('/codeToClient', async (req: any, res: any) => {
+			const obj: minerObj = req.body
+			if (!obj?.solanaWallet||!obj?.hash) {
+				return res.status(404).json({
+					error: 'has no solanaWallet'
+				}).end()
+			}
+			CodeToClientWaiting.push ({
+				solana: obj.solanaWallet,
+				res,
+				to: obj.walletAddress,
+				hash: obj.hash
+			})
+			startCodeToClientProcess()
+			
+		})
+
 
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress
@@ -520,6 +537,17 @@ let freePassportwaitingPool: string[] = []
 const SPManagermentSCPool: ethers.Contract[] = []
 SPManagermentSCPool.push(SPManagermentSC)
 
+const SPPaasport_codeToClient = new ethers.Wallet(masterSetup.passport_codeToClient, mainnet_rpc)
+const SPManagermentcodeToClient= new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, SPPaasport_codeToClient)
+const SPCodeToClient: ethers.Contract[] = [SPManagermentcodeToClient]
+interface ICodeToClient {
+	hash: string
+	to: string
+	solana: string
+	res: any
+}
+const CodeToClientWaiting: ICodeToClient[] = []
+
 const processFreePassport = async () => {
 	if (!freePassportwaitingPool.length) {
 		return
@@ -542,6 +570,31 @@ const processFreePassport = async () => {
 	}
 
 	SPManagermentSCPool.push(SC)
+}
+
+const startCodeToClientProcess = async () => {
+	const obj = CodeToClientWaiting.shift()
+	if (!obj) {
+		return
+	}
+	const SC = SPCodeToClient.shift()
+	if (!SC) {
+		CodeToClientWaiting.unshift(obj)
+		return 
+	}
+	try {
+		const tx = await SC._codeToClient()
+		await tx.wait()
+		obj.res.status(200).json({success:tx.hash}).end()
+	} catch(ex:any) {
+		CodeToClientWaiting.push(obj)
+		logger(Colors.red(`startCodeToClientProcess ${ex.message}`))
+	}
+	SPCodeToClient.push(SC)
+
+	setTimeout(() => {
+		startCodeToClientProcess()
+	}, 1000)
 }
 
 export default conet_dl_server
