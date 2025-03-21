@@ -37,7 +37,7 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
-const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
+const provideCONET = new ethers.JsonRpcProvider('http://207.90.195.48:8004')
 
 export const checkGasPrice = 1550000
 let startDailyPoolTranferProcess = false
