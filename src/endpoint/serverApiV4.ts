@@ -652,7 +652,7 @@ class conet_dl_server_v4 {
 					error: "Already finished!"
 				}).end()
 			}
-			return postLocalhost('/api/initV3', obj, res)
+			return postLocalhost('/api/freePassport', obj, res)
 		})
 
 		router.post ('/claimToken', async (req: any, res: any) => {
