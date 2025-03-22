@@ -670,7 +670,6 @@ class conet_dl_server_v4 {
 			const obj = checkSign (message, signMessage)
 			if ( !obj?.walletAddress|| !obj?.uuid || !obj?.solanaWallet) {
 				
-				
 				logger (Colors.grey(`Router /freePassport checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
 				logger(inspect(obj, false, 3, true))
 				return res.status(404).json({
