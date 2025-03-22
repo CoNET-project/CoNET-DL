@@ -412,7 +412,7 @@ class conet_dl_server {
 				hash: obj.hash
 			})
 			startCodeToClientProcess()
-			
+			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
 		})
 
 
