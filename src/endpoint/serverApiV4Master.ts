@@ -414,7 +414,7 @@ class conet_dl_server {
 				to: obj.walletAddress,
 				hash: obj.hash
 			})
-			startCodeToClientProcess()
+			await startCodeToClientProcess()
 			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
 		})
 
@@ -582,17 +582,17 @@ const processFreePassport = async () => {
 const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: BigInt[], expiresDays: BigInt[], premium:boolean[]]) => {
 
 	for (let i = 0; i < userInfo[0].length; i ++) {
-		const nft = parseInt(userInfo[i].toString())
+		const nft = parseInt(userInfo[0][i].toString())
 		if (nft === 0) {
 			continue
 		}
-		const expiresDay = parseInt(userInfo[2].toString())
-		const _expires = parseInt(userInfo[1].toString())
+		const expiresDay = parseInt(userInfo[2][i].toString())
+		const _expires = parseInt(userInfo[1][i].toString())
 		if (typeof _expires !== 'number') {
-			return i
+			return nft
 		}
 		const now = new Date().getTime()
-		const expires = new Date(_expires).getTime()
+		const expires = new Date(_expires*1000).getTime()
 		if (Math.abs(now - expires) < ExpiresDays || expiresDay < 30) {
 			continue
 		}
@@ -600,12 +600,12 @@ const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: Big
 			const _owner: bigint = await SP_Passport_SC_readonly.balanceOf(wallet, nft)
 			const owner = parseInt(_owner.toString())
 			if (owner > 0) {
-				return i
+				return nft
 			}
 		} catch (ex) {
 			continue
 		}
-		return i
+		return nft
 	}
 	return -1
 
@@ -628,15 +628,15 @@ const activeProcess = async (wallet: string, SC: ethers.Contract) => {
 		const now = new Date().getTime()
 		const currentExpires = new Date(_currentExpires * 1000).getTime()
 
-		if (currentExpires > 0 && Math.abs(now - currentExpires) > ExpiresDays) {
-			return
-		}
+		// if (currentExpires > 0 && Math.abs(now - currentExpires) > ExpiresDays) {
+		// 	return
+		// }
 
 		const nftID = await getNextNft(wallet, userInfo)
 		if (nftID === currentID || nftID < 0) {
 			return
 		}
-		
+
 		const tx = await SC._changeActiveNFT(wallet, nftID)
 		await tx.wait()
 
