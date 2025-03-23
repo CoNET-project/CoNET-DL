@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { masterSetup, getServerIPV4Address, conet_cancun_rpc} from '../util/util'
+import { masterSetup, getServerIPV4Address} from '../util/util'
 import {logger} from '../util/logger'
 import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
@@ -24,6 +24,9 @@ import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createT
 import SPClub_ABI from './SP_Club_ABI.json'
 import Bs58 from 'bs58'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
+
+import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -537,6 +540,9 @@ let freePassportwaitingPool: string[] = []
 const SPManagermentSCPool: ethers.Contract[] = []
 SPManagermentSCPool.push(SPManagermentSC)
 
+const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
+const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, mainnet_rpc)
+
 const SPPaasport_codeToClient = new ethers.Wallet(masterSetup.passport_codeToClient, mainnet_rpc)
 logger(Colors.magenta(`SPPaasport_codeToClient ${SPPaasport_codeToClient.address}`))
 const SPManagermentcodeToClient= new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, SPPaasport_codeToClient)
@@ -573,6 +579,73 @@ const processFreePassport = async () => {
 	SPManagermentSCPool.push(SC)
 }
 
+const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: BigInt[], expiresDays: BigInt[], premium:boolean[]]) => {
+
+	for (let i = 0; i < userInfo[0].length; i ++) {
+		const nft = parseInt(userInfo[i].toString())
+		if (nft === 0) {
+			continue
+		}
+		const expiresDay = parseInt(userInfo[2].toString())
+		const _expires = parseInt(userInfo[1].toString())
+		if (typeof _expires !== 'number') {
+			return i
+		}
+		const now = new Date().getTime()
+		const expires = new Date(_expires).getTime()
+		if (Math.abs(now - expires) < ExpiresDays || expiresDay < 30) {
+			continue
+		}
+		try {
+			const _owner: bigint = await SP_Passport_SC_readonly.balanceOf(wallet, nft)
+			const owner = parseInt(_owner.toString())
+			if (owner > 0) {
+				return i
+			}
+		} catch (ex) {
+			continue
+		}
+		return i
+	}
+	return -1
+
+}
+const ExpiresDays = 1000 * 60 * 60 * 24 * 7
+const activeProcess = async (wallet: string, SC: ethers.Contract) => {
+	try {
+		const [currentNFT, userInfo] = await Promise.all([
+			SPManagermentcodeToClient.getCurrentPassport(wallet),
+			SPManagermentcodeToClient.getUserInfo(wallet)
+		])
+		const currentID = parseInt(currentNFT[0])
+		const _currentExpires = parseInt(currentNFT[1].toString())
+
+		//		
+		if (typeof _currentExpires !== 'number') {
+			return
+		}
+
+		const now = new Date().getTime()
+		const currentExpires = new Date(_currentExpires * 1000).getTime()
+
+		if (currentExpires > 0 && Math.abs(now - currentExpires) > ExpiresDays) {
+			return
+		}
+
+		const nftID = await getNextNft(wallet, userInfo)
+		if (nftID === currentID || nftID < 0) {
+			return
+		}
+		
+		const tx = await SC._changeActiveNFT(wallet, nftID)
+		await tx.wait()
+
+	} catch (ex: any) {
+		logger(Colors.red(`activeProcess Error!, ${ex.message}`))
+		return
+	}
+}
+
 const startCodeToClientProcess = async () => {
 	const obj = CodeToClientWaiting.shift()
 	if (!obj) {
@@ -587,6 +660,7 @@ const startCodeToClientProcess = async () => {
 		const tx = await SC._codeToClient(obj.hash, obj.to, obj.solana)
 		await tx.wait()
 		obj.res.status(200).json({success:tx.hash}).end()
+		await activeProcess(obj.to, SC)
 	} catch(ex:any) {
 		obj.res.status(404).json({error: 'Redeem Code Error!'}).end()
 	}
