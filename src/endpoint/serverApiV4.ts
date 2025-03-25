@@ -701,6 +701,11 @@ class conet_dl_server_v4 {
 			return res.status(403).end()
 
 		})
+
+		router.post ('/applePay', async (req: any, res: any) => {
+			logger(inspect(req.body, false, 3, true))
+			return res.status(200).end()
+		})
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
