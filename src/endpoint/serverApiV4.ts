@@ -703,6 +703,7 @@ class conet_dl_server_v4 {
 		})
 
 		router.post ('/applePay', async (req: any, res: any) => {
+			logger(`/applePay`)
 			logger(inspect(req.body, false, 3, true))
 			return res.status(200).end()
 		})
