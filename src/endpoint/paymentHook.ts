@@ -20,7 +20,7 @@ class conet_dl_server {
 
 
 	private initSetupData = async () => {
-		
+		this.startServer()
 	}
 
 	constructor () {
@@ -85,3 +85,5 @@ class conet_dl_server {
 		})
 	}
 }
+
+new conet_dl_server()
