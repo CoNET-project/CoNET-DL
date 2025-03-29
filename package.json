@@ -69,7 +69,8 @@
 		"@jup-ag/api": "^6.0.40",
 		"bs58": "^6.0.0",
 		"@solana/spl-token": "^0.4.13",
-		"gill": "^0.8.0"
+		"gill": "^0.8.0",
+		"stripe": "^17.7.0"
 	},
 	"devDependencies": {
 		"@openpgp/web-stream-tools": "^0.1.3",
