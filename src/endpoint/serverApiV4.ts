@@ -96,7 +96,6 @@ const get_epoch_total = async () => {
 	// }
 }
 
-
 const unlockCNTP = async (wallet: string, privateKey: string) => {
 
 	const walletObj = new ethers.Wallet(privateKey, provider)

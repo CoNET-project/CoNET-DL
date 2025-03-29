@@ -26,11 +26,11 @@ const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const CoNET_Mainnet_oldRPC = 'http://66.179.255.8:8000'
 const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
 const provode_Cancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
-// const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
+const provode_Holesky = new ethers.JsonRpcProvider(CONET_HoleskyRPC)
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'
 const cCNTP_holeskyAddr = '0xa4b389994A591735332A67f3561D60ce96409347'
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'
-// const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
+const cntpHolesky = new ethers.Contract(cCNTP_holeskyAddr, CONET_Point_ABI, provode_Holesky)
 
 const RefferV4_HoleskyAddr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
 const RefferV4_CancunAddr = '0xbd67716ab31fc9691482a839117004497761D0b9'
@@ -433,17 +433,17 @@ export const initCNTP = async (wallet: string) => {
 
 	walletPool.set(wallet, true)
 
-	// checkGroudinerNFT(wallet)
+	//checkGroudinerNFT(wallet)
 	// checkCONETian(wallet)
 	initCoNETDePIN(wallet)
 	// checkConetianInitStatus(wallet)
 
-	// const value = await cntpHolesky.balanceOf(wallet)
-	// if (value !== BigInt(0)) {
-	// 	walletProcess.push({
-	// 		wallet, value
-	// 	})
-	// }
+	const value = await cntpHolesky.balanceOf(wallet)
+	if (value !== BigInt(0)) {
+		walletProcess.push({
+			wallet, value
+		})
+	}
 	
 }
 
