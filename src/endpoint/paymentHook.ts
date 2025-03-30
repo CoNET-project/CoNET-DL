@@ -73,6 +73,8 @@ class conet_dl_server {
 
 		router.post('/stripeHook', Express.raw({type: 'application/json'}), async (req: any, res: any) => {
 			let event = req.body
+
+
 			if (this.endpointSecret) {
 				// Get the signature sent by Stripe
 				const signature = req.headers['stripe-signature']
@@ -83,7 +85,7 @@ class conet_dl_server {
 					this.endpointSecret
 				  )
 				} catch (err: any) {
-				  logger(`⚠️  Webhook signature verification failed.`, err.message)
+				  logger(`⚠️  Webhook signature verification failed. ${signature}`, err.message)
 				  return res.sendStatus(400).end()
 				}
 			}
@@ -128,3 +130,5 @@ class conet_dl_server {
 }
 
 new conet_dl_server()
+
+//stripe events resend evt_3R85d8HIGHEZ9LgI05yRp4sK --webhook-endpoint=https://hooks.conet.network/api/stripeHook
