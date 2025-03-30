@@ -86,6 +86,7 @@ class conet_dl_server {
 				  )
 				} catch (err: any) {
 				  logger(`⚠️  Webhook signature verification failed. ${signature}`, err.message)
+				  logger(inspect(req.body, false, 3, true))
 				  return res.sendStatus(400).end()
 				}
 			}
