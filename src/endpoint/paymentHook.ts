@@ -15,6 +15,9 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	return ipaddress
 }
 
+
+const paymentReference: Map<string, string> = new Map()
+
 class conet_dl_server {
 
 	private PORT = 8005
@@ -92,16 +95,19 @@ class conet_dl_server {
 			switch (event.type) {
 				case 'payment_intent.succeeded': {
 					const paymentIntent: Stripe.PaymentIntent = event.data.object
+					
 					const pay = await searchPayment(this.stripe, paymentIntent.id, paymentIntent.amount)
-					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful!`);
+					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! client_reference_id = ${paymentReference.get(paymentIntent.id)}`)
 					break
 				}
 				
 				case 'checkout.session.completed': {
 					const session = event.data.object
 					const client_reference_id = session.client_reference_id
-					logger(`checkout.session.completed client_reference_id = ${client_reference_id}`)
+					const payment_intent = event.payment_intent
+					logger(`checkout.session.completed payment_intent = ${payment_intent} client_reference_id = ${client_reference_id}`)
 					logger(inspect(session, false, 3, true))
+					paymentReference.set(payment_intent, client_reference_id)
 					break
 				}
 				default: {
