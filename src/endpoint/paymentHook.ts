@@ -99,8 +99,9 @@ class conet_dl_server {
 				
 				case 'checkout.session.completed': {
 					const session = event.data.object
-					const client_reference_id = session.object.client_reference_id
+					const client_reference_id = session.client_reference_id
 					logger(`checkout.session.completed client_reference_id = ${client_reference_id}`)
+					logger(inspect(session, false, 3, true))
 					break
 				}
 				default: {
