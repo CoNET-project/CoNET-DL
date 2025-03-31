@@ -104,7 +104,7 @@ class conet_dl_server {
 				case 'checkout.session.completed': {
 					const session = event.data.object
 					const client_reference_id = session.client_reference_id
-					const payment_intent = event.payment_intent
+					const payment_intent = session.payment_intent
 					logger(`checkout.session.completed payment_intent = ${payment_intent} client_reference_id = ${client_reference_id}`)
 					logger(inspect(session, false, 3, true))
 					paymentReference.set(payment_intent, client_reference_id)
