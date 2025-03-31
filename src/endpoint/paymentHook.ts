@@ -97,7 +97,12 @@ class conet_dl_server {
 					break
 				}
 				
-				
+				case 'checkout.session.completed': {
+					const session = event.data.object
+					const client_reference_id = session.object.client_reference_id
+					logger(`checkout.session.completed client_reference_id = ${client_reference_id}`)
+					break
+				}
 				default: {
 					// Unexpected event type
 					console.log(`Unhandled event type ${event.type}.`)
@@ -123,14 +128,25 @@ class conet_dl_server {
 
 const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: number) => {
 	try {
+		
 		const paymentIntent = await stripe.paymentIntents.retrieve(paymentID)
+		logger(inspect(paymentIntent, false, 3, true))
 		if (paymentIntent.status !== 'succeeded') {
 			return false
 		}
-
+		
 		return paymentIntent.amount === paymentAmount
 	} catch (ex: any) {
 		return false
 	}
 }
 new conet_dl_server()
+
+// const test = async () => {
+
+// 	const id = 'pi_3R8jAhHIGHEZ9LgI18MZHccm'//'pi_3R8ReLHIGHEZ9LgI0cd6KDHB'
+// 	const stripe = new Stripe(masterSetup.stripe_SecretKey)
+// 	const kk = await searchPayment (stripe, id, 249)
+
+// }
+// test()
