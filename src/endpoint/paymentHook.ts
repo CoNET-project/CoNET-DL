@@ -139,18 +139,18 @@ class conet_dl_server {
 
 					paymentSuccess.set(paymentIntent.id, true)
 					res.status(200).json({received: true}).end()
-					const waiting = (): Promise<wallets> => new Promise(resolve => {
+					const waitingWallet = (): Promise<wallets> => new Promise(resolve => {
 						const wallets = paymentReference.get (paymentIntent.id)
 						if (!wallets) {
 							logger(`PaymentIntent ERROR! no wallets in paymentReference!`)
-							return setTimeout (async () => {
-								return waiting()
+							return setTimeout (() => {
+								return waitingWallet()
 							}, 1000)
 						}
 						return resolve(wallets)
 					})
 
-					const wallets = await waiting ()
+					const wallets = await waitingWallet ()
 
 					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! wallets = ${inspect(wallets, false, 3, true)}`)
 					mintPasswordPool.push({
