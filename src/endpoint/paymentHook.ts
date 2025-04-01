@@ -155,7 +155,7 @@ class conet_dl_server {
 					})
 
 					const wallets = await waitingWallet ()
-					
+
 					if (!wallets) {
 						return
 					}
@@ -169,7 +169,7 @@ class conet_dl_server {
 						hash: paymentIntent.id
 					})
 					mintPassport()
-					break
+					return
 				}
 				
 				case 'checkout.session.completed': {
