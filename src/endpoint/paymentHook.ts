@@ -180,7 +180,7 @@ class conet_dl_server {
 			}
 			
 			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
-			return res.status(200).json({url}).end()
+			return res.status(200).json({url})
 		})
 		
 
