@@ -298,9 +298,8 @@ const finishListening = (wallet: string, currentID: number) => {
 	if (res?.length) {
 		for (let i of res) {
 			if (i.writable) {
-				i.status(200).json({currentID}).end()
+				i.json({currentID}).end()
 			}
-			
 		}
 	}
 	payment_waiting_res.delete(wallet)
