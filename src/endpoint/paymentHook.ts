@@ -124,24 +124,34 @@ class conet_dl_server {
 					const paymentIntent: Stripe.PaymentIntent = event.data.object
 
 					if (!paymentIntent.id) {
-						return
+						break
 					}
 
 					const pay = await searchPayment(this.stripe, paymentIntent.id, paymentIntent.amount)
 					if (!pay) {
-						return
+						break
 					}
 
 					const successPay = paymentSuccess.get(paymentIntent.id)
 					if (successPay) {
-						return
+						break
 					}
 
 					paymentSuccess.set(paymentIntent.id, true)
-					const wallets = paymentReference.get (paymentIntent.id)
-					if (!wallets) {
-						return logger(`PaymentIntent ERROR! no wallets in paymentReference!`)
-					}
+					res.status(200).json({received: true}).end()
+					const waiting = (): Promise<wallets> => new Promise(resolve => {
+						const wallets = paymentReference.get (paymentIntent.id)
+						if (!wallets) {
+							logger(`PaymentIntent ERROR! no wallets in paymentReference!`)
+							return setTimeout (async () => {
+								return waiting()
+							}, 1000)
+						}
+						return resolve(wallets)
+					})
+
+					const wallets = await waiting ()
+
 					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! wallets = ${inspect(wallets, false, 3, true)}`)
 					mintPasswordPool.push({
 						walletAddress: wallets.walletAddress,
