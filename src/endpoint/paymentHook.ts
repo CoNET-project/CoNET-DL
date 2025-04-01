@@ -307,7 +307,7 @@ const mintPassport = async () => {
 	}
 	const SC = Payment_SCPool.shift()
 	if (!SC) {
-		mintPasswordPool.unshift(obj)
+		mintPasswordPool.push(obj)
 		return
 	}
 	logger(`mintPassport ${obj.walletAddress} ${obj.hash}`)
@@ -316,12 +316,14 @@ const mintPassport = async () => {
 		if (isHash) {
 			Payment_SCPool.push(SC)
 			payment_waiting_status.set(obj.walletAddress, 0)
+
 			return mintPassport()
 		}
 		
 		const ts = await SC.mintPassport(obj.walletAddress, obj.monthly ? 31 : 365, obj.hash)
+		logger(`mintPassport ${ts.hash}`)
 		await ts.wait()
-
+		
 		const [currentNFT, userInfo] = await Promise.all([
 			SPManagermentcodeToClient.getCurrentPassport(obj.walletAddress),
 			SPManagermentcodeToClient.getUserInfo(obj.walletAddress)
@@ -333,19 +335,23 @@ const mintPassport = async () => {
 		const lastNFT = userInfoArray - 1
 		const newNFT = parseInt(userInfo[0][lastNFT> -1 ? lastNFT: 0].toString()||'0')
 		//		
+		payment_waiting_status.set(obj.walletAddress, newNFT)
+
+		logger(`mintPassport new NFT is ${lastNFT}`)
 		if (typeof _currentExpires !== 'number') {
-			payment_waiting_status.set(obj.walletAddress, newNFT)
+			Payment_SCPool.push(SC)
 			return
 		}
 
 		const nftID = await getNextNft(obj.walletAddress, userInfo)
 		if (nftID === currentID || nftID < 0) {
-			payment_waiting_status.set(obj.walletAddress, newNFT)
+			Payment_SCPool.push(SC)
 			return 
 		}
+		
 		const tx = await SPManagermentcodeToClient._changeActiveNFT(obj.walletAddress, nftID)
+		logger(`mintPassport _changeActiveNFT ${nftID} ${tx.hash}`)
 		await tx.wait()
-		payment_waiting_status.set(obj.walletAddress, newNFT)
 	} catch (ex) {
 		payment_waiting_status.set(obj.walletAddress, 0)
 		logger(`mintPassport Error!`)
