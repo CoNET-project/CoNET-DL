@@ -51,7 +51,7 @@ class conet_dl_server {
 		const router = Router ()
 		app.disable('x-powered-by')
 		const Cors = require('cors')
-		app.use(Cors ())
+		// app.use(Cors ())
 		app.use(Express.json())
 
 		app.use( '/api', router )
@@ -159,7 +159,7 @@ class conet_dl_server {
 			res.status(200).json({received: true}).end()
 		})
 
-		router.post('/payment_stripe',async (req: any, res: any) => {
+		router.post('/payment_stripe', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/payment_stripe`))
 			let message, signMessage
@@ -183,7 +183,6 @@ class conet_dl_server {
 			return res.status(200).json({error: 'any data'}).end()
 		})
 		
-
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
@@ -221,3 +220,4 @@ const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: n
 }
 new conet_dl_server()
 
+//	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
