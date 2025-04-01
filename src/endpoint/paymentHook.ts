@@ -8,6 +8,8 @@ import Stripe from 'stripe'
 import { masterSetup, checkSign} from '../util/util'
 import {ethers} from 'ethers'
 import web2PaymentABI from './payment_PassportABI.json'
+import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
+import passport_distributor_ABI from './passport_distributor-ABI.json'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -21,6 +23,14 @@ type wallets = {
 	walletAddress: string
 	solanaWallet: string
 }
+
+type walletsProcess = {
+	walletAddress: string
+	solanaWallet: string
+	monthly: boolean
+	total: number
+	hash: string
+}
 const paymentReference: Map<string, wallets> = new Map()
 const paymentSuccess: Map<string, boolean> = new Map()
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
@@ -31,7 +41,9 @@ const payment_SC = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, web
 const Payment_SCPool: ethers.Contract[] = []
 Payment_SCPool.push(payment_SC)
 
-
+const payment_waiting_status: Map<string, number> = new Map()
+const payment_waiting_res: Map<string, any[]> = new Map()
+const mintPasswordPool: walletsProcess[]  = []
 
 class conet_dl_server {
 
@@ -127,7 +139,18 @@ class conet_dl_server {
 
 					paymentSuccess.set(paymentIntent.id, true)
 					const wallets = paymentReference.get (paymentIntent.id)
+					if (!wallets) {
+						return logger(`PaymentIntent ERROR! no wallets in paymentReference!`)
+					}
 					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! wallets = ${inspect(wallets, false, 3, true)}`)
+					mintPasswordPool.push({
+						walletAddress: wallets.walletAddress,
+						solanaWallet: wallets.solanaWallet,
+						monthly: paymentIntent.amount === 299 ? true: false,
+						total: 1,
+						hash: paymentIntent.id
+					})
+					mintPassport()
 					break
 				}
 				
@@ -180,7 +203,37 @@ class conet_dl_server {
 			}
 			
 			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
+			payment_waiting_status.set(obj.walletAddress, 1)
 			return res.status(200).json({url}).end()
+		})
+
+		router.post('/payment_stripe_waiting', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/payment_stripe_waiting`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
+			
+			const obj = checkSign (message, signMessage)
+			
+			if (!obj || !obj?.walletAddress) {
+				return res.status(402).json({error: 'No necessary parameters'}).end()
+			}
+			
+			const waiting = payment_waiting_status.get(obj.walletAddress)
+			if (!waiting) {
+				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
+			}
+
+			const kk = payment_waiting_res.get(obj.walletAddress)||[]
+			kk.push(res)
 		})
 		
 		router.all ('*', (req: any, res: any) => {
@@ -191,7 +244,103 @@ class conet_dl_server {
 		})
 	}
 }
+const ExpiresDays = 1000 * 60 * 60 * 24 * 7
 
+const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
+const passport_distributor_addr = '0x40d64D88A86D6efb721042225B812379dc97bc89'
+const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, CONET_MAINNET)
+const SPManagermentcodeToClient= new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, web2_wallet)
+const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: BigInt[], expiresDays: BigInt[], premium:boolean[]]) => {
+
+	for (let i = 0; i < userInfo[0].length; i ++) {
+		const nft = parseInt(userInfo[0][i].toString())
+		if (nft === 0) {
+			continue
+		}
+		const expiresDay = parseInt(userInfo[2][i].toString())
+		const _expires = parseInt(userInfo[1][i].toString())
+		if (typeof _expires !== 'number') {
+			return nft
+		}
+		const now = new Date().getTime()
+		const expires = new Date(_expires*1000).getTime()
+		if (Math.abs(now - expires) < ExpiresDays || expiresDay < 30) {
+			continue
+		}
+		try {
+			const _owner: bigint = await SP_Passport_SC_readonly.balanceOf(wallet, nft)
+			const owner = parseInt(_owner.toString())
+			if (owner > 0) {
+				return nft
+			}
+		} catch (ex) {
+			continue
+		}
+		return nft
+	}
+	return -1
+
+}
+
+const finishListening = (wallet: string, currentID: number) => {
+	payment_waiting_status.delete (wallet)
+	const res = payment_waiting_res.get (wallet)
+	if (res?.length) {
+		for (let i of res) {
+			i.status(200).json({currentID}).end()
+		}
+	}
+	payment_waiting_res.delete(wallet)
+}
+
+const mintPassport = async () => {
+	const obj = mintPasswordPool.shift()
+	if (!obj) {
+		return
+	}
+	const SC = Payment_SCPool.shift()
+	if (!SC) {
+		mintPasswordPool.unshift(obj)
+		return
+	}
+	try {
+		const isHash = await SC.getPayID(obj.hash)
+		if (isHash) {
+			Payment_SCPool.push(SC)
+			return mintPassport()
+		}
+
+		const ts = await SC.mintPassport(obj.walletAddress, obj.monthly ? 31 : 365, obj.hash)
+		await ts.wait()
+
+		const [currentNFT, userInfo] = await Promise.all([
+			SPManagermentcodeToClient.getCurrentPassport(obj.walletAddress),
+			SPManagermentcodeToClient.getUserInfo(obj.walletAddress)
+		])
+
+		const currentID = parseInt(currentNFT[0])
+		const _currentExpires = parseInt(currentNFT[1].toString())
+
+		//		
+		if (typeof _currentExpires !== 'number') {
+			finishListening(obj.walletAddress, currentID)
+			return
+		}
+
+		const nftID = await getNextNft(obj.walletAddress, userInfo)
+		if (nftID === currentID || nftID < 0) {
+			finishListening(obj.walletAddress, currentID)
+			return 
+		}
+		const tx = await SPManagermentcodeToClient._changeActiveNFT(obj.walletAddress, nftID)
+		await tx.wait()
+		finishListening(obj.walletAddress, currentID)
+	} catch (ex) {
+		logger(`mintPassport Error!`)
+	}
+	Payment_SCPool.push(SC)
+	return mintPassport()
+}
 
 const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
 	const option: Stripe.PaymentLinkCreateParams = {
