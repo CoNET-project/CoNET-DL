@@ -42,7 +42,6 @@ const Payment_SCPool: ethers.Contract[] = []
 Payment_SCPool.push(payment_SC)
 
 const payment_waiting_status: Map<string, number> = new Map()
-const payment_waiting_res: Map<string, Response[]> = new Map()
 const mintPasswordPool: walletsProcess[]  = []
 
 class conet_dl_server {
@@ -237,13 +236,11 @@ class conet_dl_server {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
 			
-			const waiting = payment_waiting_status.get(obj.walletAddress)
-			if (!waiting) {
+			const status = payment_waiting_status.get(obj.walletAddress)
+			if (!status) {
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
-
-			const kk = payment_waiting_res.get(obj.walletAddress)||[]
-			kk.push(res)
+			res.status(200).json({status }).end()
 		})
 		
 		router.all ('*', (req: any, res: any) => {
@@ -289,21 +286,8 @@ const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: Big
 		return nft
 	}
 	return -1
-
 }
 
-const finishListening = (wallet: string, currentID: number) => {
-	payment_waiting_status.delete (wallet)
-	const res = payment_waiting_res.get (wallet)
-	if (res?.length) {
-		for (let i of res) {
-			if (i.writable) {
-				i.json({currentID}).end()
-			}
-		}
-	}
-	payment_waiting_res.delete(wallet)
-}
 
 const mintPassport = async () => {
 	const obj = mintPasswordPool.shift()
@@ -315,13 +299,15 @@ const mintPassport = async () => {
 		mintPasswordPool.unshift(obj)
 		return
 	}
+	logger(`mintPassport ${obj.walletAddress} ${obj.hash}`)
 	try {
 		const isHash = await SC.getPayID(obj.hash)
 		if (isHash) {
 			Payment_SCPool.push(SC)
+			payment_waiting_status.set(obj.walletAddress, 0)
 			return mintPassport()
 		}
-		logger(`mintPassport ${obj.walletAddress} ${obj.hash}`)
+		
 		const ts = await SC.mintPassport(obj.walletAddress, obj.monthly ? 31 : 365, obj.hash)
 		await ts.wait()
 
@@ -332,22 +318,25 @@ const mintPassport = async () => {
 
 		const currentID = parseInt(currentNFT[0])
 		const _currentExpires = parseInt(currentNFT[1].toString())
-
+		const userInfoArray = userInfo[0].length
+		const lastNFT = userInfoArray - 1
+		const newNFT = parseInt(userInfo[0][lastNFT> -1 ? lastNFT: 0].toString()||'0')
 		//		
 		if (typeof _currentExpires !== 'number') {
-			finishListening(obj.walletAddress, currentID)
+			payment_waiting_status.set(obj.walletAddress, newNFT)
 			return
 		}
 
 		const nftID = await getNextNft(obj.walletAddress, userInfo)
 		if (nftID === currentID || nftID < 0) {
-			finishListening(obj.walletAddress, currentID)
+			payment_waiting_status.set(obj.walletAddress, newNFT)
 			return 
 		}
 		const tx = await SPManagermentcodeToClient._changeActiveNFT(obj.walletAddress, nftID)
 		await tx.wait()
-		finishListening(obj.walletAddress, currentID)
+		payment_waiting_status.set(obj.walletAddress, newNFT)
 	} catch (ex) {
+		payment_waiting_status.set(obj.walletAddress, 0)
 		logger(`mintPassport Error!`)
 	}
 	Payment_SCPool.push(SC)
