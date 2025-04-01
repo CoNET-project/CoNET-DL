@@ -309,7 +309,7 @@ const mintPassport = async () => {
 			Payment_SCPool.push(SC)
 			return mintPassport()
 		}
-
+		logger(`mintPassport ${obj.walletAddress} $obj.hash`)
 		const ts = await SC.mintPassport(obj.walletAddress, obj.monthly ? 31 : 365, obj.hash)
 		await ts.wait()
 
