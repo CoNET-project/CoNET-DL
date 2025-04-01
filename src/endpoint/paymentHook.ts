@@ -179,8 +179,8 @@ class conet_dl_server {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
 			
-			const utlObj = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
-			return res.status(200).json({url: utlObj.url}).end()
+			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
+			return res.status(200).json({url}).end()
 		})
 		
 
@@ -204,7 +204,7 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
 	}
 	const paymentIntent = await stripe.paymentLinks.create(option)
 	logger(inspect(paymentIntent, false, 3, true))
-	return paymentIntent
+	return paymentIntent.url
 }
 
 const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: number) => {
