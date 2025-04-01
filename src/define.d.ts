@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	web2_PaymentPassport: string
 	stripe_SecretKey: string
 	passport_codeToClient: string
 	forSPPassportFreeUser: string
@@ -273,6 +274,7 @@ interface minerObj {
 	serverIPAddress?: string
 	result?: twitterResult
 	solanaWallet?: string
+	price: number
 }
 
 interface nodeType {

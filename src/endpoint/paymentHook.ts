@@ -5,7 +5,9 @@ import {createServer} from 'node:http'
 import type {Response, Request } from 'express'
 import { inspect } from 'node:util'
 import Stripe from 'stripe'
-import { masterSetup} from '../util/util'
+import { masterSetup, checkSign} from '../util/util'
+import {ethers} from 'ethers'
+import web2PaymentABI from './payment_PassportABI.json'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -15,8 +17,21 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	return ipaddress
 }
 
+type wallets = {
+	walletAddress: string
+	solanaWallet: string
+}
+const paymentReference: Map<string, wallets> = new Map()
+const paymentSuccess: Map<string, boolean> = new Map()
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
+const web2_wallet = new ethers.Wallet(masterSetup.web2_PaymentPassport, CONET_MAINNET)
+const PaymentPassport_addr = '0xD426f38a9162A5E6983b8665A60d9a9c8bde42B6'
+const payment_SC = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, web2_wallet)
 
-const paymentReference: Map<string, string> = new Map()
+const Payment_SCPool: ethers.Contract[] = []
+Payment_SCPool.push(payment_SC)
+
+
 
 class conet_dl_server {
 
@@ -95,21 +110,43 @@ class conet_dl_server {
 			switch (event.type) {
 				case 'payment_intent.succeeded': {
 					const paymentIntent: Stripe.PaymentIntent = event.data.object
-					
+
+					if (!paymentIntent.id) {
+						return
+					}
+
 					const pay = await searchPayment(this.stripe, paymentIntent.id, paymentIntent.amount)
-					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! client_reference_id = ${paymentReference.get(paymentIntent.id)}`)
+					if (!pay) {
+						return
+					}
+
+					const successPay = paymentSuccess.get(paymentIntent.id)
+					if (successPay) {
+						return
+					}
+
+					paymentSuccess.set(paymentIntent.id, true)
+					const wallets = paymentReference.get (paymentIntent.id)
+					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! wallets = ${inspect(wallets, false, 3, true)}`)
 					break
 				}
 				
 				case 'checkout.session.completed': {
-					const session = event.data.object
-					const client_reference_id = session.client_reference_id
+					const session: Stripe.Checkout.Session = event.data.object
+					//const client_reference_id = session.client_reference_id
 					const payment_intent = session.payment_intent
-					logger(`checkout.session.completed payment_intent = ${payment_intent} client_reference_id = ${client_reference_id}`)
-					logger(inspect(session, false, 3, true))
-					paymentReference.set(payment_intent, client_reference_id)
+					const walletAddress = session?.metadata?.walletAddress
+					const solanaWallet = session?.metadata?.solanaWallet
+					if ( !payment_intent || typeof payment_intent !== 'string' || !walletAddress||!solanaWallet) {
+						logger(`checkout.session.completed !payment_intent || !walletAddress||!solanaWallet Error!`)
+						break
+					}
+					paymentReference.set(payment_intent, {walletAddress, solanaWallet})
 					break
 				}
+
+				
+
 				default: {
 					// Unexpected event type
 					console.log(`Unhandled event type ${event.type}.`)
@@ -120,6 +157,27 @@ class conet_dl_server {
 			// Return a 200 response to acknowledge receipt of the event
 			logger(inspect(event, false, 3, true))
 			res.status(200).json({received: true}).end()
+		})
+
+		router.post('/payment_stripe',async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/payment_stripe`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
+			const obj = checkSign (message, signMessage)
+			if (!obj || !obj?.walletAddress||!obj?.solanaWallet||!obj?.price) {
+				return res.status(402).json({error: 'No necessary parameters'}).end()
+			}
+			const price = obj.price
+			
 		})
 		
 
@@ -133,15 +191,27 @@ class conet_dl_server {
 }
 
 
+const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
+	const option: Stripe.PaymentLinkCreateParams = {
+		line_items: [{
+			price: price === 299 ? 'price_1R8o0cHIGHEZ9LgI1wJPFVPZ': 'price_1R8p8lHIGHEZ9LgIWBJYbUgl',
+			quantity: 1
+		}],
+		metadata:{walletAddress,solanaWallet}
+		
+	}
+	const paymentIntent = await stripe.paymentLinks.create(option)
+	logger(inspect(paymentIntent, false, 3, true))
+	return paymentIntent
+}
+
 const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: number) => {
 	try {
 		
 		const paymentIntent = await stripe.paymentIntents.retrieve(paymentID)
-		logger(inspect(paymentIntent, false, 3, true))
 		if (paymentIntent.status !== 'succeeded') {
 			return false
 		}
-		
 		return paymentIntent.amount === paymentAmount
 	} catch (ex: any) {
 		return false
@@ -153,7 +223,7 @@ new conet_dl_server()
 
 // 	const id = 'pi_3R8jAhHIGHEZ9LgI18MZHccm'//'pi_3R8ReLHIGHEZ9LgI0cd6KDHB'
 // 	const stripe = new Stripe(masterSetup.stripe_SecretKey)
-// 	const kk = await searchPayment (stripe, id, 249)
+// 	makePaymentLink (stripe, '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 299)
 
 // }
 // test()
