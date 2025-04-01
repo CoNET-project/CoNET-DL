@@ -172,12 +172,15 @@ class conet_dl_server {
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
 			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
+			
 			const obj = checkSign (message, signMessage)
-			if (!obj || !obj?.walletAddress||!obj?.solanaWallet||!obj?.price) {
+			const price = obj?.price
+			if (!obj || !obj?.walletAddress||!obj?.solanaWallet|| (price !== 299 && price !== 2499)) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
-			const price = obj.price
 			
+			const utlObj = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
+			return res.status(200).json({url: utlObj.url}).end()
 		})
 		
 
@@ -198,7 +201,6 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
 			quantity: 1
 		}],
 		metadata:{walletAddress,solanaWallet}
-		
 	}
 	const paymentIntent = await stripe.paymentLinks.create(option)
 	logger(inspect(paymentIntent, false, 3, true))
@@ -217,13 +219,5 @@ const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: n
 		return false
 	}
 }
-new conet_dl_server()
+// new conet_dl_server()
 
-// const test = async () => {
-
-// 	const id = 'pi_3R8jAhHIGHEZ9LgI18MZHccm'//'pi_3R8ReLHIGHEZ9LgI0cd6KDHB'
-// 	const stripe = new Stripe(masterSetup.stripe_SecretKey)
-// 	makePaymentLink (stripe, '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 299)
-
-// }
-// test()
