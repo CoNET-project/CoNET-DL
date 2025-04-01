@@ -42,7 +42,7 @@ const Payment_SCPool: ethers.Contract[] = []
 Payment_SCPool.push(payment_SC)
 
 const payment_waiting_status: Map<string, number> = new Map()
-const payment_waiting_res: Map<string, any[]> = new Map()
+const payment_waiting_res: Map<string, Response[]> = new Map()
 const mintPasswordPool: walletsProcess[]  = []
 
 class conet_dl_server {
@@ -297,7 +297,10 @@ const finishListening = (wallet: string, currentID: number) => {
 	const res = payment_waiting_res.get (wallet)
 	if (res?.length) {
 		for (let i of res) {
-			i.status(200).json({currentID}).end()
+			if (i.writable) {
+				i.status(200).json({currentID}).end()
+			}
+			
 		}
 	}
 	payment_waiting_res.delete(wallet)
@@ -319,7 +322,7 @@ const mintPassport = async () => {
 			Payment_SCPool.push(SC)
 			return mintPassport()
 		}
-		logger(`mintPassport ${obj.walletAddress} $obj.hash`)
+		logger(`mintPassport ${obj.walletAddress} ${obj.hash}`)
 		const ts = await SC.mintPassport(obj.walletAddress, obj.monthly ? 31 : 365, obj.hash)
 		await ts.wait()
 
