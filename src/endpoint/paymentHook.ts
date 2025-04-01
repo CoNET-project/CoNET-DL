@@ -337,7 +337,7 @@ const mintPassport = async () => {
 		//		
 		payment_waiting_status.set(obj.walletAddress, newNFT)
 
-		logger(`mintPassport new NFT is ${lastNFT}`)
+		logger(`mintPassport new NFT is ${newNFT}`)
 		if (typeof _currentExpires !== 'number') {
 			Payment_SCPool.push(SC)
 			return
