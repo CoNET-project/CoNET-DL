@@ -229,17 +229,15 @@ class conet_dl_server {
 
 		router.post('/payment_stripe_waiting', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/payment_stripe_waiting`))
 			let message, signMessage
 			try {
 				message = req.body.message
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
 			
 			const obj = checkSign (message, signMessage)
 			
@@ -249,9 +247,11 @@ class conet_dl_server {
 			
 			const status = payment_waiting_status.get(obj.walletAddress)
 			if (!status) {
+				logger(`/payment_stripe_waiting ${obj.walletAddress} got unknow status! ${status}`)
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
-			res.status(200).json({status }).end()
+			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
+			return res.status(200).json({ status }).end()
 		})
 		
 		router.all ('*', (req: any, res: any) => {
