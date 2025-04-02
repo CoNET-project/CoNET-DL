@@ -143,14 +143,13 @@ class conet_dl_server {
 					const waitingWallet = (): Promise<wallets|null> => new Promise(resolve => {
 						const wallets = paymentReference.get (paymentIntent.id)
 						if (!wallets) {
-							
 							if (++loop > 10 ) {
 								logger(`PaymentIntent ++loop > 10  ERROR! no wallets in paymentReference!`)
 								return resolve(null)
 							}
 							return setTimeout (() => {
 								logger(`PaymentIntent no wallets in paymentReference! try again`)
-								return waitingWallet()
+								return waitingWallet().then(_d => resolve (_d))
 							}, 2000)
 						}
 						return resolve(wallets)
