@@ -373,7 +373,10 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
 			price: price === 299 ? 'price_1R6bdoHIGHEZ9LgIwHsdgVaU': 'price_1R1Y7aHIGHEZ9LgIGffY433h',
 			quantity: 1
 		}],
-		metadata:{walletAddress,solanaWallet}
+		subscription_data: {
+			metadata:{walletAddress,solanaWallet}
+		}
+		
 	}
 	const paymentIntent = await stripe.paymentLinks.create(option)
 	logger(inspect(paymentIntent, false, 3, true))
