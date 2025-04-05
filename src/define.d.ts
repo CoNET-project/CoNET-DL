@@ -59,6 +59,11 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+	apple: {
+		apple_issuerId: string
+		keyId: string
+	}
+	
 	web2_PaymentPassport: string
 	stripe_SecretKey: string
 	passport_codeToClient: string

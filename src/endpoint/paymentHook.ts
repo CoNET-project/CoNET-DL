@@ -6,10 +6,12 @@ import type {Response, Request } from 'express'
 import { inspect } from 'node:util'
 import Stripe from 'stripe'
 import { masterSetup, checkSign} from '../util/util'
+import {readFile} from 'node:fs/promises'
 import {ethers} from 'ethers'
 import web2PaymentABI from './payment_PassportABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
+import { AppStoreServerAPIClient, Environment, SendTestNotificationResponse, SignedDataVerifier } from "@apple/app-store-server-library"
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -18,6 +20,12 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	}
 	return ipaddress
 }
+const issuerId = masterSetup.apple.apple_issuerId
+const keyId = masterSetup.apple.keyId
+const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
+const filePath = "/Users/peter/Downloads/SubscriptionKey_9T5X23LMC6.p8"
+const appleRoot = '/Users/peter/Downloads/AppleIncRootCertificate.cer'
+const environment = Environment.SANDBOX
 
 type wallets = {
 	walletAddress: string
@@ -384,6 +392,12 @@ const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: n
 		return false
 	}
 }
+
 new conet_dl_server()
+
+
+// apple()
+
+
 
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
