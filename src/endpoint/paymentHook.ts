@@ -370,7 +370,7 @@ const mintPassport = async () => {
 const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
 	const option: Stripe.PaymentLinkCreateParams = {
 		line_items: [{
-			price: price === 299 ? 'price_1R8o0cHIGHEZ9LgI1wJPFVPZ': 'price_1R8p8lHIGHEZ9LgIWBJYbUgl',
+			price: price === 299 ? 'price_1R6bdoHIGHEZ9LgIwHsdgVaU': 'price_1R1Y7aHIGHEZ9LgIGffY433h',
 			quantity: 1
 		}],
 		metadata:{walletAddress,solanaWallet}
