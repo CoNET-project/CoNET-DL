@@ -129,7 +129,7 @@ class conet_dl_server {
 			switch (event.type) {
 				case 'invoice.payment_succeeded': {
 					const paymentIntent: Stripe.Invoice = event.data.object
-					return searchInvoices (this.stripe, paymentIntent.id)
+					searchInvoices (this.stripe, paymentIntent.id)
 				}
 				// case 'payment_intent.succeeded': {
 				// 	const paymentIntent: Stripe.PaymentIntent = event.data.object
