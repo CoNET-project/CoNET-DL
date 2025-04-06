@@ -397,12 +397,9 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		const payAmount = paymentIntent.amount_paid
 		logger(inspect(paymentIntent, false, 3, true))
 		const metadata = paymentIntent.subscription_details?.metadata
-		if (!metadata?.solanaWallet||metadata?.walletAddress) {
+		if ( !metadata?.solanaWallet|| !metadata?.walletAddress) {
 			logger(inspect(paymentIntent))
 			return logger(`stripe Invoices Error!`)
-		}
-		if (payAmount === 299) {
-
 		}
 
 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
