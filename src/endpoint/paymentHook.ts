@@ -127,73 +127,78 @@ class conet_dl_server {
 
 			  // Handle the event
 			switch (event.type) {
-				case 'payment_intent.succeeded': {
-					const paymentIntent: Stripe.PaymentIntent = event.data.object
-
-					if (!paymentIntent.id) {
-						break
-					}
-
-					const pay = await searchPayment(this.stripe, paymentIntent.id, paymentIntent.amount)
-					if (!pay) {
-						break
-					}
-
-					const successPay = paymentSuccess.get(paymentIntent.id)
-					if (successPay) {
-						break
-					}
-
-					paymentSuccess.set(paymentIntent.id, true)
-					res.status(200).json({received: true}).end()
-
-					let loop = 0
-					const waitingWallet = (): Promise<wallets|null> => new Promise(resolve => {
-						const wallets = paymentReference.get (paymentIntent.id)
-						if (!wallets) {
-							if (++loop > 10 ) {
-								logger(`PaymentIntent ++loop > 10  ERROR! no wallets in paymentReference!`)
-								return resolve(null)
-							}
-							return setTimeout (() => {
-								logger(`PaymentIntent no wallets in paymentReference! try again`)
-								return waitingWallet().then(_d => resolve (_d))
-							}, 2000)
-						}
-						return resolve(wallets)
-					})
-
-					const wallets = await waitingWallet ()
-
-					if (!wallets) {
-						return
-					}
-
-					console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! wallets = ${inspect(wallets, false, 3, true)}`)
-					mintPasswordPool.push({
-						walletAddress: wallets.walletAddress,
-						solanaWallet: wallets.solanaWallet,
-						monthly: paymentIntent.amount === 299 ? true: false,
-						total: 1,
-						hash: paymentIntent.id
-					})
-					mintPassport()
-					return
+				case 'invoice.payment_succeeded': {
+					const paymentIntent: Stripe.Invoice = event.data.object
+					return searchInvoices (this.stripe, paymentIntent.id)
 				}
+				// case 'payment_intent.succeeded': {
+				// 	const paymentIntent: Stripe.PaymentIntent = event.data.object
+
+				// 	if (!paymentIntent.id) {
+				// 		break
+				// 	}
+
+				// 	const pay = await searchInvoices(this.stripe, paymentIntent.id, paymentIntent.amount)
+				// 	if (!pay) {
+				// 		break
+				// 	}
+
+				// 	const successPay = paymentSuccess.get(paymentIntent.id)
+				// 	if (successPay) {
+				// 		break
+				// 	}
+
+
+				// 	paymentSuccess.set(paymentIntent.id, true)
+				// 	res.status(200).json({received: true}).end()
+
+				// 	let loop = 0
+				// 	const waitingWallet = (): Promise<wallets|null> => new Promise(resolve => {
+				// 		const wallets = paymentReference.get (paymentIntent.id)
+				// 		if (!wallets) {
+				// 			if (++loop > 10 ) {
+				// 				logger(`PaymentIntent ++loop > 10  ERROR! no wallets in paymentReference!`)
+				// 				return resolve(null)
+				// 			}
+				// 			return setTimeout (() => {
+				// 				logger(`PaymentIntent no wallets in paymentReference! try again`)
+				// 				return waitingWallet().then(_d => resolve (_d))
+				// 			}, 2000)
+				// 		}
+				// 		return resolve(wallets)
+				// 	})
+
+				// 	const wallets = await waitingWallet ()
+
+				// 	if (!wallets) {
+				// 		return
+				// 	}
+
+				// 	console.log(`PaymentIntent for ${paymentIntent.id} ${paymentIntent.amount} was successful! wallets = ${inspect(wallets, false, 3, true)}`)
+				// 	mintPasswordPool.push({
+				// 		walletAddress: wallets.walletAddress,
+				// 		solanaWallet: wallets.solanaWallet,
+				// 		monthly: paymentIntent.amount === 299 ? true: false,
+				// 		total: 1,
+				// 		hash: paymentIntent.id
+				// 	})
+				// 	mintPassport()
+				// 	return
+				// }
 				
-				case 'checkout.session.completed': {
-					const session: Stripe.Checkout.Session = event.data.object
-					//const client_reference_id = session.client_reference_id
-					const payment_intent = session.payment_intent
-					const walletAddress = session?.metadata?.walletAddress
-					const solanaWallet = session?.metadata?.solanaWallet
-					if ( !payment_intent || typeof payment_intent !== 'string' || !walletAddress||!solanaWallet) {
-						logger(`checkout.session.completed !payment_intent || !walletAddress||!solanaWallet Error!`)
-						break
-					}
-					paymentReference.set(payment_intent, {walletAddress, solanaWallet})
-					break
-				}
+				// case 'checkout.session.completed': {
+				// 	const session: Stripe.Checkout.Session = event.data.object
+				// 	//const client_reference_id = session.client_reference_id
+				// 	const payment_intent = session.payment_intent
+				// 	const walletAddress = session?.metadata?.walletAddress
+				// 	const solanaWallet = session?.metadata?.solanaWallet
+				// 	if ( !payment_intent || typeof payment_intent !== 'string' || !walletAddress||!solanaWallet) {
+				// 		logger(`checkout.session.completed !payment_intent || !walletAddress||!solanaWallet Error!`)
+				// 		break
+				// 	}
+				// 	paymentReference.set(payment_intent, {walletAddress, solanaWallet})
+				// 	break
+				// }
 
 				
 
@@ -383,15 +388,36 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
 	return paymentIntent.url
 }
 
-const searchPayment = async (stripe: Stripe, paymentID: string, paymentAmount: number) => {
+const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 	try {
 		
-		const paymentIntent = await stripe.paymentIntents.retrieve(paymentID)
-		if (paymentIntent.status !== 'succeeded') {
+		const paymentIntent = await stripe.invoices.retrieve(invoicesID)
+		if (paymentIntent.status !== 'paid') {
 			return false
 		}
-		return paymentIntent.amount === paymentAmount
+		const payAmount = paymentIntent.amount_paid
+		logger(inspect(paymentIntent, false, 3, true))
+		const metadata = paymentIntent.subscription_details?.metadata
+		if (!metadata?.solanaWallet||metadata?.walletAddress) {
+			logger(inspect(paymentIntent))
+			return logger(`stripe Invoices Error!`)
+		}
+		if (payAmount === 299) {
+
+		}
+
+		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
+		mintPasswordPool.push({
+			walletAddress: metadata.walletAddress,
+			solanaWallet: metadata.solanaWallet,
+			monthly: payAmount === 299 ? true: false,
+			total: 1,
+			hash: paymentIntent.id
+		})
+		mintPassport()
+		
 	} catch (ex: any) {
+		logger(ex.message)
 		return false
 	}
 }
@@ -400,7 +426,7 @@ new conet_dl_server()
 
 
 // apple()
-
+// searchInvoices(new Stripe(masterSetup.stripe_SecretKey), 'in_1RAfuNHIGHEZ9LgISZUHJB6f', 299)
 
 
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
