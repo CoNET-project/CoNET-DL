@@ -327,7 +327,6 @@ const mintPassport = async () => {
 		const isHash = await SC.getPayID(obj.hash)
 		if (isHash) {
 			Payment_SCPool.push(SC)
-			payment_waiting_status.set(obj.walletAddress, 0)
 
 			return mintPassport()
 		}
@@ -364,9 +363,9 @@ const mintPassport = async () => {
 		const tx = await SPManagermentcodeToClient._changeActiveNFT(obj.walletAddress, nftID)
 		logger(`mintPassport _changeActiveNFT ${nftID} ${tx.hash}`)
 		await tx.wait()
-	} catch (ex) {
+	} catch (ex: any) {
 		payment_waiting_status.set(obj.walletAddress, 0)
-		logger(`mintPassport Error!`)
+		logger(`mintPassport Error! ${ex.message}`)
 	}
 	Payment_SCPool.push(SC)
 	return mintPassport()
