@@ -265,6 +265,8 @@ class conet_dl_server {
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 			return res.status(200).json({ status }).end()
 		})
+
+		
 		
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
