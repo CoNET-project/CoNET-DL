@@ -69,6 +69,11 @@ const postToServer = (url: string, obj: any) => new Promise(async resolve => {
 })
 
 const conetAPI = async (privateKey: string, path: string, portObject: Record<string, any>) => {
+
+
+	//		portObject 包含 客戶的二把公鑰
+	//		portObject = {walletAddress: string, solanaWallet: string}
+
 	//		使用私鑰創建錢包
 	const wallet = new ethers.Wallet(privateKey)
 
