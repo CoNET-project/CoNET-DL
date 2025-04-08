@@ -6,12 +6,12 @@ import type {Response, Request } from 'express'
 import { inspect } from 'node:util'
 import Stripe from 'stripe'
 import { masterSetup, checkSign} from '../util/util'
-import {readFile} from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import {ethers} from 'ethers'
 import web2PaymentABI from './payment_PassportABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
-import { AppStoreServerAPIClient, Environment, SendTestNotificationResponse, SignedDataVerifier } from "@apple/app-store-server-library"
+import { AppStoreServerAPIClient, Environment, GetTransactionHistoryVersion, ReceiptUtility, Order, ProductType, HistoryResponse, TransactionHistoryRequest, SignedDataVerifier } from "@apple/app-store-server-library"
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -24,7 +24,8 @@ const issuerId = masterSetup.apple.apple_issuerId
 const keyId = masterSetup.apple.keyId
 const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
 const filePath = "/Users/peter/Downloads/SubscriptionKey_9T5X23LMC6.p8"
-const appleRoot = '/Users/peter/Downloads/AppleIncRootCertificate.cer'
+const appleRoot = ['/Users/peter/Downloads/AppleIncRootCertificate.cer', '/Users/peter/Downloads/AppleRootCA-G3.cer', '/Users/peter/Downloads/AppleRootCA-G2.cer']
+
 const environment = Environment.SANDBOX
 
 type wallets = {
@@ -45,12 +46,12 @@ const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.netw
 const web2_wallet = new ethers.Wallet(masterSetup.web2_PaymentPassport, CONET_MAINNET)
 const PaymentPassport_addr = '0xD426f38a9162A5E6983b8665A60d9a9c8bde42B6'
 const payment_SC = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, web2_wallet)
-
+const payment_SC_readOnly = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, CONET_MAINNET)
 const Payment_SCPool: ethers.Contract[] = []
 Payment_SCPool.push(payment_SC)
 
 const payment_waiting_status: Map<string, number> = new Map()
-const mintPasswordPool: walletsProcess[]  = []
+const mintPassportPool: walletsProcess[]  = []
 
 class conet_dl_server {
 
@@ -106,6 +107,17 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
+        router.post('/applePayUser', async (req: any, res: any) => {
+            const data = req.body
+            if (!data.receipt || !data.walletAddress ||!data.solanaWallet) {
+                return res.status(403).json({error: 'unsupport data format!'}).end()
+            }
+            const ret = await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+            if (ret) {
+                return res.status(200).json({received: true}).end()
+            }
+            res.status(403).json({error: 'PURCHASE Error!'}).end()
+        })
 
 		router.post('/stripeHook', Express.raw({type: 'application/json'}), async (req: any, res: any) => {
 			let event = req.body
@@ -266,11 +278,24 @@ class conet_dl_server {
 			return res.status(200).json({ status }).end()
 		})
 
-		
+        router.post('/applePay', async (req: any, res: any) => {
+            const body = req.body
+            logger(`applePay!`)
+            logger(inspect(body, false, 3, true))
+            res.status(200).json({received: true}).end()
+        })
+
+
+
+
+        router.post('/payment_stripe_waiting', async (req: any, res: any) => {
+
+        })
+
 		
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${inspect(req.body, false, 3, true)}`))
 			res.status(404).end()
 			return res.socket?.end().destroy()
 		})
@@ -315,21 +340,23 @@ const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: Big
 
 
 const mintPassport = async () => {
-	const obj = mintPasswordPool.shift()
+	const obj = mintPassportPool.shift()
 	if (!obj) {
 		return
 	}
+
 	const SC = Payment_SCPool.shift()
 	if (!SC) {
-		mintPasswordPool.push(obj)
+		mintPassportPool.push(obj)
 		return
 	}
+
 	logger(`mintPassport ${obj.walletAddress} ${obj.hash}`)
 	try {
 		const isHash = await SC.getPayID(obj.hash)
+        //  already mint passwork
 		if (isHash) {
 			Payment_SCPool.push(SC)
-
 			return mintPassport()
 		}
 		
@@ -405,7 +432,7 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		}
 
 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
-		mintPasswordPool.push({
+		mintPassportPool.push({
 			walletAddress: metadata.walletAddress,
 			solanaWallet: metadata.solanaWallet,
 			monthly: payAmount === 299 ? true: false,
@@ -422,9 +449,80 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 
 new conet_dl_server()
 
+const appleRootCAs = appleRoot.map(n => readFileSync(n))
 
-// apple()
-// searchInvoices(new Stripe(masterSetup.stripe_SecretKey), 'in_1RAfuNHIGHEZ9LgISZUHJB6f', 299)
+const appleVerificationUsage = async (transactionPayload: string): Promise<false|{plan: '001'|'002', hash: string}> => {
+    const enableOnlineChecks = true
+    const appAppleId = 6740261324 // appAppleId is required when the environment is Production
 
+    const verifier = new SignedDataVerifier( appleRootCAs, enableOnlineChecks, environment, bundleId, appAppleId)
+    try {
+		const verifiedTransaction = await verifier.verifyAndDecodeTransaction(transactionPayload)
+        logger(inspect(verifiedTransaction, false, 3, true))
+        const plan = verifiedTransaction.productId
+        const hash = verifiedTransaction.transactionId
+        //      support PURCHASE 
+        //      RENEWAL not support
+        if ((plan == '001' || plan == '002') && hash && verifiedTransaction.transactionReason === 'PURCHASE') {
+            const ret = await checkApplePayTransactionId(hash)
+            if (ret) {
+                return {plan, hash}
+            }
+        }
+    } catch (ex: any) {
+        logger(`appleVerificationUsage Error! ${ex.message}`)
+    }
+    return false
+    
+}
 
+const checkApplePayTransactionId = async (id: string) => {
+    try {
+        const isHash = await payment_SC_readOnly.getPayID(id)
+        return !isHash
+    } catch (ex) {
+        
+    }
+    return null
+}
+
+const appleReceipt = async (receipt: string, walletAddress: string, solanaWallet: string): Promise<boolean> => {
+	const encodedKey = readFileSync(filePath, 'binary')
+	const client = new AppStoreServerAPIClient(encodedKey, keyId, issuerId, bundleId, environment)
+	const receiptUtil = new ReceiptUtility()
+	const transactionId = receiptUtil.extractTransactionIdFromAppReceipt(receipt)
+	if (transactionId != null) {
+		const transactionHistoryRequest: TransactionHistoryRequest = {
+			sort: Order.ASCENDING,
+			revoked: false,
+			productTypes: [ProductType.AUTO_RENEWABLE]
+		}
+		let response: HistoryResponse | null = null
+		do {
+			const revisionToken = response && response?.revision !== null && response?.revision !== undefined ? response.revision : null
+			response = await client.getTransactionHistory(transactionId, revisionToken, transactionHistoryRequest, GetTransactionHistoryVersion.V2)
+			if (response.signedTransactions) {
+               const process = response.signedTransactions.map(n => appleVerificationUsage(n))
+			   const resoule = await Promise.all(process)
+               resoule.forEach(n => {
+                    if (n) {
+                        logger(`appleReceipt start PURCHASE success`)
+                        mintPassportPool.push({
+                            walletAddress, solanaWallet, total: 1,
+                            monthly: n.plan === '001' ? true : false,
+                            hash: n.hash
+                        })
+                        mintPassport()
+                        return true
+                    }
+               })
+			}
+		} while (response.hasMore)
+	}
+    return false
+}
+
+// appleReceipt(kk, kk1, kk2)
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
+
+//	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/applePayUser
