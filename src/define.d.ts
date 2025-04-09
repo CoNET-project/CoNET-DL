@@ -62,6 +62,8 @@ interface ICoNET_DL_masterSetup {
 	apple: {
 		apple_issuerId: string
 		keyId: string
+        appleRootCA: string[]
+        encodedKeyPath: string
 	}
 	
 	web2_PaymentPassport: string

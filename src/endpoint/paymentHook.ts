@@ -23,8 +23,8 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 const issuerId = masterSetup.apple.apple_issuerId
 const keyId = masterSetup.apple.keyId
 const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
-const filePath = "/Users/peter/Downloads/SubscriptionKey_9T5X23LMC6.p8"
-const appleRoot = ['/Users/peter/Downloads/AppleIncRootCertificate.cer', '/Users/peter/Downloads/AppleRootCA-G3.cer', '/Users/peter/Downloads/AppleRootCA-G2.cer']
+const filePath = masterSetup.apple.encodedKeyPath
+const appleRoot = masterSetup.apple.appleRootCA
 
 const environment = Environment.SANDBOX
 
