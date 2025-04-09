@@ -40,8 +40,7 @@ type walletsProcess = {
 	total: number
 	hash: string
 }
-const paymentReference: Map<string, wallets> = new Map()
-const paymentSuccess: Map<string, boolean> = new Map()
+
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 const web2_wallet = new ethers.Wallet(masterSetup.web2_PaymentPassport, CONET_MAINNET)
 const PaymentPassport_addr = '0xD426f38a9162A5E6983b8665A60d9a9c8bde42B6'
@@ -112,11 +111,9 @@ class conet_dl_server {
             if (!data.receipt || !data.walletAddress ||!data.solanaWallet) {
                 return res.status(403).json({error: 'unsupport data format!'}).end()
             }
-            const ret = await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
-            if (ret) {
-                return res.status(200).json({received: true}).end()
-            }
-            res.status(403).json({error: 'PURCHASE Error!'}).end()
+            
+            await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+			return res.status(200).json({received: true}).end()
         })
 
 		router.post('/stripeHook', Express.raw({type: 'application/json'}), async (req: any, res: any) => {
@@ -301,6 +298,7 @@ class conet_dl_server {
 		})
 	}
 }
+
 const ExpiresDays = 1000 * 60 * 60 * 24 * 7
 
 const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
@@ -432,8 +430,10 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		}
 
 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
+        const walletAddress = metadata.walletAddress.toLowerCase()
+        payment_waiting_status.set(walletAddress, 1)
 		mintPassportPool.push({
-			walletAddress: metadata.walletAddress,
+			walletAddress,
 			solanaWallet: metadata.solanaWallet,
 			monthly: payAmount === 299 ? true: false,
 			total: 1,
@@ -486,7 +486,7 @@ const checkApplePayTransactionId = async (id: string) => {
     return null
 }
 
-const appleReceipt = async (receipt: string, walletAddress: string, solanaWallet: string): Promise<boolean> => {
+const appleReceipt = async (receipt: string, _walletAddress: string, solanaWallet: string): Promise<boolean> => {
 	const encodedKey = readFileSync(filePath, 'binary')
 	const client = new AppStoreServerAPIClient(encodedKey, keyId, issuerId, bundleId, environment)
 	const receiptUtil = new ReceiptUtility()
@@ -506,7 +506,9 @@ const appleReceipt = async (receipt: string, walletAddress: string, solanaWallet
 			   const resoule = await Promise.all(process)
                resoule.forEach(n => {
                     if (n) {
-                        logger(`appleReceipt start PURCHASE success`)
+                        const walletAddress = _walletAddress.toLowerCase()
+                        payment_waiting_status.set(walletAddress, 1)
+                        logger(`appleReceipt start PURCHASE success ${walletAddress}`)
                         mintPassportPool.push({
                             walletAddress, solanaWallet, total: 1,
                             monthly: n.plan === '001' ? true : false,
