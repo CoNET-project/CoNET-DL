@@ -434,8 +434,9 @@ const mintPassport = async () => {
 	return mintPassport()
 }
 
-const StripeMonthlyID = 'prod_S6eVDBVXqU1O0a'
-const StripeAnnualID = 'prod_S6eXLMxJQ1VpCy'
+const StripeMonthlyID = 'price_1RCRC4FmCrk3Nr7LyuweZ0bn'
+const StripeAnnualID = 'price_1RCREGFmCrk3Nr7LeEDA5JIb'
+
 const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
 	const option: Stripe.PaymentLinkCreateParams = {
 		line_items: [{
@@ -485,14 +486,16 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 	}
 }
 
-new conet_dl_server()
+// new conet_dl_server()
 
-const appleRootCAs = appleRoot.map(n => readFileSync(n))
 
+let appleRootCAs: any = null
 const appleVerificationUsage = async (transactionPayload: string): Promise<false|{plan: '001'|'002', hash: string}> => {
     const enableOnlineChecks = true
     const appAppleId = 6740261324 // appAppleId is required when the environment is Production
-
+	if (!appleRootCAs) {
+		appleRootCAs = appleRoot.map(n => readFileSync(n))
+	}
     const verifier = new SignedDataVerifier( appleRootCAs, enableOnlineChecks, environment, bundleId, appAppleId)
     try {
 		const verifiedTransaction = await verifier.verifyAndDecodeTransaction(transactionPayload)
@@ -562,6 +565,15 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
     return false
 }
 
+
+const testPaymentLink = async() => {
+	const walletAddress = ''
+	const solanaWallet = ''
+	const stripe = new Stripe(masterSetup.stripe_SecretKey)
+	const kk = await makePaymentLink(stripe, walletAddress, solanaWallet, 299)
+}
+
+testPaymentLink()
 // appleReceipt(kk, kk1, kk2)
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
 
