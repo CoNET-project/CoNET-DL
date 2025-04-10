@@ -486,7 +486,7 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 	}
 }
 
-// new conet_dl_server()
+new conet_dl_server()
 
 
 let appleRootCAs: any = null
