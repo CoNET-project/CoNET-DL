@@ -26,6 +26,8 @@ const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
 const filePath = masterSetup.apple.encodedKeyPath
 const appleRoot = masterSetup.apple.appleRootCA
 
+const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
+
 const environment = Environment.SANDBOX
 
 type wallets = {
@@ -115,6 +117,47 @@ class conet_dl_server {
             await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
 			return res.status(200).json({received: true}).end()
         })
+
+
+		router.post('/paypal_fx168', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+
+			//		body === { message, signMessage}
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			//		
+			const obj = checkSign (message, signMessage)
+
+			//		obj === {walletAddress: '168 public key', data {walletAddress: 'client public KEY', solanaWallet: 'client solana public key'}}
+
+			const data = obj?.data
+			if (!obj || obj?.walletAddress !== fx168PublicKey || !data?.walletAddress || !data?.solanaWallet || data?.type !== '1' || data?.type !== '2' || data?.hash ) {
+				return res.status(402).json({error: 'No necessary parameters'}).end()
+			}
+
+			//	發行NFT 進程
+			//
+
+			payment_waiting_status.set(data.walletAddress, 1)
+			
+			mintPassportPool.push({
+				walletAddress: data.walletAddress,
+				solanaWallet:data.solanaWallet,
+				monthly: data?.type === '1'?  true: false,
+				total: 1,
+				hash: data.hash
+			})
+
+			res.status(200).json({success: true})
+
+		})
 
 		router.post('/stripeHook', Express.raw({type: 'application/json'}), async (req: any, res: any) => {
 			let event = req.body
@@ -280,13 +323,6 @@ class conet_dl_server {
             logger(`applePay!`)
             logger(inspect(body, false, 3, true))
             res.status(200).json({received: true}).end()
-        })
-
-
-
-
-        router.post('/payment_stripe_waiting', async (req: any, res: any) => {
-
         })
 
 		
