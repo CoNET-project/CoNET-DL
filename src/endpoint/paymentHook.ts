@@ -573,7 +573,7 @@ const testPaymentLink = async() => {
 	const kk = await makePaymentLink(stripe, walletAddress, solanaWallet, 299)
 }
 
-testPaymentLink()
+// testPaymentLink()
 // appleReceipt(kk, kk1, kk2)
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
 
