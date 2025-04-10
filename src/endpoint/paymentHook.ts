@@ -287,7 +287,7 @@ class conet_dl_server {
 			}
 			
 			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
-			payment_waiting_status.set(obj.walletAddress, 1)
+			payment_waiting_status.set(obj.walletAddress.toLowerCase(), 1)
 			return res.status(200).json({url}).end()
 		})
 
@@ -434,10 +434,12 @@ const mintPassport = async () => {
 	return mintPassport()
 }
 
+const StripeMonthlyID = 'prod_S6eVDBVXqU1O0a'
+const StripeAnnualID = 'prod_S6eXLMxJQ1VpCy'
 const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
 	const option: Stripe.PaymentLinkCreateParams = {
 		line_items: [{
-			price: price === 299 ? 'price_1R6bdoHIGHEZ9LgIwHsdgVaU': 'price_1R1Y7aHIGHEZ9LgIGffY433h',
+			price: price === 299 ? StripeMonthlyID: StripeAnnualID,
 			quantity: 1
 		}],
 		subscription_data: {
