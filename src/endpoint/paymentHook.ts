@@ -138,7 +138,7 @@ class conet_dl_server {
 			//		obj === {walletAddress: '168 public key', data {walletAddress: 'client public KEY', solanaWallet: 'client solana public key'}}
 
 			const data = obj?.data
-			if (!obj || obj?.walletAddress !== fx168PublicKey || !data?.walletAddress || !data?.solanaWallet || data?.type !== '1' || data?.type !== '2' || data?.hash ) {
+			if (!obj || obj?.walletAddress !== fx168PublicKey || !data?.walletAddress || !data?.solanaWallet || (data?.type !== '1' && data?.type !== '2') || !data?.hash ) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
 
@@ -146,7 +146,7 @@ class conet_dl_server {
 			//
 
 			payment_waiting_status.set(data.walletAddress, 1)
-			
+
 			mintPassportPool.push({
 				walletAddress: data.walletAddress,
 				solanaWallet:data.solanaWallet,
