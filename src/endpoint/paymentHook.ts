@@ -154,7 +154,7 @@ class conet_dl_server {
 				total: 1,
 				hash: data.hash
 			})
-
+			mintPassport()
 			res.status(200).json({success: true})
 
 		})
