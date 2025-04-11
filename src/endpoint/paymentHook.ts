@@ -371,7 +371,7 @@ const mintPassport = async () => {
 		}
 
 		const currentNFT: BigInt = await SC.getCurrntPasspurtNumber()
-        payment_waiting_status.set(obj.walletAddress, parseInt(currentNFT.toString() + 1))
+        payment_waiting_status.set(obj.walletAddress, parseInt(currentNFT.toString()) + 1)
 		const ts = await SC.mintPassportAndActive(obj.walletAddress, obj.monthly ? 32 : 372, obj.hash)
 		logger(`mintPassport ${ts.hash}`)
 		await ts.wait()
