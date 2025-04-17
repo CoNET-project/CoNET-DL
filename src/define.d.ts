@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    solana_return_manager: string
 	apple: {
 		apple_issuerId: string
 		keyId: string
@@ -447,4 +448,9 @@ interface spOracle {
 	sp999: string
 	sp9999: string
 	so: string
+}
+
+interface OracleData {
+	timeStamp: number
+	data: spOracle| null
 }

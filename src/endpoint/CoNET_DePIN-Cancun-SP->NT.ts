@@ -57,10 +57,7 @@ const SP_purchase_Failed: {
 	amount: string
 }[] = []
 
-interface OracleData {
-	timeStamp: number
-	data: spOracle| null
-}
+
 
 let oracleData: OracleData = {
 	timeStamp: 0,
