@@ -17,6 +17,7 @@ import Bs58 from 'bs58'
 import { Connection, PublicKey, Keypair,Transaction, sendAndConfirmTransaction, SystemProgram, SendOptions, ComputeBudgetProgram, TransactionConfirmationStrategy } from "@solana/web3.js"
 import {getSimulationComputeUnits} from "@solana-developers/helpers"
 import SP_Oracle_ABI from './SP_OracleABI.json'
+import SP_Reward_ABI from './spReward_ABI.json'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -246,6 +247,42 @@ class conet_dl_server {
             res.status(200).json({received: true}).end()
         })
 
+		router.post('/spReward', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/spReward`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			logger(Colors.magenta(`/spReward`), message, signMessage)
+			
+			const obj = checkSign (message, signMessage)
+			const price = obj?.price
+			if (!obj || !obj?.walletAddress||!obj?.solanaWallet) {
+				return res.status(402).json({error: 'No necessary parameters'}).end()
+			}
+			
+			const status = await spRewardCheck(obj.walletAddress, obj.solanaWallet)
+
+            if (!status) {
+                return res.status(403).json({error: 'Not available'}).end()
+            }
+            payment_waiting_status.set(obj.walletAddress, 1)
+
+            reword_pool.push({
+                wallet: obj.walletAddress,
+                solana: obj.solanaWallet
+            })
+            sp_reword_process()
+
+			return res.status(200).json({success: true}).end()
+		})
+
 		
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -254,6 +291,54 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 	}
+}
+const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)
+const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
+const sp_reword_contract = new ethers.Contract(sp_reword_address, SP_Reward_ABI, wallet_sp_reword)
+
+const sp_reword_sc_pool: ethers.Contract[] = []
+sp_reword_sc_pool.push(sp_reword_contract)
+
+const reword_pool: {wallet: string, solana: string}[] = []
+
+
+const sp_reword_process = async () => {
+    const SC = sp_reword_sc_pool.shift()
+    if (!SC) {
+        return
+    }
+    const obj = reword_pool.shift()
+    if (!obj) {
+        sp_reword_sc_pool.push(SC)
+        return
+    }
+
+    try {
+        const [tx, currentNFT] = await Promise.all([
+            sp_reword_contract.mintReword(obj.wallet, obj.solana),
+            payment_SC.getCurrntPasspurtNumber()
+        ])
+        
+        await tx.wait()
+        logger(`sp_reword_process ${obj.wallet}:${obj.solana} success, tx= ${tx.hash}`)
+        payment_waiting_status.set(obj.wallet, parseInt(currentNFT.toString()) + 1)
+
+    } catch (ex) {
+        logger(Colors.red(`sp_reword_process Error! ${obj.wallet} `))
+        payment_waiting_status.set(obj.wallet, 0)
+    }
+
+    sp_reword_sc_pool.push(SC)
+    return sp_reword_process()
+}
+
+const spRewardCheck = async (wallet: string, solana: string) => {
+    try {
+        const status = await sp_reword_contract.isReadyReword(wallet, solana)
+        return status
+    } catch (ex) {
+        return false
+    }
 }
 
 const ExpiresDays = 1000 * 60 * 60 * 24 * 7

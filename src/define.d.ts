@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    sp_reword: string
     solana_return_manager: string
 	apple: {
 		apple_issuerId: string
