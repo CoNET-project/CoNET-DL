@@ -402,7 +402,7 @@ const spRewardCheck = async (wallet: string, solana: string) => {
         if (balance < price) {
             return false
         }
-        
+
         return status
     } catch (ex) {
         return false
@@ -1004,7 +1004,7 @@ const returnSP_Pool_process = async () => {
 
 
 
-// new conet_dl_server()
+new conet_dl_server()
 
 // const test = async () => {
 //     const balance = await getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
