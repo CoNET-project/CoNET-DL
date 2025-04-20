@@ -18,6 +18,7 @@ import { Connection, PublicKey, Keypair,Transaction, sendAndConfirmTransaction, 
 import {getSimulationComputeUnits} from "@solana-developers/helpers"
 import SP_Oracle_ABI from './SP_OracleABI.json'
 import SP_Reward_ABI from './spReward_ABI.json'
+import {request as HTTPS_Request, RequestOptions} from 'node:https'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -59,6 +60,54 @@ Payment_SCPool.push(payment_SC)
 
 const payment_waiting_status: Map<string, number> = new Map()
 const mintPassportPool: walletsProcess[]  = []
+
+const HTTPS_PostTohost_JSON = async (host: string, path: string, obj: any) => new Promise(async resolve => {
+    
+    const option: RequestOptions = {
+        hostname: host,
+        path,
+        port: 443,
+        method: 'POST',
+        protocol: 'https:',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }
+    
+    const req = HTTPS_Request (option, res => {
+        if (res.statusCode !== 200) {
+            return resolve (false)
+        }
+        let data = ''
+        res.on('data', _data => {
+            data += _data.toString()
+        })
+        
+        res.once('end', () => {
+            if (!data) {
+                return resolve (true)
+            }
+            try {
+                const ret = JSON.parse(data)
+                return resolve (ret)
+            } catch (ex) {
+                return resolve (null)
+            }
+        })
+        res.once('error', err => {
+            logger(`HTTPS_PostTohost_JSON on Error`, err.message)
+        })
+
+    })
+
+    req.once('error', err => {
+        logger(`HTTPS_PostTohost_JSON HTTPS_Request on Error`, err.message)
+        return resolve (false) 
+    })
+
+    req.write(JSON.stringify(obj))
+    req.end()
+})
 
 class conet_dl_server {
 
@@ -249,7 +298,7 @@ class conet_dl_server {
 
 		router.post('/spReward', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/spReward`))
+			
 			let message, signMessage
 			try {
 				message = req.body.message
@@ -270,8 +319,10 @@ class conet_dl_server {
 			const status = await spRewardCheck(obj.walletAddress, obj.solanaWallet)
 
             if (!status) {
+
                 return res.status(403).json({error: 'Not available'}).end()
             }
+
             payment_waiting_status.set(obj.walletAddress, 1)
 
             reword_pool.push({
@@ -317,6 +368,7 @@ const sp_reword_process = async () => {
         const [tx, currentNFT] = await Promise.all([
             sp_reword_contract.mintReword(obj.wallet, obj.solana),
             payment_SC.getCurrntPasspurtNumber()
+            
         ])
         
         await tx.wait()
@@ -332,9 +384,25 @@ const sp_reword_process = async () => {
     return sp_reword_process()
 }
 
+
 const spRewardCheck = async (wallet: string, solana: string) => {
+
     try {
-        const status = await sp_reword_contract.isReadyReword(wallet, solana)
+
+        const [status, balance] = await Promise.all([
+            sp_reword_contract.isReadyReword(wallet, solana),
+            getBalance_SP(solana),
+            getOracle()
+        ])
+        if (!oracleData.data) {
+            return false
+        }
+
+        const price = parseInt(oracleData.data?.sp2499)
+        if (balance < price) {
+            return false
+        }
+        
         return status
     } catch (ex) {
         return false
@@ -694,6 +762,7 @@ let oracleData: OracleData = {
 	data:null
 }
 const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
+const SP_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
 const returnPool: {
 	from: string
 	SP_amount: string
@@ -839,6 +908,32 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     // }
 }
 
+const getBalance_SP = async (solanaWallet: string) => {
+    const payload = {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccountsByOwner",
+        params: [
+            solanaWallet,
+            { programId: SP_PROGRAM_ID },
+            { encoding: "jsonParsed" },
+        ],
+    }
+    const ret: any = await HTTPS_PostTohost_JSON('api.mainnet-beta.solana.com', '/', payload)
+    const tokenAccounts = ret?.result?.value ?? [];
+    let balance = 0
+    for (let account of tokenAccounts) {
+      const info = account.account.data.parsed.info;
+      if (info.mint === SP_address) {
+        balance = info.tokenAmount.uiAmount; // Return balance in tokens
+        logger(inspect(info.tokenAmount, false, 3, true))
+        return balance
+      }
+    }
+    return 0
+
+}
+
 const sleepWaiting = (second: number) => new Promise(resolve => {
     setTimeout(() => {
         resolve(true)
@@ -909,8 +1004,12 @@ const returnSP_Pool_process = async () => {
 
 
 
-new conet_dl_server()
+// new conet_dl_server()
 
+// const test = async () => {
+//     const balance = await getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+//     logger(inspect(balance, false, 3, true))
+// }
 
 
 // const testPaymentLink = async() => {
