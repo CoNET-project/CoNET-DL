@@ -218,7 +218,7 @@ let EPOCH_DATA: iEPOCH_DATA
 
 class conet_dl_server {
 
-	private PORT = 8008
+	private PORT = 8003
 	private serverID = ''
 
 	public CNTP_manager = new CNTP_TicketManager_class ([masterSetup.gameCNTPAdmin[0]], 1000)
