@@ -149,7 +149,7 @@ const getLocalhostData = async (path: string, obj: any, callback: (data: any) =>
 	})
 
 	req.once('error', (e) => {
-		console.error(`postLocalhost to master on Error! ${e.message}`)
+		console.error(`postLocalhost ${path} to master on Error! ${e.message}`)
 	})
 
 	req.write(JSON.stringify(obj))
