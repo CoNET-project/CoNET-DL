@@ -394,6 +394,7 @@ const spRewardCheck = async (wallet: string, solana: string) => {
             getBalance_SP(solana),
             getOracle()
         ])
+
         if (!oracleData.data) {
             return false
         }
@@ -922,8 +923,10 @@ const getBalance_SP = async (solanaWallet: string) => {
     const ret: any = await HTTPS_PostTohost_JSON('api.mainnet-beta.solana.com', '/', payload)
     const tokenAccounts = ret?.result?.value ?? [];
     let balance = 0
+    logger(inspect(tokenAccounts, false, 4, true))
     for (let account of tokenAccounts) {
       const info = account.account.data.parsed.info;
+
       if (info.mint === SP_address) {
         balance = info.tokenAmount.uiAmount; // Return balance in tokens
         logger(inspect(info.tokenAmount, false, 3, true))
@@ -1004,13 +1007,16 @@ const returnSP_Pool_process = async () => {
 
 
 
-new conet_dl_server()
+// new conet_dl_server()
 
-// const test = async () => {
-//     const balance = await getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
-//     logger(inspect(balance, false, 3, true))
-// }
+const test = async () => {
+    // const balance = await getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+    // logger(inspect(balance, false, 3, true))
 
+    const kk = await spRewardCheck ('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+    logger(inspect(kk, false, 3, true))
+}
+getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 
 // const testPaymentLink = async() => {
 // 	const walletAddress = ''

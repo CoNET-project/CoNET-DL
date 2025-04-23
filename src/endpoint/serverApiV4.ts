@@ -880,3 +880,4 @@ const checkFreePassport = async (wallet: string) => {
 
 
 export default conet_dl_server_v4
+new conet_dl_server_v4()
