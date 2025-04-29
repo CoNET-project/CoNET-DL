@@ -20,7 +20,6 @@ const sslOptions: TLSSocketOptions = {
 	rejectUnauthorized: masterSetup.Cassandra.certificate.rejectUnauthorized
 }
 
-
 const option = {
 	contactPoints : masterSetup.Cassandra.databaseEndPoints,
 	localDataCenter: 'dc1',

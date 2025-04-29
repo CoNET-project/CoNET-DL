@@ -19,6 +19,8 @@ import {getSimulationComputeUnits} from "@solana-developers/helpers"
 import SP_Oracle_ABI from './SP_OracleABI.json'
 import SP_Reward_ABI from './spReward_ABI.json'
 import {request as HTTPS_Request, RequestOptions} from 'node:https'
+import GuardianOracle_ABI from './GuardianOracleABI.json'
+import {v4} from 'uuid'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -32,8 +34,12 @@ const keyId = masterSetup.apple.keyId
 const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
 const filePath = masterSetup.apple.encodedKeyPath
 const appleRoot = masterSetup.apple.appleRootCA
+const Cancun_provide = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 
 const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
+
+const oracleSC_addr = '0x0Ac28e301FeE0f60439675594141BEB53853f7b9'
+const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, Cancun_provide)
 const cryptoPayWallet = ethers.Wallet.fromPhrase(masterSetup.cryptoPayWallet)
 const environment = Environment.SANDBOX
 
@@ -109,6 +115,32 @@ const HTTPS_PostTohost_JSON = async (host: string, path: string, obj: any) => ne
     req.end()
 })
 
+const oracle = {
+    bnb: 0,
+    eth: 0
+}
+const oracolDeman = async () => {
+    await oracolPrice()
+    setTimeout(() => {
+        oracolDeman()
+    }, 15 * 1000 * 60)
+}
+
+const oracolPrice = async () => {
+    const assets = ['bnb', 'eth']
+	const process: any[] = []
+	assets.forEach(n =>{
+		process.push (oracleSC.GuardianPrice(n))
+	})
+
+	const price = await Promise.all(process)
+    const bnb = ethers.formatEther(price[0])
+    const eth = ethers.formatEther(price[1])
+
+    oracle.bnb = parseFloat(bnb)
+    oracle.eth = parseFloat(eth)
+}
+
 class conet_dl_server {
 
 	private PORT = 8005
@@ -116,6 +148,7 @@ class conet_dl_server {
 	private initSetupData = async () => {
 		this.startServer()
         getOracle()
+        oracolDeman()
 	}
 
 	constructor () {
@@ -308,12 +341,16 @@ class conet_dl_server {
                 return res.end(error)
             }
 
-            const result = await getCryptoPay(agentWallet, cryptoName)
-            if (!result) {
+            const wallet = await getCryptoPay(agentWallet, cryptoName)
+            const transferNumber = getPriceFromCryptoName(cryptoName)
+            if (!wallet|| !transferNumber) {
                 return res.end(error)
             }
             
-            res.json({success: true, wallet: result}).end()
+            const paymentUUID = v4()
+            listenTransfer(wallet, paymentUUID, transferNumber, cryptoName)
+
+            res.json({success: true, wallet, paymentUUID, transferNumber}).end()
         })
 
 		router.post('/spReward', async (req: any, res: any) => {
@@ -371,6 +408,25 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
+const getPriceFromCryptoName = (cryptoName: string) => {
+    switch (cryptoName) {
+        case 'BNB': {
+            return (24.99/oracle.bnb).toFixed(6)
+        }
+        case 'BNB USDT': {
+            return '24.99'
+        }
+        default: {
+            return ''
+        }
+    }
+}
+
+const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
+const listenTransfer = (wallet: string, uuid: string, price: string, cryptoName: string) => {
+
+}
+
 const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
     const agentWallet = _agentWallet.toString()
     const index = agentWalletWhiteList.findIndex(n => n === agentWallet)
@@ -389,7 +445,6 @@ const sp_reword_sc_pool: ethers.Contract[] = []
 sp_reword_sc_pool.push(sp_reword_contract)
 
 const reword_pool: {wallet: string, solana: string}[] = []
-
 
 const sp_reword_process = async () => {
     const SC = sp_reword_sc_pool.shift()
@@ -421,7 +476,6 @@ const sp_reword_process = async () => {
     sp_reword_sc_pool.push(SC)
     return sp_reword_process()
 }
-
 
 const spRewardCheck = async (wallet: string, solana: string) => {
 
@@ -1046,7 +1100,7 @@ const returnSP_Pool_process = async () => {
 
 
 
-new conet_dl_server()
+// new conet_dl_server()
 
 // const test = async () => {
 //     // const balance = await getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
@@ -1074,3 +1128,6 @@ new conet_dl_server()
 
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/applePayUser
 //  curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":1,"method": "getRecentPrioritizationFees","params": [["A8Vk2LsNqKktabs4xPY4YUmYxBoDqcTdxY5em4EQm8v1"]]}'
+
+
+new conet_dl_server ()
