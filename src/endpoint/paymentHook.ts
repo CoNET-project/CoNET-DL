@@ -318,7 +318,7 @@ class conet_dl_server {
                 res.end(error)
             }
             const ret = JSON.stringify({success: true, wallet: result})+'\r\n\r\n'
-            res.socker.write(ret)
+            res.socket.write(ret)
         })
 
 		router.post('/spReward', async (req: any, res: any) => {
