@@ -308,15 +308,17 @@ class conet_dl_server {
             logger(`cryptoPay! ipaddress = ${ipaddress}`)
 			const agentWallet = body?.agentWallet
             const cryptoName = body?.cryptoName
+            const error = JSON.stringify({error: 'Format error!'})
             if (!agentWallet || !cryptoName) {
-                return res.json({error: 'Format error!'}).end()
+                return res.end(error)
             }
 
             const result = await getCryptoPay(agentWallet, cryptoName)
             if (!result) {
-                res.json({error: 'Format error!'}).end()
+                res.end(error)
             }
-            return res.json({success: true}).end()
+
+            return res.json({success: true, wallet: result}).end()
         })
 
 		router.post('/spReward', async (req: any, res: any) => {
@@ -372,7 +374,7 @@ const getNextWallet = () => {
     return cryptoPayWallet.deriveChild(cryptopWaymentWallet++)
 }
 
-const agentWalletWhiteList: string[] = []
+const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
 const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
     const agentWallet = _agentWallet.toString()
