@@ -34,7 +34,7 @@ const filePath = masterSetup.apple.encodedKeyPath
 const appleRoot = masterSetup.apple.appleRootCA
 
 const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
-
+const cryptoPayWallet = ethers.Wallet.fromPhrase(masterSetup.cryptoPayWallet)
 const environment = Environment.SANDBOX
 
 type wallets = {
@@ -296,6 +296,29 @@ class conet_dl_server {
             res.status(200).json({received: true}).end()
         })
 
+		router.post('/cryptoPay', async (req: any, res: any) => {
+            res.writeHead(200, {
+                "Connection": "keep-alive",
+                "Cache-Control": "no-cache",
+                "Content-Type": "text/event-stream",
+            })
+
+            const body = req.body
+            const ipaddress = getIpAddressFromForwardHeader(req)
+            logger(`cryptoPay! ipaddress = ${ipaddress}`)
+			const agentWallet = body?.agentWallet
+            const cryptoName = body?.cryptoName
+            if (!agentWallet || !cryptoName) {
+                return res.json({error: 'Format error!'}).end()
+            }
+
+            const result = await getCryptoPay(agentWallet, cryptoName)
+            if (!result) {
+                res.json({error: 'Format error!'}).end()
+            }
+            return res.json({success: true}).end()
+        })
+
 		router.post('/spReward', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			
@@ -343,6 +366,24 @@ class conet_dl_server {
 		})
 	}
 }
+
+let cryptopWaymentWallet = 0
+const getNextWallet = () => {
+    return cryptoPayWallet.deriveChild(cryptopWaymentWallet++)
+}
+
+const agentWalletWhiteList: string[] = []
+
+const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
+    const agentWallet = _agentWallet.toString()
+    const index = agentWalletWhiteList.findIndex(n => n === agentWallet)
+    if (index < 0) {
+        return false
+    }
+    const listenWallet = getNextWallet()
+    return listenWallet.address
+}
+
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)
 const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
 const sp_reword_contract = new ethers.Contract(sp_reword_address, SP_Reward_ABI, wallet_sp_reword)
@@ -872,11 +913,12 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
             units: 200000
         })
-
+        
         const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
         tx.add (transferInstructionSP)
         tx.add (transferInstructionSol)
 
+		
         const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
         tx.recentBlockhash = latestBlockHash.blockhash
         

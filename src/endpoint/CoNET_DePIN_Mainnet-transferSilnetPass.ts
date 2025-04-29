@@ -88,4 +88,3 @@ const getBlock = async (block: number, wallet: string, contract: ethers.Contract
 }
 
 
-
