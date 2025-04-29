@@ -297,11 +297,6 @@ class conet_dl_server {
         })
 
 		router.post('/cryptoPay', async (req: any, res: any) => {
-            res.writeHead(200, {
-                "Connection": "keep-alive",
-                "Cache-Control": "no-cache",
-                "Content-Type": "text/event-stream",
-            })
 
             const body = req.body
             const ipaddress = getIpAddressFromForwardHeader(req)
@@ -315,10 +310,10 @@ class conet_dl_server {
 
             const result = await getCryptoPay(agentWallet, cryptoName)
             if (!result) {
-                res.end(error)
+                return res.end(error)
             }
-            const ret = JSON.stringify({success: true, wallet: result})+'\n\n'
-            res.write(ret)
+            
+            res.json({success: true, wallet: result}).end()
         })
 
 		router.post('/spReward', async (req: any, res: any) => {
