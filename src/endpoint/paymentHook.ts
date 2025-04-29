@@ -317,7 +317,7 @@ class conet_dl_server {
             if (!result) {
                 res.end(error)
             }
-            const ret = JSON.stringify({success: true, wallet: result})
+            const ret = JSON.stringify({success: true, wallet: result})+'\r\n\r\n'
             res.write(ret)
         })
 
