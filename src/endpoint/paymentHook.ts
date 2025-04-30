@@ -22,7 +22,7 @@ import {request as HTTPS_Request, RequestOptions} from 'node:https'
 import GuardianOracle_ABI from './GuardianOracleABI.json'
 import {v4} from 'uuid'
 import { writeFileSync} from 'node:fs'
-import ERC20_ABI from './CGPNsV7.json'
+import ERC20_ABI from './cCNTPv7.json'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
