@@ -487,7 +487,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number) => new Pr
         }
         waitingList.set(wallet, count)
         return setTimeout(async () => {
-            // logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
+            logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
             return executor( await waitingBNB (walletHD, price))
         }, 15 * 1000)
     }
@@ -497,7 +497,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number) => new Pr
         payment_waiting_status.set (wallet, 0)
         return storePayment(walletHD, price, 'BNB', balance, true)
     }
-
+    logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
     payment_waiting_status.set (wallet, 'asdcascsacasd4')
     storePayment(walletHD, price, 'BNB', balance, false)
 })

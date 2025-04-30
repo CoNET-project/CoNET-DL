@@ -152,6 +152,6 @@ const getBNB_UST = async (wallet:string) => {
     logger(inspect(bb, false, 3, true))
 }
 
-// getBNB_UST('0x05ed84EAca46686f23a6aC4463A1de1978895fC5')
+getBNB_UST('0x83a77a20d98179b2445f5b43ade947b4b368f4be')
 
 // createWallet()
