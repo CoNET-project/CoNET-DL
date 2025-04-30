@@ -463,7 +463,7 @@ const waitingBNB = (wallet: ethers.HDNodeWallet, price: number) => new Promise(a
         return waitingList.set(wallet.address.toLowerCase(), setTimeout(async () => {
             logger(`waitingBNB ${wallet.address.toLowerCase()} is ZERO do next waiting!`)
             return executor(await waitingBNB (wallet, price))
-        }))
+        }, 15 * 1000))
     }
     const balance = parseFloat(ethers.formatEther(_balance))
 
