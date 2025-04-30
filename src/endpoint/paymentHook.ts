@@ -499,7 +499,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number) => new Pr
         return storePayment(walletHD, price, 'BNB', balance, true)
     }
     logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
-    payment_waiting_status.set (wallet, 'asdcascsacasd4')
+    payment_waiting_status.set (wallet, '48VFBgXUx305o83Kb7pXLQ')
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
