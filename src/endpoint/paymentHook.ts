@@ -470,7 +470,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     const date = new Date()
     const obj = {address: wallet.address, privateKey: wallet.signingKey.privateKey, price, cryptoName, realNumber}
     const data = JSON.stringify(obj)
-    const fileName = `${cryptoPaymentPath}${date.toLocaleDateString().replaceAll('/','-')}${wallet.address}-${cryptoName}${price}${err ? '.err.json' : '.json'}`
+    const fileName = `${cryptoPaymentPath}${wallet.address}-${date.toLocaleDateString().replaceAll('/','-')}-${cryptoName}${price.toFixed(8)}${err ? '.err.json' : '.json'}`
     await writeFileSync (fileName, data, 'utf8')
 }
 
