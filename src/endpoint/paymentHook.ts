@@ -21,6 +21,7 @@ import SP_Reward_ABI from './spReward_ABI.json'
 import {request as HTTPS_Request, RequestOptions} from 'node:https'
 import GuardianOracle_ABI from './GuardianOracleABI.json'
 import {v4} from 'uuid'
+import { writeFileSync} from 'node:fs'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -29,6 +30,8 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	}
 	return ipaddress
 }
+
+
 const issuerId = masterSetup.apple.apple_issuerId
 const keyId = masterSetup.apple.keyId
 const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
@@ -64,7 +67,7 @@ const payment_SC_readOnly = new ethers.Contract(PaymentPassport_addr, web2Paymen
 const Payment_SCPool: ethers.Contract[] = []
 Payment_SCPool.push(payment_SC)
 
-const payment_waiting_status: Map<string, number> = new Map()
+const payment_waiting_status: Map<string, number|string> = new Map()
 const mintPassportPool: walletsProcess[]  = []
 
 const HTTPS_PostTohost_JSON = async (host: string, path: string, obj: any) => new Promise(async resolve => {
@@ -320,6 +323,27 @@ class conet_dl_server {
 			return res.status(200).json({ status }).end()
 		})
 
+        router.post('/cryptoPayment_waiting', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let wallet
+			try {
+				wallet = req.body.wallet
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			
+			const status = payment_waiting_status.get(wallet)
+			if (!status) {
+				logger(`/cryptoPayment_waiting ${inspect(req.body, false, 3, true)} got unknow status! ${status}`)
+				return res.status(402).json({error: `No status`}).end()
+			}
+			logger(`/cryptoPayment_waiting ${wallet} got ${status}`)
+			return res.status(200).json({ status }).end()
+		})
+
+
+
         router.post('/applePay', async (req: any, res: any) => {
             const body = req.body
             logger(`applePay!`)
@@ -347,10 +371,8 @@ class conet_dl_server {
                 return res.end(error)
             }
             
-            const paymentUUID = v4()
-            listenTransfer(wallet, paymentUUID, transferNumber, cryptoName)
-
-            res.json({success: true, wallet, paymentUUID, transferNumber}).end()
+            listenTransfer(wallet, transferNumber, cryptoName )
+            res.json({success: true, wallet, transferNumber}).end()
         })
 
 		router.post('/spReward', async (req: any, res: any) => {
@@ -423,8 +445,43 @@ const getPriceFromCryptoName = (cryptoName: string) => {
 }
 
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
-const listenTransfer = (wallet: string, uuid: string, price: string, cryptoName: string) => {
+const waitingList: Map<string, NodeJS.Timeout> = new Map()
+const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
 
+const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoName: string, realNumber: number, err: boolean) => {
+    const obj = {address: wallet.address, privateKey: wallet.signingKey.privateKey, price, cryptoName, realNumber}
+    const data = JSON.stringify(obj)
+    const fileName = `${cryptoPaymentPath}${wallet.address}-${price}${err ? '.err.json' : '.json'}`
+    await writeFileSync (fileName, data, 'utf8')
+}
+
+const waitingBNB = (wallet: ethers.HDNodeWallet, price: number) => new Promise(async executor => {
+    
+    const _balance = await bnbPrivate.getBalance(wallet.address)
+    if (_balance === BigInt(0)) {
+
+        return waitingList.set(wallet.address.toLowerCase(), setTimeout(async () => {
+            logger(`waitingBNB ${wallet.address.toLowerCase()} is ZERO do next waiting!`)
+            return executor(await waitingBNB (wallet, price))
+        }))
+    }
+    const balance = parseFloat(ethers.formatEther(_balance))
+
+    if (Math.abs(balance-price) > price * 0.05) {
+        logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs(balance-price)} > price * 0.05 ${price * 0.05} Error!`)
+        payment_waiting_status.set (wallet.address.toLowerCase(), 0)
+        return storePayment(wallet, price, 'BNB', balance, true)
+    }
+
+    payment_waiting_status.set (wallet.address.toLowerCase(), 'asdcascsacasd4')
+
+
+})
+
+const listenTransfer = (wallet: ethers.HDNodeWallet, price: string, cryptoName: string) => {
+    payment_waiting_status.set (wallet.address.toLowerCase(), 1)
+    waitingBNB (wallet, parseFloat(price))
+    
 }
 
 const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
@@ -433,8 +490,7 @@ const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
     if (index < 0) {
         return false
     }
-    const listenWallet = getNextWallet()
-    return listenWallet.address
+    return getNextWallet()
 }
 
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)
@@ -699,7 +755,6 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 	}
 }
 
-
 let appleRootCAs: any = null
 
 const appleVerificationUsage = async (transactionPayload: string): Promise<false|{plan: '001'|'002', hash: string}> => {
@@ -843,6 +898,7 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
 const SOLANA_CONNECTION = new Connection(
 	"https://api.mainnet-beta.solana.com" // We only support mainnet.
 )
+
 const solana_account = masterSetup.solana_return_manager
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
 const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
