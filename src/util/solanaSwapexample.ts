@@ -5,7 +5,7 @@ import { createJupiterApiClient, QuoteGetRequest,  } from '@jup-ag/api'
 import bs58 from "bs58"
 import { logger } from "./util"
 import { inspect } from "node:util"
-
+import ERC20_ABI from '../endpoint/cCNTPv7.json'
 const SOLANA_CONNECTION = new Connection(
 	"https://api.mainnet-beta.solana.com", "confirmed"
 )
@@ -140,12 +140,18 @@ const cryptoPayWallet = ethers.Wallet.createRandom()
 const getNextWallet = () => {
     return cryptoPayWallet.deriveChild(cryptopWaymentWallet++)
 }
-// const createWallet = () => {
-//     logger(inspect(cryptoPayWallet.address))
-//     do {
-//         const ee = getNextWallet()
-//         logger(inspect(ee.address))
-//     } while (true)
-// }
+const createWallet = () => {
+    logger(inspect(cryptoPayWallet, false, 3, true ))
+}
+
+const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
+const getBNB_UST = async (wallet:string) => {
+    const contract = new ethers.Contract('0x55d398326f99059fF775485246999027B3197955', ERC20_ABI, bnbPrivate)
+    const balance = await contract.balanceOf (wallet)
+    const bb = ethers.formatEther(balance)
+    logger(inspect(bb, false, 3, true))
+}
+
+// getBNB_UST('0x05ed84EAca46686f23a6aC4463A1de1978895fC5')
 
 // createWallet()

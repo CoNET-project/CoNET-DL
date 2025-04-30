@@ -22,7 +22,7 @@ import {request as HTTPS_Request, RequestOptions} from 'node:https'
 import GuardianOracle_ABI from './GuardianOracleABI.json'
 import {v4} from 'uuid'
 import { writeFileSync} from 'node:fs'
-
+import ERC20_ABI from './CGPNsV7.json'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -446,11 +446,25 @@ const getPriceFromCryptoName = (cryptoName: string) => {
     }
 }
 
+const getAssetERC20Address = (cryptoName: string) => {
+    switch (cryptoName) {
+
+        case 'BNB USDT': {
+            return '0x55d398326f99059fF775485246999027B3197955'
+        }
+
+        default: {
+            return ``
+        }
+    }
+}
+
+
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
 const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
 const initWalletBalance: Map<string, number> = new Map()
-
+const bnb_usdt_contract = new ethers.Contract('0x55d398326f99059fF775485246999027B3197955', ERC20_ABI, bnbPrivate)
 
 const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoName: string, realNumber: number, err: boolean) => {
     const obj = {address: wallet.address, privateKey: wallet.signingKey.privateKey, price, cryptoName, realNumber}
@@ -459,12 +473,13 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise(async executor => {
+const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
-    const _balance = await bnbPrivate.getBalance(wallet)
+    const _balance = await bnb_usdt_contract.balanceOf(wallet)
     const balanceNew = parseFloat(ethers.formatEther(_balance))
     const balance = balanceNew - initBalance
+
     if (balance <0.000001) {
         let count = waitingList.get(wallet) || 0
         if (++ count > 40) {
@@ -472,12 +487,40 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise
         }
         waitingList.set(wallet, count)
         return setTimeout(async () => {
-            logger(`waitingBNB count [${count}] ${wallet} is ZERO do next waiting!`)
-            return executor(await waitingBNB (walletHD, price))
+            // logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
+            return executor( await waitingBNB (walletHD, price))
         }, 15 * 1000)
     }
    
+    if (Math.abs(balance - price) > price * 0.05) {
+        logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
+        payment_waiting_status.set (wallet, 0)
+        return storePayment(walletHD, price, 'BNB', balance, true)
+    }
 
+    payment_waiting_status.set (wallet, 'asdcascsacasd4')
+    storePayment(walletHD, price, 'BNB', balance, false)
+})
+
+const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise(async executor => {
+    const wallet = walletHD.address.toLowerCase()
+    const initBalance = initWalletBalance.get (wallet)||0
+    const _balance = await bnbPrivate.getBalance(wallet)
+    const balanceNew = parseFloat(ethers.formatEther(_balance))
+    const balance = balanceNew - initBalance
+
+    if (balance <0.000001) {
+        let count = waitingList.get(wallet) || 0
+        if (++ count > 40) {
+            return logger(`waitingBNB ${wallet} time over STOP listening!`)
+        }
+        waitingList.set(wallet, count)
+        return setTimeout(async () => {
+            // logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
+            return executor( await waitingBNB (walletHD, price))
+        }, 15 * 1000)
+    }
+   
     if (Math.abs(balance - price) > price * 0.05) {
         logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
         payment_waiting_status.set (wallet, 0)
@@ -491,11 +534,26 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise
 const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string) => {
     payment_waiting_status.set (wallet.address.toLowerCase(), 1)
     
-    const _balance = await bnbPrivate.getBalance(wallet.address)
-    const balance = parseFloat(ethers.formatEther(_balance))
-    initWalletBalance.set(wallet.address.toLowerCase(), balance)
+    switch(cryptoName) {
+        case 'BNB': {
+            const _balance = await bnbPrivate.getBalance(wallet.address)
+            const balance = parseFloat(ethers.formatEther(_balance))
+            initWalletBalance.set(wallet.address.toLowerCase(), balance)
+            return waitingBNB (wallet, parseFloat(price))
+        }
+        case 'BNB USDT': {
+            
+            const _balance = await bnb_usdt_contract.balanceOf(wallet.address)
+            const balance = parseFloat(ethers.formatEther(_balance))
+            initWalletBalance.set(wallet.address.toLowerCase(), balance)
+            return waitingBNB_USDT(wallet, parseFloat(price))
+        }
 
-    waitingBNB (wallet, parseFloat(price))
+        default: {
+            return ''
+        }
+    }
+    
 }
 
 const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
