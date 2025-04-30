@@ -325,20 +325,21 @@ class conet_dl_server {
 
         router.post('/cryptoPayment_waiting', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			let wallet
+			let _wallet
 			try {
-				wallet = req.body.wallet
+				_wallet = req.body.wallet
 			} catch (ex) {
 				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			
+			const wallet = _wallet.toLowerCase()
 			const status = payment_waiting_status.get(wallet)
 			if (!status) {
 				logger(`/cryptoPayment_waiting ${inspect(req.body, false, 3, true)} got unknow status! ${status}`)
 				return res.status(402).json({error: `No status`}).end()
 			}
 			logger(`/cryptoPayment_waiting ${wallet} got ${status}`)
+            waitingList.set(wallet, 0)
 			return res.status(200).json({ status }).end()
 		})
 
@@ -466,7 +467,7 @@ const waitingBNB = (wallet: ethers.HDNodeWallet, price: number) => new Promise(a
         }
         waitingList.set(wallet.address.toLowerCase(), count)
         return setTimeout(async () => {
-            logger(`waitingBNB ${wallet.address.toLowerCase()} is ZERO do next waiting!`)
+            logger(`waitingBNB count [${count}] ${wallet.address.toLowerCase()} is ZERO do next waiting!`)
             return executor(await waitingBNB (wallet, price))
         }, 15 * 1000)
     }
