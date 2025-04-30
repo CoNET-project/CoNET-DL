@@ -313,8 +313,8 @@ class conet_dl_server {
 			if (!obj || !obj?.walletAddress) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
-			
-			const status = payment_waiting_status.get(obj.walletAddress)
+			const wallet = obj.walletAddress.toLowerCase()
+			const status = payment_waiting_status.get(wallet)
 			if (!status) {
 				logger(`/payment_stripe_waiting ${obj.walletAddress} got unknow status! ${status}`)
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
@@ -445,7 +445,7 @@ const getPriceFromCryptoName = (cryptoName: string) => {
 }
 
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
-const waitingList: Map<string, NodeJS.Timeout> = new Map()
+const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
 
 const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoName: string, realNumber: number, err: boolean) => {
@@ -459,11 +459,15 @@ const waitingBNB = (wallet: ethers.HDNodeWallet, price: number) => new Promise(a
     
     const _balance = await bnbPrivate.getBalance(wallet.address)
     if (_balance === BigInt(0)) {
-
-        return waitingList.set(wallet.address.toLowerCase(), setTimeout(async () => {
+        let count = waitingList.get(wallet.address.toLowerCase()) ||0
+        if (++ count > 40) {
+            return logger(`waitingBNB ${wallet.address} time over STOP listening!`)
+        }
+        waitingList.set(wallet.address.toLowerCase(), count)
+        return setTimeout(async () => {
             logger(`waitingBNB ${wallet.address.toLowerCase()} is ZERO do next waiting!`)
             return executor(await waitingBNB (wallet, price))
-        }, 15 * 1000))
+        }, 15 * 1000)
     }
     const balance = parseFloat(ethers.formatEther(_balance))
 
@@ -474,8 +478,7 @@ const waitingBNB = (wallet: ethers.HDNodeWallet, price: number) => new Promise(a
     }
 
     payment_waiting_status.set (wallet.address.toLowerCase(), 'asdcascsacasd4')
-
-
+    storePayment(wallet, price, 'BNB', balance, false)
 })
 
 const listenTransfer = (wallet: ethers.HDNodeWallet, price: string, cryptoName: string) => {
