@@ -467,9 +467,10 @@ const initWalletBalance: Map<string, number> = new Map()
 const bnb_usdt_contract = new ethers.Contract('0x55d398326f99059fF775485246999027B3197955', ERC20_ABI, bnbPrivate)
 
 const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoName: string, realNumber: number, err: boolean) => {
+    const date = new Date()
     const obj = {address: wallet.address, privateKey: wallet.signingKey.privateKey, price, cryptoName, realNumber}
     const data = JSON.stringify(obj)
-    const fileName = `${cryptoPaymentPath}${wallet.address}-${price}${err ? '.err.json' : '.json'}`
+    const fileName = `${cryptoPaymentPath}${date.toLocaleDateString().replaceAll('/','-')}${wallet.address}-${cryptoName}${price}${err ? '.err.json' : '.json'}`
     await writeFileSync (fileName, data, 'utf8')
 }
 
