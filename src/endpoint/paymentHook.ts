@@ -365,13 +365,14 @@ class conet_dl_server {
                 return res.end(error)
             }
 
-            const wallet = await getCryptoPay(agentWallet, cryptoName)
+            const _wallet = await getCryptoPay(agentWallet, cryptoName)
             const transferNumber = getPriceFromCryptoName(cryptoName)
-            if (!wallet|| !transferNumber) {
+            if (!_wallet|| !transferNumber) {
                 return res.end(error)
             }
             
-            listenTransfer(wallet, transferNumber, cryptoName )
+            listenTransfer(_wallet, transferNumber, cryptoName )
+            const wallet = _wallet.address.toLowerCase()
             res.json({success: true, wallet, transferNumber}).end()
         })
 
