@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    ReferralManager: string
     cryptoPayWallet: string
     sp_reword: string
     solana_return_manager: string

@@ -23,6 +23,8 @@ import GuardianOracle_ABI from './GuardianOracleABI.json'
 import {v4} from 'uuid'
 import { writeFileSync} from 'node:fs'
 import ERC20_ABI from './cCNTPv7.json'
+import SPClubPoint from './SPClub.ABI.json'
+import ReferralsV3ABI from './ReferralsV3.json'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -210,6 +212,31 @@ class conet_dl_server {
 			return res.status(200).json({received: true}).end()
         })
 
+        router.post('/addReferral', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			
+			const obj = checkSign (message, signMessage)
+			
+			if (!obj || !obj?.walletAddress|| !obj?.referrer) {
+				return res.status(402).json({error: 'No necessary parameters'}).end()
+			}
+			const wallet = obj.walletAddress.toLowerCase()
+			const ret = await addedReffer(wallet, obj.referrer)
+            if (ret) {
+                return res.status(200).json({ wallet, referrer: obj.referrer }).end()
+            }
+            return res.status(402).json({error: 'Not allowed'}).end()
+			
+		})
 
 		router.post('/paypal_fx168', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -343,8 +370,6 @@ class conet_dl_server {
 			return res.status(200).json({ status }).end()
 		})
 
-
-
         router.post('/applePay', async (req: any, res: any) => {
             const body = req.body
             logger(`applePay!`)
@@ -423,6 +448,56 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 	}
+}
+const SPClubAddress = `0x9D27BEdb1d093F38726F60551CfefaD83fA838a2`
+const ReferralsV3Address = '0xE235f3b481270F5DF2362c25FF5ED8Bdc834DcE9'
+
+const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)
+const SPClubContract = new ethers.Contract(SPClubAddress, SPClubPoint, SPClubWallet)
+const ReferralsV3Contract_readonly = new ethers.Contract(ReferralsV3Address, ReferralsV3ABI, CONET_MAINNET)
+const SPClubManager = [SPClubContract]
+
+const addReferralsPool: {
+    wallet: string
+    referrer: string
+}[] = []
+
+const addReferralsProcess = async () => {
+    const obj = addReferralsPool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = SPClubManager.shift()
+    if (!SC) {
+        addReferralsPool.unshift(obj)
+        return setTimeout(() => {
+            addReferralsProcess()
+        }, 5000)
+    }
+    try {
+        const tx = await SC.initAddReferrer(obj.referrer, obj.wallet )
+        await tx.wait()
+        logger(`addReferralsProcess ${obj.wallet} => ${obj.referrer} success ${tx.hash}`)
+    } catch (ex:any) {
+        logger(`addReferralsProcess ${obj.wallet} => ${obj.referrer} Error ${ex.message}`)
+    }
+    SPClubManager.push(SC)
+    return setTimeout(() => {
+        addReferralsProcess()
+    }, 1000)
+}
+
+const addedReffer = async (wallet: string, referrer: string) => {
+    try {
+        const isReady = await ReferralsV3Contract_readonly.getReferrer(wallet)
+        if (isReady === ethers.ZeroAddress) {
+            addReferralsPool.push({wallet,referrer})
+            return true
+        }
+    } catch (ex) {
+        
+    }
+    return false
 }
 
 let cryptopWaymentWallet = 0
