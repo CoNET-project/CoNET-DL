@@ -492,6 +492,7 @@ const addedReffer = async (wallet: string, referrer: string) => {
         const isReady = await ReferralsV3Contract_readonly.getReferrer(wallet)
         if (isReady === ethers.ZeroAddress) {
             addReferralsPool.push({wallet,referrer})
+            addReferralsProcess()
             return true
         }
     } catch (ex) {
