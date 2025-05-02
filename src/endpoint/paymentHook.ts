@@ -77,7 +77,7 @@ const Payment_SCPool: ethers.Contract[] = [payment_SC]
 const payment_waiting_status: Map<string, number|string> = new Map()
 const mintPassportPool: walletsProcess[]  = []
 
-const HTTPS_PostTohost_JSON = async (host: string, path: string, obj: any) => new Promise(async resolve => {
+const HTTPS_PostTohost_JSON = async (host: string, path: string, obj: any): Promise<boolean|null> => new Promise(async resolve => {
     
     const option: RequestOptions = {
         path,
@@ -119,7 +119,7 @@ const HTTPS_PostTohost_JSON = async (host: string, path: string, obj: any) => ne
 
     req.once('error', err => {
         logger(`HTTPS_PostTohost_JSON HTTPS_Request on Error`, err.message)
-        return resolve (false) 
+        return resolve (null) 
     })
 
     req.end(JSON.stringify(obj))
@@ -150,7 +150,7 @@ const oracolPrice = async () => {
     oracle.bnb = parseFloat(bnb)
     oracle.eth = parseFloat(eth)
 }
-const monitorRewardWaitingMins = 1
+const monitorRewardWaitingMins = 15
 
 class conet_dl_server {
 
@@ -710,7 +710,7 @@ const revokeRewardProcess = async () => {
         }, 2000)
     }
     try {
-        const tx = await SC.mintReword(wallet)
+        const tx = await SC.revokeReword(wallet)
         await tx.wait()
         logger(`revokeRewardProcess ${wallet} success, tx= ${tx.hash}`)
 
@@ -743,9 +743,10 @@ const monitorReward = async (wallet: string, solana: string, _balance: number, k
         getOracle()
     ])
 
-    if (!oracleData.data) {
+    if (!oracleData.data|| typeof balance !== 'number' ) {
         return repet()
     }
+
     const price = parseInt(oracleData.data.sp2499)
     if (parseInt(balance.toFixed(0)) >= _balance || balance > price) {
         return repet()
@@ -772,7 +773,7 @@ const spRewardCheck = async (wallet: string, solana: string): Promise<false|numb
         
 
         const price = parseInt(oracleData.data?.sp2499)
-        if (!status || balance < price) {
+        if (!status || typeof balance !== 'number' || balance < price) {
             return false
         }
 
@@ -1221,7 +1222,7 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     // }
 }
 
-const getBalance_SP = async (solanaWallet: string) => {
+const getBalance_SP = async (solanaWallet: string): Promise<number|null> => {
     const payload = {
         jsonrpc: "2.0",
         id: 1,
@@ -1235,6 +1236,10 @@ const getBalance_SP = async (solanaWallet: string) => {
     const _node1 = Guardian_Nodes[Math.floor(Math.random() * (Guardian_Nodes.length - 1))]
 
     const ret: any = await HTTPS_PostTohost_JSON(`${_node1.domain}.conet.network`, '/solana-rpc', payload)
+    if (ret === null || typeof ret === 'boolean') {
+        return null
+    }
+    
     // logger(inspect(ret, false, 4, true))
     const tokenAccounts = ret?.result?.value ?? [];
     let balance = 0
@@ -1406,10 +1411,3 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 
 new conet_dl_server ()
-
-// const test = async () => {
-//     // await getAllNodes()
-//     const balance = await getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
-//     logger(`balance = `, balance)
-// }
-// test()
