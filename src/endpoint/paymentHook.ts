@@ -174,6 +174,12 @@ class conet_dl_server {
 		app.disable('x-powered-by')
 		const Cors = require('cors')
 		// app.use(Cors ())
+        app.use((err: any, req: any, res: any, next: any) => {
+            if (err) {
+                console.error(err)
+                return res.status(400).send({ status: 400, message: err.message }); // Bad request
+            }
+        })
 		app.use(Express.json())
 
 		app.use( '/api', router )
@@ -393,13 +399,17 @@ class conet_dl_server {
             logger(`cryptoPay! ipaddress = ${ipaddress}`)
 			const agentWallet = body?.agentWallet
             const cryptoName = body?.cryptoName
+            const plan = body?.plan
+
+
             const error = JSON.stringify({error: 'Format error!'})
-            if (!agentWallet || !cryptoName) {
-                return res.end(error)
+            if (!cryptoName||plan !== '1'||plan !== '2') {
+                return res.status(200).json({error: 'format error'}).end()
             }
 
-            const _wallet = await getCryptoPay(agentWallet, cryptoName)
-            const transferNumber = getPriceFromCryptoName(cryptoName)
+            const _wallet = await getCryptoPay()
+            const transferNumber = getPriceFromCryptoName(cryptoName, plan)
+
             if (!_wallet|| !transferNumber) {
                 return res.end(error)
             }
@@ -518,14 +528,16 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
-const getPriceFromCryptoName = (cryptoName: string) => {
+const getPriceFromCryptoName = (cryptoName: string, plan: '1'|'2') => {
+
     switch (cryptoName) {
         case 'BNB': {
-            return (24.99/oracle.bnb).toFixed(6)
+            return plan === '2' ? (24.99/oracle.bnb).toFixed(6): (2.49/oracle.bnb).toFixed(6)
         }
         case 'BNB USDT': {
-            return '24.99'
+            return plan === '2' ? '24.99' : '2.49'
         }
+
         default: {
             return ''
         }
@@ -560,7 +572,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number) => new Promise(async executor => {
+const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'2', agentWallet: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnb_usdt_contract.balanceOf(wallet)
@@ -575,21 +587,21 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number) => new Pr
         waitingList.set(wallet, count)
         return setTimeout(async () => {
             logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
-            return executor( await waitingBNB (walletHD, price))
+            return executor( await waitingBNB (walletHD, price, plan, agentWallet))
         }, 15 * 1000)
     }
    
     if (Math.abs(balance - price) > price * 0.05) {
         logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
         payment_waiting_status.set (wallet, 0)
-        return storePayment(walletHD, price, 'BNB', balance, true)
+        return storePayment(walletHD, price, 'BNB-USDT', balance, true)
     }
     logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
     payment_waiting_status.set (wallet, '48VFBgXUx305o83Kb7pXLQ')
-    storePayment(walletHD, price, 'BNB', balance, false)
+    storePayment(walletHD, price, 'BNB-USDT', balance, false)
 })
 
-const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise(async executor => {
+const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'2', agentWallet: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnbPrivate.getBalance(wallet)
@@ -604,7 +616,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise
         waitingList.set(wallet, count)
         return setTimeout(async () => {
             // logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
-            return executor( await waitingBNB (walletHD, price))
+            return executor( await waitingBNB (walletHD, price, plan, agentWallet))
         }, 15 * 1000)
     }
    
@@ -618,7 +630,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number) => new Promise
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
-const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string) => {
+const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'2', agentWallet: string) => {
     payment_waiting_status.set (wallet.address.toLowerCase(), 1)
     
     switch(cryptoName) {
@@ -626,14 +638,14 @@ const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, crypto
             const _balance = await bnbPrivate.getBalance(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            return waitingBNB (wallet, parseFloat(price))
+            return waitingBNB (wallet, parseFloat(price), plan, agentWallet)
         }
         case 'BNB USDT': {
             
             const _balance = await bnb_usdt_contract.balanceOf(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            return waitingBNB_USDT(wallet, parseFloat(price))
+            return waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet)
         }
 
         default: {
@@ -643,12 +655,7 @@ const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, crypto
     
 }
 
-const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
-    const agentWallet = _agentWallet.toString()
-    const index = agentWalletWhiteList.findIndex(n => n === agentWallet)
-    if (index < 0) {
-        return false
-    }
+const getCryptoPay = () => {
     return getNextWallet()
 }
 
