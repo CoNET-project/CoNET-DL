@@ -414,7 +414,7 @@ class conet_dl_server {
                 return res.end(error)
             }
             
-            listenTransfer(_wallet, transferNumber, cryptoName )
+            listenTransfer(_wallet, transferNumber, cryptoName, plan, agentWallet )
             const wallet = _wallet.address.toLowerCase()
             res.json({success: true, wallet, transferNumber}).end()
         })
