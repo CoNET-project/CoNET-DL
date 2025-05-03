@@ -626,11 +626,11 @@ const createRedeem = (plan: '1'|'12', referee: string) => {
         expiresDayes, _referee,
         redeemCode: hash
     })
-
+    createRedeemProcess()
     return RedeemCode
 }
 
-const createRedeemProcess = () => {
+const createRedeemProcess = async () => {
     const obj = createRedeemWaitingPool.shift()
     if (!obj) {
         return
@@ -642,8 +642,16 @@ const createRedeemProcess = () => {
             createRedeemProcess ()
         }, 2000)
     }
+    try {
+        const tx = await SC.cryptoSubscriptMint(obj.expiresDayes, obj._referee, obj.redeemCode)
+        logger(`createRedeemProcess ${obj.expiresDayes} SUCCESS ===> ${tx.hash}`)
+        await tx.wait ()
+    } catch (ex: any) {
+        logger(`createRedeemProcess Error!`, ex.message)
+    }
 
-    SC.cryptoSubscriptMint()
+    sp_reword_sc_pool.unshift(SC)
+    createRedeemProcess ()
 
 
 }
