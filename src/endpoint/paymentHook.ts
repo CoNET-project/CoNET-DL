@@ -458,6 +458,7 @@ class conet_dl_server {
 		})
 	}
 }
+
 const SPClubAddress = `0x9D27BEdb1d093F38726F60551CfefaD83fA838a2`
 const ReferralsV3Address = '0xE235f3b481270F5DF2362c25FF5ED8Bdc834DcE9'
 
@@ -653,7 +654,8 @@ const getCryptoPay = (_agentWallet: string, cryptoName: string) => {
 
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)       //      0x784985d7dC024fE8a08519Bba16EA72f8170b5c2
 // const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
-const SPClubPointManager = '0xD844A3B42328A1608934fD24EefEE2b85c36a74A'
+// const SPClubPointManager = '0xD844A3B42328A1608934fD24EefEE2b85c36a74A'
+const SPClubPointManager = '0xa7534DE4EEA4011df6B94f542e11e1A019b1933a'
 const sp_reword_contract = new ethers.Contract(SPClubPointManager, SPClubPointManagerABI, wallet_sp_reword)
 
 
@@ -726,10 +728,11 @@ const revokeRewardProcess = async () => {
 }
 
 const monitorReward = async (wallet: string, solana: string, _balance: number, keepCount: number) => {
-    logger(`monitorReward ${wallet} ${solana}`)
+    logger(`monitorReward ${wallet} ${solana} keepCount = ${keepCount}`)
     if (keepCount > 44) {
         return
     }
+
     keepCount ++
     const repet = () => {
         
@@ -751,11 +754,10 @@ const monitorReward = async (wallet: string, solana: string, _balance: number, k
     if (parseInt(balance.toFixed(0)) >= _balance || balance > price) {
         return repet()
     }
-    logger(`monitorReward revock => ${wallet} ${solana}`)
+    logger(`monitorReward revock => ${wallet} ${solana} keepCount = ${keepCount}`)
     revokeReward.push(wallet)
     revokeRewardProcess()
 }
-
 
 const spRewardCheck = async (wallet: string, solana: string): Promise<false|number> => {
 
