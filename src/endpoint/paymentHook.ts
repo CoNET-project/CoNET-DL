@@ -403,7 +403,8 @@ class conet_dl_server {
 
 
             const error = JSON.stringify({error: 'Format error!'})
-            if (!cryptoName||plan !== '1'||plan !== '2') {
+            if (!cryptoName|| plan !== '1' || plan !== '2') {
+                logger(`Error ===== !cryptoName ${!cryptoName} || plan !== '1' ${plan !== '1'} || plan !== '2' ${plan !== '2'}`)
                 return res.status(200).json({error: 'format error'}).end()
             }
 
