@@ -403,8 +403,8 @@ class conet_dl_server {
 
 
             const error = JSON.stringify({error: 'Format error!'})
-            if (!cryptoName|| plan !== '1' && plan !== '2') {
-                logger(`Error ===== !cryptoName ${!cryptoName} || plan !== '1' ${plan !== '1'} || plan !== '2' ${plan !== '2'}`)
+            if (!cryptoName|| plan !== '1' && plan !== '12') {
+                logger(`Error ===== !cryptoName ${!cryptoName} || plan !== '1' ${plan !== '1'} || plan !== '12' ${plan !== '12'}`)
                 return res.status(200).json({error: 'format error'}).end()
             }
 
@@ -529,14 +529,14 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
-const getPriceFromCryptoName = (cryptoName: string, plan: '1'|'2') => {
+const getPriceFromCryptoName = (cryptoName: string, plan: '1'|'12') => {
 
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '2' ? (24.99/oracle.bnb).toFixed(6): (2.49/oracle.bnb).toFixed(6)
+            return plan === '12' ? (24.99/oracle.bnb).toFixed(6): (2.99/oracle.bnb).toFixed(6)
         }
-        case 'BNB USDT': {
-            return plan === '2' ? '24.99' : '2.49'
+        case 'BSC USDT': {
+            return plan === '12' ? '24.99' : '2.99'
         }
 
         default: {
@@ -573,7 +573,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'2', agentWallet: string) => new Promise(async executor => {
+const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12', agentWallet: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnb_usdt_contract.balanceOf(wallet)
@@ -602,7 +602,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     storePayment(walletHD, price, 'BNB-USDT', balance, false)
 })
 
-const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'2', agentWallet: string ) => new Promise(async executor => {
+const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12', agentWallet: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnbPrivate.getBalance(wallet)
@@ -631,7 +631,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'2',
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
-const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'2', agentWallet: string) => {
+const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'12', agentWallet: string) => {
     payment_waiting_status.set (wallet.address.toLowerCase(), 1)
     
     switch(cryptoName) {
