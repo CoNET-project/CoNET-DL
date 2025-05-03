@@ -365,14 +365,14 @@ class conet_dl_server {
 
         router.post('/cryptoPayment_waiting', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
-			let _wallet
+			let wallet
 			try {
-				_wallet = req.body.wallet
+				wallet = req.body?.wallet?.toLowerCase()
 			} catch (ex) {
 				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			const wallet = _wallet.toLowerCase()
+
 			const status = payment_waiting_status.get(wallet)
 			if (!status) {
 				logger(`/cryptoPayment_waiting ${inspect(req.body, false, 3, true)} got unknow status! ${status}`)
