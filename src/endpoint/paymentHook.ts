@@ -470,6 +470,7 @@ class conet_dl_server {
 	}
 }
 
+
 const SPClubAddress = `0x9D27BEdb1d093F38726F60551CfefaD83fA838a2`
 const ReferralsV3Address = '0xE235f3b481270F5DF2362c25FF5ED8Bdc834DcE9'
 
@@ -583,24 +584,69 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     if (balance <0.000001) {
         let count = waitingList.get(wallet) || 0
         if (++ count > 40) {
-            return logger(`waitingBNB ${wallet} time over STOP listening!`)
+            return logger(`BNB-USDT ${wallet} time over STOP listening!`)
         }
         waitingList.set(wallet, count)
         return setTimeout(async () => {
-            logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
-            return executor( await waitingBNB (walletHD, price, plan, agentWallet))
+            logger(`waitingBNB_USDT count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
+            return executor( await waitingBNB_USDT (walletHD, price, plan, agentWallet))
         }, 15 * 1000)
     }
    
     if (Math.abs(balance - price) > price * 0.05) {
-        logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
+        logger(`waitingBNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
         payment_waiting_status.set (wallet, 0)
         return storePayment(walletHD, price, 'BNB-USDT', balance, true)
     }
-    logger(`waitingBNB price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
-    payment_waiting_status.set (wallet, '48VFBgXUx305o83Kb7pXLQ')
+
+    logger(`waitingBNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
+
+    const redeemCode = createRedeem (plan, agentWallet)
+    payment_waiting_status.set (wallet, redeemCode)
     storePayment(walletHD, price, 'BNB-USDT', balance, false)
+
 })
+
+const createRedeemWaitingPool: {
+    expiresDayes: number
+    _referee: string
+    redeemCode: string
+}[] = []
+
+const uuid62 = require('uuid62')
+
+
+const createRedeem = (plan: '1'|'12', referee: string) => {
+    const expiresDayes = plan === '1' ? 31 : 365
+    const _referee = !referee ? ethers.ZeroAddress: referee
+    const RedeemCode = uuid62.v4()
+    const _hash = ethers.solidityPacked(['string'], [RedeemCode])
+    const hash = ethers.zeroPadBytes(_hash, 32)
+    createRedeemWaitingPool.push({
+        expiresDayes, _referee,
+        redeemCode: hash
+    })
+
+    return RedeemCode
+}
+
+const createRedeemProcess = () => {
+    const obj = createRedeemWaitingPool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = sp_reword_sc_pool.shift()
+    if (!SC) {
+        createRedeemWaitingPool.unshift(obj)
+        return setTimeout(() => {
+            createRedeemProcess ()
+        }, 2000)
+    }
+
+    SC.cryptoSubscriptMint()
+
+
+}
 
 const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12', agentWallet: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
@@ -626,8 +672,8 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'
         payment_waiting_status.set (wallet, 0)
         return storePayment(walletHD, price, 'BNB', balance, true)
     }
-
-    payment_waiting_status.set (wallet, 'asdcascsacasd4')
+    const redeemCode = createRedeem (plan, agentWallet)
+    payment_waiting_status.set (wallet, redeemCode)
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
