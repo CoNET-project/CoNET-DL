@@ -410,12 +410,12 @@ class conet_dl_server {
 
             const _wallet = await getCryptoPay()
             const transferNumber = getPriceFromCryptoName(cryptoName, plan)
+            const listen = listenTransfer(_wallet, transferNumber, cryptoName, plan, agentWallet )
 
-            if (!_wallet|| !transferNumber) {
-                return res.end(error)
+            if (!_wallet|| !transferNumber ||! listen) {
+                return res.status(200).json({error: 'No necessary parameters'}).end()
             }
             
-            listenTransfer(_wallet, transferNumber, cryptoName, plan, agentWallet )
             const wallet = _wallet.address.toLowerCase()
             res.json({success: true, wallet, transferNumber}).end()
         })
@@ -639,18 +639,20 @@ const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, crypto
             const _balance = await bnbPrivate.getBalance(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            return waitingBNB (wallet, parseFloat(price), plan, agentWallet)
+            waitingBNB (wallet, parseFloat(price), plan, agentWallet)
+            return true
         }
-        case 'BNB USDT': {
+        case 'BSC USDT': {
             
             const _balance = await bnb_usdt_contract.balanceOf(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            return waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet)
+            waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet)
+            return true
         }
 
         default: {
-            return ''
+            return false
         }
     }
     
