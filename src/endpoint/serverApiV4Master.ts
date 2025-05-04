@@ -24,7 +24,7 @@ import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createT
 import SPClub_ABI from './SP_Club_ABI.json'
 import Bs58 from 'bs58'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
-
+import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -412,7 +412,8 @@ class conet_dl_server {
 				solana: obj.solanaWallet,
 				res,
 				to: obj.walletAddress,
-				hash: obj.hash
+				hash: obj.hash,
+                uuid: obj.uuid
 			})
 			await startCodeToClientProcess()
 			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
@@ -543,8 +544,8 @@ SPManagermentSCPool.push(SPManagermentSC)
 const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, mainnet_rpc)
 
-const SPPaasport_codeToClient = new ethers.Wallet(masterSetup.passport_codeToClient, mainnet_rpc)
-logger(Colors.magenta(`SPPaasport_codeToClient ${SPPaasport_codeToClient.address}`))
+const SPPaasport_codeToClient = new ethers.Wallet(masterSetup.passport_codeToClient, mainnet_rpc)       //      0xed98Fa572Cb1Aa3C4e3FcBd3e75503cf565E56f0
+
 const SPManagermentcodeToClient= new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, SPPaasport_codeToClient)
 const SPCodeToClient: ethers.Contract[] = [SPManagermentcodeToClient]
 interface ICodeToClient {
@@ -552,7 +553,10 @@ interface ICodeToClient {
 	to: string
 	solana: string
 	res: any
+    uuid: string
 }
+
+
 const CodeToClientWaiting: ICodeToClient[] = []
 
 const processFreePassport = async () => {
@@ -646,11 +650,43 @@ const activeProcess = async (wallet: string, SC: ethers.Contract) => {
 	}
 }
 
+const CodeToClientV2_addr = `0x1dD0800714945163408e40ac0fA6B7f4B4C02319`
+const Contract = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, SPPaasport_codeToClient)
+const CodeToClientV2ContractPool = [Contract]
+
+const checkCodeToClientV2 = (obj: ICodeToClient): Promise<boolean> => new Promise(async executor => {
+    const SC = CodeToClientV2ContractPool.shift()
+    let ret = false
+    if (!SC) {
+        return setTimeout(async () => {
+            return executor(await checkCodeToClientV2(obj))
+        }, 2000)
+    }
+    try {
+        const detail: any = SC.redeemData(obj.hash)
+        if (detail[0] !== ethers.ZeroAddress) {
+            const tx = await SC.redeemPassport(obj.uuid, obj.to)
+            logger(`checkCodeToClientV2 redeem ${obj.uuid} => ${obj.to} success ${tx.hash}`)
+            await tx.wait()
+            ret = true
+        }
+    } catch (ex:any) {
+        logger(Colors.red(`checkCodeToClientV2 redeemData Error!`), ex.message)
+    }
+    CodeToClientV2ContractPool.push(SC)
+    return executor(ret)
+})
+
+
 const startCodeToClientProcess = async () => {
 	const obj = CodeToClientWaiting.shift()
 	if (!obj) {
 		return
 	}
+    const tryV2 = await checkCodeToClientV2 (obj)
+    if (tryV2) {
+        return startCodeToClientProcess ()
+    }
 	const SC = SPCodeToClient.shift()
 	if (!SC) {
 		CodeToClientWaiting.unshift(obj)
@@ -672,5 +708,3 @@ const startCodeToClientProcess = async () => {
 }
 
 export default conet_dl_server
-
-

@@ -674,6 +674,7 @@ class conet_dl_server_v4 {
 					error: "SignObj Error!"
 				}).end()
 			}
+
 			const _hash = ethers.solidityPacked(['string'], [obj.uuid])
 			obj.hash = ethers.zeroPadBytes(_hash, 32)
 			return postLocalhost('/api/codeToClient', obj, res)
