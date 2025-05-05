@@ -688,7 +688,7 @@ const startCodeToClientProcess = async () => {
 	if (!obj) {
 		return
 	}
-    const nft = await SP_Passport_SC_readonly.currentID()
+    const nft = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
     const tryV2 = await checkCodeToClientV2 (obj, nft.toString())
     if (tryV2) {
         
@@ -702,7 +702,7 @@ const startCodeToClientProcess = async () => {
 	try {
 		const tx = await SC._codeToClient(obj.hash, obj.to, obj.solana)
         
-		obj.res.status(200).json({status:nft}).end()
+		obj.res.status(200).json({status: nft.toString()}).end()
         await tx.wait()
 		await activeProcess(obj.to, SC)
 	} catch(ex:any) {
