@@ -658,12 +658,12 @@ const CodeToClientV2_addr = `0x2A8F4bd8Ed99A86b7F84D9DB73A31Fe660529C8F`
 const Contract = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, SPPaasport_codeToClient)
 const CodeToClientV2ContractPool = [Contract]
 
-const checkCodeToClientV2 = (obj: ICodeToClient): Promise<boolean> => new Promise(async executor => {
+const checkCodeToClientV2 = (obj: ICodeToClient, nftID: string): Promise<boolean> => new Promise(async executor => {
     const SC = CodeToClientV2ContractPool.shift()
     let ret = false
     if (!SC) {
         return setTimeout(async () => {
-            return executor(await checkCodeToClientV2(obj))
+            return executor(await checkCodeToClientV2(obj, nftID))
         }, 2000)
     }
     try {
@@ -671,6 +671,7 @@ const checkCodeToClientV2 = (obj: ICodeToClient): Promise<boolean> => new Promis
         if (detail[0] !== ethers.ZeroAddress) {
             const tx = await SC.redeemPassport(obj.uuid, obj.to)
             logger(`checkCodeToClientV2 redeem ${obj.uuid} => ${obj.to} success ${tx.hash}`)
+            obj.res.status(200).json({status: nftID}).end()
             await tx.wait()
             ret = true
         }
@@ -688,9 +689,9 @@ const startCodeToClientProcess = async () => {
 		return
 	}
     const nft = await SP_Passport_SC_readonly.currentID()
-    const tryV2 = await checkCodeToClientV2 (obj)
+    const tryV2 = await checkCodeToClientV2 (obj, nft.toString())
     if (tryV2) {
-        obj.res.status(200).json({status:nft}).end()
+        
         return startCodeToClientProcess ()
     }
 	const SC = SPCodeToClient.shift()
@@ -700,6 +701,7 @@ const startCodeToClientProcess = async () => {
 	}
 	try {
 		const tx = await SC._codeToClient(obj.hash, obj.to, obj.solana)
+        
 		obj.res.status(200).json({status:nft}).end()
         await tx.wait()
 		await activeProcess(obj.to, SC)
