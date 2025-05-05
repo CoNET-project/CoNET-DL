@@ -21,7 +21,7 @@ const conet_rpc = 'https://cancun-rpc.conet.network'
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const CONET_Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 
-const provider = new ethers.JsonRpcProvider(conet_rpc)
+const provider_cancun = new ethers.JsonRpcProvider(conet_rpc)
 const launchMap: Map<string, boolean> = new Map()
 const epochTotal: Map<string, number> = new Map()
 
@@ -319,7 +319,7 @@ const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
 const moveData = async () => {
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provider)
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provider_cancun)
 	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
 
 	const block = currentEpoch - 1
@@ -395,7 +395,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 	getAllNodesProcess = true
 
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_cancun, GuardianNodesV2ABI, provider)
+	const GuardianNodes = new ethers.Contract(CONET_Guardian_cancun, GuardianNodesV2ABI, provider_cancun)
 	let scanNodes = 0
 	try {
 		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
@@ -422,7 +422,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 		})
 	}
 		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)
+	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider_cancun)
 	let i = 0
 	
 	await mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
@@ -467,7 +467,7 @@ const start = async () => {
 	startGossipListening()
 	managerWallet = Math.round(_start / 100)
 
-	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], provider)
+	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], provider_cancun)
 	const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
 	CoNET_passport_SC.push(sc)
 }

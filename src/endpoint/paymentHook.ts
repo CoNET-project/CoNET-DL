@@ -720,7 +720,8 @@ const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET
 // const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
 // const SPClubPointManager = '0xD844A3B42328A1608934fD24EefEE2b85c36a74A'
 //const SPClubPointManager = '0xa7534DE4EEA4011df6B94f542e11e1A019b1933a'
-const SPClubPointManagerV2 = '0x1dD0800714945163408e40ac0fA6B7f4B4C02319'
+// const SPClubPointManagerV2 = '0x1dD0800714945163408e40ac0fA6B7f4B4C02319'
+const SPClubPointManagerV2 = '0x2A8F4bd8Ed99A86b7F84D9DB73A31Fe660529C8F'
 const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPointManagerABI, wallet_sp_reword)
 
 

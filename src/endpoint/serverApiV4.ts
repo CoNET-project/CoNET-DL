@@ -20,7 +20,7 @@ import referralsV3ABI from './ReferralsV3.json'
 import SPClub_ABI from './SP_Club_ABI.json'
 import SPPassportABI from './SPPassportABI.json'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
-
+import {readFile} from 'node:fs/promises'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
@@ -569,56 +569,6 @@ class conet_dl_server_v4 {
 			})
 		})
 
-		// router.post ('/getTestNFTs', async (req: any, res: any) => {
-		// 	const ipaddress = getIpAddressFromForwardHeader(req)
-		// 	let message, signMessage
-		// 	try {
-		// 		message = req.body.message
-		// 		signMessage = req.body.signMessage
-
-		// 	} catch (ex) {
-		// 		logger (Colors.grey(`${ipaddress} request /getTestNFTs req.body ERROR!`), inspect(req.body))
-		// 		return res.status(404).end()
-		// 	}
-		// 	logger(Colors.magenta(`/getTestNFTs`))
-		// 	const obj = checkSign (message, signMessage)
-	
-		// 	if ( !obj?.walletAddress ) {
-		// 		logger (Colors.grey(`Router /getTestNFTs checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-		// 		logger(inspect(obj, false, 3, true))
-		// 		return res.status(404).json({
-		// 			error: "SignObj Error!"
-		// 		}).end()
-		// 	}
-		// 	return createTestNft(obj, res)
-
-		// })
-
-		// router.post ('/getTestNFTsNew', async (req: any, res: any) => {
-		// 	const ipaddress = getIpAddressFromForwardHeader(req)
-		// 	let message, signMessage
-		// 	try {
-		// 		message = req.body.message
-		// 		signMessage = req.body.signMessage
-
-		// 	} catch (ex) {
-		// 		logger (Colors.grey(`${ipaddress} request /getTestNFTsNew req.body ERROR!`), inspect(req.body))
-		// 		return res.status(404).end()
-		// 	}
-		// 	logger(Colors.magenta(`/getTestNFTsNew`))
-		// 	const obj = checkSign (message, signMessage)
-	
-		// 	if ( !obj?.walletAddress ) {
-		// 		logger (Colors.grey(`Router /getTestNFTsNew checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-		// 		logger(inspect(obj, false, 3, true))
-		// 		return res.status(404).json({
-		// 			error: "SignObj Error!"
-		// 		}).end()
-		// 	}
-		// 	return createTestNft_new(obj, res)
-
-		// })
-
 		router.post('/freePassport', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -652,6 +602,28 @@ class conet_dl_server_v4 {
 			}
 			return postLocalhost('/api/freePassport', obj, res)
 		})
+
+        router.post('/cryptoPayment_waiting', async (req: any, res: any) => {
+            const ipaddress = getIpAddressFromForwardHeader(req)
+            let wallet
+            try {
+                wallet = req.body?.wallet?.toLowerCase()
+            } catch (ex) {
+                logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+                return res.status(402).json({error: 'Data format error!'}).end()
+            }
+
+            if (!wallet) {
+                return res.statusCode(400).json({error:'format error!'})
+            }
+
+            const status = await getCryptoPayment_waiting(wallet)
+            if (!status) {
+                return res.statusCode(200).json({error:'no data!'})
+            }
+            
+            return res.status(200).json({ status }).end()
+        })
 
 		router.post('/codeToClient', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -715,6 +687,18 @@ class conet_dl_server_v4 {
 		})
 	}
 }
+const cryptoPayment_waiting_path = '/home/peter/.data/cryptoWaiting/'
+const getCryptoPayment_waiting = async (wallet: string) => {
+    try {
+        const data = await readFile(`${cryptoPayment_waiting_path}wallet`, 'utf8')
+        const ret = JSON.parse(data)
+        return ret
+    } catch (ex) {
+        return false
+    }
+    
+}
+
 
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
