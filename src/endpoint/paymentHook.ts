@@ -397,7 +397,7 @@ class conet_dl_server {
             const body = req.body
             const ipaddress = getIpAddressFromForwardHeader(req)
             logger(`cryptoPay! ipaddress = ${ipaddress}`)
-			const agentWallet = body?.agentWallet
+			const agentWallet = body?.agentWallet||''
             const cryptoName = body?.cryptoName
             const plan = body?.plan
 
@@ -687,7 +687,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'
 
 const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'12', agentWallet: string) => {
     payment_waiting_status.set (wallet.address.toLowerCase(), 1)
-    
+    agentWallet = ethers.isAddress(agentWallet) ? agentWallet : ''
     switch(cryptoName) {
         case 'BNB': {
             const _balance = await bnbPrivate.getBalance(wallet.address)
