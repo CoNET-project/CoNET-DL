@@ -27,6 +27,7 @@ import passport_distributor_ABI from './passport_distributor-ABI.json'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
@@ -408,7 +409,7 @@ class conet_dl_server {
 					error: 'has no solanaWallet'
 				}).end()
 			}
-            res.status(200).end()
+            
 			CodeToClientWaiting.push ({
 				solana: obj.solanaWallet,
 				res,
@@ -416,7 +417,7 @@ class conet_dl_server {
 				hash: obj.hash,
                 uuid: obj.uuid
 			})
-			await startCodeToClientProcess()
+			startCodeToClientProcess()
 			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
 		})
 
@@ -446,6 +447,7 @@ interface SPClubProcessObj {
 	referrer: string
 	res: any
 }
+
 
 const SPClubProcess: SPClubProcessObj[] = []
 const SPClub = (obj: minerObj, res: any) => {
@@ -676,7 +678,7 @@ const checkCodeToClientV2 = (obj: ICodeToClient): Promise<boolean> => new Promis
         logger(Colors.red(`checkCodeToClientV2 redeemData Error!`), ex.message)
     }
     CodeToClientV2ContractPool.push(SC)
-    return executor(ret)
+    return ret
 })
 
 
@@ -685,8 +687,10 @@ const startCodeToClientProcess = async () => {
 	if (!obj) {
 		return
 	}
+    const nft = await SP_Passport_SC_readonly.currentID()
     const tryV2 = await checkCodeToClientV2 (obj)
     if (tryV2) {
+        obj.res.status(200).json({status:nft}).end()
         return startCodeToClientProcess ()
     }
 	const SC = SPCodeToClient.shift()
@@ -696,8 +700,8 @@ const startCodeToClientProcess = async () => {
 	}
 	try {
 		const tx = await SC._codeToClient(obj.hash, obj.to, obj.solana)
-		await tx.wait()
-		obj.res.status(200).json({success:tx.hash}).end()
+		obj.res.status(200).json({status:nft}).end()
+        await tx.wait()
 		await activeProcess(obj.to, SC)
 	} catch(ex:any) {
 		obj.res.status(404).json({error: 'Redeem Code Error!'}).end()

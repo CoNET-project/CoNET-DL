@@ -601,28 +601,6 @@ class conet_dl_server_v4 {
 			return postLocalhost('/api/freePassport', obj, res)
 		})
 
-        router.post('/cryptoPayment_waiting', async (req: any, res: any) => {
-            const ipaddress = getIpAddressFromForwardHeader(req)
-            let wallet
-            try {
-                wallet = req.body?.wallet?.toLowerCase()
-            } catch (ex) {
-                logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
-                return res.status(402).json({error: 'Data format error!'}).end()
-            }
-
-            if (!wallet) {
-                return res.statusCode(400).json({error:'format error!'})
-            }
-
-            const status = await getCryptoPayment_waiting(wallet)
-            if (!status) {
-                return res.statusCode(200).json({error:'no data!'})
-            }
-
-            return res.status(200).json({ status }).end()
-        })
-
 		router.post('/codeToClient', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
@@ -688,7 +666,7 @@ class conet_dl_server_v4 {
 const cryptoPayment_waiting_path = '/home/peter/.data/cryptoWaiting/'
 const getCryptoPayment_waiting = async (wallet: string) => {
     try {
-        const data = await readFile(`${cryptoPayment_waiting_path}wallet`, 'utf8')
+        const data = await readFile(`${cryptoPayment_waiting_path}${wallet}`, 'utf8')
         const ret = JSON.parse(data)
         return ret
     } catch (ex) {
