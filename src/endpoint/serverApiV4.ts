@@ -380,8 +380,8 @@ class conet_dl_server_v4 {
 				
 				return res.socket?.end().destroy()
 			}
-			
-			return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
+			return res.statusCode(200).end()
+			// return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
 
 		})
 
@@ -409,8 +409,6 @@ class conet_dl_server_v4 {
 			GuardianPurchase()
 			
 		})
-
-
 
 		router.post ('/initV3',  async (req: any, res: any) => {
 
@@ -621,7 +619,7 @@ class conet_dl_server_v4 {
             if (!status) {
                 return res.statusCode(200).json({error:'no data!'})
             }
-            
+
             return res.status(200).json({ status }).end()
         })
 
