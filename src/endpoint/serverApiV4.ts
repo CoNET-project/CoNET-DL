@@ -380,7 +380,7 @@ class conet_dl_server_v4 {
 				
 				return res.socket?.end().destroy()
 			}
-			return res.statusCode(200).end()
+			return res.status(200).end()
 			// return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
 
 		})
