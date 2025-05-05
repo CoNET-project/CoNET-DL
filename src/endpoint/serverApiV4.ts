@@ -21,6 +21,10 @@ import SPClub_ABI from './SP_Club_ABI.json'
 import SPPassportABI from './SPPassportABI.json'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
 import {readFile} from 'node:fs/promises'
+import SPClubPointManagerABI from './SPClubPointManagerABI.json'
+
+
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
@@ -625,6 +629,18 @@ class conet_dl_server_v4 {
 
 			const _hash = ethers.solidityPacked(['string'], [obj.uuid])
 			obj.hash = ethers.zeroPadBytes(_hash, 32)
+            try {
+                const [,expiresDayes] = await CodeToClientV2_readonly.redeemData(obj.hash)
+                if (expiresDayes === BigInt(0)) {
+                    return res.status(400).json({
+                        error: "Redeem Code Error!"
+                    }).end()
+                }
+            } catch (ex: any) {
+                return res.status(400).json({
+                        error: "Unavailable!"
+                    }).end()
+            }
 			return postLocalhost('/api/codeToClient', obj, res)
 		})
 
@@ -675,7 +691,8 @@ const getCryptoPayment_waiting = async (wallet: string) => {
     
 }
 
-
+const CodeToClientV2_addr = `0xd83257F16355f0D8a36562226A74A7b5DCd7C8Da`
+const CodeToClientV2_readonly = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, mainnetEndpoint)
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
 	const option: RequestOptions = {
