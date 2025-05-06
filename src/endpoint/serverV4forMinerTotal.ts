@@ -40,7 +40,8 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
-const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
+const provide_cancun = new ethers.JsonRpcProvider(conet_cancun_rpc)
+const provide_mainnet = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 
 export const checkGasPrice = 1550000
 
@@ -94,12 +95,15 @@ const startFaucetProcess = () => new Promise(async resolve => {
 
 const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 
-const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
+const sc = new ethers.Contract(scAddr, devplopABI, provide_cancun)
+
 const developWalletPool: Map<string, boolean> = new Map()
 
 const epoch_mining_info_cancun_addr = '0x31680dc539cb1835d7C1270527bD5D209DfBC547'
-const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provideCONET)
-const epoch_mining_sc = new ethers.Contract(epoch_mining_info_cancun_addr, epoch_info_ABI, epoch_mining_manager)
+const epoch_mining_info_mainnet_addr = '0xbC713Fef0c7Bb178151cE45eFF1FD17d020a9ecD'
+
+const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provide_mainnet)
+const epoch_mining_sc = new ethers.Contract(epoch_mining_info_mainnet_addr, epoch_info_ABI, epoch_mining_manager)
 
 const CONET_Guardian_cancun_addr = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
 const GuardianNodesInfoV6_cancun_addr = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
@@ -122,7 +126,7 @@ const getAllDevelopAddress = async () => {
 
 const developWalletListening = async (block: number) => {
 	
-	const blockTs = await provideCONET.getBlock(block)
+	const blockTs = await provide_cancun.getBlock(block)
 
 	if (!blockTs?.transactions) {
         return 
@@ -130,7 +134,7 @@ const developWalletListening = async (block: number) => {
 
 	for (let tx of blockTs.transactions) {
 
-		const event = await provideCONET.getTransaction(tx)
+		const event = await provide_cancun.getTransaction(tx)
 		
 		if ( event?.to?.toLowerCase() === scAddr) {
 			await getAllDevelopAddress()
@@ -140,7 +144,7 @@ const developWalletListening = async (block: number) => {
 }
 
 const stratlivenessV2 = async (eposh: number) => {
-
+    logger(`stratlivenessV2 ${eposh}!`)
 	await Promise.all([
 		startProcess(),
 		startFaucetProcess(),
@@ -154,16 +158,16 @@ const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
 
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provideCONET)
+const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provide_cancun)
 logger(Colors.magenta(`faucetWallet = ${faucetWallet.address}`))
 const faucetContract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
 const faucet_v3_Contract_Pool = [faucetContract]
 
 
-const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
-const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
+const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provide_cancun)
+const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provide_cancun)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
-const contract_Referral = new ethers.Contract(conet_Referral_cancun, CONET_Referral_ABI, provideCONET)
+const contract_Referral = new ethers.Contract(conet_Referral_cancun, CONET_Referral_ABI, provide_cancun)
 
 interface faucetRequest {
 	wallet: string
@@ -190,7 +194,7 @@ const addTofaucetPool = async (wallet: string, ipAddress: string) => {
 	}
 
 	try {
-		const balance: BigInt = await provideCONET.getBalance(wallet)
+		const balance: BigInt = await provide_cancun.getBalance(wallet)
 		if (!balance) {
 			faucetWaitingPool.push({wallet, ipAddress})
 			startFaucetProcess()
@@ -263,7 +267,7 @@ let EPOCH_DATA: iEPOCH_DATA
 
 
 const moveData = async (epoch: number) => {
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provideCONET)
+	const rateSC = new ethers.Contract(rateAddr, rateABI, provide_cancun)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
 
 	const block = epoch-2
@@ -345,11 +349,11 @@ class conet_dl_server {
 
 	private initSetupData = async () => {
 		this.serverID = getServerIPV4Address(false)[0]
-		currentEpoch = await provideCONET.getBlockNumber()
+		currentEpoch = await provide_mainnet.getBlockNumber()
 		await getAllDevelopAddress()
 		this.startServer()
 
-		provideCONET.on ('block', async _block => {
+		provide_mainnet.on ('block', async _block => {
 
 			if (_block % 2) {
 				return
@@ -431,4 +435,6 @@ class conet_dl_server {
 
 export default conet_dl_server
 
-new conet_dl_server()
+// new conet_dl_server()
+
+logger(epoch_mining_manager.address)
