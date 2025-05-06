@@ -398,6 +398,7 @@ class conet_dl_server {
 			}
 			freePassportPool.set(obj.walletAddress, true)
 			freePassportwaitingPool.push(obj.walletAddress)
+            processFreePassport()
 			logger(`processFreePassport!!`)
 			return res.status(200).json({}).end()
 		})
