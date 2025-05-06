@@ -719,7 +719,7 @@ const getCryptoPay = () => {
 
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)       //      0x784985d7dC024fE8a08519Bba16EA72f8170b5c2
 // const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
-const SPClubPointManagerV2 = '0xd83257F16355f0D8a36562226A74A7b5DCd7C8Da'
+const SPClubPointManagerV2 = '0x5F4308E3A3351668a542A5e7179127FDA69d78FF'
 const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPointManagerABI, wallet_sp_reword)
 
 const sp_reword_sc_pool: ethers.Contract[] = [sp_reword_contract]

@@ -559,7 +559,6 @@ interface ICodeToClient {
     uuid: string
 }
 
-
 const CodeToClientWaiting: ICodeToClient[] = []
 
 const processFreePassport = async () => {
@@ -573,6 +572,7 @@ const processFreePassport = async () => {
 	if (!SC) {
 		return
 	}
+    
 	try {
 		const ts = await SC.freePassport(poolData)
 		await ts.wait()
@@ -653,7 +653,7 @@ const activeProcess = async (wallet: string, SC: ethers.Contract) => {
 	}
 }
 
-const CodeToClientV2_addr = `0xd83257F16355f0D8a36562226A74A7b5DCd7C8Da`
+const CodeToClientV2_addr = `0x5F4308E3A3351668a542A5e7179127FDA69d78FF`
 const Contract = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, SPPaasport_codeToClient)
 const CodeToClientV2ContractPool = [Contract]
 
@@ -668,7 +668,7 @@ const checkCodeToClientV2 = (obj: ICodeToClient, nftID: string): Promise<boolean
     try {
         const detail: any = SC.redeemData(obj.hash)
         if (detail[0] !== ethers.ZeroAddress) {
-            const tx = await SC.redeemPassport(obj.uuid, obj.to)
+            const tx = await SC.redeemPassport(obj.uuid, obj.to, obj.solana)
             logger(`checkCodeToClientV2 redeem ${obj.uuid} => ${obj.to} success ${tx.hash}`)
             obj.res.status(200).json({status: nftID}).end()
             await tx.wait()

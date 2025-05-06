@@ -66,6 +66,29 @@
 			"inputs": [
 				{
 					"internalType": "address",
+					"name": "to",
+					"type": "address"
+				},
+				{
+					"internalType": "uint256",
+					"name": "nftID",
+					"type": "uint256"
+				},
+				{
+					"internalType": "string",
+					"name": "solanaWallet",
+					"type": "string"
+				}
+			],
+			"name": "_changeActiveNFT",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
 					"name": "",
 					"type": "address"
 				}
@@ -280,6 +303,25 @@
 					"internalType": "address",
 					"name": "to",
 					"type": "address"
+				}
+			],
+			"name": "isSubscription",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "to",
+					"type": "address"
 				},
 				{
 					"internalType": "string",
@@ -327,6 +369,11 @@
 					"internalType": "address",
 					"name": "to",
 					"type": "address"
+				},
+				{
+					"internalType": "string",
+					"name": "solanaWallet",
+					"type": "string"
 				}
 			],
 			"name": "redeemPassport",
@@ -345,6 +392,25 @@
 			"name": "revokeReword",
 			"outputs": [],
 			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "solana",
+			"outputs": [
+				{
+					"internalType": "string",
+					"name": "",
+					"type": "string"
+				}
+			],
+			"stateMutability": "view",
 			"type": "function"
 		},
 		{

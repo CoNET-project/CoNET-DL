@@ -691,7 +691,7 @@ const getCryptoPayment_waiting = async (wallet: string) => {
     
 }
 
-const CodeToClientV2_addr = `0xd83257F16355f0D8a36562226A74A7b5DCd7C8Da`
+const CodeToClientV2_addr = `0x5F4308E3A3351668a542A5e7179127FDA69d78FF`
 const CodeToClientV2_readonly = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, mainnetEndpoint)
 
 const getReferrer = async (address: string, callbak: (err: Error|null, data?: any) => void)=> {
