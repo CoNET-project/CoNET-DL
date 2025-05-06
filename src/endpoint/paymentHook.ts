@@ -1139,17 +1139,15 @@ let oracleData: OracleData = {
 	timeStamp: 0,
 	data:null
 }
-const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
+const SP_Oracle_Addr = '0x96B2d95084C0D4b0dD67461Da06E22451389dE23'
 const SP_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
 const returnPool: {
 	from: string
 	SP_amount: string
     So_amount: string
 }[] = []
-const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 
-const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
-const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, endPointCancun)
+const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, CONET_MAINNET)
 
 const getOracle = async () => {
     const timeStamp = new Date().getTime()

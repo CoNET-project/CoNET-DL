@@ -19,14 +19,14 @@ const SOLANA_CONNECTION = new Connection(
 const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const endPointMainnet = new ethers.JsonRpcProvider(CoNETMainnetRPC)
 
-const SP_Oracle_Addr = '0xA57Dc01fF9a340210E5ba6CF01b4EE6De8e50719'
+const SP_Oracle_Addr = '0x96B2d95084C0D4b0dD67461Da06E22451389dE23'
 const SP_purchase_Addr = '0xE111F88A0204eE1F5DFE2cF5796F9C2179EeBBDd'.toLowerCase()
 const mainnet_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 
 
 
 
-const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, endPointCancun)
+const SP_Oracle_SC_reaonly = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, endPointMainnet)
 
 const solana_account = masterSetup.solanaManager
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
