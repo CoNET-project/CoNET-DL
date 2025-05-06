@@ -435,6 +435,4 @@ class conet_dl_server {
 
 export default conet_dl_server
 
-// new conet_dl_server()
-
-logger(epoch_mining_manager.address)
+new conet_dl_server()
