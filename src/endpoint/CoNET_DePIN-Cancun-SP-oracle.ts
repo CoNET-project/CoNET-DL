@@ -8,9 +8,9 @@ import { createJupiterApiClient, QuoteGetRequest } from '@jup-ag/api'
 import SP_Oracle_ABI from './SP_OracleABI.json'
 
 const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
-const endPointCancun = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
+const endPoint_Mainnet = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
 const SP_Oracle_Addr = '0x96B2d95084C0D4b0dD67461Da06E22451389dE23'
-const SP_Oracle_Wallet = new ethers.Wallet(masterSetup.SP_Oracle, endPointCancun)
+const SP_Oracle_Wallet = new ethers.Wallet(masterSetup.SP_Oracle, endPoint_Mainnet)
 const SP_Oracle_SC = new ethers.Contract(SP_Oracle_Addr, SP_Oracle_ABI, SP_Oracle_Wallet)
 logger(SP_Oracle_Wallet.address)
 const solanaDecimalPlaces = 9
@@ -23,9 +23,7 @@ const solanaAddr = "So11111111111111111111111111111111111111112"
 const usdcAddr = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 const spAddr = "Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump"
 
-const SC_Pool:  ethers.Contract[] = []
-
-SC_Pool.push (SP_Oracle_SC)
+const SC_Pool:  ethers.Contract[] = [SP_Oracle_SC]
 
 const jupiterQuoteApi = createJupiterApiClient()
 
@@ -210,9 +208,9 @@ let currentBlock = 0
 
 const daemondStart = async () => {
 	
-	currentBlock = await endPointCancun.getBlockNumber()
-	logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
-	endPointCancun.on('block', async block => {
+	currentBlock = await endPoint_Mainnet.getBlockNumber()
+	logger(Colors.magenta(`CoNET DePIN Oracle daemon Start from block [${currentBlock}]`))
+	endPoint_Mainnet.on('block', async block => {
 		if (block > currentBlock) {
 			currentBlock = block
 			if (block % 10 === 0) {
