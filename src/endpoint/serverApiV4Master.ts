@@ -654,7 +654,7 @@ const activeProcess = async (wallet: string, SC: ethers.Contract) => {
 	}
 }
 
-const CodeToClientV2_addr = `0x5F4308E3A3351668a542A5e7179127FDA69d78FF`
+const CodeToClientV2_addr = `0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb`
 const Contract = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, SPPaasport_codeToClient)
 const CodeToClientV2ContractPool = [Contract]
 

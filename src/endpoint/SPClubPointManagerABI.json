@@ -108,6 +108,29 @@
 			"inputs": [
 				{
 					"internalType": "address",
+					"name": "to",
+					"type": "address"
+				},
+				{
+					"internalType": "string",
+					"name": "solanaWallet",
+					"type": "string"
+				},
+				{
+					"internalType": "string",
+					"name": "_ipaddress",
+					"type": "string"
+				}
+			],
+			"name": "airdrop",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
 					"name": "addr",
 					"type": "address"
 				},
@@ -118,6 +141,19 @@
 				}
 			],
 			"name": "changeAddressInAdminlist",
+			"outputs": [],
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "uint256",
+					"name": "number",
+					"type": "uint256"
+				}
+			],
+			"name": "changeInitMemoLimited",
 			"outputs": [],
 			"stateMutability": "nonpayable",
 			"type": "function"
@@ -156,6 +192,19 @@
 				}
 			],
 			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "to",
+					"type": "address"
+				}
+			],
+			"name": "freePassport",
+			"outputs": [],
+			"stateMutability": "nonpayable",
 			"type": "function"
 		},
 		{
@@ -276,6 +325,25 @@
 		{
 			"inputs": [
 				{
+					"internalType": "bytes32",
+					"name": "",
+					"type": "bytes32"
+				}
+			],
+			"name": "initMemo",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
 					"internalType": "address",
 					"name": "to",
 					"type": "address"
@@ -292,6 +360,11 @@
 					"internalType": "bool",
 					"name": "ret",
 					"type": "bool"
+				},
+				{
+					"internalType": "uint256",
+					"name": "SP_Balance",
+					"type": "uint256"
 				}
 			],
 			"stateMutability": "view",
@@ -319,6 +392,25 @@
 		{
 			"inputs": [
 				{
+					"internalType": "string",
+					"name": "",
+					"type": "string"
+				}
+			],
+			"name": "last_SP_balance",
+			"outputs": [
+				{
+					"internalType": "uint256",
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
 					"internalType": "address",
 					"name": "to",
 					"type": "address"
@@ -327,6 +419,11 @@
 					"internalType": "string",
 					"name": "solanaWallet",
 					"type": "string"
+				},
+				{
+					"internalType": "uint256",
+					"name": "SP_balance",
+					"type": "uint256"
 				}
 			],
 			"name": "mintReword",
@@ -408,6 +505,25 @@
 					"internalType": "string",
 					"name": "",
 					"type": "string"
+				}
+			],
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"inputs": [
+				{
+					"internalType": "address",
+					"name": "",
+					"type": "address"
+				}
+			],
+			"name": "solanaLinked",
+			"outputs": [
+				{
+					"internalType": "bool",
+					"name": "",
+					"type": "bool"
 				}
 			],
 			"stateMutability": "view",

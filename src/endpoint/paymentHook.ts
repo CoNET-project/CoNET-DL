@@ -719,7 +719,7 @@ const getCryptoPay = () => {
 
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)       //      0x784985d7dC024fE8a08519Bba16EA72f8170b5c2
 // const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
-const SPClubPointManagerV2 = '0x5F4308E3A3351668a542A5e7179127FDA69d78FF'
+const SPClubPointManagerV2 = '0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb'
 const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPointManagerABI, wallet_sp_reword)
 
 const sp_reword_sc_pool: ethers.Contract[] = [sp_reword_contract]
@@ -836,9 +836,9 @@ const spRewardCheck = async (wallet: string, solana: string): Promise<false|numb
             return false
         }
         
-
+        const initBalance = parseInt(ethers.formatUnits(status[1], 6))
         const price = parseInt(oracleData.data?.sp2499)
-        if (!status || typeof balance !== 'number' || balance < price) {
+        if (!status[0] || typeof balance !== 'number'  || balance < price && (initBalance === 0 || initBalance > 0 && initBalance > balance)) {
             return false
         }
 
@@ -1474,3 +1474,21 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 
 new conet_dl_server ()
+
+const createRedeemProcessAdmin  = () => {
+    for (let i = 0; i < 20; i ++) {
+        const redeemCode = createRedeem ('1', '')
+        console.log(redeemCode)
+    }
+    logger(`success!`)
+}
+
+const check = async () => {
+    const kkk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+}
+
+setTimeout (() => {
+    check()
+}, 10000)
+
+// createRedeemProcessAdmin ()
