@@ -435,6 +435,7 @@ class conet_dl_server {
 			logger(Colors.magenta(`/spReward`), message, signMessage)
 			
 			const obj = checkSign (message, signMessage)
+
 			const price = obj?.price
 			if (!obj || !obj?.walletAddress|| !obj?.solanaWallet) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
@@ -450,7 +451,8 @@ class conet_dl_server {
 
             reword_pool.push({
                 wallet: obj.walletAddress,
-                solana
+                solana,
+                balance: ethers.parseUnits(balance.toString(), spDecimalPlaces)
             })
             sp_reword_process()
             setTimeout(() => {
@@ -724,7 +726,7 @@ const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPoint
 
 const sp_reword_sc_pool: ethers.Contract[] = [sp_reword_contract]
 
-const reword_pool: {wallet: string, solana: string}[] = []
+const reword_pool: {wallet: string, solana: string, balance: BigInt}[] = []
 
 const sp_reword_process = async () => {
     const obj = reword_pool.shift()
