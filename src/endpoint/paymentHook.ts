@@ -744,7 +744,7 @@ const sp_reword_process = async () => {
 
     try {
         const [tx, currentNFT] = await Promise.all([
-            SC.mintReword(obj.wallet, obj.solana),
+            SC.mintReword(obj.wallet, obj.solana, obj.balance),
             payment_SC_readOnly.getCurrntPasspurtNumber()
             
         ])
@@ -1485,12 +1485,12 @@ const createRedeemProcessAdmin  = () => {
     logger(`success!`)
 }
 
-const check = async () => {
-    const kkk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
-}
+// const check = async () => {
+//     const kkk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+// }
 
-setTimeout (() => {
-    check()
-}, 10000)
+// setTimeout (() => {
+//     check()
+// }, 10000)
 
 // createRedeemProcessAdmin ()
