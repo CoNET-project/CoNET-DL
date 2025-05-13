@@ -606,7 +606,7 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
         logger(`spRate !oracleData?.data Error!`)
         return {sp:'0', so:'0'}
     }
-logger(inspect(oracleData?.data, false, 3, true))
+    logger(inspect(oracleData?.data, false, 3, true))
     returnPool.push({
         from: solana,
         SP_amount:ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces).toString(), //oracleData.data.sp2499,
@@ -1426,7 +1426,7 @@ const returnSP_Pool_process = async () => {
 	if (!returnData) {
 		return
 	}
-    logger(inspect(returnData, false, 3, true))
+    logger(inspect({publicKey: solana_account_privatekey.publicKey, returnData}, false, 3, true))
     returnSP_Pool_processing = true
     await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount)
 	returnSP_Pool_processing = false
