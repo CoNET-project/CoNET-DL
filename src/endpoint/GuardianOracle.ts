@@ -89,4 +89,6 @@ const process = async () => {
 	})
 }
 // getIDs()
-process()
+// process()
+
+logger(managerWallet.address)
