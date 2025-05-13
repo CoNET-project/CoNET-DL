@@ -24,7 +24,7 @@ interface quote {
 	}
 }
 
-const provide = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
+const provide = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 const apiKey = masterSetup.CoinMarketCapAPIKey
 const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
 const managerWallet = new ethers.Wallet(masterSetup.oracleManager, provide)

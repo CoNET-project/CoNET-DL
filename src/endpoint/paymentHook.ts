@@ -45,11 +45,9 @@ const keyId = masterSetup.apple.keyId
 const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
 const filePath = masterSetup.apple.encodedKeyPath
 const appleRoot = masterSetup.apple.appleRootCA
-const Cancun_provide = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 
 const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
-const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
-const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, Cancun_provide)
+
 const cryptoPayWallet = ethers.Wallet.fromPhrase(masterSetup.cryptoPayWallet)
 const environment = Environment.SANDBOX
 
@@ -73,7 +71,8 @@ const PaymentPassport_addr = '0x3F7D3F23D0A00C60f5231De78094bD7409C72AF9'
 const payment_SC = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, web2_wallet)
 const payment_SC_readOnly = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, CONET_MAINNET)
 const Payment_SCPool: ethers.Contract[] = [payment_SC]
-
+const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
+const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, CONET_MAINNET)
 
 const payment_waiting_status: Map<string, number|string> = new Map()
 const mintPassportPool: walletsProcess[]  = []
