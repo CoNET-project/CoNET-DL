@@ -1180,9 +1180,6 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
     return false
 }
 
-const SOLANA_CONNECTION = new Connection(
-	"https://api.mainnet-beta.solana.com" // We only support mainnet.
-)
 
 const solana_account = masterSetup.solana_return_manager
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
@@ -1271,6 +1268,7 @@ const SP_Address = new PublicKey(SP_address)
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
+    const SOLANA_CONNECTION = new Connection(getRandomNode())
     try {
         const sourceAccount = await getOrCreateAssociatedTokenAccount(
             SOLANA_CONNECTION, 
@@ -1339,6 +1337,11 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     // } catch (ex: any) {
     //     logger(Colors.red(`returnSP sendAndConfirmTransaction Error! ${ex.message}`))
     // }
+}
+
+const getRandomNode = () => {
+    const _node1 = Guardian_Nodes[Math.floor(Math.random() * (Guardian_Nodes.length - 1))]
+    return `https://${_node1.domain}.conet.network/solana-rpc`
 }
 
 const getBalance_SP = async (solanaWallet: string): Promise<number|null> => {
@@ -1540,6 +1543,13 @@ const createRedeemProcessAdmin  = () => {
     logger(`success!`)
 }
 
+// const test = async () => {
+//     setTimeout(async () => {
+//         await returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', '112932169665', '')
+//     }, 15000)
+    
+// }
+
 // const check = async () => {
 //     const kkk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 // }
@@ -1549,3 +1559,4 @@ const createRedeemProcessAdmin  = () => {
 // }, 10000)
 
 // createRedeemProcessAdmin ()
+// test()
