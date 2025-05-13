@@ -609,8 +609,8 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
 logger(inspect(oracleData?.data, false, 3, true))
     returnPool.push({
         from: solana,
-        SP_amount:'',
-        So_amount: ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces).toString() //oracleData.data.sp2499
+        SP_amount:ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces).toString(), //oracleData.data.sp2499,
+        So_amount: ''
     })
     returnSP_Pool_process()
     
