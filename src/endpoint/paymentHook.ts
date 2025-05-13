@@ -602,11 +602,12 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
 	mintPassport()
 
     await getOracle()
+    
     if (!oracleData?.data) {
         logger(`spRate !oracleData?.data Error!`)
         return {sp:'0', so:'0'}
     }
-
+logger(inspect(oracleData?.data, false, 3, true))
     returnPool.push({
         from: solana,
         SP_amount:'',
