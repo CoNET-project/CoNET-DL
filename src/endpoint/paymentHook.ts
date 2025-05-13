@@ -596,7 +596,7 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
 			solanaWallet: solana,
 			expiresDays: 93,
 			total: 1,
-			hash: `${hdWallet}-${walletAddress}-${solana}`,
+			hash: `${hdWallet}-${walletAddress}`,
             hdWallet
 		})
 	mintPassport()
