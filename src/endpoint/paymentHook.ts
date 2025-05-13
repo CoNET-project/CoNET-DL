@@ -61,9 +61,10 @@ type wallets = {
 type walletsProcess = {
 	walletAddress: string
 	solanaWallet: string
-	monthly: boolean
+	expiresDays: number
 	total: number
 	hash: string
+    hdWallet?: string
 }
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
@@ -282,7 +283,7 @@ class conet_dl_server {
 			mintPassportPool.push({
 				walletAddress: data.walletAddress,
 				solanaWallet:data.solanaWallet,
-				monthly: data?.type === '1'?  true: false,
+				expiresDays: data?.type === '1'?  31: 372,
 				total: 1,
 				hash: data.hash
 			})
@@ -399,20 +400,33 @@ class conet_dl_server {
             logger(`cryptoPay! ipaddress = ${ipaddress}`)
 			const agentWallet = body?.agentWallet||''
             const cryptoName = body?.cryptoName
+            const walletAddress = body?.walletAddress||''
+            const solana = body?.solana||''
             const plan = body?.plan
 
-
             const error = JSON.stringify({error: 'Format error!'})
-            if (!cryptoName|| plan !== '1' && plan !== '12') {
-                logger(`Error ===== !cryptoName ${!cryptoName} || plan !== '1' ${plan !== '1'} || plan !== '12' ${plan !== '12'}`)
+            
+            if (!cryptoName || (cryptoName !== 'BSC USDT' && cryptoName !=='BNB' ) || (plan !== '1' && plan !== '12' && plan !== '3' ) || plan === '3' && (!walletAddress || !solana)) {
+                logger(`/cryptoPay Error ===== !cryptoName ${!cryptoName} || plan !== '1' ${plan !== '1'} || plan !== '12' ${plan !== '12'}`)
+                return res.status(200).json({error: 'format error'}).end()
+            }
+
+            if (walletAddress) {
+                if (!ethers.isAddress(walletAddress)) {
+                    return res.status(200).json({error: 'format error'}).end()
+                }
+            }
+            
+            const transferNumber = getPriceFromCryptoName(cryptoName, plan)
+            if (!transferNumber) {
+                logger(`/cryptoPay Error transferNumber === null! cryptoName = ${cryptoName} plan = ${plan}`)
                 return res.status(200).json({error: 'format error'}).end()
             }
 
             const _wallet = await getCryptoPay()
-            const transferNumber = getPriceFromCryptoName(cryptoName, plan)
-            const listen = listenTransfer(_wallet, transferNumber, cryptoName, plan, agentWallet )
+            const listen = listenTransfer(_wallet, transferNumber, cryptoName, plan, agentWallet, walletAddress.toLowerCase(), solana )
 
-            if (!_wallet|| !transferNumber ||! listen) {
+            if (!_wallet|| ! listen) {
                 return res.status(200).json({error: 'No necessary parameters'}).end()
             }
             
@@ -532,14 +546,14 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
-const getPriceFromCryptoName = (cryptoName: string, plan: '1'|'12') => {
+const getPriceFromCryptoName = (cryptoName: string, plan: '1'|'12'|'3') => {
 
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '12' ? (24.99/oracle.bnb).toFixed(6): (2.99/oracle.bnb).toFixed(6)
+            return plan === '12' ? (24.99/oracle.bnb).toFixed(6): plan === '1' ?  (2.99/oracle.bnb).toFixed(6): (31/oracle.bnb).toFixed(6)
         }
         case 'BSC USDT': {
-            return plan === '12' ? '24.99' : '2.99'
+            return plan === '12' ? '24.99' : plan === '1' ? '2.99' : '31.00'
         }
 
         default: {
@@ -576,7 +590,33 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12', agentWallet: string) => new Promise(async executor => {
+const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string) => {
+    mintPassportPool.push({
+			walletAddress,
+			solanaWallet: solana,
+			expiresDays: 93,
+			total: 1,
+			hash: `${hdWallet}-${walletAddress}-${solana}`,
+            hdWallet
+		})
+	mintPassport()
+
+    await getOracle()
+    if (!oracleData?.data) {
+        logger(`spRate !oracleData?.data Error!`)
+        return {sp:'0', so:'0'}
+    }
+
+    returnPool.push({
+        from: solana,
+        SP_amount:'',
+        So_amount: ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces).toString() //oracleData.data.sp2499
+    })
+    returnSP_Pool_process()
+    
+}
+
+const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnb_usdt_contract.balanceOf(wallet)
@@ -589,9 +629,10 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
             return logger(`BNB-USDT ${wallet} time over STOP listening!`)
         }
         waitingList.set(wallet, count)
+
         return setTimeout(async () => {
-            logger(`waitingBNB_USDT count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
-            return executor( await waitingBNB_USDT (walletHD, price, plan, agentWallet))
+            logger(`waiting BNB_USDT count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
+            return executor( await waitingBNB_USDT (walletHD, price, plan, agentWallet, wallet, solana))
         }, 15 * 1000)
     }
    
@@ -602,9 +643,13 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     }
 
     logger(`waitingBNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
-
-    const redeemCode = createRedeem (plan, agentWallet)
-    payment_waiting_status.set (wallet, redeemCode)
+    if (plan !== '3') {
+        const redeemCode = createRedeem (plan, agentWallet)
+        payment_waiting_status.set (wallet, redeemCode)
+    } else {
+        mintPluePlan(wallet, walletAddress, solana)
+    }
+    
     storePayment(walletHD, price, 'BNB-USDT', balance, false)
 
 })
@@ -659,7 +704,7 @@ const createRedeemProcess = async () => {
 
 }
 
-const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12', agentWallet: string ) => new Promise(async executor => {
+const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnbPrivate.getBalance(wallet)
@@ -674,7 +719,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'
         waitingList.set(wallet, count)
         return setTimeout(async () => {
             // logger(`waitingBNB count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
-            return executor( await waitingBNB (walletHD, price, plan, agentWallet))
+            return executor( await waitingBNB (walletHD, price, plan, agentWallet, walletAddress, solana))
         }, 15 * 1000)
     }
    
@@ -683,12 +728,20 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'
         payment_waiting_status.set (wallet, 0)
         return storePayment(walletHD, price, 'BNB', balance, true)
     }
-    const redeemCode = createRedeem (plan, agentWallet)
-    payment_waiting_status.set (wallet, redeemCode)
+    
+    if (plan === '1' || plan === '12') {
+        const _plan: '1'|'12' = plan
+        const redeemCode = createRedeem (_plan, agentWallet)
+        payment_waiting_status.set (wallet, redeemCode)
+    } else {
+        mintPluePlan(wallet, walletAddress, solana)
+    }
+    
+    
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
-const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'12', agentWallet: string) => {
+const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => {
     payment_waiting_status.set (wallet.address.toLowerCase(), 1)
     agentWallet = ethers.isAddress(agentWallet) ? agentWallet : ''
     switch(cryptoName) {
@@ -696,15 +749,14 @@ const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, crypto
             const _balance = await bnbPrivate.getBalance(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            waitingBNB (wallet, parseFloat(price), plan, agentWallet)
+            waitingBNB (wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
             return true
         }
         case 'BSC USDT': {
-            
             const _balance = await bnb_usdt_contract.balanceOf(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet)
+            waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
             return true
         }
 
@@ -909,8 +961,8 @@ const mintPassport = async () => {
 		}
 
 		const currentNFT: BigInt = await SC.getCurrntPasspurtNumber()
-        payment_waiting_status.set(obj.walletAddress, parseInt(currentNFT.toString()) + 1)
-		const ts = await SC.mintPassportAndActive(obj.walletAddress, obj.monthly ? 32 : 372, obj.hash)
+        payment_waiting_status.set(obj.hdWallet||obj.walletAddress, parseInt(currentNFT.toString()) + 1)
+		const ts = await SC.mintPassportAndActive(obj.walletAddress, obj.expiresDays, obj.hash)
 		logger(`mintPassport ${ts.hash}`)
 		await ts.wait()
 		
@@ -922,7 +974,7 @@ const mintPassport = async () => {
         }
 
 	} catch (ex: any) {
-		payment_waiting_status.set(obj.walletAddress, 0)
+		payment_waiting_status.set(obj.hdWallet||obj.walletAddress, 0)
 		logger(`mintPassport Error! ${ex.message}`)
 	}
 	Payment_SCPool.push(SC)
@@ -970,7 +1022,7 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		mintPassportPool.push({
 			walletAddress,
 			solanaWallet: metadata.solanaWallet,
-			monthly: payAmount === 299 ? true: false,
+			expiresDays: payAmount === 299 ? 31: 372,
 			total: 1,
 			hash: paymentIntent.id
 		})
@@ -1045,8 +1097,10 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                     if (getPassedWallet) {
                         const plan = verifiedTransactionRenew.productId
                         mintPassportPool.push({
-                            walletAddress: getPassedWallet.walletAddress, solanaWallet: getPassedWallet.solanaWallet, total: 1,
-                            monthly: plan === '001' ? true : false,
+                            walletAddress: getPassedWallet.walletAddress, 
+                            solanaWallet: getPassedWallet.solanaWallet, 
+                            total: 1,
+                            expiresDays: plan === '001' ? 31 : 372,
                             hash: verifiedTransactionRenew.originalTransactionId
                         })
                         return mintPassport()
@@ -1110,7 +1164,7 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
                         logger(`appleReceipt start PURCHASE success ${walletAddress}`)
                         mintPassportPool.push({
                             walletAddress, solanaWallet, total: 1,
-                            monthly: n.plan === '001' ? true : false,
+                            expiresDays: n.plan === '001' ? 31 : 372,
                             hash: n.hash
                         })
                         mintPassport()
@@ -1239,11 +1293,11 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
             BigInt(SP_Amount)
         )
 
-        const transferInstructionSol = SystemProgram.transfer({
+        const transferInstructionSol = Sol_Amount ? SystemProgram.transfer({
             fromPubkey: solana_account_privatekey.publicKey,
             toPubkey: new PublicKey(to),
             lamports: BigInt(Sol_Amount),
-        })
+        }) : null
 
 
         const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
@@ -1252,7 +1306,7 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         
         const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
         tx.add (transferInstructionSP)
-        tx.add (transferInstructionSol)
+        transferInstructionSol ? tx.add (transferInstructionSol): null
 
 		
         const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
