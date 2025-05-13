@@ -546,8 +546,8 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
-const getPriceFromCryptoName = (cryptoName: string, plan: '1'|'12'|'3') => {
-
+const getPriceFromCryptoName = async (cryptoName: string, plan: '1'|'12'|'3') => {
+    await oracolPrice()
     switch (cryptoName) {
         case 'BNB': {
             return plan === '12' ? (24.99/oracle.bnb).toFixed(6): plan === '1' ?  (2.99/oracle.bnb).toFixed(6): (31/oracle.bnb).toFixed(6)
