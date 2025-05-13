@@ -417,7 +417,7 @@ class conet_dl_server {
                 }
             }
             
-            const transferNumber = getPriceFromCryptoName(cryptoName, plan)
+            const transferNumber = await getPriceFromCryptoName(cryptoName, plan)
             if (!transferNumber) {
                 logger(`/cryptoPay Error transferNumber === null! cryptoName = ${cryptoName} plan = ${plan}`)
                 return res.status(200).json({error}).end()
