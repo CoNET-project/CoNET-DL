@@ -1286,12 +1286,12 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
             to_address
         )
 
-        const transferInstructionSP = createTransferInstruction(
+        const transferInstructionSP = SP_Amount ? createTransferInstruction(
             sourceAccount.address,
             destinationAccount.address,
             solana_account_privatekey.publicKey,
             BigInt(SP_Amount)
-        )
+        ): null
 
         const transferInstructionSol = Sol_Amount ? SystemProgram.transfer({
             fromPubkey: solana_account_privatekey.publicKey,
@@ -1305,7 +1305,7 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         })
         
         const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
-        tx.add (transferInstructionSP)
+        transferInstructionSP ? tx.add (transferInstructionSP): null
         transferInstructionSol ? tx.add (transferInstructionSol): null
 
 		
@@ -1426,10 +1426,11 @@ const returnSP_Pool_process = async () => {
 	if (!returnData) {
 		return
 	}
+    logger(inspect(returnData, false, 3, true))
     returnSP_Pool_processing = true
     await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount)
 	returnSP_Pool_processing = false
-    logger(inspect(returnData, false, 3, true))
+    
 	returnSP_Pool_process()
 }
 
