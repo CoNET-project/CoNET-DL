@@ -48,7 +48,7 @@ const appleRoot = masterSetup.apple.appleRootCA
 const Cancun_provide = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 
 const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
-const oracleSC_addr = '0x0Ac28e301FeE0f60439675594141BEB53853f7b9'
+const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
 const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, Cancun_provide)
 const cryptoPayWallet = ethers.Wallet.fromPhrase(masterSetup.cryptoPayWallet)
 const environment = Environment.SANDBOX
