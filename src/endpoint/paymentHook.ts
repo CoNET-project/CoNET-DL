@@ -407,20 +407,20 @@ class conet_dl_server {
             const error = JSON.stringify({error: 'Format error!'})
             
             if (!cryptoName || (cryptoName !== 'BSC USDT' && cryptoName !=='BNB' ) || (plan !== '1' && plan !== '12' && plan !== '3' ) || plan === '3' && (!walletAddress || !solana)) {
-                logger(`/cryptoPay Error ===== !cryptoName ${!cryptoName} || plan !== '1' ${plan !== '1'} || plan !== '12' ${plan !== '12'}`)
-                return res.status(200).json({error: 'format error'}).end()
+                logger(`/cryptoPay Error ===== !cryptoName ${!(cryptoName !== 'BSC USDT' && cryptoName !=='BNB' )} || (plan !== '1' && plan !== '12' && plan !== '3' ) == ${(plan !== '1' && plan !== '12' && plan !== '3' )}  plan === '3' && (!walletAddress || !solana) ==${ plan === '3' && (!walletAddress || !solana)}`)
+                return res.status(200).json({error}).end()
             }
 
             if (walletAddress) {
                 if (!ethers.isAddress(walletAddress)) {
-                    return res.status(200).json({error: 'format error'}).end()
+                    return res.status(200).json({error}).end()
                 }
             }
             
             const transferNumber = getPriceFromCryptoName(cryptoName, plan)
             if (!transferNumber) {
                 logger(`/cryptoPay Error transferNumber === null! cryptoName = ${cryptoName} plan = ${plan}`)
-                return res.status(200).json({error: 'format error'}).end()
+                return res.status(200).json({error}).end()
             }
 
             const _wallet = await getCryptoPay()
