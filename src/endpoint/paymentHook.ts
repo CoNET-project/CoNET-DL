@@ -611,7 +611,7 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
         solanaWallet: solana,
         expiresDays: 93,
         total: 1,
-        hash: `${v4()}`,
+        hash: `${new Date().getTime().toString()}`,
         hdWallet
     })
     reword_pool.push({
