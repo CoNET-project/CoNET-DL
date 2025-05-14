@@ -1264,14 +1264,16 @@ const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
     microLamports: 9000
 })
 
-
+const fromKeypair = Keypair.fromSecretKey(Bs58.decode(solana_account))
+const SP_Address = new PublicKey(SP_address)
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
-    const connect = getRandomNode()
+    const connect = 'https://api.mainnet-beta.solana.com'
+    // const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, "confirmed")
-    const SP_Address = new PublicKey(SP_address)
-    const fromKeypair = Keypair.fromSecretKey(Bs58.decode(solana_account))
+   
+    
     const SP_amount = parseInt(SP_Amount)
     const SOL_amount = parseInt(Sol_Amount)
     try {
@@ -1283,8 +1285,6 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
             false,
             "confirmed"
         )
-
-       
 
         const destinationAccount = await getOrCreateAssociatedTokenAccount(
             SOLANA_CONNECTION, 
@@ -1326,9 +1326,9 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         tx.recentBlockhash = latestBlockHash.blockhash
         
         const transactionSignature = await SOLANA_CONNECTION.sendTransaction(tx, [fromKeypair])
-        logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Sol = ${ethers.parseUnits(Sol_Amount, solanaDecimalPlaces)} hash = ${transactionSignature} success!`))
+        logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP = ${SP_amount/spDecimalPlaces**10} Sol = ${SOL_amount/10**solanaDecimalPlaces} hash = ${transactionSignature} success!`))
     } catch (ex: any) {
-        logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Sol = ${ethers.parseUnits(Sol_Amount, solanaDecimalPlaces)} Error! ${ex.message}`))
+        logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP =  ${SP_amount/spDecimalPlaces**10} Sol = ${SOL_amount/10**solanaDecimalPlaces} Error! ${ex.message}`))
     }
     
     // const option:TransactionConfirmationStrategy = {
@@ -1556,6 +1556,10 @@ const createRedeemProcessAdmin  = () => {
         console.log(redeemCode)
     }
     logger(`success!`)
+}
+
+const test = () => {
+    returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
 }
 
 // const check = async () => {
