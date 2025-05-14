@@ -590,15 +590,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
 }
 
 const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string) => {
-    mintPassportPool.push({
-			walletAddress,
-			solanaWallet: solana,
-			expiresDays: 93,
-			total: 1,
-			hash: `${hdWallet}-${walletAddress}`,
-            hdWallet
-		})
-	mintPassport()
+    
 
     await getOracle()
     
@@ -607,12 +599,26 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
         return {sp:'0', so:'0'}
     }
     logger(inspect(oracleData?.data, false, 3, true))
+    const SP_amount = ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces).toString()
+    const So_amount = ''
     returnPool.push({
         from: solana,
-        SP_amount:ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces).toString(), //oracleData.data.sp2499,
-        So_amount: ''
+        SP_amount,
+        So_amount
     })
-    returnSP_Pool_process()
+    mintPassportPool.push({
+        walletAddress,
+        solanaWallet: solana,
+        expiresDays: 93,
+        total: 1,
+        hash: `${hdWallet}-${SP_amount}`,
+        hdWallet
+    })
+    await Promise.all([
+        mintPassport(),
+        returnSP_Pool_process()
+    ])
+	
     
 }
 
