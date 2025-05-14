@@ -962,6 +962,7 @@ const mintPassport = async () => {
 		const isHash = await SC.getPayID(obj.hash)
         //  already mint passwork
 		if (isHash) {
+            logger(`mintPassport hash ${obj.hash} alaready `)
 			Payment_SCPool.push(SC)
 			return mintPassport()
 		}
