@@ -1268,11 +1268,12 @@ const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
-    const connect = 'https://api.mainnet-beta.solana.com'// getRandomNode()
+    const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, "confirmed")
     const SP_Address = new PublicKey(SP_address)
     const fromKeypair = Keypair.fromSecretKey(Bs58.decode(solana_account))
-    const amount = parseInt(Sol_Amount)
+    const SP_amount = parseInt(SP_Amount)
+    const SOL_amount = parseInt(Sol_Amount)
     try {
         const sourceAccount = await getOrCreateAssociatedTokenAccount(
             SOLANA_CONNECTION, 
@@ -1298,13 +1299,13 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
             sourceAccount.address,
             destinationAccount.address,
             fromKeypair.publicKey,
-            amount
+            SP_amount
         ): null
 
         const transferInstructionSol = Sol_Amount ? SystemProgram.transfer({
             fromPubkey: fromKeypair.publicKey,
             toPubkey: new PublicKey(to),
-            lamports: amount,
+            lamports: SOL_amount,
         }) : null
 
 
