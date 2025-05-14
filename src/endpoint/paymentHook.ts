@@ -645,7 +645,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
 
         return setTimeout(async () => {
             logger(`waiting BNB_USDT count [${count}] ${wallet} is ZERO ${balance} do next waiting!`)
-            return executor( await waitingBNB_USDT (walletHD, price, plan, agentWallet, wallet, solana))
+            return executor( await waitingBNB_USDT (walletHD, price, plan, walletAddress, wallet, solana))
         }, 15 * 1000)
     }
    
