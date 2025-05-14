@@ -31,6 +31,7 @@ import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
 import {mapLimit} from 'async'
 
+
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -611,7 +612,7 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
         solanaWallet: solana,
         expiresDays: 93,
         total: 1,
-        hash: `${hdWallet}-${SP_amount}`,
+        hash: `${v4()}`,
         hdWallet
     })
     await Promise.all([
