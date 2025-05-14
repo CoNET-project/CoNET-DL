@@ -599,6 +599,8 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
         return {sp:'0', so:'0'}
     }
     logger(inspect(oracleData?.data, false, 3, true))
+
+    logger(inspect({hdWallet,walletAddress, solana}))
     const SP_amount = ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces)
     const So_amount = ''
     returnPool.push({
@@ -654,6 +656,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     }
 
     logger(`waitingBNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
+
     if (plan !== '3') {
         const redeemCode = createRedeem (plan, agentWallet)
         payment_waiting_status.set (wallet, redeemCode)
