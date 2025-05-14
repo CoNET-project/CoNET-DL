@@ -30,7 +30,7 @@ import GuardianNodesV2ABI from './CGPNv7New.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
 import {mapLimit} from 'async'
-
+import CoNET_DePIN_SpClub_ABI from './CoNET_DePIN-SPClub.ABI.json'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -590,7 +590,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string) => {
+const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string, referee: string) => {
 
     await getOracle()
     
@@ -621,9 +621,17 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
         solana,
         balance: SP_amount
     })
+
+    SPClub_Point_Process.push({
+        expiresDayes: 93,
+        wallet: walletAddress,
+        referee,
+
+    })
     await Promise.all([
         mintPassport(),
-        returnSP_Pool_process()
+        returnSP_Pool_process(),
+        process_SPClub_Poing_Process()
     ])
 	
     sp_reword_process()
@@ -661,7 +669,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
         const redeemCode = createRedeem (plan, agentWallet)
         payment_waiting_status.set (wallet, redeemCode)
     } else {
-        mintPluePlan(wallet, walletAddress, solana)
+        mintPluePlan(wallet, walletAddress, solana, agentWallet)
     }
     
     storePayment(walletHD, price, 'BNB-USDT', balance, false)
@@ -748,7 +756,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'
         const redeemCode = createRedeem (_plan, agentWallet)
         payment_waiting_status.set (wallet, redeemCode)
     } else {
-        mintPluePlan(wallet, walletAddress, solana)
+        mintPluePlan(wallet, walletAddress, solana, agentWallet)
     }
     
     
@@ -951,6 +959,46 @@ const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: Big
 		return nft
 	}
 	return -1
+}
+
+const SP_Club_Point_Manager = new ethers.Wallet(masterSetup.SP_Club_Point_Manager, CONET_MAINNET)
+const SPClub_Point_manager = [new ethers.Contract('0x563344B7Dd3336a3e493429Cb7c435Ba86c2CfE9', CoNET_DePIN_SpClub_ABI, SP_Club_Point_Manager)]
+
+const SPClub_Point_Process: {
+    wallet: string
+    referee: string
+    expiresDayes: number
+}[] = []
+
+const SubscriptionPoint = 3
+const RefferentSubscriptionPoint = 4
+
+const process_SPClub_Poing_Process = async () => {
+    const obj = SPClub_Point_Process.shift()
+    if (!obj) {
+        return
+    }
+    const SC = SPClub_Point_manager.shift()
+    if (!SC) {
+        SPClub_Point_Process.unshift(obj)
+        return
+    }
+
+    try {
+        
+        const tx1 = await SC.mint (obj.wallet, SubscriptionPoint, obj.expiresDayes)
+        await tx1.wait()
+        if (obj.referee) {
+            const tx2 = await SC.mint (obj.referee, RefferentSubscriptionPoint, obj.expiresDayes)
+            await tx2.wait()
+        }
+
+    } catch (ex: any) {
+        logger(`process_SPClub_Poing Error!`, ex.message)
+    }
+    SPClub_Point_manager.unshift(SC)
+    return process_SPClub_Poing_Process ()
+
 }
 
 const mintPassport = async () => {
