@@ -488,7 +488,7 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			logger(Colors.magenta(`/spReward`), message, signMessage)
+			logger(Colors.magenta(`/activeNFT`), message, signMessage)
 			
 			const obj = checkSign (message, signMessage)
 
@@ -538,6 +538,7 @@ const changeActiveNFT_Process = async () => {
     try {
         const tx = await SC._changeActiveNFT (obj.wallet, obj.nftID, obj.solanaWallet)
         await tx.wait ()
+        logger(`changeActiveNFT_Process ${obj.wallet}:${obj.nftID} Success ${tx.hash}`)
     } catch (ex) {
 
     }
