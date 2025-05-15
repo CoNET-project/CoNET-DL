@@ -541,7 +541,7 @@ const changeActiveNFT_Process = async () => {
     } catch (ex) {
 
     }
-    changeActiveNFT_pool.unshift(obj)
+    sp_reword_sc_pool.push(SC)
     changeActiveNFT_Process()
 }
 
@@ -796,7 +796,7 @@ const createRedeemProcess = async () => {
         logger(`createRedeemProcess Error!`, ex.message)
     }
 
-    sp_reword_sc_pool.unshift(SC)
+    sp_reword_sc_pool.push(SC)
     createRedeemProcess ()
 
 
