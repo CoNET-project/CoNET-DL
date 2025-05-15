@@ -554,7 +554,7 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
         changeActiveNFT_pool.push({
             wallet, nftID, solanaWallet
         })
-
+        changeActiveNFT_Process()
         return true
 
     } catch (ex) {
