@@ -476,6 +476,35 @@ class conet_dl_server {
 			return res.status(200).json({success: true}).end()
 		})
 
+        router.post('/activeNFT', async (req: any, res: any) => {
+            const ipaddress = getIpAddressFromForwardHeader(req)
+			
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			logger(Colors.magenta(`/spReward`), message, signMessage)
+			
+			const obj = checkSign (message, signMessage)
+
+			const nftID = parseInt(obj?.data)
+			if (!obj || !obj?.solanaWallet || !obj?.walletAddress || isNaN(nftID) || nftID < 100 ) {
+				return res.status(402).json({error: 'No necessary parameters'}).end()
+			}
+            const isOwnship = await checkNFTOwnership (obj.walletAddress, nftID, obj?.solanaWallet)
+
+            if (!isOwnship) {
+                return res.status(402).json({error: 'No ownship'}).end()
+            }
+            return res.status(200).json({success: true}).end()
+
+        })
+
 		
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -486,6 +515,53 @@ class conet_dl_server {
 	}
 }
 
+const changeActiveNFT_pool: {
+    wallet: string
+    nftID: number
+    solanaWallet: string
+}[] = []
+
+const changeActiveNFT_Process = async () => {
+    const obj = changeActiveNFT_pool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = sp_reword_sc_pool.shift()
+    if (!SC) {
+        changeActiveNFT_pool.unshift(obj)
+        logger(`changeActiveNFT_Process has no SC in pool ${sp_reword_sc_pool.length} waiting next!`)
+        return setTimeout(() => {
+            changeActiveNFT_Process()
+        }, 1000)
+    }
+
+    try {
+        const tx = await SC._changeActiveNFT (obj.wallet, obj.nftID, obj.solanaWallet)
+        await tx.wait ()
+    } catch (ex) {
+
+    }
+    changeActiveNFT_pool.unshift(obj)
+    changeActiveNFT_Process()
+}
+
+const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: string) => {
+    try {
+        const _owner: bigint = await SP_Passport_SC_readonly.balanceOf(wallet, nftID)
+        if ( _owner == BigInt(0)) {
+            return false
+        }
+        changeActiveNFT_pool.push({
+            wallet, nftID, solanaWallet
+        })
+
+        return true
+
+    } catch (ex) {
+        return false
+    }
+    
+}
 
 const SPClubAddress = `0x9D27BEdb1d093F38726F60551CfefaD83fA838a2`
 const ReferralsV3Address = '0xE235f3b481270F5DF2362c25FF5ED8Bdc834DcE9'
@@ -914,6 +990,7 @@ const spRewardCheck = async (wallet: string, solana: string): Promise<false|numb
         
         const initBalance = parseInt(ethers.formatUnits(status[1], 6))
         const price = parseInt(oracleData.data?.sp2499)
+        
         if (!status[0] || typeof balance !== 'number'  || balance < price && (initBalance === 0 || initBalance > 0 && initBalance > balance)) {
             return false
         }
@@ -1621,8 +1698,15 @@ const createRedeemProcessAdmin  = () => {
     logger(`success!`)
 }
 
-const test = () => {
-    returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
+const test = async () => {
+    // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
+    setTimeout(async () => {
+        // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
+        const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+        logger(kk)
+    }, 10000)
+    
+    
 }
 
 // const check = async () => {
