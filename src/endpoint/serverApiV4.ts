@@ -22,7 +22,7 @@ import SPPassportABI from './SPPassportABI.json'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
 import {readFile} from 'node:fs/promises'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
-
+import AirDropForSPABI from './AirDropForSP.ABI.json'
 
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -235,6 +235,23 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 	
 	return await checkClaimeToeknbalance(obj.walletAddress, data.tokenName)
 }
+
+
+const airDropForSP_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
+const airDropForSP_readonly = new ethers.Contract(airDropForSP_addr, AirDropForSPABI, mainnetEndpoint)
+
+const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string) => {
+    try {
+        const tx = await airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress)
+        return tx
+    } catch (ex: any) {
+        console.log (`checkAirDropForSP Error`, ex.message)
+        return false
+    }
+}
+
+
+
 
 
 const countAccessPool: Map<string, number[]> = new Map()
@@ -670,6 +687,38 @@ class conet_dl_server_v4 {
 			logger(inspect(req.body, false, 3, true))
 			return res.status(200).json({"success": true}).end()
 		})
+
+        router.post('/airDropForSP', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/airDropForSP`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
+				return res.status(404).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			logger(Colors.magenta(`/airDropForSP`), message, signMessage)
+			const obj = checkSign (message, signMessage)
+	
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet ) {
+				logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+
+				return res.status(403).json({
+					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+				}).end()
+			}
+
+            const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
+            return res.status(200).json({status}).end()
+		})
+
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -679,6 +728,7 @@ class conet_dl_server_v4 {
 		})
 	}
 }
+
 const cryptoPayment_waiting_path = '/home/peter/.data/cryptoWaiting/'
 const getCryptoPayment_waiting = async (wallet: string) => {
     try {
@@ -756,6 +806,7 @@ const _checkNFT_expires = (nftObj: any[]) => {
 	}
 	return true
 }
+
 const SPClub_SC_addr = `0xe1949263B338D8c1eD7d4CbDE2026eb82DB78D3a`
 const SPClub_SC_readonly = new ethers.Contract(SPClub_SC_addr, SPClub_ABI, mainnetEndpoint)
 const proCheckSPClubMember = async (obj: minerObj) => {
