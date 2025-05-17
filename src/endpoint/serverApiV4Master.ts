@@ -430,6 +430,12 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 		})
+
+        router.post('/getAirDropForSP', async (req: any, res: any) => {
+            const obj: minerObj = req.body
+            logger(`getAirDropForSP`, inspect(obj, false, 3, true))
+            return res.status(200).json({success: true}).end()
+        })
 		
 
 		router.all ('*', (req: any, res: any) => {

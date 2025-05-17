@@ -240,7 +240,7 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 const airDropForSP_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
 const airDropForSP_readonly = new ethers.Contract(airDropForSP_addr, AirDropForSPABI, mainnetEndpoint)
 
-const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string) => {
+const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
     try {
         const tx = await airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress)
         return tx
@@ -704,7 +704,7 @@ class conet_dl_server_v4 {
 			
 			const obj = checkSign (message, signMessage)
 	
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet ) {
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
 				logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
 				logger(inspect(obj, false, 3, true))
 
@@ -712,6 +712,7 @@ class conet_dl_server_v4 {
 					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
 				}).end()
 			}
+
             logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
 
@@ -719,7 +720,41 @@ class conet_dl_server_v4 {
 		})
 
         router.post ('getAirDropForSP', async (req: any, res: any) => {
+            const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/getAirDropForSP`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
 
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
+				return res.status(404).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			
+			const obj = checkSign (message, signMessage)
+	
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
+				logger (Colors.grey(`Router /getAirDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+
+				return res.status(403).json({
+					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+				}).end()
+			}
+
+            const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
+            if (!status) {
+                return res.status(404).json({
+					error: 'Unavailable!'
+				}).end()
+            }
+            obj.ipAddress = ipaddress
+            logger(Colors.magenta(`/getAirDropForSP`), inspect({obj}, false, 3, true))
+            return postLocalhost('/api/getAirDropForSP', obj, res)
         })
 
 		
