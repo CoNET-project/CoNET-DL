@@ -728,7 +728,7 @@ class conet_dl_server_v4 {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /getAirDropForSP req.body ERROR!`), inspect(req.body))
 				return res.status(404).json({
 					error: 'message & signMessage Object Error!'
 				}).end()

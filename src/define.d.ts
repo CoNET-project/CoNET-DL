@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    SP_Club_Airdrop: string
     SP_Club_Point_Manager: string
     ReferralManager: string
     cryptoPayWallet: string
