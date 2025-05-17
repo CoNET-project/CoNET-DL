@@ -544,13 +544,13 @@ class conet_dl_server {
 			const obj = checkSign (message, signMessage)
 	
 			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
-				logger (Colors.grey(`Router /getAirDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
+                logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+                logger(inspect(obj, false, 3, true))
 
-				return res.status(403).json({
-					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
-				}).end()
-			}
+                return res.status(403).json({
+                    error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+                }).end()
+            }
 
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
             if (!status) {
@@ -566,6 +566,7 @@ class conet_dl_server {
                 solanaWallet: obj.solanaWallet,
                 ipaddress
             })
+            logger(inspect(obj, false, 3, true))
             SPClub_AirdropProcess()
             return res.status(404).json({
                 status: true
