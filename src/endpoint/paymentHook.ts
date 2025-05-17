@@ -525,7 +525,7 @@ class conet_dl_server {
 			return res.status(200).json({success: true}).end()
 		})
 
-        router.post ('getAirDropForSP', async (req: any, res: any) => {
+        router.post ('/getAirDropForSP', async (req: any, res: any) => {
             const ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/getAirDropForSP`))
 			let message, signMessage
