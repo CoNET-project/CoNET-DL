@@ -31,6 +31,7 @@ import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
 import {mapLimit} from 'async'
 import CoNET_DePIN_SpClub_ABI from './CoNET_DePIN-SPClub.ABI.json'
+import SPClub_Airdrop_ABI from './AirDropForSP.ABI.json'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -152,6 +153,54 @@ const oracolPrice = async () => {
     oracle.eth = parseFloat(eth)
 }
 const monitorRewardWaitingMins = 15
+
+const SPClub_airdrop_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
+const SPClub_Airdrop_manager = new ethers.Wallet(masterSetup.SP_Club_Airdrop, CONET_MAINNET)
+const SPClub_Airdrop_Contract_pool = [new ethers.Contract(SPClub_airdrop_addr, SPClub_Airdrop_ABI, SPClub_Airdrop_manager)]
+const SPClub_AirdropPool: {
+    walletAddress: string
+    solanaWallet: string
+    ipaddress: string
+}[] = []
+
+const SPClub_AirdropProcess = async () => {
+    const obj = SPClub_AirdropPool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = SPClub_Airdrop_Contract_pool.shift()
+    if (!SC) {
+        SPClub_AirdropPool.unshift(obj)
+        return setTimeout(async () => {
+            await SPClub_AirdropProcess()
+        }, 1000)
+    }
+    try {
+        const tx = await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
+        await tx.wait ()
+    } catch (ex: any) {
+        logger(`SPClub_AirdropProcess Error`, ex.message)
+    }
+
+    SPClub_Airdrop_Contract_pool.push(SC)
+    setTimeout(() => {
+        SPClub_AirdropProcess ()
+    }, 1000)
+
+}
+
+const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
+    try {
+        const tx = await SPClub_Airdrop_Contract_pool[0].isReadyForSP (solana, wallet, ipaddress)
+        return tx
+    } catch (ex: any) {
+        console.log (`checkAirDropForSP Error`, ex.message)
+        return false
+    }
+}
+
+
+
 
 class conet_dl_server {
 
@@ -475,6 +524,54 @@ class conet_dl_server {
 
 			return res.status(200).json({success: true}).end()
 		})
+
+        router.post ('getAirDropForSP', async (req: any, res: any) => {
+            const ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/getAirDropForSP`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /getAirDropForSP req.body ERROR!`), inspect(req.body))
+				return res.status(404).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			
+			const obj = checkSign (message, signMessage)
+	
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
+				logger (Colors.grey(`Router /getAirDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+
+				return res.status(403).json({
+					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+				}).end()
+			}
+
+            const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
+            if (!status) {
+                return res.status(404).json({
+					error: 'Unavailable!'
+				}).end()
+            }
+
+
+            obj.ipAddress = ipaddress
+            SPClub_AirdropPool.push({
+                walletAddress: obj.walletAddress,
+                solanaWallet: obj.solanaWallet,
+                ipaddress
+            })
+            SPClub_AirdropProcess()
+            return res.status(404).json({
+                status: true
+            }).end()
+
+        })
 
         router.post('/activeNFT', async (req: any, res: any) => {
             const ipaddress = getIpAddressFromForwardHeader(req)

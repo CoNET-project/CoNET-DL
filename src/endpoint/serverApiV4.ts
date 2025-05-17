@@ -719,43 +719,7 @@ class conet_dl_server_v4 {
             return res.status(200).json({status}).end()
 		})
 
-        router.post ('getAirDropForSP', async (req: any, res: any) => {
-            const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/getAirDropForSP`))
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
 
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /getAirDropForSP req.body ERROR!`), inspect(req.body))
-				return res.status(404).json({
-					error: 'message & signMessage Object Error!'
-				}).end()
-			}
-
-			
-			const obj = checkSign (message, signMessage)
-	
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
-				logger (Colors.grey(`Router /getAirDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
-
-				return res.status(403).json({
-					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
-				}).end()
-			}
-
-            const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
-            if (!status) {
-                return res.status(404).json({
-					error: 'Unavailable!'
-				}).end()
-            }
-            obj.ipAddress = ipaddress
-            logger(Colors.magenta(`/getAirDropForSP`), inspect({obj}, false, 3, true))
-            return postLocalhost('/api/getAirDropForSP', obj, res)
-        })
 
 		
 		router.all ('*', (req: any, res: any) =>{

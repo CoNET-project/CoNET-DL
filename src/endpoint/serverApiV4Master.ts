@@ -26,7 +26,7 @@ import Bs58 from 'bs58'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
-import SPClub_Airdrop_ABI from './AirDropForSP.ABI.json'
+
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -216,16 +216,6 @@ interface iEPOCH_DATA {
 }
 let EPOCH_DATA: iEPOCH_DATA
 
-const SPClub_airdrop_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
-const SPClub_Airdrop_manager = new ethers.Wallet(masterSetup.SP_Club_Airdrop, mainnet_rpc)
-const SPClub_Airdrop_Contract_pool = [new ethers.Contract(SPClub_airdrop_addr, SPClub_Airdrop_ABI, SPClub_Airdrop_manager)]
-const SPClub_AirdropPool: {
-    
-}[] = []
-
-const SPClub_AirdropProcess = () => {
-
-}
 
 class conet_dl_server {
 
@@ -440,12 +430,6 @@ class conet_dl_server {
 				return res.status(403).end()
 			}
 		})
-
-        router.post('/getAirDropForSP', async (req: any, res: any) => {
-            const obj: minerObj = req.body
-            logger(`getAirDropForSP`, inspect(obj, false, 3, true))
-            return res.status(200).json({success: true}).end()
-        })
 		
 
 		router.all ('*', (req: any, res: any) => {
