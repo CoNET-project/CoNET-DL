@@ -252,8 +252,6 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
 
 
 
-
-
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server_v4 {
 
@@ -703,7 +701,7 @@ class conet_dl_server_v4 {
 				}).end()
 			}
 
-			logger(Colors.magenta(`/airDropForSP`), message, signMessage)
+			
 			const obj = checkSign (message, signMessage)
 	
 			if (!obj || !obj?.walletAddress || !obj?.solanaWallet ) {
@@ -714,10 +712,15 @@ class conet_dl_server_v4 {
 					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
 				}).end()
 			}
-
+            logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
+
             return res.status(200).json({status}).end()
 		})
+
+        router.post ('getAirDropForSP', async (req: any, res: any) => {
+
+        })
 
 		
 		router.all ('*', (req: any, res: any) =>{
