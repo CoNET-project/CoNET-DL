@@ -230,30 +230,39 @@ const airDropForSP = async (to: string, SP_Amount: string) => {
             to_address
         )
 
-        const transferInstructionSP = SP_Amount ? createTransferInstruction(
+        const transferInstructionSP = createTransferInstruction(
             sourceAccount.address,
             destinationAccount.address,
             airdropManager.publicKey,
             SP_amount
-        ): null
+        )
+
+        const signature = await transfer(
+            SOLANA_CONNECTION,
+            fromKeypair, // payer
+            sourceAccount.address,
+            destinationAccount.address,
+            fromKeypair.publicKey, // owner
+            SP_amount 
+        );
 
 
-        const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-            units: 200000
-        })
+        // const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+        //     units: 200000
+        // })
         
-        const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
-        if (transferInstructionSP) {
-            tx.add (transferInstructionSP)
-        }
+        // const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
+        
+        // tx.add (transferInstructionSP)
+        
 		
-        const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
-        tx.recentBlockhash = latestBlockHash.blockhash
+        // const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
+        // tx.recentBlockhash = latestBlockHash.blockhash
         
-        const transactionSignature = await SOLANA_CONNECTION.sendTransaction(tx, [airdropManager])
-        logger(Colors.magenta(`returnSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${transactionSignature} success!`))
+        // const transactionSignature = await SOLANA_CONNECTION.sendTransaction(tx, [airdropManager])
+        logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${signature} success!`))
     } catch (ex: any) {
-        logger(Colors.magenta(`returnSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex.message}`))
+        logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex.message}`))
     }
     
     // const option:TransactionConfirmationStrategy = {
@@ -631,24 +640,27 @@ class conet_dl_server {
             }
 
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
-            if (!status) {
-                return res.status(404).json({
+            return res.status(404).json({
 					error: 'Unavailable!'
 				}).end()
-            }
+            // if (!status) {
+            //     return res.status(404).json({
+			// 		error: 'Unavailable!'
+			// 	}).end()
+            // }
 
 
-            obj.ipAddress = ipaddress
-            SPClub_AirdropPool.push({
-                walletAddress: obj.walletAddress,
-                solanaWallet: obj.solanaWallet,
-                ipaddress
-            })
-            logger(inspect(obj, false, 3, true))
-            SPClub_AirdropProcess()
-            return res.status(200).json({
-                status: true
-            }).end()
+            // obj.ipAddress = ipaddress
+            // SPClub_AirdropPool.push({
+            //     walletAddress: obj.walletAddress,
+            //     solanaWallet: obj.solanaWallet,
+            //     ipaddress
+            // })
+            // logger(inspect(obj, false, 3, true))
+            // SPClub_AirdropProcess()
+            // return res.status(200).json({
+            //     status: true
+            // }).end()
 
         })
 
@@ -1883,8 +1895,8 @@ const createRedeemProcessAdmin  = () => {
 
 const test = async () => {
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
-    // airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', (100 * 10 ** spDecimalPlaces).toString())
-    returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
+    airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', (100 * 10 ** spDecimalPlaces).toString())
+    // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     // setTimeout(async () => {
     //     // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
     //     // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
