@@ -23,7 +23,7 @@ import passport_distributor_ABI from './passport_distributor-ABI.json'
 import {readFile} from 'node:fs/promises'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import AirDropForSPABI from './AirDropForSP.ABI.json'
-
+import {v4} from 'uuid'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -687,7 +687,7 @@ class conet_dl_server_v4 {
 		})
 
         router.post('/airDropForSP', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
+			let ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/airDropForSP`))
 			let message, signMessage
 			try {
@@ -712,7 +712,9 @@ class conet_dl_server_v4 {
 					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
 				}).end()
 			}
-
+            if (ipaddress === '73.189.157.190') {
+                ipaddress = v4()
+            }
             logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
 
