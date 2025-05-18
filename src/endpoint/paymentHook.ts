@@ -161,6 +161,7 @@ const SPClub_AirdropPool: {
     walletAddress: string
     solanaWallet: string
     ipaddress: string
+    amount: number
 }[] = []
 
 const SPClub_AirdropProcess = async () => {
@@ -178,7 +179,7 @@ const SPClub_AirdropProcess = async () => {
     try {
         const tx = await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
         await tx.wait ()
-        await airDropForSP(obj.solanaWallet, (100 * 10 ** spDecimalPlaces).toString())
+        await airDropForSP(obj.solanaWallet, obj.amount)
 
     } catch (ex: any) {
         logger(`SPClub_AirdropProcess Error`, ex.message)
@@ -201,9 +202,7 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
     }
 }
 
-
-
-const airDropForSP = async (to: string, SP_Amount: string) => {
+const airDropForSP = async (to: string, SP_Amount: number) => {
     const to_address = new PublicKey(to)
     const connect = 'https://api.mainnet-beta.solana.com'
     // const connect = getRandomNode()
@@ -213,7 +212,6 @@ const airDropForSP = async (to: string, SP_Amount: string) => {
     })
     const SP_Address = new PublicKey(SP_address)
     const airdropManager = Keypair.fromSecretKey(Bs58.decode(masterSetup.SP_Club_Airdrop_solana))
-    const SP_amount = parseInt(SP_Amount)
 
     try {
         const sourceAccount = await getOrCreateAssociatedTokenAccount(
@@ -230,36 +228,15 @@ const airDropForSP = async (to: string, SP_Amount: string) => {
             to_address
         )
 
-        const transferInstructionSP = createTransferInstruction(
+        const signature = await transfer(
+            SOLANA_CONNECTION,
+            airdropManager,
             sourceAccount.address,
             destinationAccount.address,
             airdropManager.publicKey,
-            SP_amount
+            SP_Amount
         )
 
-        const signature = await transfer(
-            SOLANA_CONNECTION,
-            fromKeypair, // payer
-            sourceAccount.address,
-            destinationAccount.address,
-            fromKeypair.publicKey, // owner
-            SP_amount 
-        );
-
-
-        // const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-        //     units: 200000
-        // })
-        
-        // const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
-        
-        // tx.add (transferInstructionSP)
-        
-		
-        // const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
-        // tx.recentBlockhash = latestBlockHash.blockhash
-        
-        // const transactionSignature = await SOLANA_CONNECTION.sendTransaction(tx, [airdropManager])
         logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${signature} success!`))
     } catch (ex: any) {
         logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex.message}`))
@@ -639,28 +616,31 @@ class conet_dl_server {
                 }).end()
             }
 
-            const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
-            return res.status(404).json({
+            const [status, balance] = await Promise.all([
+                checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress),
+                checkIsHoldSP(obj.solanaWallet)
+            ])
+
+            if (!status) {
+                return res.status(404).json({
 					error: 'Unavailable!'
 				}).end()
-            // if (!status) {
-            //     return res.status(404).json({
-			// 		error: 'Unavailable!'
-			// 	}).end()
-            // }
+            }
+            const amount = balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
+            obj.ipAddress = ipaddress
+            SPClub_AirdropPool.push({
+                walletAddress: obj.walletAddress,
+                solanaWallet: obj.solanaWallet,
+                ipaddress,
+                amount
+            })
 
-
-            // obj.ipAddress = ipaddress
-            // SPClub_AirdropPool.push({
-            //     walletAddress: obj.walletAddress,
-            //     solanaWallet: obj.solanaWallet,
-            //     ipaddress
-            // })
-            // logger(inspect(obj, false, 3, true))
-            // SPClub_AirdropProcess()
-            // return res.status(200).json({
-            //     status: true
-            // }).end()
+            logger(inspect(obj, false, 3, true))
+            SPClub_AirdropProcess()
+            return res.status(200).json({
+                status: true,
+                amount: balance ? 1000 : 100
+            }).end()
 
         })
 
@@ -1161,6 +1141,29 @@ const monitorReward = async (wallet: string, solana: string, _balance: number, k
     logger(`monitorReward revock => ${wallet} ${solana} keepCount = ${keepCount}`)
     revokeReward.push(wallet)
     revokeRewardProcess()
+}
+
+const checkIsHoldSP = async (solana: string) => {
+    try {
+        const [balance] = await Promise.all([
+            getBalance_SP(solana),
+            getOracle()
+        ])
+
+        if (!oracleData.data) {
+            return false
+        }
+        
+        const price = parseInt(oracleData.data?.sp2499)
+        
+        if (typeof balance !== 'number'  || balance < price) {
+            return false
+        }
+
+        return true
+    } catch (ex) {
+        return false
+    }
 }
 
 const spRewardCheck = async (wallet: string, solana: string): Promise<false|number> => {
@@ -1895,7 +1898,7 @@ const createRedeemProcessAdmin  = () => {
 
 const test = async () => {
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
-    airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', (100 * 10 ** spDecimalPlaces).toString())
+    airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     // setTimeout(async () => {
     //     // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
@@ -1917,4 +1920,4 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemProcessAdmin ()
-// test()
+test()
