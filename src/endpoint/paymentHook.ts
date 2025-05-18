@@ -590,7 +590,7 @@ class conet_dl_server {
 		})
 
         router.post ('/getAirDropForSP', async (req: any, res: any) => {
-            const ipaddress = getIpAddressFromForwardHeader(req)
+            let ipaddress = getIpAddressFromForwardHeader(req)
 			logger(Colors.magenta(`/getAirDropForSP`))
 			let message, signMessage
 			try {
@@ -615,7 +615,10 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
-
+            if (ipaddress === '73.189.157.190') {
+                ipaddress = v4()
+            }
+            
             const [status, balance] = await Promise.all([
                 checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress),
                 checkIsHoldSP(obj.solanaWallet)
