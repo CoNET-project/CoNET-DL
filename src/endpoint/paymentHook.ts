@@ -178,7 +178,7 @@ const SPClub_AirdropProcess = async () => {
     try {
         const tx = await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
         await tx.wait ()
-        await airDropForSP(obj.solanaWallet, (100 * spDecimalPlaces ** 10).toString())
+        await airDropForSP(obj.solanaWallet, (100 * 10 ** spDecimalPlaces).toString())
 
     } catch (ex: any) {
         logger(`SPClub_AirdropProcess Error`, ex.message)
