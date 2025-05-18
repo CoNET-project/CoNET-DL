@@ -823,7 +823,6 @@ const getAssetERC20Address = (cryptoName: string) => {
     }
 }
 
-
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
 const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
@@ -1561,7 +1560,6 @@ const getOracle = async () => {
     }
 }
 
-
 const makeSolanaProm = async (solanaWallet: string) => {
     const getSP = await spRate()
     if (getSP.so == '0') {
@@ -1602,10 +1600,11 @@ const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
 const fromKeypair = Keypair.fromSecretKey(Bs58.decode(solana_account))
 const SP_Address = new PublicKey(SP_address)
 
+
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
-    const connect = 'https://api.mainnet-beta.solana.com'
-    // const connect = getRandomNode()
+    // const connect = 'https://api.mainnet-beta.solana.com'
+    const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1648,9 +1647,11 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         })
         
         const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
+
         if (transferInstructionSP) {
             tx.add (transferInstructionSP)
         }
+
         if (transferInstructionSol) {
             tx.add (transferInstructionSol)
         }
@@ -1741,38 +1742,6 @@ const sleepWaiting = (second: number) => new Promise(resolve => {
     }, second)
 })
 
-// const returnSo = async(to: string, amount: string) => {
-    
-    
-//     const units = await getSimulationComputeUnits(SOLANA_CONNECTION, [transferInstruction], solana_account_privatekey.publicKey, [])
-
-//     const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-//         units: units||2000000
-//     })
-
-//     const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
-
-//     tx.add(transferInstruction)
-    
-//     const latestBlockHash = await SOLANA_CONNECTION.getLatestBlockhash('confirmed')
-// 	tx.recentBlockhash = await latestBlockHash.blockhash
-
-//     const blockhashResponse = await SOLANA_CONNECTION.getLatestBlockhashAndContext();
-//     const lastValidBlockHeight = blockhashResponse.context.slot + 150
-//     const rawTransaction = tx.serialize()
-//     let blockheight = await SOLANA_CONNECTION.getBlockHeight()
-//     logger(`returnSo tx.recentBlockhash = ${tx.recentBlockhash} lastValidBlockHeight = ${lastValidBlockHeight}`) 
-//     while (blockheight < lastValidBlockHeight) {
-//         SOLANA_CONNECTION.sendRawTransaction(rawTransaction, {
-//             skipPreflight: true,
-//         })
-//         await sleepWaiting (500)
-//         blockheight = await SOLANA_CONNECTION.getBlockHeight()
-//     }
-
-//     logger(inspect({LAMPORTS_PER_SOL, lamportsToSend}, false, 3, true))
-    
-// }
 
 let returnSP_Pool_processing = false
 
@@ -1787,7 +1756,12 @@ const returnSP_Pool_process = async () => {
 	}
     logger(inspect({publicKey: solana_account_privatekey.publicKey, returnData}, false, 3, true))
     returnSP_Pool_processing = true
-    await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount)
+    if (!returnData.So_amount) {
+        await airDropForSP(returnData.from, parseInt(returnData.SP_amount))
+    } else {
+        await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount)
+    }
+    
 	returnSP_Pool_processing = false
     
 	returnSP_Pool_process()
@@ -1900,7 +1874,7 @@ const createRedeemProcessAdmin  = () => {
 }
 
 const test = async () => {
-    // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
+    returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
     airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     // setTimeout(async () => {
@@ -1923,4 +1897,4 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemProcessAdmin ()
-test()
+// test()
