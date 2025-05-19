@@ -244,7 +244,7 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
     try {
         const [isReadyForSP, isReadyForReferees] = await Promise.all ([
             airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress),
-            airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress)
+            airDropForSP_readonly.isReadyForReferees (solana, wallet, ipaddress)
         ])
         
         return ({isReadyForSP, isReadyForReferees})
@@ -721,7 +721,7 @@ class conet_dl_server_v4 {
             logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
             if (!status) {
-                
+
             }
             return res.status(200).json({status}).end()
 		})

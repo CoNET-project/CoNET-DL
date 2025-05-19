@@ -647,6 +647,64 @@ class conet_dl_server {
 
         })
 
+        router.post ('/getAirDropForSPReff', async (req: any, res: any) => {
+            let ipaddress = getIpAddressFromForwardHeader(req)
+			logger(Colors.magenta(`/getAirDropForSP`))
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /getAirDropForSP req.body ERROR!`), inspect(req.body))
+				return res.status(404).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			
+			const obj = checkSign (message, signMessage)
+	
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
+                logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
+                logger(inspect(obj, false, 3, true))
+
+                return res.status(403).json({
+                    error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+                }).end()
+            }
+            if (ipaddress === '73.189.157.190') {
+                ipaddress = v4()
+            }
+            
+            const [status, balance] = await Promise.all([
+                checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress),
+                checkIsHoldSP(obj.solanaWallet)
+            ])
+
+            if (!status) {
+                return res.status(404).json({
+					error: 'Unavailable!'
+				}).end()
+            }
+            const amount = balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
+            obj.ipAddress = ipaddress
+            SPClub_AirdropPool.push({
+                walletAddress: obj.walletAddress,
+                solanaWallet: obj.solanaWallet,
+                ipaddress,
+                amount
+            })
+
+            logger(inspect(obj, false, 3, true))
+            SPClub_AirdropProcess()
+            return res.status(200).json({
+                status: true,
+                amount: balance ? 1000 : 100
+            }).end()
+
+        })
+
         router.post('/activeNFT', async (req: any, res: any) => {
             const ipaddress = getIpAddressFromForwardHeader(req)
 			
@@ -1513,7 +1571,6 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
 	}
     return false
 }
-
 
 const solana_account = masterSetup.solana_return_manager
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
