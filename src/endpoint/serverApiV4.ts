@@ -240,16 +240,19 @@ export const claimeToekn = async (message: string, signMessage: string ) => {
 const airDropForSP_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
 const airDropForSP_readonly = new ethers.Contract(airDropForSP_addr, AirDropForSPABI, mainnetEndpoint)
 
-const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
+const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<{isReadyForSP: boolean, isReadyForReferees: boolean}|null> => {
     try {
-        const tx = await airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress)
-        return tx
+        const [isReadyForSP, isReadyForReferees] = await Promise.all ([
+            airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress),
+            airDropForSP_readonly.isReadyForSP (solana, wallet, ipaddress)
+        ])
+        
+        return ({isReadyForSP, isReadyForReferees})
     } catch (ex: any) {
         console.log (`checkAirDropForSP Error`, ex.message)
-        return false
+        return null
     }
 }
-
 
 
 const countAccessPool: Map<string, number[]> = new Map()
@@ -717,7 +720,9 @@ class conet_dl_server_v4 {
             }
             logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
             const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
-
+            if (!status) {
+                
+            }
             return res.status(200).json({status}).end()
 		})
 

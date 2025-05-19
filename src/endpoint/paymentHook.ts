@@ -204,8 +204,8 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
 
 const airDropForSP = async (to: string, SP_Amount: number) => {
     const to_address = new PublicKey(to)
-    const connect = 'https://api.mainnet-beta.solana.com'
-    // const connect = getRandomNode()
+    // const connect = 'https://api.mainnet-beta.solana.com'
+    const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1603,8 +1603,8 @@ const SP_Address = new PublicKey(SP_address)
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
-    // const connect = 'https://api.mainnet-beta.solana.com'
-    const connect = getRandomNode()
+    const connect = 'https://api.mainnet-beta.solana.com'
+    // const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1754,8 +1754,10 @@ const returnSP_Pool_process = async () => {
 	if (!returnData) {
 		return
 	}
+
     logger(inspect({publicKey: solana_account_privatekey.publicKey, returnData}, false, 3, true))
     returnSP_Pool_processing = true
+
     if (!returnData.So_amount) {
         await airDropForSP(returnData.from, parseInt(returnData.SP_amount))
     } else {
@@ -1874,8 +1876,8 @@ const createRedeemProcessAdmin  = () => {
 }
 
 const test = async () => {
-    returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8','130083250', '')
-    airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
+    // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(1 * 10 ** spDecimalPlaces).toString(), '')
+    //  airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     // setTimeout(async () => {
     //     // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
