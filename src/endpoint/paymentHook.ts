@@ -1719,8 +1719,8 @@ const SP_Address = new PublicKey(SP_address)
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
-    // const connect = 'https://api.mainnet-beta.solana.com'
-    const connect = getRandomNode()
+    const connect = 'https://api.mainnet-beta.solana.com'
+    // const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1729,6 +1729,7 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     
     const SP_amount = parseInt(SP_Amount)
     const SOL_amount = parseInt(Sol_Amount)
+
     try {
         const sourceAccount = await getOrCreateAssociatedTokenAccount(
             SOLANA_CONNECTION, 
@@ -1737,16 +1738,30 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
             fromKeypair.publicKey
         )
 
-        const destinationAccount = await getOrCreateAssociatedTokenAccount(
-            SOLANA_CONNECTION, 
-            fromKeypair,
+        const recipientTokenAddress = await getAssociatedTokenAddress(
             SP_Address,
             to_address
         )
+        logger(fromKeypair.publicKey)
+        const accountInfo = await SOLANA_CONNECTION.getAccountInfo(recipientTokenAddress)
+
+        if (!accountInfo) {
+            
+            const tx = new Transaction().add(
+                createAssociatedTokenAccountInstruction(
+                    fromKeypair.publicKey,         // payer
+                    recipientTokenAddress,    // ATA address
+                    to_address,          // wallet owner
+                    SP_Address                      // token mint
+                )
+            )
+            const hash = await sendAndConfirmTransaction(SOLANA_CONNECTION, tx, [fromKeypair])
+            console.log(`airDropForSP Creating recipient token account for ${to}! hash ${hash}`)
+        }
 
         const transferInstructionSP = SP_Amount ? createTransferInstruction(
             sourceAccount.address,
-            destinationAccount.address,
+            recipientTokenAddress,
             fromKeypair.publicKey,
             SP_amount
         ): null
@@ -1981,7 +1996,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 //  curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":1,"method": "getRecentPrioritizationFees","params": [["A8Vk2LsNqKktabs4xPY4YUmYxBoDqcTdxY5em4EQm8v1"]]}'
 
 
-new conet_dl_server ()
+// new conet_dl_server ()
 
 
 
@@ -1994,8 +2009,8 @@ const createRedeemProcessAdmin  = () => {
 }
 
 const test = async () => {
-    // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(1 * 10 ** spDecimalPlaces).toString(), '')
-    // airDropForSP('4Q8K8WqbDGnieK1cj9MxwYDxYu87v9HjL1Ssv7TA51wJ', 0.1 * 10 ** spDecimalPlaces)
+    returnSP('2zQgvUPcwGQZF7LjeCi3TbAMj2GAGfeMVB5F5R6j7kcW',(0.5 * 10 ** spDecimalPlaces).toString(), '')
+    airDropForSP('4Q8K8WqbDGnieK1cj9MxwYDxYu87v9HjL1Ssv7TA51wJ', 0.1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
         // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
@@ -2017,4 +2032,4 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemProcessAdmin ()
-test()
+// test()
