@@ -744,7 +744,7 @@ class conet_dl_server {
 
             return res.status(200).json({
                 status: true,
-                amount: balance ? 1000 : 100
+                amount: amount
             }).end()
 
         })
