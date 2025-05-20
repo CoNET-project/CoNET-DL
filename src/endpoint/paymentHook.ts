@@ -1647,10 +1647,10 @@ const SP_Address = new PublicKey(SP_address)
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string, privateKey: string) => {
     const to_address = new PublicKey(to)
-    // const connect = 'https://api.mainnet-beta.solana.com'
+    const connect = masterSetup.solana_rpc
 
     const fromKeypair = Keypair.fromSecretKey(Bs58.decode(privateKey))
-    const connect = getRandomNode()
+    // const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1924,10 +1924,11 @@ const createRedeemProcessAdmin  = () => {
 }
 
 const test = async () => {
-    ///returnSP('9hyi9oDD7WbPKRfEwPJt4psR8pP9fzk9jNDbuiZAQUt4',(0.5 * 10 ** spDecimalPlaces).toString(), '', solana_account)
-    //airDropForSP('RMnMAaPdaD6TfNrFr5FBfBfC59VVehNp6E1oy2fDH4F', 0.1 * 10 ** spDecimalPlaces)
+    // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
+    // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
+        // returnSP('A4y9UWXZ6FYNRuWzm47nWJWdmdcic7p35SdDFHJj3Ei8', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
         // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
         // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
         // logger(kk)
