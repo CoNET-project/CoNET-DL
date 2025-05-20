@@ -225,8 +225,8 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
 
 const airDropForSP = async (to: string, SP_Amount: number) => {
     const to_address = new PublicKey(to)
-    // const connect = 'https://api.mainnet-beta.solana.com'
-    const connect = getRandomNode()
+    const connect = 'https://api.mainnet-beta.solana.com'
+    // const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1980,13 +1980,13 @@ const test = async () => {
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(1 * 10 ** spDecimalPlaces).toString(), '')
     //  airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
-    // setTimeout(async () => {
-    //     // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
-    //     // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
-    //     // logger(kk)
-    //     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
-    //     airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', (100 * 10 ** spDecimalPlaces).toString())
-    // }, 10000)
+    setTimeout(async () => {
+        // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
+        // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+        // logger(kk)
+        // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
+        airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
+    }, 10000)
     
     
 }
