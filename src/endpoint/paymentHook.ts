@@ -260,7 +260,7 @@ const airDropForSP = async (to: string, SP_Amount: number) => {
 
         logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${signature} success!`))
     } catch (ex: any) {
-        logger(Colors.magenta(`airDropForSP ${connect} from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex.message}`))
+        logger(Colors.magenta(`airDropForSP ${connect} from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex}`))
     }
     
     // const option:TransactionConfirmationStrategy = {
@@ -1978,14 +1978,14 @@ const createRedeemProcessAdmin  = () => {
 
 const test = async () => {
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(1 * 10 ** spDecimalPlaces).toString(), '')
-     airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
+    airDropForSP('7jQcUbakSSkxWnJU4ngpp1kWiKVqtyP6LXCPphDi5n73', 0.5 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
         // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
         // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
         // logger(kk)
         // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
-        airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
+        // airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
     }, 10000)
     
     
