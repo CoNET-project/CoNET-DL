@@ -225,7 +225,7 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
 
 const airDropForSP = async (to: string, SP_Amount: number) => {
     const to_address = new PublicKey(to)
-    const connect = 'https://api.mainnet-beta.solana.com'
+    const connect = masterSetup.solana_rpc
     // const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
@@ -1978,7 +1978,7 @@ const createRedeemProcessAdmin  = () => {
 
 const test = async () => {
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(1 * 10 ** spDecimalPlaces).toString(), '')
-    //  airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
+     airDropForSP('85T5x1n7EcNovJL9zZh1foucHXynsDejvkdHpZEDPV3d', 1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
         // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
