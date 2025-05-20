@@ -1996,7 +1996,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 //  curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":1,"method": "getRecentPrioritizationFees","params": [["A8Vk2LsNqKktabs4xPY4YUmYxBoDqcTdxY5em4EQm8v1"]]}'
 
 
-// new conet_dl_server ()
+new conet_dl_server ()
 
 
 
