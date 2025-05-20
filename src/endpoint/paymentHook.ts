@@ -258,9 +258,9 @@ const airDropForSP = async (to: string, SP_Amount: number) => {
             SP_Amount
         )
 
-        logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${signature} success!`))
+        logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${signature} success!`))
     } catch (ex: any) {
-        logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex.message}`))
+        logger(Colors.magenta(`airDropForSP ${connect} from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex.message}`))
     }
     
     // const option:TransactionConfirmationStrategy = {
