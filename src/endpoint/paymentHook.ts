@@ -286,10 +286,10 @@ const airDropForSP = async (to: string, SP_Amount: number) => {
     // }
 }
 const reffAddressList = [
-    '0x915Ab24b3bEb4B004ED437e649bdFd4e0665B45B',
-    '0x8eA27BCd88f3ff97f089ECB9236edfC767d3e268',
-    '0x0162443c477BD116359444cF7260a235AC8f5f2c',
-    '0xf044f270860c9e2aa76537EFc19CB5072D2600B5'
+    '0x915Ab24b3bEb4B004ED437e649bdFd4e0665B45B'.toLowerCase(),
+    '0x8eA27BCd88f3ff97f089ECB9236edfC767d3e268'.toLowerCase(),
+    '0x0162443c477BD116359444cF7260a235AC8f5f2c'.toLowerCase(),
+    '0xf044f270860c9e2aa76537EFc19CB5072D2600B5'.toLowerCase()
 ]
 
 const reffSOlanaAddressList = [
