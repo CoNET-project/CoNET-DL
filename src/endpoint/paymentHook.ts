@@ -295,7 +295,7 @@ const reffAddressList = [
 const reffSOlanaAddressList = [
     '',
     'CLNTomz3Q34TWa4dampqoRTDgDkTAb1ENsHtX4B9nxpR',
-    '',
+    '3gp7V8HDiPouQEjHhdsqhooQhTQNfSL8BGMPWnT22Y3R',
     '8DgvFpNUW8ZLx8aoUYuYe38JaYK96pHz9r3upPufY7Lf'
 ]
 
