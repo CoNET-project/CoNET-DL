@@ -163,7 +163,8 @@ const SPClub_AirdropPool: {
     solanaWallet: string
     ipaddress: string
     amount: number
-    referrer?:string
+    referrer?: string
+    referrerSolana?: string
 }[] = []
 
 const SPClub_AirdropProcess = async () => {
@@ -182,7 +183,14 @@ const SPClub_AirdropProcess = async () => {
 
         const tx = obj?.referrer ? await SC.airdropForReferees(obj.solanaWallet, obj.walletAddress, obj.ipaddress, obj.referrer)  : await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
         await tx.wait ()
-        await airDropForSP(obj.solanaWallet, obj.amount)
+        if (obj.amount > 0) {
+            await airDropForSP(obj.solanaWallet, obj.amount)
+            if (obj?.referrerSolana) {
+                await airDropForSP(obj.referrerSolana, obj.amount)
+            }
+            
+        }
+        
 
     } catch (ex: any) {
         logger(`SPClub_AirdropProcess Error`, ex.message)
@@ -278,7 +286,17 @@ const airDropForSP = async (to: string, SP_Amount: number) => {
     // }
 }
 const reffAddressList = [
-    ''
+    '0x915Ab24b3bEb4B004ED437e649bdFd4e0665B45B',
+    '0x8eA27BCd88f3ff97f089ECB9236edfC767d3e268',
+    '0x0162443c477BD116359444cF7260a235AC8f5f2c',
+    '0xf044f270860c9e2aa76537EFc19CB5072D2600B5'
+]
+
+const reffSOlanaAddressList = [
+    '',
+    'CLNTomz3Q34TWa4dampqoRTDgDkTAb1ENsHtX4B9nxpR',
+    '',
+    '8DgvFpNUW8ZLx8aoUYuYe38JaYK96pHz9r3upPufY7Lf'
 ]
 
 class conet_dl_server {
@@ -678,8 +696,10 @@ class conet_dl_server {
 
 			
 			const obj = checkSign (message, signMessage)
-	
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress || !obj?.referrer ) {
+            
+            const isAddress = ethers.isAddress(obj?.referrer)
+
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress || !isAddress ) {
                 logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
@@ -687,6 +707,9 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
+            
+            const referrer = obj.referrer?.toLowerCase()
+
             if (ipaddress === '73.189.157.190') {
                 ipaddress = v4()
             }
@@ -701,19 +724,24 @@ class conet_dl_server {
 					error: 'Unavailable!'
 				}).end()
             }
-            const amount = balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
+            const isWhiteList = reffAddressList.findIndex(n => n === referrer)
             obj.ipAddress = ipaddress
+
+            const amount = isWhiteList < 0 ? 0 : balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
             
+
             SPClub_AirdropPool.push({
                 walletAddress: obj.walletAddress,
                 solanaWallet: obj.solanaWallet,
                 ipaddress,
                 amount,
-                referrer: obj.referrer
+                referrer: obj.referrer,
+                referrerSolana: reffSOlanaAddressList[isWhiteList]
             })
 
             logger(inspect(obj, false, 3, true))
             SPClub_AirdropProcess()
+
             return res.status(200).json({
                 status: true,
                 amount: balance ? 1000 : 100
