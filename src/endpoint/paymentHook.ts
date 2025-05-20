@@ -744,7 +744,7 @@ class conet_dl_server {
 
             return res.status(200).json({
                 status: true,
-                amount: amount
+                amount: ethers.parseUnits(amount.toString(), spDecimalPlaces)
             }).end()
 
         })
