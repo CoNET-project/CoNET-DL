@@ -12,7 +12,7 @@ import web2PaymentABI from './payment_PassportABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
 import { AppStoreServerAPIClient, Environment, GetTransactionHistoryVersion, ReceiptUtility, Order, ProductType, HistoryResponse, TransactionHistoryRequest, SignedDataVerifier } from "@apple/app-store-server-library"
-import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createTransferInstruction, getAssociatedTokenAddress, getAccount, transfer } from "@solana/spl-token"
+import { getOrCreateAssociatedTokenAccount,createBurnCheckedInstruction, createTransferInstruction, getAssociatedTokenAddress, getAccount, transfer, createTransferCheckedInstruction, createAssociatedTokenAccountInstruction } from "@solana/spl-token"
 import Bs58 from 'bs58'
 import { Connection, PublicKey, Keypair,Transaction, sendAndConfirmTransaction, SystemProgram, SendOptions, ComputeBudgetProgram, TransactionConfirmationStrategy } from "@solana/web3.js"
 import {getSimulationComputeUnits} from "@solana-developers/helpers"
@@ -225,8 +225,9 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
 
 const airDropForSP = async (to: string, SP_Amount: number) => {
     const to_address = new PublicKey(to)
-    const connect = masterSetup.solana_rpc
-    // const connect = getRandomNode()
+    // const connect = masterSetup.solana_rpc
+    
+    const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -239,21 +240,35 @@ const airDropForSP = async (to: string, SP_Amount: number) => {
             SOLANA_CONNECTION, 
             airdropManager,
             SP_Address,
-            airdropManager.publicKey
+            airdropManager.publicKey,
+            true
         )
 
-        const destinationAccount = await getOrCreateAssociatedTokenAccount(
-            SOLANA_CONNECTION, 
-            airdropManager,
+        const recipientTokenAddress = await getAssociatedTokenAddress(
             SP_Address,
             to_address
         )
+
+        const accountInfo = await SOLANA_CONNECTION.getAccountInfo(recipientTokenAddress)
+
+        if (!accountInfo) {
+            console.log(`airDropForSP Creating recipient token account for ${to}!`)
+            const tx = new Transaction().add(
+                createAssociatedTokenAccountInstruction(
+                    airdropManager.publicKey,         // payer
+                    recipientTokenAddress,    // ATA address
+                    to_address,          // wallet owner
+                    SP_Address                      // token mint
+                )
+            )
+            await sendAndConfirmTransaction(SOLANA_CONNECTION, tx, [airdropManager])
+        }
 
         const signature = await transfer(
             SOLANA_CONNECTION,
             airdropManager,
             sourceAccount.address,
-            destinationAccount.address,
+            recipientTokenAddress,
             airdropManager.publicKey,
             SP_Amount
         )
@@ -1704,8 +1719,8 @@ const SP_Address = new PublicKey(SP_address)
 
 const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
     const to_address = new PublicKey(to)
-    const connect = 'https://api.mainnet-beta.solana.com'
-    // const connect = getRandomNode()
+    // const connect = 'https://api.mainnet-beta.solana.com'
+    const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1968,6 +1983,8 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 new conet_dl_server ()
 
+
+
 const createRedeemProcessAdmin  = () => {
     for (let i = 0; i < 20; i ++) {
         const redeemCode = createRedeem ('1', '')
@@ -1978,7 +1995,7 @@ const createRedeemProcessAdmin  = () => {
 
 const test = async () => {
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(1 * 10 ** spDecimalPlaces).toString(), '')
-    airDropForSP('7jQcUbakSSkxWnJU4ngpp1kWiKVqtyP6LXCPphDi5n73', 0.5 * 10 ** spDecimalPlaces)
+    // airDropForSP('4Q8K8WqbDGnieK1cj9MxwYDxYu87v9HjL1Ssv7TA51wJ', 0.1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
         // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
@@ -2000,4 +2017,4 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemProcessAdmin ()
-// test()
+test()
