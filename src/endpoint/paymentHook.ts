@@ -184,9 +184,9 @@ const SPClub_AirdropProcess = async () => {
         const tx = obj?.referrer ? await SC.airdropForReferees(obj.solanaWallet, obj.walletAddress, obj.ipaddress, obj.referrer)  : await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
         await tx.wait ()
         if (obj.amount > 0) {
-            await airDropForSP(obj.solanaWallet, obj.amount)
+            await returnSP(obj.solanaWallet, obj.amount.toString(), '', masterSetup.SP_Club_Airdrop_solana)
             if (obj?.referrerSolana) {
-                await airDropForSP(obj.referrerSolana, obj.amount)
+                await returnSP(obj.referrerSolana, obj.amount.toString(), '', masterSetup.SP_Club_Airdrop_solana)
             }
             
         }
@@ -215,6 +215,7 @@ const checkAirDropForSPReffers = async (wallet: string, solana: string, ipaddres
 
 const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
     try {
+        
         const tx = await SPClub_Airdrop_Contract_pool[0].isReadyForSP (solana, wallet, ipaddress)
         return tx
     } catch (ex: any) {
@@ -223,83 +224,6 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
     }
 }
 
-const airDropForSP = async (to: string, SP_Amount: number) => {
-    const to_address = new PublicKey(to)
-    // const connect = masterSetup.solana_rpc
-    
-    const connect = getRandomNode()
-    const SOLANA_CONNECTION = new Connection(connect, {
-        commitment: "confirmed",
-        disableRetryOnRateLimit: false,
-    })
-    const SP_Address = new PublicKey(SP_address)
-    const airdropManager = Keypair.fromSecretKey(Bs58.decode(masterSetup.SP_Club_Airdrop_solana))
-
-    try {
-        const sourceAccount = await getOrCreateAssociatedTokenAccount(
-            SOLANA_CONNECTION, 
-            airdropManager,
-            SP_Address,
-            airdropManager.publicKey,
-            true
-        )
-
-        const recipientTokenAddress = await getAssociatedTokenAddress(
-            SP_Address,
-            to_address
-        )
-
-        const accountInfo = await SOLANA_CONNECTION.getAccountInfo(recipientTokenAddress)
-
-        if (!accountInfo) {
-            console.log(`airDropForSP Creating recipient token account for ${to}!`)
-            const tx = new Transaction().add(
-                createAssociatedTokenAccountInstruction(
-                    airdropManager.publicKey,         // payer
-                    recipientTokenAddress,    // ATA address
-                    to_address,          // wallet owner
-                    SP_Address                      // token mint
-                )
-            )
-            await sendAndConfirmTransaction(SOLANA_CONNECTION, tx, [airdropManager])
-        }
-
-        const signature = await transfer(
-            SOLANA_CONNECTION,
-            airdropManager,
-            sourceAccount.address,
-            recipientTokenAddress,
-            airdropManager.publicKey,
-            SP_Amount
-        )
-
-        logger(Colors.magenta(`airDropForSP from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} hash = ${signature} success!`))
-    } catch (ex: any) {
-        logger(Colors.magenta(`airDropForSP ${connect} from ${airdropManager.publicKey} to ${to} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Error! ${ex}`))
-    }
-    
-    // const option:TransactionConfirmationStrategy = {
-    //     blockhash: latestBlockHash.blockhash,
-    //         lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    //         signature: transactionSignature,
-            
-    // }   
-    // try {
-    //     const yyy = await SOLANA_CONNECTION.confirmTransaction(option, 'confirmed')
-    //     logger(Colors.magenta(`returnSP from ${solana_account_privatekey.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Sol = ${ethers.parseUnits(Sol_Amount, solanaDecimalPlaces)} ${inspect(yyy, false, 3, true)} success!`))
-    // } catch(ex: any) {
-    //     logger(Colors.magenta(`returnSP from ${solana_account_privatekey.publicKey} SP = ${ethers.formatUnits(SP_Amount, spDecimalPlaces)} Sol = ${ethers.parseUnits(Sol_Amount, solanaDecimalPlaces)} transactionSignature = ${transactionSignature} Error!`), ex.message)
-    // }
-    
-
-
-    // try {
-    //     const auth = await sendAndConfirmTransaction(SOLANA_CONNECTION, tx, [solana_account_privatekey], option)
-    //     logger(Colors.magenta(`returnSP from ${solana_account_privatekey.publicKey} SP = ${ethers.parseUnits(SP_Amount, spDecimalPlaces)} Sol = ${ethers.parseUnits(Sol_Amount, solanaDecimalPlaces)} ${inspect(auth, false, 3, true)} success!`))
-    // } catch (ex: any) {
-    //     logger(Colors.red(`returnSP sendAndConfirmTransaction Error! ${ex.message}`))
-    // }
-}
 const reffAddressList = [
     '0x915Ab24b3bEb4B004ED437e649bdFd4e0665B45B'.toLowerCase(),
     '0x8eA27BCd88f3ff97f089ECB9236edfC767d3e268'.toLowerCase(),
@@ -666,17 +590,20 @@ class conet_dl_server {
             if (ipaddress === '73.189.157.190') {
                 ipaddress = v4()
             }
-            
+            const key = new PublicKey( obj.solanaWallet).toBase58()
+
+
             const [status, balance] = await Promise.all([
                 checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress),
                 checkIsHoldSP(obj.solanaWallet)
             ])
 
-            if (!status) {
+            if (!status||!key) {
                 return res.status(404).json({
 					error: 'Unavailable!'
 				}).end()
             }
+
             const amount = balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
             obj.ipAddress = ipaddress
             SPClub_AirdropPool.push({
@@ -733,8 +660,9 @@ class conet_dl_server {
                 checkAirDropForSPReffers(obj.walletAddress, obj.solanaWallet, ipaddress),
                 checkIsHoldSP(obj.solanaWallet)
             ])
+            const key = new PublicKey( obj.solanaWallet).toBase58()
 
-            if (!status) {
+            if (!status||!key) {
                 return res.status(404).json({
 					error: 'Unavailable!'
 				}).end()
@@ -1713,14 +1641,16 @@ const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
     microLamports: 9000
 })
 
-const fromKeypair = Keypair.fromSecretKey(Bs58.decode(solana_account))
+
 const SP_Address = new PublicKey(SP_address)
 
 
-const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
+const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string, privateKey: string) => {
     const to_address = new PublicKey(to)
-    const connect = 'https://api.mainnet-beta.solana.com'
-    // const connect = getRandomNode()
+    // const connect = 'https://api.mainnet-beta.solana.com'
+
+    const fromKeypair = Keypair.fromSecretKey(Bs58.decode(privateKey))
+    const connect = getRandomNode()
     const SOLANA_CONNECTION = new Connection(connect, {
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
@@ -1742,12 +1672,16 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
             SP_Address,
             to_address
         )
+        const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+            units: 200000
+        })
+        const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
         logger(fromKeypair.publicKey)
         const accountInfo = await SOLANA_CONNECTION.getAccountInfo(recipientTokenAddress)
 
         if (!accountInfo) {
             
-            const tx = new Transaction().add(
+            tx.add(
                 createAssociatedTokenAccountInstruction(
                     fromKeypair.publicKey,         // payer
                     recipientTokenAddress,    // ATA address
@@ -1755,8 +1689,6 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
                     SP_Address                      // token mint
                 )
             )
-            const hash = await sendAndConfirmTransaction(SOLANA_CONNECTION, tx, [fromKeypair])
-            console.log(`airDropForSP Creating recipient token account for ${to}! hash ${hash}`)
         }
 
         const transferInstructionSP = SP_Amount ? createTransferInstruction(
@@ -1773,12 +1705,6 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         }) : null
 
 
-        const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-            units: 200000
-        })
-        
-        const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
-
         if (transferInstructionSP) {
             tx.add (transferInstructionSP)
         }
@@ -1791,14 +1717,7 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string) => {
         tx.recentBlockhash = latestBlockHash.blockhash
         
         const transactionSignature = await SOLANA_CONNECTION.sendTransaction(tx, [fromKeypair])
-        // const signature = await transfer(
-        //     SOLANA_CONNECTION,
-        //     fromKeypair, // payer
-        //     sourceAccount.address,
-        //     destinationAccount.address,
-        //     fromKeypair.publicKey, // owner
-        //     SOL_amount // amount (e.g., 1 token if mint has 6 decimals)
-        // );
+
         logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP = ${ethers.formatUnits(SP_amount, spDecimalPlaces)} Sol = ${SOL_amount ? ethers.formatUnits(SOL_amount, solanaDecimalPlaces): null} hash = ${transactionSignature} success!`))
     } catch (ex: any) {
         logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP =  ${ethers.formatUnits(SP_amount, spDecimalPlaces)} Sol = ${ethers.formatUnits(SOL_amount, solanaDecimalPlaces)} Error! ${ex.message}`))
@@ -1889,11 +1808,7 @@ const returnSP_Pool_process = async () => {
     logger(inspect({publicKey: solana_account_privatekey.publicKey, returnData}, false, 3, true))
     returnSP_Pool_processing = true
 
-    if (!returnData.So_amount) {
-        await airDropForSP(returnData.from, parseInt(returnData.SP_amount))
-    } else {
-        await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount)
-    }
+    await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount, solana_account)
     
 	returnSP_Pool_processing = false
     
@@ -2009,8 +1924,8 @@ const createRedeemProcessAdmin  = () => {
 }
 
 const test = async () => {
-    returnSP('2zQgvUPcwGQZF7LjeCi3TbAMj2GAGfeMVB5F5R6j7kcW',(0.5 * 10 ** spDecimalPlaces).toString(), '')
-    airDropForSP('4Q8K8WqbDGnieK1cj9MxwYDxYu87v9HjL1Ssv7TA51wJ', 0.1 * 10 ** spDecimalPlaces)
+    ///returnSP('9hyi9oDD7WbPKRfEwPJt4psR8pP9fzk9jNDbuiZAQUt4',(0.5 * 10 ** spDecimalPlaces).toString(), '', solana_account)
+    //airDropForSP('RMnMAaPdaD6TfNrFr5FBfBfC59VVehNp6E1oy2fDH4F', 0.1 * 10 ** spDecimalPlaces)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
         // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
@@ -2033,3 +1948,5 @@ const test = async () => {
 
 // createRedeemProcessAdmin ()
 // test()
+
+///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
