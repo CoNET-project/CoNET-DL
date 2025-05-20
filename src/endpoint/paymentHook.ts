@@ -157,11 +157,13 @@ const monitorRewardWaitingMins = 15
 const SPClub_airdrop_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
 const SPClub_Airdrop_manager = new ethers.Wallet(masterSetup.SP_Club_Airdrop, CONET_MAINNET)
 const SPClub_Airdrop_Contract_pool = [new ethers.Contract(SPClub_airdrop_addr, SPClub_Airdrop_ABI, SPClub_Airdrop_manager)]
+
 const SPClub_AirdropPool: {
     walletAddress: string
     solanaWallet: string
     ipaddress: string
     amount: number
+    referrer?:string
 }[] = []
 
 const SPClub_AirdropProcess = async () => {
@@ -177,7 +179,8 @@ const SPClub_AirdropProcess = async () => {
         }, 1000)
     }
     try {
-        const tx = await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
+
+        const tx = obj?.referrer ? await SC.airdropForReferees(obj.solanaWallet, obj.walletAddress, obj.ipaddress, obj.referrer)  : await SC.airdropForSP(obj.solanaWallet, obj.walletAddress, obj.ipaddress)
         await tx.wait ()
         await airDropForSP(obj.solanaWallet, obj.amount)
 
@@ -190,6 +193,16 @@ const SPClub_AirdropProcess = async () => {
         SPClub_AirdropProcess ()
     }, 1000)
 
+}
+
+const checkAirDropForSPReffers = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
+    try {
+        const tx = await SPClub_Airdrop_Contract_pool[0].isReadyForReferees (solana, wallet, ipaddress)
+        return tx
+    } catch (ex: any) {
+        console.log (`checkAirDropForSPReffers Error`, ex.message)
+        return false
+    }
 }
 
 const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
@@ -264,7 +277,9 @@ const airDropForSP = async (to: string, SP_Amount: number) => {
     //     logger(Colors.red(`returnSP sendAndConfirmTransaction Error! ${ex.message}`))
     // }
 }
-
+const reffAddressList = [
+    ''
+]
 
 class conet_dl_server {
 
@@ -649,14 +664,13 @@ class conet_dl_server {
 
         router.post ('/getAirDropForSPReff', async (req: any, res: any) => {
             let ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/getAirDropForSP`))
 			let message, signMessage
 			try {
 				message = req.body.message
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /getAirDropForSP req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /getAirDropForSPReff req.body ERROR!`), inspect(req.body))
 				return res.status(404).json({
 					error: 'message & signMessage Object Error!'
 				}).end()
@@ -665,8 +679,8 @@ class conet_dl_server {
 			
 			const obj = checkSign (message, signMessage)
 	
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
-                logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress || !obj?.referrer ) {
+                logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
                 return res.status(403).json({
@@ -678,7 +692,7 @@ class conet_dl_server {
             }
             
             const [status, balance] = await Promise.all([
-                checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress),
+                checkAirDropForSPReffers(obj.walletAddress, obj.solanaWallet, ipaddress),
                 checkIsHoldSP(obj.solanaWallet)
             ])
 
@@ -689,11 +703,13 @@ class conet_dl_server {
             }
             const amount = balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
             obj.ipAddress = ipaddress
+            
             SPClub_AirdropPool.push({
                 walletAddress: obj.walletAddress,
                 solanaWallet: obj.solanaWallet,
                 ipaddress,
-                amount
+                amount,
+                referrer: obj.referrer
             })
 
             logger(inspect(obj, false, 3, true))
