@@ -1,9 +1,7 @@
 import * as TronWeb from 'tronweb'
 import crypto from 'node:crypto'
-import { logger } from '../util/util'
+import { logger, masterSetup } from '../util/util'
 import { inspect } from 'node:util'
-import tron_USDT_ABI from './tron_USDT_ABI.json'
-
 
 const fullNode = 'https://api.shasta.trongrid.io'
 const solidityNode = 'https://api.shasta.trongrid.io'
@@ -11,9 +9,10 @@ const eventServer = 'https://api.shasta.trongrid.io'
 var privateKey = crypto.randomBytes(32).toString('hex')
 
 const tronWeb = new TronWeb.TronWeb({
-    fullHost: fullNode
+    fullHost: 'https://api.trongrid.io',
+    headers: { 'TRON-PRO-API-KEY': masterSetup.tronAPIKey }
 })
-
+tronWeb.setAddress('TEKZGDktKqs68agSYTsnkkJa8LHhRP8HCW')
 const USDT_CONTRACT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t'
 const USDT_Decimal = 6
 
@@ -34,16 +33,14 @@ export const ethToTronAddress = (ethAddress: string) => {
 export const balanceTron = async (tronAddr: string) => {
     
     try {
-
-
-        const ethAddr = tronToEthAddress (tronAddr)
+        
         const balace =  await tronWeb.trx.getBalance(tronAddr)
-        logger(inspect(balace, false, 3, true))
         const balanceInTRX = tronWeb.fromSun(balace)
-        console.log(`Balance of ${tronAddr}:${ethAddr} = ${balanceInTRX} TRX`)
+        return balanceInTRX.toString()
     } catch (ex: any) {
         console.error("Failed to fetch balance:", ex.message)
     }
+    return '0'
 }
 
 export const getAccount = async(tronAddr: string) => {
@@ -67,22 +64,22 @@ export const tronToEthAddress = (tronAddr: string) => {
 
 export const getBalance_USDT = async (tronAddr: string) => {
     const ethAddr = tronToEthAddress (tronAddr)
-    tronWeb.setAddress(tronAddr)
-    const {
-        abi
-    } = await tronWeb.trx.getContract(USDT_CONTRACT)
-    const contract = await tronWeb.contract(tron_USDT_ABI, USDT_CONTRACT)
     
+    const contract = await tronWeb.contract().at(USDT_CONTRACT)
     const result = await contract.balanceOf(tronAddr).call()
+
     const balance = tronWeb.toBigNumber(result).div(10 ** USDT_Decimal).toString()
     console.log(`${tronAddr}:${ethAddr} USDT Balance: ${balance} USDT`)
 }
 
+
+
+
 const test = () => {
     const account = 'TEKZGDktKqs68agSYTsnkkJa8LHhRP8HCW'
-    // balanceTron(account)
+    
     // getAccount(account)
-    getBalance_USDT(account)
+    // getBalance_USDT(account)
 }
 
-test()
+// test()

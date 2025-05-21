@@ -32,7 +32,7 @@ import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, 
 import {mapLimit} from 'async'
 import CoNET_DePIN_SpClub_ABI from './CoNET_DePIN-SPClub.ABI.json'
 import SPClub_Airdrop_ABI from './AirDropForSP.ABI.json'
-
+import { balanceTron, ethToTronAddress } from './tron'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -491,8 +491,8 @@ class conet_dl_server {
 
             const error = JSON.stringify({error: 'Format error!'})
             
-            if (!cryptoName || (cryptoName !== 'BSC USDT' && cryptoName !=='BNB' ) || (plan !== '1' && plan !== '12' && plan !== '3' ) || plan === '3' && (!walletAddress || !solana)) {
-                logger(`/cryptoPay Error ===== !cryptoName ${!(cryptoName !== 'BSC USDT' && cryptoName !=='BNB' )} || (plan !== '1' && plan !== '12' && plan !== '3' ) == ${(plan !== '1' && plan !== '12' && plan !== '3' )}  plan === '3' && (!walletAddress || !solana) ==${ plan === '3' && (!walletAddress || !solana)}`)
+            if (!cryptoName || (cryptoName !== 'BSC USDT' && cryptoName !=='BNB' && cryptoName !=='TRON TRX') || (plan !== '1' && plan !== '12' && plan !== '3' ) || plan === '3' && (!walletAddress || !solana)) {
+                logger(`/cryptoPay Error ===== !cryptoName ${!(cryptoName !== 'BSC USDT' && cryptoName !=='BNB' && cryptoName !=='TRON TRX')} || (plan !== '1' && plan !== '12' && plan !== '3' ) == ${(plan !== '1' && plan !== '12' && plan !== '3' )}  plan === '3' && (!walletAddress || !solana) ==${ plan === '3' && (!walletAddress || !solana)}`)
                 return res.status(200).json({error}).end()
             }
 
@@ -929,6 +929,48 @@ const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: str
     sp_reword_process()
 }
 
+const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
+    const wallet = walletHD.address.toLowerCase()
+    const tronWalletAddr = ethToTronAddress(wallet)
+    const initBalance = parseFloat(await balanceTron(tronWalletAddr))
+    const checkBalance = async () => {
+        const newBalance = parseFloat(await balanceTron(tronWalletAddr))
+        const balance = newBalance - initBalance
+        if (balance < 0.000001) {
+            let count = waitingList.get(wallet) || 0
+            if (++ count > 40) {
+                return logger(`TRON-TRX ${tronWalletAddr} time over STOP listening!`)
+            }
+            waitingList.set(wallet, count)
+            return setTimeout(async () => {
+                logger(`waiting TRON-TRX count [${count}] ${tronWalletAddr}:${walletAddress} is ZERO ${balance}  do next waiting!`)
+                return executor( await waitingTron_trx (walletHD, price, plan, agentWallet, walletAddress, solana))
+            })
+        }
+
+        if (Math.abs(balance - price) > price * 0.05) {
+            logger(`TRON-TRX price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
+            payment_waiting_status.set (wallet, 0)
+            return storePayment(walletHD, price, 'TRON-TRX', balance, true)
+        }
+
+        logger(`waiting BNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
+
+        if (plan !== '3') {
+            const redeemCode = createRedeem (plan, agentWallet)
+            payment_waiting_status.set (wallet, redeemCode)
+        } else {
+            mintPluePlan(wallet, walletAddress, solana, agentWallet)
+        }
+        
+        storePayment(walletHD, price, 'BNB-USDT', balance, false)
+    }
+
+    checkBalance()
+    
+})
+
+
 const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
@@ -950,12 +992,12 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     }
    
     if (Math.abs(balance - price) > price * 0.05) {
-        logger(`waitingBNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
+        logger(`waiting BNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } Error!`)
         payment_waiting_status.set (wallet, 0)
         return storePayment(walletHD, price, 'BNB-USDT', balance, true)
     }
 
-    logger(`waitingBNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
+    logger(`waiting BNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
 
     if (plan !== '3') {
         const redeemCode = createRedeem (plan, agentWallet)
@@ -1072,6 +1114,11 @@ const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, crypto
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
             waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
             return true
+        }
+
+        case 'TRON TRX': {
+            waitingTron_trx(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
+            return false
         }
 
         default: {
