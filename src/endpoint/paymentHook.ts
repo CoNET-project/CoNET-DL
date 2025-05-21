@@ -1118,7 +1118,7 @@ const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, crypto
 
         case 'TRON TRX': {
             waitingTron_trx(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
-            return false
+            return true
         }
 
         default: {
