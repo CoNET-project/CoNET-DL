@@ -203,14 +203,18 @@ const SPClub_AirdropProcess = async () => {
 
 }
 
-const checkAirDropForSPReffers = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
-    try {
-        const tx = await SPClub_Airdrop_Contract_pool[0].isReadyForReferees (solana, wallet, ipaddress)
-        return tx
-    } catch (ex: any) {
-        console.log (`checkAirDropForSPReffers Error`, ex.message)
-        return false
+const checkAirDropForSPReffers = async (wallet: string, solana: string, ipaddress: string, reffer: string): Promise<boolean> => {
+    if (wallet !== reffer) {
+        try {
+            const tx = await SPClub_Airdrop_Contract_pool[0].isReadyForReferees (solana, wallet, ipaddress)
+            return tx
+        } catch (ex: any) {
+            console.log (`checkAirDropForSPReffers Error`, ex.message)
+            
+        }
     }
+    
+    return false
 }
 
 const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: string): Promise<boolean> => {
@@ -640,8 +644,9 @@ class conet_dl_server {
 			const obj = checkSign (message, signMessage)
             
             const isAddress = ethers.isAddress(obj?.referrer)
+            
 
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress || !isAddress ) {
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress || !isAddress ||!obj?.referrer) {
                 logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
@@ -650,14 +655,14 @@ class conet_dl_server {
                 }).end()
             }
             
-            const referrer = obj.referrer?.toLowerCase()
+            const referrer = obj.referrer.toLowerCase()
 
             if (ipaddress === '73.189.157.190') {
                 ipaddress = v4()
             }
             
             const [status, balance] = await Promise.all([
-                checkAirDropForSPReffers(obj.walletAddress, obj.solanaWallet, ipaddress),
+                checkAirDropForSPReffers(obj.walletAddress, obj.solanaWallet, ipaddress, referrer),
                 checkIsHoldSP(obj.solanaWallet)
             ])
             const key = new PublicKey( obj.solanaWallet).toBase58()
