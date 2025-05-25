@@ -14,8 +14,10 @@ const test = () => {
     const encodedMessage = new TextEncoder().encode(message)
 
     // Sign the message
-    const signature = nacl.sign.detached(encodedMessage, keypair.secretKey)
-    const encodedSignature = bs58.encode(signature)
+    const _signature = nacl.sign.detached(encodedMessage, keypair.secretKey)
+    const encodedSignature = bs58.encode(_signature)
+
+    const signature = bs58.decode(encodedSignature)
 
     // Verify the signature
     const isValid = nacl.sign.detached.verify(encodedMessage, signature, publicKey.toBytes());

@@ -902,8 +902,8 @@ class conet_dl_server {
             const _sign: string = obj.data
             const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
             const encodedMessage = new TextEncoder().encode(obj.walletAddress)
-            const sign = Uint8Array.from(Buffer.from(_sign, 'hex'))
-            const isValid = nacl.sign.detached.verify(encodedMessage, sign, solanaWalletPublicKey.toBytes())
+            const signature = Bs58.decode(obj.data)
+            const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
 
             if (!isValid) {
                 logger(`/purchasePassportBySP isValid Error! ${isValid}`)
@@ -911,7 +911,7 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
-            
+
             return res.status(200).json({
                 status: true
             }).end()
