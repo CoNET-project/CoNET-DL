@@ -11,12 +11,12 @@ import Bs58 from 'bs58'
 import SP_purchase_eventABI from './SP_purchase_eventABI.json'
 import SP_mainnetABI from './CoNET_DEPIN-mainnet_SP-API.json'
 
-const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
+
 const CoNETMainnetRPC = 'https://mainnet-rpc.conet.network'
 const SOLANA_CONNECTION = new Connection(
 	"https://api.mainnet-beta.solana.com" // We only support mainnet.
 )
-const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
+
 const endPointMainnet = new ethers.JsonRpcProvider(CoNETMainnetRPC)
 
 const SP_Oracle_Addr = '0x96B2d95084C0D4b0dD67461Da06E22451389dE23'
@@ -39,7 +39,7 @@ const sp_NGO = '6g5CHuv3tUHMupdccP6s7jRbEPjks2DAM5T5GYfrqvWz'
 const spDecimalPlaces = 6
 
 
-const SP_purchaseWallet = new ethers.Wallet(masterSetup.SP_purchase[0], endPointCancun)
+const SP_purchaseWallet = new ethers.Wallet(masterSetup.SP_purchase[0], endPointMainnet)
 const SP_purchase_event_SC = new ethers.Contract(SP_purchase_Addr, SP_purchase_eventABI, SP_purchaseWallet)
 
 const SP_NFT_SC_pool: ethers.Contract[]= []
@@ -47,8 +47,7 @@ const SP_NFT_managerWallet = new ethers.Wallet(masterSetup.SP_purchase[0], endPo
 const SP_NFT_SC = new ethers.Contract(mainnet_passport_addr, SP_mainnetABI, SP_NFT_managerWallet)
 SP_NFT_SC_pool.push(SP_NFT_SC)
 
-const SP_purchase_event_SCPool: ethers.Contract[] = []
-SP_purchase_event_SCPool.push(SP_purchase_event_SC)
+const SP_purchase_event_SCPool = [SP_purchase_event_SC]
 
 
 const SP_purchase_Success: string[] = []
@@ -480,14 +479,14 @@ const brunSP = async (brunNUmber: string) => {
 let currentBlock = 0
 
 const getBlock = async (block: number) => {
-	const blockTs = await endPointCancun.getBlock(block)
+	const blockTs = await endPointMainnet.getBlock(block)
 	if (!blockTs?.transactions) {
 		return logger(Colors.gray(`holeskyBlockListenning ${block} has none`))
 	}
 	logger(Colors.gray(`holeskyBlockListenning ${block} has process now!`))
 	for (let tx of blockTs.transactions) {
 
-		const event = await endPointCancun.getTransactionReceipt(tx)
+		const event = await endPointMainnet.getTransactionReceipt(tx)
 		
 		if ( event?.to?.toLowerCase() === SP_purchase_Addr) {
 			
@@ -499,9 +498,9 @@ const getBlock = async (block: number) => {
 
 const daemondStart = async () => {
 	
-	currentBlock = await endPointCancun.getBlockNumber()
+	currentBlock = await endPointMainnet.getBlockNumber()
 	logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
-	endPointCancun.on('block', async block => {
+	endPointMainnet.on('block', async block => {
 		if (block > currentBlock) {
 			currentBlock = block
 			getBlock(block)
