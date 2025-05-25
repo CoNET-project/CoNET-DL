@@ -299,7 +299,7 @@ const checkPrice: (_amount: string) => Promise<nftType> = async (_amount: string
     return resolve('')
 })
 
-const checkSolanaPayment = async (solanaTx: string, walletAddress: string): Promise<boolean> => new Promise(async executor => {
+const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _solanaWallet: string): Promise<boolean> => new Promise(async executor => {
 
     //		from: J3qsMcDnE1fSmWLd1WssMBE5wX77kyLpyUxckf73w9Cs
     //		to: 2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q
@@ -319,7 +319,7 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string): Prom
         const preTokenBalances = meta.preTokenBalances
         if (preTokenBalances?.length == 2 && postTokenBalances?.length == 2) {
             const solanaWallet = postTokenBalances[0].owner
-            if (solanaWallet && preTokenBalances[0].mint === SP_address && (preTokenBalances[0].owner === sp_team || preTokenBalances[1].owner === sp_team)) {
+            if (solanaWallet === _solanaWallet && preTokenBalances[0].mint === SP_address && (preTokenBalances[0].owner === sp_team || preTokenBalances[1].owner === sp_team)) {
                 const index = preTokenBalances[0].owner === sp_team ? 0 : 1
 
                 if (postTokenBalances[index].uiTokenAmount && preTokenBalances[index].uiTokenAmount) {
@@ -350,6 +350,7 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string): Prom
                         
                         // return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
                     }
+                    payment_waiting_status.set(walletAddress, 1)
                     /**
                      * mintPassportPool.push({
                         walletAddress,
@@ -360,11 +361,13 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string): Prom
                     })
                      */
 
-                    mintPassportPool.push({
-                        walletAddress, solanaWallet, expiresDays: nftType === 'sp249' ? 31 : 367, hash, total: 1
-                    })
+                    // mintPassportPool.push({
+                    //     walletAddress, solanaWallet, expiresDays: nftType === 'sp249' ? 31 : 367, hash, total: 1
+                    // })
 
-                    mintPassport()
+                    // mintPassport()
+
+                    
 
                     logger(Colors.magenta(`Purchase ${walletAddress} NFT ${nftType}`))
                     executor(true)
@@ -902,7 +905,7 @@ class conet_dl_server {
             const _sign: string = obj.data
             const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
             const encodedMessage = new TextEncoder().encode(obj.walletAddress)
-            const signature = Bs58.decode(obj.data)
+            const signature = Bs58.decode(_sign)
             const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
 
             if (!isValid) {
@@ -911,7 +914,14 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
+            const status = await checkSolanaPayment(obj.hash, obj.walletAddress, obj.solanaWallet)
 
+            if (!status) {
+                return res.status(403).json({
+                    error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+                }).end()
+            }
+            
             return res.status(200).json({
                 status: true
             }).end()
