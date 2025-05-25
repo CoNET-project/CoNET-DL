@@ -17,7 +17,6 @@ import Bs58 from 'bs58'
 import { Connection, PublicKey, Keypair,Transaction, sendAndConfirmTransaction, SystemProgram, SendOptions, ComputeBudgetProgram, TransactionConfirmationStrategy } from "@solana/web3.js"
 import {getSimulationComputeUnits} from "@solana-developers/helpers"
 import SP_Oracle_ABI from './SP_OracleABI.json'
-import SP_Reward_ABI from './spReward_ABI.json'
 import {request as HTTPS_Request, RequestOptions} from 'node:https'
 import GuardianOracle_ABI from './GuardianOracleABI.json'
 import {v4} from 'uuid'
@@ -33,6 +32,10 @@ import {mapLimit} from 'async'
 import CoNET_DePIN_SpClub_ABI from './CoNET_DePIN-SPClub.ABI.json'
 import SPClub_Airdrop_ABI from './AirDropForSP.ABI.json'
 import { balanceTron, ethToTronAddress } from './tron'
+import nacl from 'tweetnacl'
+
+
+
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -47,7 +50,7 @@ const keyId = masterSetup.apple.keyId
 const bundleId = "com.fx168.CoNETVPN1.CoNETVPN1"
 const filePath = masterSetup.apple.encodedKeyPath
 const appleRoot = masterSetup.apple.appleRootCA
-
+const sp_team = '2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q'
 const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
 
 const cryptoPayWallet = ethers.Wallet.fromPhrase(masterSetup.cryptoPayWallet)
@@ -137,6 +140,23 @@ const oracolDeman = async () => {
         oracolDeman()
     }, 15 * 1000 * 60)
 }
+let currentBlock = 0
+
+
+
+const daemondStart = async () => {
+    
+    currentBlock = await CONET_MAINNET.getBlockNumber()
+    logger(Colors.magenta(`CoNET DePIN passport airdrop daemon Start from block [${currentBlock}]`))
+    CONET_MAINNET.on('block', async block => {
+        if (block > currentBlock) {
+            currentBlock = block
+            
+        }
+        
+    })
+}
+
 
 const oracolPrice = async () => {
     const assets = ['bnb', 'eth']
@@ -242,6 +262,133 @@ const reffSOlanaAddressList = [
     '8DgvFpNUW8ZLx8aoUYuYe38JaYK96pHz9r3upPufY7Lf'
 ]
 
+type nftType = 'sp9999'| 'sp2499'| 'sp999'| 'sp249'|''
+
+const checkPrice: (_amount: string) => Promise<nftType> = async (_amount: string) => new Promise( async resolve=>{
+    await getOracle()
+
+    logger(inspect(oracleData, false, 3, true))
+    const amount = parseFloat(_amount)
+    if (oracleData.data == null) {
+        resolve('')
+        return logger(`checkPrice oracleData?.data is NULL Error!`)
+    }
+    // check sp9999
+    const sp249 = parseFloat(oracleData.data.sp249)
+    const sp999 = parseFloat(oracleData.data.sp999)
+    const sp2499 = parseFloat(oracleData.data.sp2499)
+    const sp9999 = parseFloat(oracleData.data.sp9999)
+
+    
+    if (Math.abs(amount - sp9999) < sp9999 * 0.05) {
+        return resolve('sp9999')
+    }
+
+    if (Math.abs(amount - sp2499) < sp2499 * 0.05) {
+        return resolve('sp2499')
+    }
+
+    if (Math.abs(amount - sp999) < sp999 * 0.05) {
+        return resolve('sp999')
+    }
+
+    if (Math.abs(amount - sp249) < sp249 * 0.05) {
+        return resolve('sp249')
+    }
+
+    return resolve('')
+})
+
+const checkSolanaPayment = async (solanaTx: string, walletAddress: string): Promise<boolean> => new Promise(async executor => {
+
+    //		from: J3qsMcDnE1fSmWLd1WssMBE5wX77kyLpyUxckf73w9Cs
+    //		to: 2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q
+    const connect = masterSetup.solana_rpc
+
+    // const connect = getRandomNode()
+    const SOLANA_CONNECTION = new Connection(connect, {
+        commitment: "confirmed",
+        disableRetryOnRateLimit: false,
+    })
+
+    const tx = await SOLANA_CONNECTION.getTransaction(solanaTx, {maxSupportedTransactionVersion: 0})
+    const meta = tx?.meta
+    if (meta) {
+        // logger(inspect(meta, false, 3, true))
+        const postTokenBalances = meta.postTokenBalances
+        const preTokenBalances = meta.preTokenBalances
+        if (preTokenBalances?.length == 2 && postTokenBalances?.length == 2) {
+            const solanaWallet = postTokenBalances[0].owner
+            if (solanaWallet && preTokenBalances[0].mint === SP_address && (preTokenBalances[0].owner === sp_team || preTokenBalances[1].owner === sp_team)) {
+                const index = preTokenBalances[0].owner === sp_team ? 0 : 1
+
+                if (postTokenBalances[index].uiTokenAmount && preTokenBalances[index].uiTokenAmount) {
+                    const preAmount = parseFloat(preTokenBalances[index].uiTokenAmount.uiAmount ? preTokenBalances[index].uiTokenAmount.uiAmount.toString() : "0")
+                    const postAmount = parseFloat( postTokenBalances[index].uiTokenAmount.uiAmount ? postTokenBalances[index].uiTokenAmount.uiAmount.toString() : "0")
+                    const _amount = postAmount - preAmount
+
+                    logger(Colors.blue(`transferAmount = ${_amount}`))
+                    const [hash, nftType] = await Promise.all([
+                        checkHash(solanaTx),
+                        checkPrice(_amount.toFixed(4))
+                    ])
+                    
+                    
+                    if (nftType === ''|| !hash ) {
+                        logger(Colors.magenta(`checkSolanaPayment Pay ${solanaTx} $SP${_amount} nftType=${nftType} hash=${hash} not correct f${_amount}  [${solanaWallet}] ethWallet ${walletAddress}`))
+                        return executor(false)
+                        // const amount = parseFloat(_amount.toFixed(4)) * 0.97
+                        // if (amount > 0.1) {
+                        //     returnPool.push ({
+                        //         from, amount: amount.toFixed(4)
+                        //     })
+
+                        //     returnSP()
+                        // }
+                        
+                        // process_SP_purchase__Failed()
+                        
+                        // return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
+                    }
+                    /**
+                     * mintPassportPool.push({
+                        walletAddress,
+                        solanaWallet: metadata.solanaWallet,
+                        expiresDays: payAmount === 299 ? 31: 372,
+                        total: 1,
+                        hash: paymentIntent.id
+                    })
+                     */
+
+                    mintPassportPool.push({
+                        walletAddress, solanaWallet, expiresDays: nftType === 'sp249' ? 31 : 367, hash, total: 1
+                    })
+
+                    mintPassport()
+
+                    logger(Colors.magenta(`Purchase ${walletAddress} NFT ${nftType}`))
+                    executor(true)
+                    return logger(Colors.magenta(`NFT success! for ${solanaTx} [${walletAddress}]`))
+                }
+
+                logger(inspect(preTokenBalances, false, 3, true))
+                logger(inspect(postTokenBalances, false, 3, true))
+                executor(false)
+                return logger(Colors.red(`NFT Errot! from ${solanaWallet} postTokenBalances[1].uiTokenAmount && preTokenBalances[1].uiTokenAmount [${postTokenBalances[1].uiTokenAmount && preTokenBalances[1].uiTokenAmount}]`))
+
+            }
+
+            logger(inspect(preTokenBalances, false, 3, true))
+            logger(inspect(postTokenBalances, false, 3, true))
+            executor(false)
+            return logger(Colors.magenta(`NFT Errot! from ${solanaWallet} preTokenBalances[0].mint === SP_address ${preTokenBalances[0].mint === SP_address} preTokenBalances[0].owner === sp_team ${preTokenBalances[0].owner === sp_team}`))
+        }
+        executor(false)
+        return logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length}postTokenBalances?.length ${postTokenBalances?.length} Error!`))
+    }
+    
+})
+
 class conet_dl_server {
 
 	private PORT = 8005
@@ -251,6 +398,7 @@ class conet_dl_server {
 		this.startServer()
         getOracle()
         oracolDeman()
+        daemondStart()
 	}
 
 	constructor () {
@@ -725,6 +873,52 @@ class conet_dl_server {
             return res.status(200).json({success: true}).end()
 
         })
+
+        router.post ('/purchasePassportBySP', async (req: any, res: any) => {
+            let ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /purchasePassportBySP req.body ERROR!`), inspect(req.body))
+				return res.status(404).json({
+					error: 'message & signMessage Object Error!'
+				}).end()
+			}
+
+			
+			const obj = checkSign (message, signMessage)
+
+			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !obj?.hash || !obj?.data) {
+                logger (Colors.grey(`Router /purchasePassportBySP checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
+                logger(inspect(obj, false, 3, true))
+
+                return res.status(403).json({
+                    error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+                }).end()
+            }
+            const _sign: string = obj.data
+            const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
+            const encodedMessage = new TextEncoder().encode(obj.walletAddress)
+            const sign = Uint8Array.from(Buffer.from(_sign, 'hex'))
+            const isValid = nacl.sign.detached.verify(encodedMessage, sign, solanaWalletPublicKey.toBytes())
+
+            if (!isValid) {
+                logger(`/purchasePassportBySP isValid Error! ${isValid}`)
+                return res.status(403).json({
+                    error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+                }).end()
+            }
+            
+            return res.status(200).json({
+                status: true
+            }).end()
+
+        })
+
+        
 
 		
 		router.all ('*', (req: any, res: any) => {
@@ -1372,6 +1566,24 @@ const process_SPClub_Poing_Process = async () => {
 
 }
 
+const checkHash = async (hash_temp: string): Promise<undefined|string> => {
+    const _hash = ethers.solidityPacked(['string'], [hash_temp])
+    const hash = _hash.length > 32 ? _hash.substring(0, 66) : ethers.zeroPadBytes(_hash, 32)
+    
+    logger(`checkHash = ${hash}`)
+    try {
+        const isUsed = await payment_SC_readOnly.payID(hash)
+        if (isUsed) {
+            return undefined
+        }
+        return hash
+    } catch (ex: any) {
+        
+    }
+    return undefined
+    
+}
+
 const mintPassport = async () => {
 	const obj = mintPassportPool.shift()
 	if (!obj) {
@@ -1981,7 +2193,7 @@ const createRedeemProcessAdmin  = () => {
 
 
 const test = async () => {
-    //returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
+    returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
@@ -1995,7 +2207,7 @@ const test = async () => {
     
 }
 
-
+// checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')
 
 // const check = async () => {
 //     const kkk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
@@ -2010,4 +2222,4 @@ const test = async () => {
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
-createRedeemProcessAdmin()
+// createRedeemProcessAdmin()
