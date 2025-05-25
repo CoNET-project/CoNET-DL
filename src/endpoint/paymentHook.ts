@@ -351,24 +351,12 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _sola
                         // return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
                     }
                     payment_waiting_status.set(walletAddress, 1)
-                    /**
-                     * mintPassportPool.push({
-                        walletAddress,
-                        solanaWallet: metadata.solanaWallet,
-                        expiresDays: payAmount === 299 ? 31: 372,
-                        total: 1,
-                        hash: paymentIntent.id
+
+                    mintPassportPool.push({
+                        walletAddress, solanaWallet, expiresDays: nftType === 'sp249' ? 31 : 367, hash, total: 1
                     })
-                     */
 
-                    // mintPassportPool.push({
-                    //     walletAddress, solanaWallet, expiresDays: nftType === 'sp249' ? 31 : 367, hash, total: 1
-                    // })
-
-                    // mintPassport()
-
-                    
-
+                    mintPassport()
                     logger(Colors.magenta(`Purchase ${walletAddress} NFT ${nftType}`))
                     executor(true)
                     return logger(Colors.magenta(`NFT success! for ${solanaTx} [${walletAddress}]`))
@@ -921,7 +909,7 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
-            
+
             return res.status(200).json({
                 status: true
             }).end()
