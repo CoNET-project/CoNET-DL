@@ -356,7 +356,17 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _sola
                         walletAddress, solanaWallet, expiresDays: nftType === 'sp249' ? 31 : 367, hash, total: 1
                     })
 
+
+
+                    SPClub_Point_Process.push({
+                        expiresDayes: nftType === 'sp249' ? 31 : 367,
+                        wallet: walletAddress,
+                        referee: await getReferrer(walletAddress)
+
+                    })
+
                     mintPassport()
+                    process_SPClub_Poing_Process()
                     logger(Colors.magenta(`Purchase ${walletAddress} NFT ${nftType}`))
                     executor(true)
                     return logger(Colors.magenta(`NFT success! for ${solanaTx} [${walletAddress}]`))
@@ -379,6 +389,15 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _sola
     }
     
 })
+
+const getReferrer = async (walletAddress: string) => {
+    try {
+        const reffers = ReferralsV3Contract_readonly.getReferrer(walletAddress)
+        return reffers
+    } catch (ex) {
+        return null
+    }
+}
 
 class conet_dl_server {
 
@@ -515,7 +534,15 @@ class conet_dl_server {
 				total: 1,
 				hash: data.hash
 			})
-			mintPassport()
+			
+            SPClub_Point_Process.push({
+                expiresDayes: data?.type === '1'?  31: 372,
+                wallet: data.walletAddress,
+                referee: await getReferrer(data.walletAddress)
+            })
+            process_SPClub_Poing_Process()
+            mintPassport()
+            
 			res.status(200).json({success: true})
 
 		})
@@ -902,6 +929,7 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
+            
             const status = await checkSolanaPayment(obj.hash, obj.walletAddress, obj.solanaWallet)
 
             if (!status) {
@@ -1674,7 +1702,12 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
         if (payAmount !== 299 && metadata.solanaWallet) {
             makeSolanaProm(metadata.solanaWallet)
         }
-        
+        SPClub_Point_Process.push({
+            expiresDayes: payAmount === 299 ? 31: 372,
+            wallet: walletAddress,
+            referee: await getReferrer(walletAddress)
+        })
+        process_SPClub_Poing_Process()
 		
 	} catch (ex: any) {
 		logger(ex.message)
@@ -1801,7 +1834,7 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
 			if (response.signedTransactions) {
                const process = response.signedTransactions.map(n => appleVerificationUsage(n))
 			   const resoule = await Promise.all(process)
-               resoule.forEach(n => {
+               resoule.forEach(async n => {
                     if (n) {
                         const walletAddress = _walletAddress.toLowerCase()
                         payment_waiting_status.set(walletAddress, 1)
@@ -1811,6 +1844,12 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
                             expiresDays: n.plan === '001' ? 31 : 372,
                             hash: n.hash
                         })
+                        SPClub_Point_Process.push({
+                            expiresDayes: n.plan === '001' ? 31 : 372,
+                            wallet: walletAddress,
+                            referee: await getReferrer(walletAddress)
+                        })
+                        process_SPClub_Poing_Process()
                         mintPassport()
                         if (n.plan === '002') {
                             makeSolanaProm(solanaWallet)
