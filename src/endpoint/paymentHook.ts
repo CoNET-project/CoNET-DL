@@ -1346,6 +1346,7 @@ const listenTransfer = async (price: number, cryptoName: string, plan: '299'|'31
             const _balance = await bnbPrivate.getBalance(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
+            payment_waiting_status.set(wallet.address.toLowerCase(), 0)
             waitingBNB (wallet, price, plan, agentWallet, walletAddress, solana)
             return wallet.address
         }
@@ -1354,6 +1355,7 @@ const listenTransfer = async (price: number, cryptoName: string, plan: '299'|'31
             const _balance = await bnb_usdt_contract.balanceOf(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
+            payment_waiting_status.set(wallet.address.toLowerCase(), 0)
             waitingBNB_USDT(wallet, price, plan, agentWallet, walletAddress, solana)
             return wallet.address
         }
