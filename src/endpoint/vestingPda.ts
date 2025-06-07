@@ -310,7 +310,7 @@ export const claimPDA = async (BENEFICIARY: web3.Keypair) => {
 
 
 const test = async () => {
-    const BENEFICIARY_privateKey = '5xCJW1XkiFW3AjkzwL1f1GeD6SZVQQiQm7ZpLiDT2rFDKjj2Y42ARUhNhrrtF8Kspxuad1TKSUdCtBGNY8TEAVzj'
+    const BENEFICIARY_privateKey = ''
     // logger(`Managet key ${ManagerKey.publicKey.toBase58()}`)
     
     const BENEFICIARY_bs58 = Bs58.decode(BENEFICIARY_privateKey)
