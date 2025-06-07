@@ -692,7 +692,7 @@ class conet_dl_server {
                 return res.status(200).json({error}).end()
             }
 
-            return res.status(200).json({success: waitingAddress}).end()
+            return res.status(200).json({success: true, wallet: waitingAddress, transferNumber: plan.toString()}).end()
             
         })
 
