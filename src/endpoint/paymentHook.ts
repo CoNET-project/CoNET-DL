@@ -1237,7 +1237,10 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '29
         return storePayment(walletHD, price, 'BNB-USDT', balance, true)
     }
 
-    logger(`waiting BNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
+    
+    logger(`waiting BNB_USDT ${walletHD.address} success got payment ${price}`)
+    payment_waiting_status.set(wallet, 100)
+    storePayment(walletHD, price, 'BNB', balance, false)
 
     // if (plan !== '3') {
     //     const redeemCode = createRedeem (plan, agentWallet)
@@ -1246,7 +1249,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '29
     //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
     // }
     
-    // storePayment(walletHD, price, 'BNB-USDT', balance, false)
+    storePayment(walletHD, price, 'BNB-USDT', balance, false)
 
 })
 
@@ -1332,9 +1335,9 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3
     // } else {
     //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
     // }
-    
-    
-    // storePayment(walletHD, price, 'BNB', balance, false)
+    logger(`waiting BNB ${walletHD.address} success got payment ${price}`)
+    payment_waiting_status.set(wallet, 100)
+    storePayment(walletHD, price, 'BNB', balance, false)
 })
 
 const listenTransfer = async (price: number, cryptoName: string, plan: '299'|'3100', walletAddress: string, solana: string): Promise<string> => {
