@@ -1,0 +1,251 @@
+{
+  "address": "3Ar8n19awwnfkVwnz29NCz3HJDyEeDAwLPa8egsQd1Cs",
+  "metadata": {
+    "name": "anchor_linear_vesting",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "claim",
+      "docs": [
+        "Claim any newly‐vested tokens. Only the recorded `beneficiary` may call."
+      ],
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "beneficiary",
+          "docs": [
+            "The beneficiary who will sign to claim tokens."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vesting_account",
+          "docs": [
+            "The vesting PDA, which Anchor verifies was derived using:",
+            "[",
+            "b\"vesting\",",
+            "vesting_account.owner.as_ref(),",
+            "vesting_account.token_mint.as_ref(),",
+            "&[vesting_id]",
+            "]"
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_token_account",
+          "docs": [
+            "The PDA’s escrow token account holding the locked tokens."
+          ],
+          "writable": true
+        },
+        {
+          "name": "beneficiary_token_account",
+          "docs": [
+            "The beneficiary’s own token account to receive claimed tokens."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "token_mint"
+        }
+      ],
+      "args": [
+        {
+          "name": "vesting_id",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "initialize_vesting",
+      "docs": [
+        "Initialize a new vesting schedule.",
+        "- `vesting_id` is a small `u8` (0…255) that distinguishes multiple schedules for the same (beneficiary, token_mint).",
+        "- The initializer pays rent and must transfer `total_amount` tokens from their own token account into the PDA’s escrow."
+      ],
+      "discriminator": [
+        5,
+        29,
+        245,
+        237,
+        50,
+        242,
+        35,
+        13
+      ],
+      "accounts": [
+        {
+          "name": "initializer",
+          "docs": [
+            "The wallet paying rent and providing tokens. Must be a Signer."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "beneficiary"
+        },
+        {
+          "name": "vesting_account",
+          "docs": [
+            "The vesting PDA, created by Anchor with these seeds + bump:",
+            "[",
+            "b\"vesting\",",
+            "beneficiary.key().as_ref(),",
+            "token_mint.key().as_ref(),",
+            "&[vesting_id]",
+            "]"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The SPL token mint being vested."
+          ]
+        },
+        {
+          "name": "escrow_token_account",
+          "docs": [
+            "The token account (ATA or custom) owned by the PDA; holds escrowed tokens."
+          ],
+          "writable": true
+        },
+        {
+          "name": "initializer_token_account",
+          "docs": [
+            "The initializer’s own token account for this mint (must hold ≥ `total_amount`)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "docs": [
+            "Standard programs & sysvars."
+          ],
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "vesting_id",
+          "type": "u8"
+        },
+        {
+          "name": "total_amount",
+          "type": "u64"
+        },
+        {
+          "name": "start_time",
+          "type": "i64"
+        },
+        {
+          "name": "release_duration",
+          "type": "i64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "VestingAccount",
+      "discriminator": [
+        102,
+        73,
+        10,
+        233,
+        200,
+        188,
+        228,
+        216
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "You are not authorized to claim from this vesting account."
+    },
+    {
+      "code": 6001,
+      "name": "InvalidVestingId",
+      "msg": "The provided vesting_id does not match the PDA’s stored vesting_id."
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPda",
+      "msg": "The PDA did not match the expected seeds (beneficiary, token_mint, vesting_id)."
+    }
+  ],
+  "types": [
+    {
+      "name": "VestingAccount",
+      "docs": [
+        "On‐chain data for each vesting PDA."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vesting_id",
+            "type": "u8"
+          },
+          {
+            "name": "escrow_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "release_duration",
+            "type": "i64"
+          },
+          {
+            "name": "total_amount",
+            "type": "u64"
+          },
+          {
+            "name": "claimed_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

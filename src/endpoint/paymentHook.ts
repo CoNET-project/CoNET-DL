@@ -157,7 +157,6 @@ const daemondStart = async () => {
     })
 }
 
-
 const oracolPrice = async () => {
     const assets = ['bnb', 'eth']
 	const process: any[] = []
@@ -390,13 +389,17 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _sola
     
 })
 
-const getReferrer = async (walletAddress: string) => {
+const getReferrer = async (walletAddress: string): Promise<string> => {
     try {
-        const reffers = ReferralsV3Contract_readonly.getReferrer(walletAddress)
-        return reffers
+        const reffers = await ReferralsV3Contract_readonly.getReferrer(walletAddress)
+        if (reffers !== ethers.ZeroAddress) {
+            return reffers
+        }
+        
     } catch (ex) {
-        return null
+        
     }
+    return ''
 }
 
 class conet_dl_server {
@@ -650,43 +653,47 @@ class conet_dl_server {
 
 		router.post('/cryptoPay', async (req: any, res: any) => {
 
-            const body = req.body
             const ipaddress = getIpAddressFromForwardHeader(req)
-            logger(`cryptoPay! ipaddress = ${ipaddress}`)
-			const agentWallet = body?.agentWallet||''
-            const cryptoName = body?.cryptoName
-            const walletAddress = body?.walletAddress||''
-            const solana = body?.solana||''
-            const plan = body?.plan
+			
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
+				return res.status(402).json({error: 'Data format error!'}).end()
+			}
+			logger(Colors.magenta(`/spReward`), message, signMessage)
+			
+			const obj = checkSign (message, signMessage)
 
             const error = JSON.stringify({error: 'Format error!'})
             
-            if (!cryptoName || (cryptoName !== 'BSC USDT' && cryptoName !=='BNB' && cryptoName !=='TRON TRX') || (plan !== '1' && plan !== '12' && plan !== '3' ) || plan === '3' && (!walletAddress || !solana)) {
-                logger(`/cryptoPay Error ===== !cryptoName ${!(cryptoName !== 'BSC USDT' && cryptoName !=='BNB' && cryptoName !=='TRON TRX')} || (plan !== '1' && plan !== '12' && plan !== '3' ) == ${(plan !== '1' && plan !== '12' && plan !== '3' )}  plan === '3' && (!walletAddress || !solana) ==${ plan === '3' && (!walletAddress || !solana)}`)
+            if (!obj||!obj?.solanaWallet||!obj?.data ||!obj.data?.cryptoName||!obj.data?.plan) {
+                logger(`/cryptoPay data format error!`)
                 return res.status(200).json({error}).end()
             }
 
-            if (walletAddress) {
-                if (!ethers.isAddress(walletAddress)) {
-                    return res.status(200).json({error}).end()
-                }
-            }
-            
-            const transferNumber = await getPriceFromCryptoName(cryptoName, plan)
-            if (!transferNumber) {
-                logger(`/cryptoPay Error transferNumber === null! cryptoName = ${cryptoName} plan = ${plan}`)
+            const cryptoName = obj.data.cryptoName
+            const planName = obj.data.plan
+
+            const plan = await getPriceFromCryptoName (cryptoName, planName)
+
+            if (plan === 0) {
+                logger(`/cryptoPay plan format error!`)
                 return res.status(200).json({error}).end()
             }
 
-            const _wallet = await getCryptoPay()
-            const listen = listenTransfer(_wallet, transferNumber, cryptoName, plan, agentWallet, walletAddress.toLowerCase(), solana )
+            const waitingAddress = await listenTransfer(plan, cryptoName, planName, obj.walletAddress, obj.solanaWallet)
 
-            if (!_wallet|| ! listen) {
-                return res.status(200).json({error: 'No necessary parameters'}).end()
+            if (!waitingAddress) {
+                logger(`/cryptoPay plan format error!`)
+                return res.status(200).json({error}).end()
             }
+
+            return res.status(200).json({success: waitingAddress}).end()
             
-            const wallet = _wallet.address.toLowerCase()
-            res.json({success: true, wallet, transferNumber}).end()
         })
 
 		router.post('/spReward', async (req: any, res: any) => {
@@ -917,30 +924,35 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
-            const _sign: string = obj.data
-            const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
-            const encodedMessage = new TextEncoder().encode(obj.walletAddress)
-            const signature = Bs58.decode(_sign)
-            const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
-
-            if (!isValid) {
-                logger(`/purchasePassportBySP isValid Error! ${isValid}`)
-                return res.status(403).json({
-                    error: 'message & signMessage Object walletAddress or solanaWallet Error!'
-                }).end()
-            }
             
-            const status = await checkSolanaPayment(obj.hash, obj.walletAddress, obj.solanaWallet)
-
-            if (!status) {
-                return res.status(403).json({
+            return res.status(403).json({
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
-            }
 
-            return res.status(200).json({
-                status: true
-            }).end()
+            // const _sign: string = obj.data
+            // const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
+            // const encodedMessage = new TextEncoder().encode(obj.walletAddress)
+            // const signature = Bs58.decode(_sign)
+            // const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
+
+            // if (!isValid) {
+            //     logger(`/purchasePassportBySP isValid Error! ${isValid}`)
+            //     return res.status(403).json({
+            //         error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+            //     }).end()
+            // }
+            
+            // const status = await checkSolanaPayment(obj.hash, obj.walletAddress, obj.solanaWallet)
+
+            // if (!status) {
+            //     return res.status(403).json({
+            //         error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+            //     }).end()
+            // }
+
+            // return res.status(200).json({
+            //     status: true
+            // }).end()
 
         })
 
@@ -1061,24 +1073,25 @@ const addedReffer = async (wallet: string, referrer: string) => {
 }
 
 let cryptopWaymentWallet = 0
+
 const getNextWallet = () => {
     return cryptoPayWallet.deriveChild(cryptopWaymentWallet++)
 }
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
-const getPriceFromCryptoName = async (cryptoName: string, plan: '1'|'12'|'3') => {
+const getPriceFromCryptoName = async (cryptoName: string, plan: '299'|'3100'): Promise<number> => {
     await oracolPrice()
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '12' ? (24.99/oracle.bnb).toFixed(6): plan === '1' ?  (2.99/oracle.bnb).toFixed(6): (31/oracle.bnb).toFixed(6)
+            return plan === '299' ? parseFloat((2.99/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((31/oracle.bnb).toFixed(6)) : 0
         }
         case 'BSC USDT': {
-            return plan === '12' ? '24.99' : plan === '1' ? '2.99' : '31.00'
+            return plan === '299' ? 2.99 : plan === '3100' ? 31 : 0
         }
 
         default: {
-            return ''
+            return 0
         }
     }
 }
@@ -1198,8 +1211,7 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     
 })
 
-
-const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
+const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3100', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnb_usdt_contract.balanceOf(wallet)
@@ -1227,14 +1239,14 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
 
     logger(`waiting BNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
 
-    if (plan !== '3') {
-        const redeemCode = createRedeem (plan, agentWallet)
-        payment_waiting_status.set (wallet, redeemCode)
-    } else {
-        mintPluePlan(wallet, walletAddress, solana, agentWallet)
-    }
+    // if (plan !== '3') {
+    //     const redeemCode = createRedeem (plan, agentWallet)
+    //     payment_waiting_status.set (wallet, redeemCode)
+    // } else {
+    //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
+    // }
     
-    storePayment(walletHD, price, 'BNB-USDT', balance, false)
+    // storePayment(walletHD, price, 'BNB-USDT', balance, false)
 
 })
 
@@ -1288,7 +1300,7 @@ const createRedeemProcess = async () => {
 
 }
 
-const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
+const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3100', agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnbPrivate.getBalance(wallet)
@@ -1313,52 +1325,52 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'
         return storePayment(walletHD, price, 'BNB', balance, true)
     }
     
-    if (plan === '1' || plan === '12') {
-        const _plan: '1'|'12' = plan
-        const redeemCode = createRedeem (_plan, agentWallet)
-        payment_waiting_status.set (wallet, redeemCode)
-    } else {
-        mintPluePlan(wallet, walletAddress, solana, agentWallet)
-    }
+    // if (plan === '1' || plan === '12') {
+    //     const _plan: '1'|'12' = plan
+    //     const redeemCode = createRedeem (_plan, agentWallet)
+    //     payment_waiting_status.set (wallet, redeemCode)
+    // } else {
+    //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
+    // }
     
     
-    storePayment(walletHD, price, 'BNB', balance, false)
+    // storePayment(walletHD, price, 'BNB', balance, false)
 })
 
-const listenTransfer = async (wallet: ethers.HDNodeWallet, price: string, cryptoName: string, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => {
-    payment_waiting_status.set (wallet.address.toLowerCase(), 1)
-    agentWallet = ethers.isAddress(agentWallet) ? agentWallet : ''
+const listenTransfer = async (price: number, cryptoName: string, plan: '299'|'3100', walletAddress: string, solana: string): Promise<string> => {
+    
+    const agentWallet = await getReferrer(walletAddress)
     switch(cryptoName) {
         case 'BNB': {
+            const wallet = getNextWallet()
             const _balance = await bnbPrivate.getBalance(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            waitingBNB (wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
-            return true
+            waitingBNB (wallet, price, plan, agentWallet, walletAddress, solana)
+            return wallet.address
         }
         case 'BSC USDT': {
+            const wallet = getNextWallet()
             const _balance = await bnb_usdt_contract.balanceOf(wallet.address)
             const balance = parseFloat(ethers.formatEther(_balance))
             initWalletBalance.set(wallet.address.toLowerCase(), balance)
-            waitingBNB_USDT(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
-            return true
+            waitingBNB_USDT(wallet, price, plan, agentWallet, walletAddress, solana)
+            return wallet.address
         }
 
-        case 'TRON TRX': {
-            waitingTron_trx(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
-            return true
-        }
+        // case 'TRON TRX': {
+        //     waitingTron_trx(wallet, parseFloat(price), plan, agentWallet, walletAddress, solana)
+        //     return true
+        // }
 
         default: {
-            return false
+            return ''
         }
     }
     
 }
 
-const getCryptoPay = () => {
-    return getNextWallet()
-}
+
 
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)       //      0x784985d7dC024fE8a08519Bba16EA72f8170b5c2
 // const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
@@ -1866,6 +1878,7 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
 const solana_account = masterSetup.solana_return_manager
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
 const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
+
 const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 
 const spDecimalPlaces = 6
@@ -1980,7 +1993,7 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string, priva
             units: 200000
         })
         const tx = new Transaction().add(modifyComputeUnits).add(addPriorityFee)
-        logger(fromKeypair.publicKey)
+        
         const accountInfo = await SOLANA_CONNECTION.getAccountInfo(recipientTokenAddress)
 
         if (!accountInfo) {
@@ -2220,7 +2233,7 @@ new conet_dl_server ()
 
 
 const createRedeemProcessAdmin  = () => {
-    for (let i = 0; i < 1; i ++) {
+    for (let i = 0; i < 10; i ++) {
         const redeemCode = createRedeem ('1', '')
         console.log(redeemCode)
     }
@@ -2259,4 +2272,3 @@ const test = async () => {
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
-// createRedeemProcessAdmin()
