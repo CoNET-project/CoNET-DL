@@ -639,7 +639,7 @@ class conet_dl_server {
 			}
 			logger(`/cryptoPayment_waiting ${wallet} got ${status}`)
             waitingList.set(wallet, 0)
-			return res.status(200).json({ status }).end()
+			return res.status(200).json({ status: status }).end()
 		})
 
         router.post('/applePay', async (req: any, res: any) => {
@@ -1159,7 +1159,7 @@ const SPGlodProcess = async () => {
         logger(`SPGlodProcess tx = ${tx.hash}`)
         await tx.wait()
 
-        payment_waiting_status.set(obj.HDWallet, NFT)
+        payment_waiting_status.set(obj.HDWallet, NFT.toString())
     } catch (ex: any) {
         payment_waiting_status.set(obj.HDWallet, 0)
         logger(`SPGlodProcess Error`, ex.message)
