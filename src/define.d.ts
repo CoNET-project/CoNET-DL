@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    SPClubGlod_Manager: string
     SP_Club_Manager: string
     tronAPIKey: string
     solana_rpc: string

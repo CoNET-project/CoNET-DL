@@ -62,7 +62,7 @@ const connection = new Connection(solana_rpc, "confirmed")
 const AnchorConnection = new web3.Connection(solana_rpc, "confirmed")
 
 
-const findAndVESTING_ID = async (_BENEFICIARY: string, VESTING_ID = 0): Promise<number> => {
+export const findAndVESTING_ID = async (_BENEFICIARY: string, VESTING_ID = 0): Promise<[number, string]> => {
     const BENEFICIARY = new web3.PublicKey(_BENEFICIARY)
         // STEP 1: Derive PDA
     const [vestingPda, vestingBump] = web3.PublicKey.findProgramAddressSync(
@@ -81,15 +81,14 @@ const findAndVESTING_ID = async (_BENEFICIARY: string, VESTING_ID = 0): Promise<
     ], ASSOCIATED_TOKEN_PROGRAM_ID)
     try {
         await getAccount(connection, escrowAta)
-
         if (++VESTING_ID > 255) {
-            return -1
+            return [-1, '']
         }
 
         return await findAndVESTING_ID(_BENEFICIARY, VESTING_ID)
     } catch (ex) {
     }
-    return VESTING_ID
+    return [VESTING_ID, escrowAta.toBase58()]
     
 }
 
@@ -99,9 +98,9 @@ export const init_gold_linear_vesting = async (_BENEFICIARY: string, _amount: nu
     const TOTAL_AMOUNT_RAW = new BN(_amount* 10 ** SP_tokenDecimals)
     const BENEFICIARY = new web3.PublicKey(_BENEFICIARY)
     const now = Math.floor(Date.now() / 1000)
-    const _startTime = _startTimeDays * Time_Day
+    const _startTime =  Math.floor(_startTimeDays * Time_Day)
     const START_TS = new BN(now + _startTime) // starts _startTime later
-    const duration = Time_Day * lockedTmeDays
+    const duration = Math.floor(Time_Day * lockedTmeDays)
     const DURATION_SEC = new BN(duration)
     
 
@@ -147,7 +146,7 @@ export const init_gold_linear_vesting = async (_BENEFICIARY: string, _amount: nu
         
         const txCreate = new web3.Transaction().add(createEscrowIx)
         await anchorProvider.sendAndConfirm(txCreate, [ManagerKey])
-        logger(`init_gold_linear_vesting escrowTokenAccount = ${escrowAta.toBase58()} success!`)
+        logger(`init_gold_linear_vesting escrowTokenAccount=${escrowAta.toBase58()}`)
         await new Promise(executor => {setTimeout(() => executor(true), 5000)})
 
     }
@@ -346,7 +345,26 @@ export const claimPDA = async (BENEFICIARY: web3.Keypair) => {
 
 
 const SolNumeric = 9
+const usdtNumeric = 6
 const SolAddress = 'So11111111111111111111111111111111111111112'
+const USDTAddress = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
+
+export const getUSDT2Sol_Price = async (usdt: string): Promise<string> => {
+    const inputMint = USDTAddress
+    const outputMint = SolAddress
+
+    const amount = ethers.parseUnits(usdt, usdtNumeric)
+    const slippageBps = 50; // 0.5% slippage
+    const quoteUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
+    try {
+        const quoteResponse = await axios.get(quoteUrl)
+        const quote = quoteResponse.data
+        const price = ethers.formatUnits(quote.otherAmountThreshold, SolNumeric)
+        return price
+    } catch (ex) {
+    }
+    return ''
+}
 
 
 export const exchangeSolToSP = async (_amount: string): Promise<number> => {
@@ -434,12 +452,12 @@ export const exchangeSolToSP = async (_amount: string): Promise<number> => {
 
 const testExchange = async (publicKey: string, totalSol: number, lockedTmeDays: number, startTimeDays: number) => {
     const SP_Amount = await exchangeSolToSP(totalSol.toString())
-    logger(`SP_Amount = ${SP_Amount}`)
-    const uuu = await findAndVESTING_ID (publicKey, 0)
+    logger(`SP_Amount=${SP_Amount}`)
+    const [uuu] = await findAndVESTING_ID (publicKey, 0)
     logger(`VESTING_ID = ${uuu}`)
     await init_gold_linear_vesting (publicKey, SP_Amount, lockedTmeDays,  uuu, startTimeDays)
     logger(`success!`)
-    process.exit(1)
+    process.exit(0)
 }
 
 
@@ -471,3 +489,4 @@ args.forEach ((n, index ) => {
 if (publicKey && lockedTmeDays > 0 && totalSol > 0 && startTimeDays > 0) {
     testExchange (publicKey, totalSol, lockedTmeDays, startTimeDays )
 }
+

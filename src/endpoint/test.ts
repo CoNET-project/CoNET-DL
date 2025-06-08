@@ -67,6 +67,10 @@ import { logger } from '../util/util'
 
 import anchor_linear_vesting_del from './anchor_linear_vesting.json'
 import {AnchorLinearVesting} from './anchor_linear_vesting'
+import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
+import {exec} from 'node:child_process'
+import {join} from 'node:path'
+
 
 const programAddress = "11111111111111111111111111111111" as Address
 
@@ -1436,4 +1440,32 @@ const test = async () => {
     //await withdrawPDA_all(feePayer, mintSPLAddr)
     //await claimPDA(recipient, mintSPLAddr)
 }
-test()
+
+const vestingPdaExec =  join(__dirname,`vestingPda`)
+
+const test1 = async () => {
+    const solana = '73jkhYyFLbRqjr74zgiRfhodHU7mitDoD3SwrTwRjYeo'
+    const endDays = 1
+    const startDays = 1
+    const amountSol = 0.000205886
+    let SP_Amount = ''
+    let escrowTokenAccount = ''
+    logger(`escrowTokenAccount = ${await findAndVESTING_ID(solana, 0)}`)
+    exec(`node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} S=${amountSol}`, (error, stdout, stderr) => {
+            const kkk = stdout.split('SP_Amount=')[1]
+            if (kkk) {
+                SP_Amount = kkk.split('\n')[0]
+            }
+            const kkk1 = stdout.split('escrowTokenAccount=')[1]
+            if (kkk1) {
+                escrowTokenAccount = kkk1.split('\n')[0]
+            }
+            logger(`stdout`, stdout)
+            logger(`stderr`,stderr)
+            logger(`SP_Amount = [${SP_Amount}]`)
+            logger(`escrowTokenAccount = [${escrowTokenAccount}]`)
+    })
+}
+
+
+test1()

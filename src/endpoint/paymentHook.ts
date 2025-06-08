@@ -32,10 +32,10 @@ import {mapLimit} from 'async'
 import CoNET_DePIN_SpClub_ABI from './CoNET_DePIN-SPClub.ABI.json'
 import SPClub_Airdrop_ABI from './AirDropForSP.ABI.json'
 import { balanceTron, ethToTronAddress } from './tron'
-import nacl from 'tweetnacl'
-
-
-
+import {exec} from 'node:child_process'
+import {join} from 'node:path'
+import SPGlodMemberABI from './SPGlodMember_ABI.json'
+import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -1123,6 +1123,52 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
+const SPGoldMember_Addr = '0xe130c8e5536917F02b69Be57F521c012961e85a0'
+const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
+const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
+const SPGlodProcessSc = [SPGlodManagerSC]
+
+const SPGlodProceePool: {
+    walletAddress: string
+    plan: '299'|'3100'
+    pdaAddress: string
+    solana: string
+    amountSP: number
+    HDWallet: string
+}[] = []
+
+const SPGlodProcess = async () => {
+    const obj = SPGlodProceePool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = SPGlodProcessSc.shift() 
+    if (!SC) {
+        SPGlodProceePool.unshift(obj)
+        return
+    }
+
+    try {
+        let tx
+        const NFT = await SP_Passport_SC_readonly.currentID()
+        if (obj.plan === '299') {
+            tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, obj.amountSP)
+        } else {
+            tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.amountSP)
+        }
+        logger(`SPGlodProcess tx = ${tx.hash}`)
+        await tx.wait()
+
+        payment_waiting_status.set(obj.HDWallet, NFT)
+    } catch (ex: any) {
+        payment_waiting_status.set(obj.HDWallet, 0)
+        logger(`SPGlodProcess Error`, ex.message)
+    }
+    SPGlodProcessSc.unshift(SC)
+    return SPGlodProcess()
+}
+
+
 const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string, referee: string) => {
 
     await getOracle()
@@ -1211,6 +1257,45 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
     
 })
 
+const vestingPdaExec =  join(__dirname,`vestingPda`)
+
+const execVesting = async (plan: '299'|'3100', walletAddress: string, solana: string, HDWallet: string) => {
+    const startDays = plan === '299' ? 30 : 365
+    const endDays = plan === '299' ? 0.00069444 : 5 * 365
+
+    const [amountSol] = await Promise.all([
+        getUSDT2Sol_Price(plan === '299' ? '0.0299': '0.031'),
+    ])
+
+    let amountSP = 0
+    let pdaAddress = ''
+    exec(`node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} S=${amountSol}`, (error, stdout, stderr) => {
+        const kkk = stdout.split('SP_Amount=')[1]
+        if (kkk) {
+            amountSP = parseFloat(kkk.split('\n')[0])
+        }
+        const kkk1 = stdout.split('escrowTokenAccount=')[1]
+        if (kkk1) {
+            pdaAddress = kkk1.split('\n')[0]
+        }
+        logger(`stdout`, stdout)
+        logger(`stderr`,stderr)
+    })
+    logger(`vestingPdaExec plan = ${plan} Solana = ${amountSol} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress}`)
+
+    SPGlodProceePool.push({
+        solana,
+        walletAddress,
+        plan,
+        pdaAddress,
+        amountSP,
+        HDWallet
+    })
+
+    SPGlodProcess()
+
+}
+
 const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3100', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
@@ -1237,17 +1322,11 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '29
         return storePayment(walletHD, price, 'BNB-USDT', balance, true)
     }
 
-    
     logger(`waiting BNB_USDT ${walletHD.address} success got payment ${price}`)
-    payment_waiting_status.set(wallet, 100)
+    
     storePayment(walletHD, price, 'BNB', balance, false)
 
-    // if (plan !== '3') {
-    //     const redeemCode = createRedeem (plan, agentWallet)
-    //     payment_waiting_status.set (wallet, redeemCode)
-    // } else {
-    //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
-    // }
+    execVesting(plan, walletAddress, solana, wallet )
     
     storePayment(walletHD, price, 'BNB-USDT', balance, false)
 
@@ -1339,7 +1418,9 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3
     // }
     
     logger(`waiting BNB ${walletHD.address} success got payment ${price}`)
-    payment_waiting_status.set(wallet, 100)
+    
+    execVesting(plan, walletAddress, solana, wallet )
+
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
