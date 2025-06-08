@@ -1,3 +1,4 @@
+import { inspect } from 'node:util'
 import anchor_linear_vesting_del from './anchor_linear_vesting.json'
 import {AnchorLinearVesting} from './anchor_linear_vesting'
 import {
@@ -31,10 +32,12 @@ import {
     transfer,
     TOKEN_PROGRAM_ID
 } from "@solana/spl-token"
-import { Keypair, Connection, LAMPORTS_PER_SOL, SystemProgram, Transaction, sendAndConfirmTransaction, ComputeBudgetProgram, PublicKey, SYSVAR_RENT_PUBKEY} from '@solana/web3.js'
+import { Keypair, LAMPORTS_PER_SOL, SystemProgram, Transaction, sendAndConfirmTransaction, 
+    ComputeBudgetProgram, PublicKey, SYSVAR_RENT_PUBKEY, TransactionInstruction, AddressLookupTableAccount, Connection, TransactionMessage, VersionedTransaction} from '@solana/web3.js'
 import {logger} from '../util/logger'
 import { masterSetup, checkSign} from '../util/util'
 import {ethers} from 'ethers'
+import axios from 'axios'
 
 const SP_tokenDecimals = 6
 const PROGRAM_ID = new web3.PublicKey(anchor_linear_vesting_del.address)
@@ -46,33 +49,64 @@ const Time_Month = 31 * Time_Day            //      1 month = 31 Days
 const Time_year = 12 * Time_Month           //      1 year = 12 Months
 const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 const TOKEN_MINT = new web3.PublicKey(SP_address)
-const _payerPrivatekey = masterSetup.SP_Club_Airdrop_solana                         //      5G2CDk6fhtVGQwj42SNbyhW9S33c5zoa2iTKqEJ78bNt
+const _payerPrivatekey = masterSetup.SP_Club_Manager                        //      6fW8wQhYQJTudT2EB14DvKCbe1X9Ewhd16ukT3DQkFX9
 const solana_account_privatekeyArray = Bs58.decode(_payerPrivatekey)
 const ManagerKey = web3.Keypair.fromSecretKey(solana_account_privatekeyArray)
 const solana_rpc = masterSetup.solana_rpc
+    const anchorWallet = new Wallet(ManagerKey)
 
 const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
     microLamports: 9000
 })
+const connection = new Connection(solana_rpc, "confirmed")
+const AnchorConnection = new web3.Connection(solana_rpc, "confirmed")
 
-export const init_gold_linear_vesting = async (_BENEFICIARY: string, _amount: number, lockedTmeMin: number) => {
 
-    const connection = new Connection(solana_rpc, "confirmed")
+const findAndVESTING_ID = async (_BENEFICIARY: string, VESTING_ID = 0): Promise<number> => {
+    const BENEFICIARY = new web3.PublicKey(_BENEFICIARY)
+        // STEP 1: Derive PDA
+    const [vestingPda, vestingBump] = web3.PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("vesting"),
+      BENEFICIARY.toBuffer(),
+      TOKEN_MINT.toBuffer(),
+      Uint8Array.of(VESTING_ID),
+    ], PROGRAM_ID)
+
+        //      Derive the escrow ATA owned by the PDA:
+    const [escrowAta] = await web3.PublicKey.findProgramAddressSync([
+        vestingPda.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        TOKEN_MINT.toBuffer(),
+    ], ASSOCIATED_TOKEN_PROGRAM_ID)
+    try {
+        await getAccount(connection, escrowAta)
+
+        if (++VESTING_ID > 255) {
+            return -1
+        }
+
+        return await findAndVESTING_ID(_BENEFICIARY, VESTING_ID)
+    } catch (ex) {
+    }
+    return VESTING_ID
+    
+}
+
+export const init_gold_linear_vesting = async (_BENEFICIARY: string, _amount: number, lockedTmeDays: number, VESTING_ID: number, _startTimeDays: number) => {
+
     
     const TOTAL_AMOUNT_RAW = new BN(_amount* 10 ** SP_tokenDecimals)
     const BENEFICIARY = new web3.PublicKey(_BENEFICIARY)
     const now = Math.floor(Date.now() / 1000)
-    const _startTime = 5 * Time_Min
+    const _startTime = _startTimeDays * Time_Day
     const START_TS = new BN(now + _startTime) // starts _startTime later
-    const duration = 60 * lockedTmeMin  
+    const duration = Time_Day * lockedTmeDays
     const DURATION_SEC = new BN(duration)
-    const VESTING_ID = 0
-    const anchorConnection = new web3.Connection(solana_rpc)
     
-    
-    const anchorWallet = new Wallet(ManagerKey)
 
-    const anchorProvider = new AnchorProvider(anchorConnection, anchorWallet,  {
+
+    const anchorProvider = new AnchorProvider(AnchorConnection, anchorWallet,  {
         preflightCommitment: 'confirmed'
     })
    
@@ -99,8 +133,10 @@ export const init_gold_linear_vesting = async (_BENEFICIARY: string, _amount: nu
     try {
         const info = await getAccount(connection, escrowAta)
         if (!info.owner.equals(vestingPda)) {
-            return false
+            return logger(`error vestingPda ${vestingPda.toBase58()} !== info.owner ${info.owner.toBase58()}`)
         }
+        return logger(`error escrowAta ${escrowAta.toBase58()} already exits!`)
+
     } catch (ex) {
         const createEscrowIx = createAssociatedTokenAccountInstruction(
             ManagerKey.publicKey,    // payer
@@ -309,15 +345,129 @@ export const claimPDA = async (BENEFICIARY: web3.Keypair) => {
 }
 
 
-const test = async () => {
-    const BENEFICIARY_privateKey = ''
-    // logger(`Managet key ${ManagerKey.publicKey.toBase58()}`)
-    
-    const BENEFICIARY_bs58 = Bs58.decode(BENEFICIARY_privateKey)
-    const BENEFICIARY = web3.Keypair.fromSecretKey(BENEFICIARY_bs58)
-    //init_gold_linear_vesting(BENEFICIARY.publicKey.toBase58(), 60, 180)
-    await getBalanceFromPDA (BENEFICIARY)
-    //await claimPDA (BENEFICIARY)
+const SolNumeric = 9
+const SolAddress = 'So11111111111111111111111111111111111111112'
+
+
+export const exchangeSolToSP = async (_amount: string): Promise<number> => {
+    const inputMint = SolAddress
+    const outputMint = SP_address
+
+    const amount = ethers.parseUnits(_amount, SolNumeric)
+    const slippageBps = 50; // 0.5% slippage
+    const quoteUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
+
+    try {
+        const quoteResponse = await axios.get(quoteUrl)
+        const quote = quoteResponse.data
+        const SP_Price = ethers.formatUnits(quote.otherAmountThreshold, SP_tokenDecimals)
+        logger(`exchangeSolToSP success ${_amount} Sol ===> ${SP_Price} SP`)
+        const swapInstructionsResponse = await axios.post('https://quote-api.jup.ag/v6/swap-instructions', {
+            quoteResponse: quote,
+            userPublicKey: ManagerKey.publicKey.toBase58(),
+            wrapAndUnwrapSol: true,
+            dynamicComputeUnitLimit: true,
+        })
+        const {
+            setupInstructions,
+            swapInstruction,
+            cleanupInstruction,
+            addressLookupTableAddresses,
+        } = swapInstructionsResponse.data
+        
+        const deserializeInstruction = (instruction: any) =>
+            new TransactionInstruction({
+                programId: new PublicKey(instruction.programId),
+                keys: instruction.accounts.map((key: any) => ({
+                    pubkey: new PublicKey(key.pubkey),
+                    isSigner: key.isSigner,
+                    isWritable: key.isWritable,
+                    })),
+                data: Buffer.from(instruction.data, 'base64'),
+            })
+            
+        const setupIxs = setupInstructions.map(deserializeInstruction)
+        const swapIx = deserializeInstruction(swapInstruction)
+        const cleanupIxs = Array.isArray(cleanupInstruction) ? cleanupInstruction.map(deserializeInstruction) : [deserializeInstruction(cleanupInstruction)]
+
+        const altAccounts: AddressLookupTableAccount[] = []
+        
+        for (const address of addressLookupTableAddresses) {
+            const altAccountInfo = await connection.getAccountInfo(new PublicKey(address))
+            if (altAccountInfo) {
+                const altAccount = new AddressLookupTableAccount({
+                key: new PublicKey(address),
+                state: AddressLookupTableAccount.deserialize(altAccountInfo.data),
+                });
+                altAccounts.push(altAccount);
+            }
+        }
+
+        const latestBlockhash = await connection.getLatestBlockhash();
+
+        const messageV0 = new web3.TransactionMessage({
+            payerKey: ManagerKey.publicKey,
+            recentBlockhash: latestBlockhash.blockhash,
+            instructions: [...setupIxs, swapIx, ...cleanupIxs],
+        }).compileToV0Message(altAccounts)
+
+        const transaction = new web3.VersionedTransaction(messageV0)
+        transaction.sign([ManagerKey])
+        const anchorWallet = new Wallet(ManagerKey)
+        
+        const anchorProvider = new AnchorProvider(AnchorConnection, anchorWallet,  {
+            preflightCommitment: 'confirmed'
+        })
+
+        const signature = await anchorProvider.sendAndConfirm(transaction, [ManagerKey])
+        console.log('Transaction Signature:', signature)
+
+        logger(`exchangeSolToSP Success!`)
+        return parseFloat(SP_Price)
+    } catch (ex: any) {
+        logger(`exchangeSolToSP Error`, ex.message)
+    }
+    return 0
+
 }
 
-test()
+
+const testExchange = async (publicKey: string, totalSol: number, lockedTmeDays: number, startTimeDays: number) => {
+    const SP_Amount = await exchangeSolToSP(totalSol.toString())
+    logger(`SP_Amount = ${SP_Amount}`)
+    const uuu = await findAndVESTING_ID (publicKey, 0)
+    logger(`VESTING_ID = ${uuu}`)
+    await init_gold_linear_vesting (publicKey, SP_Amount, lockedTmeDays,  uuu, startTimeDays)
+    logger(`success!`)
+    process.exit(1)
+}
+
+
+const [,,...args] = process.argv
+let publicKey = ''
+let lockedTmeDays = 0
+let totalSol = 0
+let startTimeDays = 0
+args.forEach ((n, index ) => {
+
+	if (/^P\=/i.test(n)) {
+		const srp = n.split('=')[1]
+		publicKey = srp
+	}
+	if (/^L\=/i.test(n)) {
+		lockedTmeDays = parseInt(n.split('=')[1])
+	}
+
+    if (/^E\=/i.test(n)) {
+		startTimeDays = parseInt(n.split('=')[1])
+	}
+
+	if (/^S\=/i.test(n)) {
+		totalSol = parseFloat(n.split('=')[1])
+	}
+    
+})
+
+if (publicKey && lockedTmeDays > 0 && totalSol > 0 && startTimeDays > 0) {
+    testExchange (publicKey, totalSol, lockedTmeDays, startTimeDays )
+}

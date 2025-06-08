@@ -1084,10 +1084,10 @@ const getPriceFromCryptoName = async (cryptoName: string, plan: '299'|'3100'): P
     await oracolPrice()
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '299' ? parseFloat((2.99/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((31/oracle.bnb).toFixed(6)) : 0
+            return plan === '299' ? parseFloat((0.0299/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((0.031/oracle.bnb).toFixed(6)) : 0
         }
         case 'BSC USDT': {
-            return plan === '299' ? 2.99 : plan === '3100' ? 31 : 0
+            return plan === '299' ? 0.0299 : plan === '3100' ? 0.031 : 0
         }
 
         default: {
@@ -1327,6 +1327,8 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3
         payment_waiting_status.set (wallet, 0)
         return storePayment(walletHD, price, 'BNB', balance, true)
     }
+
+
     
     // if (plan === '1' || plan === '12') {
     //     const _plan: '1'|'12' = plan
@@ -1335,6 +1337,7 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3
     // } else {
     //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
     // }
+    
     logger(`waiting BNB ${walletHD.address} success got payment ${price}`)
     payment_waiting_status.set(wallet, 100)
     storePayment(walletHD, price, 'BNB', balance, false)
