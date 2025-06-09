@@ -696,7 +696,7 @@ class conet_dl_server {
 
 
             const plan = goldRedeem < 31 ? '0' : goldRedeem > 365 ? "3100" : '299'
-            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress)
+            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress, obj.hash)
             return res.status(200).json({
                 status: "1"
             }).end()
@@ -1195,6 +1195,7 @@ const SPGlodProceePool: {
     solana: string
     amountSP: number
     HDWallet: string
+    hash?: string
 }[] = []
 
 const SPGlodProcess = async () => {
@@ -1211,11 +1212,16 @@ const SPGlodProcess = async () => {
     try {
         let tx
         const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
-        if (obj.plan === '3100') {
-            tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.amountSP)
+        if (obj?.hash) {
+            tx = await SC.redeemPassport(obj.hash, obj.walletAddress, obj.solana, obj.pdaAddress, obj.amountSP)
         } else {
-            tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.plan === '299' ? 31 : 30, obj.amountSP)
+            if (obj.plan === '3100') {
+                tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.amountSP)
+            } else {
+                tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, obj.amountSP)
+            }
         }
+        
         logger(`SPGlodProcess tx = ${tx.hash}`)
         await tx.wait()
 
@@ -1319,7 +1325,7 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
 
 const vestingPdaExec =  join(__dirname,`vestingPda`)
 
-const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana: string, HDWallet: string) => {
+const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana: string, HDWallet: string, hash = '') => {
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 0.00069444 : 5 * 365
 
@@ -1331,7 +1337,9 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     let pdaAddress = ''
 
     if (amountSol > 0 ) {
-        return exec(`node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} S=${amountSol}`, (error, stdout, stderr) => {
+        const cmd = `node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} S=${amountSol}`
+        logger(cmd)
+        return exec(cmd, (error, stdout, stderr) => {
             const kkk = stdout.split('SP_Amount=')[1]
             if (kkk) {
                 amountSP = parseFloat(kkk.split('\n')[0])
@@ -1364,6 +1372,7 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
         plan,
         pdaAddress: solana,
         amountSP,
+        hash,
         HDWallet
     })
 
