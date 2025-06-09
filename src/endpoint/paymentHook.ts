@@ -674,8 +674,10 @@ class conet_dl_server {
                     SPGlodManagerSC.redeemData_expiresDayes(obj.hash),
                     CodeToClientV2_readonly.redeemData(obj.hash)
                 ])
+                goldRedeem = parseInt(goldRedeem.toString())
+                oldRedeem = parseInt(oldRedeem.toString())
 
-                if (goldRedeem === BigInt(0)||oldRedeem === BigInt(0)) {
+                if (goldRedeem === 0 && oldRedeem === 0) {
                     logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} oldRedeem = ${oldRedeem} ${obj.walletAddress}`)
                     return res.status(400).json({
                         error: "Redeem Code Error!"
@@ -690,8 +692,7 @@ class conet_dl_server {
                 }).end()
             }
 
-            goldRedeem = parseInt(goldRedeem.toString())
-            oldRedeem = parseInt(oldRedeem.toString())
+            
 
             if (oldRedeem > 0) {
                 CodeToClientWaiting.push ({
@@ -705,6 +706,7 @@ class conet_dl_server {
                     status: "1"
                 }).end()
             }
+            
             const plan = goldRedeem <365 ? "299" : "3100"
             execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress)
             return res.status(200).json({
