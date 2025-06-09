@@ -488,4 +488,3 @@ args.forEach ((n, index ) => {
 if (publicKey && lockedTmeDays > 0 && totalSol > 0 && startTimeDays > 0) {
     testExchange (publicKey, totalSol, lockedTmeDays, startTimeDays )
 }
-

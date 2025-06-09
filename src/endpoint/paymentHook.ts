@@ -1180,7 +1180,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0x1da3ac3C73b4E22e189c7d9c0867d2270cAA4900'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
+const SPGoldMember_Addr = '0x30500bE92e8A41de01bAe1EC72CB0C7294d9FAD3'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -2443,7 +2443,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('299')
+        const redeemCode = await createRedeemWithSP ('0')
         console.log(redeemCode)
     }
     logger(`success!`)
