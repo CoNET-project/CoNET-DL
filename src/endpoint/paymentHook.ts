@@ -1180,7 +1180,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0x529686423b745F6C8D6667e939505fD5e7917315'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
+const SPGoldMember_Addr = '0x1da3ac3C73b4E22e189c7d9c0867d2270cAA4900'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -1211,7 +1211,7 @@ const SPGlodProcess = async () => {
         if (obj.plan === '3100') {
             tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.amountSP)
         } else {
-            tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, obj.amountSP)
+            tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.plan === '299' ? 31 : 30, obj.amountSP)
         }
         logger(`SPGlodProcess tx = ${tx.hash}`)
         await tx.wait()
@@ -1340,7 +1340,7 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
             logger(`stdout`, stdout)
             logger(`stderr`,stderr)
 
-            logger(`vestingPdaExec plan = ${plan} Solana = ${amountSol} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress}`)
+            logger(`vestingPdaExec plan = ${plan} Solana = ${amountSol} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress} amountSP = ${amountSP}`)
 
             SPGlodProceePool.push({
                 solana,
@@ -1482,7 +1482,7 @@ const createRedeemWithSPProcess = async () => {
     try {
         const tx = await SC.SPGoldRedeemMint(obj.expiresDayes, obj.redeemCode)
         await tx.wait()
-        logger()
+        logger(`tx = ${tx.hash}`)
     } catch (ex: any) {
         logger(`createRedeemWithSPProcess Error`, ex.message)
     }
@@ -2443,7 +2443,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('0')
+        const redeemCode = await createRedeemWithSP ('299')
         console.log(redeemCode)
     }
     logger(`success!`)
