@@ -676,7 +676,7 @@ class conet_dl_server {
                 ])
 
                 if (goldRedeem === BigInt(0)||oldRedeem === BigInt(0)) {
-                    logger(`/codeToClient Redeem Code Error! ${obj.walletAddress}`)
+                    logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} oldRedeem = ${oldRedeem} ${obj.walletAddress}`)
                     return res.status(400).json({
                         error: "Redeem Code Error!"
                     }).end()
