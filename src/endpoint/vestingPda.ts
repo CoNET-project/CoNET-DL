@@ -366,7 +366,6 @@ export const getUSDT2Sol_Price = async (usdt: string): Promise<string> => {
     return ''
 }
 
-
 export const exchangeSolToSP = async (_amount: string): Promise<number> => {
     const inputMint = SolAddress
     const outputMint = SP_address

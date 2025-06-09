@@ -142,7 +142,8 @@ const oracolDeman = async () => {
 }
 let currentBlock = 0
 
-
+const CodeToClientV2_addr = `0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb`
+const CodeToClientV2_readonly = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, CONET_MAINNET)
 
 const daemondStart = async () => {
     
@@ -642,6 +643,74 @@ class conet_dl_server {
 			return res.status(200).json({ status: status }).end()
 		})
 
+        router.post('/codeToClient', async (req: any, res: any) => {
+            const ipaddress = getIpAddressFromForwardHeader(req)
+            let message, signMessage
+            try {
+                message = req.body.message
+                signMessage = req.body.signMessage
+
+            } catch (ex) {
+                logger (Colors.grey(`${ipaddress} request /freePassport req.body ERROR!`), inspect(req.body))
+                return res.status(404).end()
+            }
+            
+            const obj = checkSign (message, signMessage)
+            if ( !obj?.walletAddress|| !obj?.uuid || !obj?.solanaWallet) {
+                
+                logger (Colors.grey(`Router /freePassport checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+                logger(inspect(obj, false, 3, true))
+                return res.status(404).json({
+                    error: "SignObj Error!"
+                }).end()
+            }
+
+            const _hash = ethers.solidityPacked(['string'], [obj.uuid])
+            obj.hash = ethers.zeroPadBytes(_hash, 32)
+            let goldRedeem, oldRedeem
+            try {
+                [goldRedeem, [,oldRedeem]] = await Promise.all([
+                    SPGlodManagerSC.redeemData_expiresDayes(obj.hash),
+                    CodeToClientV2_readonly.redeemData(obj.hash)
+                ])
+
+                if (goldRedeem === BigInt(0)||oldRedeem === BigInt(0)) {
+                    return res.status(400).json({
+                        error: "Redeem Code Error!"
+                    }).end()
+                }
+                
+
+            } catch (ex: any) {
+                return res.status(400).json({
+                    error: "Unavailable!"
+                }).end()
+            }
+
+            goldRedeem = parseInt(goldRedeem.toString())
+            oldRedeem = parseInt(oldRedeem.toString())
+
+            if (oldRedeem > 0) {
+                CodeToClientWaiting.push ({
+                    solana: obj.solanaWallet,
+                    to: obj.walletAddress,
+                    hash: obj.hash,
+                    uuid: obj.uuid
+                })
+                startCodeToClientProcess()
+                return res.status(200).json({
+                    status: "1"
+                }).end()
+            }
+            const plan = goldRedeem <365 ? "299" : "3100"
+            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress)
+            return res.status(200).json({
+                status: "1"
+            }).end()
+
+            
+        })
+
         router.post('/applePay', async (req: any, res: any) => {
             const body = req.body
             logger(`applePay!`)
@@ -957,8 +1026,6 @@ class conet_dl_server {
         })
 
         
-
-		
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${inspect(req.body, false, 3, true)}`))
@@ -1123,7 +1190,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0xe130c8e5536917F02b69Be57F521c012961e85a0'
+const SPGoldMember_Addr = '0x03557B2311Df61229d08444FC5726807cdFFd2e7'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -1150,7 +1217,7 @@ const SPGlodProcess = async () => {
 
     try {
         let tx
-        const NFT = await SP_Passport_SC_readonly.currentID()
+        const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
         if (obj.plan === '299') {
             tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, obj.amountSP)
         } else {
@@ -1338,10 +1405,24 @@ const createRedeemWaitingPool: {
     redeemCode: string
 }[] = []
 
+
+const createRedeemWithSPPool: {
+    expiresDayes: number
+    redeemCode: string
+}[] = []
+
 const uuid62 = require('uuid62')
 
+interface ICodeToClient {
+	hash: string
+	to: string
+	solana: string
+    uuid: string
+}
 
-const createRedeem = (plan: '1'|'12', referee: string) => {
+const CodeToClientWaiting: ICodeToClient[] = []
+
+const createRedeem = (plan:'1'|'12' , referee: string) => {
     const expiresDayes = plan === '1' ? 31 : 365
     
     const _referee = !referee ? ethers.ZeroAddress: referee
@@ -1380,6 +1461,41 @@ const createRedeemProcess = async () => {
     createRedeemProcess ()
 
 
+}
+
+const createRedeemWithSPProcess = async () => {
+    const obj = createRedeemWithSPPool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = SPGlodProcessSc.shift()
+    if (!SC) {
+        createRedeemWithSPPool.unshift(obj)
+        return setTimeout(() => {
+            createRedeemWithSPProcess()
+        }, 5000)
+    }
+    try {
+        const tx = await SC.SPGoldRedeemMint(obj.expiresDayes, obj.redeemCode)
+        await tx.wait()
+    } catch (ex: any) {
+        logger(`createRedeemWithSPProcess Error`, ex.message)
+    }
+    SPGlodProcessSc.unshift(SC)
+    createRedeemWithSPProcess()
+}
+
+const createRedeemWithSP = async(plan: '299'|'3100') => {
+    const expiresDayes = plan === '299' ? 31 : 365
+    const RedeemCode = uuid62.v4()
+    const _hash = ethers.solidityPacked(['string'], [RedeemCode])
+    const hash = ethers.zeroPadBytes(_hash, 32)
+    createRedeemWithSPPool.push({
+        expiresDayes,
+        redeemCode: hash
+    })
+    createRedeemWithSPProcess()
+    return RedeemCode
 }
 
 const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3100', agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
@@ -2318,12 +2434,54 @@ logger(solana_account_privatekey.publicKey)
 
 
 new conet_dl_server ()
+const SPPaasport_codeToClient = new ethers.Wallet(masterSetup.passport_codeToClient, CONET_MAINNET)       //      0xed98Fa572Cb1Aa3C4e3FcBd3e75503cf565E56f0
+const Contract = new ethers.Contract(CodeToClientV2_addr, SPClubPointManagerABI, SPPaasport_codeToClient)
+const CodeToClientV2ContractPool = [Contract]
 
+const startCodeToClientProcess = async () => {
+	const obj = CodeToClientWaiting.shift()
+	if (!obj) {
+		return
+	}
+        
+        const SC = CodeToClientV2ContractPool.shift()
+       
+        if (!SC) {
+            CodeToClientWaiting.unshift(obj)
+            return 
+        }
+        try {
+            const nft = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
+            const tx = await SC.redeemPassport(obj.uuid, obj.to, obj.solana)
+            logger(`checkCodeToClientV2 redeem ${obj.uuid} => ${obj.to} success ${tx.hash}`)
+            payment_waiting_status.set(obj.to, nft)
+            await tx.wait()
+            
+        } catch (ex:any) {
+            logger(Colors.red(`checkCodeToClientV2 redeemData Error!`), ex.message)
+            payment_waiting_status.set(obj.to, 0)
+        }
+
+        CodeToClientV2ContractPool.push(SC)
+       
+
+	setTimeout(() => {
+		startCodeToClientProcess()
+	}, 1000)
+}
 
 
 const createRedeemProcessAdmin  = () => {
     for (let i = 0; i < 10; i ++) {
         const redeemCode = createRedeem ('1', '')
+        console.log(redeemCode)
+    }
+    logger(`success!`)
+}
+
+const createRedeemWithSPProcessAdmin  = async () => {
+    for (let i = 0; i < 1; i ++) {
+        const redeemCode = await createRedeemWithSP ('299')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2356,7 +2514,8 @@ const test = async () => {
 //     check()
 // }, 10000)
 
-// createRedeemProcessAdmin ()
+//createRedeemProcessAdmin ()
+//createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
