@@ -1352,19 +1352,21 @@ const execVesting = async (plan: '299'|'3100', walletAddress: string, solana: st
         }
         logger(`stdout`, stdout)
         logger(`stderr`,stderr)
-    })
-    logger(`vestingPdaExec plan = ${plan} Solana = ${amountSol} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress}`)
 
-    SPGlodProceePool.push({
-        solana,
-        walletAddress,
-        plan,
-        pdaAddress,
-        amountSP,
-        HDWallet
-    })
+        logger(`vestingPdaExec plan = ${plan} Solana = ${amountSol} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress}`)
 
-    SPGlodProcess()
+        SPGlodProceePool.push({
+            solana,
+            walletAddress,
+            plan,
+            pdaAddress,
+            amountSP,
+            HDWallet
+        })
+
+        SPGlodProcess()
+    })
+    
 
 }
 
@@ -1483,6 +1485,7 @@ const createRedeemWithSPProcess = async () => {
     try {
         const tx = await SC.SPGoldRedeemMint(obj.expiresDayes, obj.redeemCode)
         await tx.wait()
+        logger()
     } catch (ex: any) {
         logger(`createRedeemWithSPProcess Error`, ex.message)
     }
@@ -2485,7 +2488,7 @@ const createRedeemProcessAdmin  = () => {
 }
 
 const createRedeemWithSPProcessAdmin  = async () => {
-    for (let i = 0; i < 1; i ++) {
+    for (let i = 0; i < 5; i ++) {
         const redeemCode = await createRedeemWithSP ('299')
         console.log(redeemCode)
     }
@@ -2520,7 +2523,7 @@ const test = async () => {
 // }, 10000)
 
 //createRedeemProcessAdmin ()
-//createRedeemWithSPProcessAdmin()
+createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
