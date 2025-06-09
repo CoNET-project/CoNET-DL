@@ -651,20 +651,20 @@ class conet_dl_server {
                 signMessage = req.body.signMessage
 
             } catch (ex) {
-                logger (Colors.grey(`${ipaddress} request /freePassport req.body ERROR!`), inspect(req.body))
+                logger (Colors.grey(`${ipaddress} request /codeToClient req.body ERROR!`), inspect(req.body))
                 return res.status(404).end()
             }
             
             const obj = checkSign (message, signMessage)
             if ( !obj?.walletAddress|| !obj?.uuid || !obj?.solanaWallet) {
                 
-                logger (Colors.grey(`Router /freePassport checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+                logger (Colors.grey(`Router /codeToClient checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
                 logger(inspect(obj, false, 3, true))
                 return res.status(404).json({
                     error: "SignObj Error!"
                 }).end()
             }
-
+            logger(`/codeToClient `, inspect(obj, false, 3, true))
             const _hash = ethers.solidityPacked(['string'], [obj.uuid])
             obj.hash = ethers.zeroPadBytes(_hash, 32)
             let goldRedeem, oldRedeem
