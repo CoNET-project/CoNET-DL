@@ -668,13 +668,16 @@ class conet_dl_server {
             const _hash = ethers.solidityPacked(['string'], [obj.uuid])
             obj.hash = ethers.zeroPadBytes(_hash, 32)
             logger(`/codeToClient `, inspect(obj, false, 3, true))
-            let goldRedeem
+            let goldRedeem, status
             try {
-                goldRedeem = await SPGlodManagerSC.redeemData_expiresDayes(obj.hash)
+                [goldRedeem, status] = await Promise.all([
+                    SPGlodManagerSC.redeemData_expiresDayes(obj.hash),
+                    SPGlodManagerSC.redeemUsed(obj.hash)
+                ]) 
                 
                 goldRedeem = parseInt(goldRedeem.toString())
 
-                if (goldRedeem === 0) {
+                if (goldRedeem === 0|| status) {
                     logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} ${obj.walletAddress}`)
                     return res.status(400).json({
                         error: "Redeem Code Error!"
@@ -1180,7 +1183,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0x30500bE92e8A41de01bAe1EC72CB0C7294d9FAD3'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
+const SPGoldMember_Addr = '0x49591A10FdE1cc6468A3B14175572f32e292c788'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -2477,7 +2480,7 @@ const test = async () => {
 // }, 10000)
 
 //createRedeemProcessAdmin ()
-// createRedeemWithSPProcessAdmin()
+createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
