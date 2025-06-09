@@ -696,7 +696,7 @@ class conet_dl_server {
 
 
             const plan = goldRedeem < 31 ? '0' : goldRedeem > 365 ? "3100" : '299'
-            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress, obj.hash)
+            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress, obj.uuid)
             return res.status(200).json({
                 status: "1"
             }).end()
