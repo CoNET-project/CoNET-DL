@@ -692,7 +692,7 @@ class conet_dl_server {
                 }).end()
             }
 
-            
+            payment_waiting_status.set(obj.walletAddress, 1)
 
             if (oldRedeem > 0) {
                 CodeToClientWaiting.push ({
@@ -706,7 +706,7 @@ class conet_dl_server {
                     status: "1"
                 }).end()
             }
-            
+
             const plan = goldRedeem <365 ? "299" : "3100"
             execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress)
             return res.status(200).json({
@@ -1396,7 +1396,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '29
 
     logger(`waiting BNB_USDT ${walletHD.address} success got payment ${price}`)
     
-    storePayment(walletHD, price, 'BNB', balance, false)
+
 
     execVesting(plan, walletAddress, solana, wallet )
     
