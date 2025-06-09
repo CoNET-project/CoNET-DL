@@ -664,9 +664,10 @@ class conet_dl_server {
                     error: "SignObj Error!"
                 }).end()
             }
-            logger(`/codeToClient `, inspect(obj, false, 3, true))
+            
             const _hash = ethers.solidityPacked(['string'], [obj.uuid])
             obj.hash = ethers.zeroPadBytes(_hash, 32)
+            logger(`/codeToClient `, inspect(obj, false, 3, true))
             let goldRedeem, oldRedeem
             try {
                 [goldRedeem, [,oldRedeem]] = await Promise.all([
