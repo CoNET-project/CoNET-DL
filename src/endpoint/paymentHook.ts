@@ -1213,13 +1213,14 @@ const SPGlodProcess = async () => {
     try {
         let tx
         const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
+        const amountSP = ethers.parseEther(obj.amountSP.toString())
         if (obj?.hash) {
-            tx = await SC.redeemPassport(obj.hash, obj.walletAddress, obj.solana, obj.pdaAddress, obj.amountSP)
+            tx = await SC.redeemPassport(obj.hash, obj.walletAddress, obj.solana, obj.pdaAddress, amountSP)
         } else {
             if (obj.plan === '3100') {
-                tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), obj.amountSP)
+                tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), amountSP)
             } else {
-                tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, obj.amountSP)
+                tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, amountSP)
             }
         }
         
