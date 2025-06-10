@@ -672,7 +672,7 @@ class conet_dl_server {
             try {
                 [goldRedeem, padID] = await Promise.all([
                     SPGlodManagerSC.redeemData_expiresDayes(obj.hash),
-                    payment_SC_readOnly.getPayID(obj.hash)
+                    payment_SC_readOnly.getPayID(obj.uuid)
                 ])
                 
                 
