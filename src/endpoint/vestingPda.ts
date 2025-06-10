@@ -476,7 +476,7 @@ args.forEach ((n, index ) => {
 	}
 
     if (/^E\=/i.test(n)) {
-		startTimeDays = parseInt(n.split('=')[1])
+		startTimeDays = parseFloat(n.split('=')[1])
 	}
 
 	if (/^S\=/i.test(n)) {

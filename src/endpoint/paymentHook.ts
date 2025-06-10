@@ -2456,7 +2456,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('0')
+        const redeemCode = await createRedeemWithSP ('299')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2490,7 +2490,7 @@ const test = async () => {
 // }, 10000)
 
 //createRedeemProcessAdmin ()
-// createRedeemWithSPProcessAdmin()
+createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
