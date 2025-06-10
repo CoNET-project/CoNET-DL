@@ -410,25 +410,6 @@
 		{
 			"inputs": [
 				{
-					"internalType": "bytes32",
-					"name": "",
-					"type": "bytes32"
-				}
-			],
-			"name": "redeemUsed",
-			"outputs": [
-				{
-					"internalType": "bool",
-					"name": "",
-					"type": "bool"
-				}
-			],
-			"stateMutability": "view",
-			"type": "function"
-		},
-		{
-			"inputs": [
-				{
 					"internalType": "string",
 					"name": "",
 					"type": "string"
