@@ -668,14 +668,18 @@ class conet_dl_server {
             const _hash = ethers.solidityPacked(['string'], [obj.uuid])
             obj.hash = ethers.zeroPadBytes(_hash, 32)
             logger(`/codeToClient `, inspect(obj, false, 3, true))
-            let goldRedeem
+            let goldRedeem, padID
             try {
-                goldRedeem = await SPGlodManagerSC.redeemData_expiresDayes(obj.hash)
+                [goldRedeem, padID] = await Promise.all([
+                    SPGlodManagerSC.redeemData_expiresDayes(obj.hash),
+                    payment_SC_readOnly.getPayID(obj.hash)
+                ])
+                
                 
                 goldRedeem = parseInt(goldRedeem.toString())
 
-                if (goldRedeem === 0) {
-                    logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} ${obj.walletAddress}`)
+                if (goldRedeem === 0||padID) {
+                    logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
                     return res.status(400).json({
                         error: "Redeem Code Error!"
                     }).end()
