@@ -2490,7 +2490,7 @@ const test = async () => {
 // }, 10000)
 
 //createRedeemProcessAdmin ()
-createRedeemWithSPProcessAdmin()
+// createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
