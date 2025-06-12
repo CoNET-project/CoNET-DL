@@ -1331,15 +1331,15 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
 
-    let amountSol = plan === '0' ? 0 : parseFloat(await getUSDT2Sol_Price(plan === '299' ? '0.0299': '0.031'))
+    let amountUSDC = plan === '0' ? 0 : plan === '299' ? 0.0299 : 0.031
 
 
 
     let amountSP = 0
     let pdaAddress = ''
 
-    if (amountSol > 0 ) {
-        const cmd = `node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} S=${amountSol}`
+    if (amountUSDC > 0 ) {
+        const cmd = `node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} U=${amountUSDC}`
         logger(cmd)
         return exec(cmd, (error, stdout, stderr) => {
             const kkk = stdout.split('SP_Amount=')[1]
@@ -1353,7 +1353,7 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
             logger(`stdout`, stdout)
             logger(`stderr`,stderr)
 
-            logger(`vestingPdaExec plan = ${plan} Solana = ${amountSol} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress} amountSP = ${amountSP}`)
+            logger(`vestingPdaExec plan = ${plan} USDC = ${amountUSDC} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress} amountSP = ${amountSP}`)
 
             SPGlodProceePool.push({
                 solana,
@@ -2495,4 +2495,3 @@ const test = async () => {
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
-

@@ -345,8 +345,10 @@ export const claimPDA = async (BENEFICIARY: web3.Keypair) => {
 
 
 const SolNumeric = 9
-const usdtNumeric = 6
+const usdtNumeric = 6 
+const usdcNumeric = 6 
 const SolAddress = 'So11111111111111111111111111111111111111112'
+const USDCAddress = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
 const USDTAddress = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 
 export const getUSDT2Sol_Price = async (usdt: string): Promise<string> => {
@@ -448,9 +450,92 @@ export const exchangeSolToSP = async (_amount: string): Promise<number> => {
 
 }
 
+export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
+    const inputMint = usdcNumeric
+    const outputMint = SP_address
+
+    const amount = ethers.parseUnits(_amount, usdcNumeric)
+    const slippageBps = 50; // 0.5% slippage
+    const quoteUrl = `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
+
+    try {
+        const quoteResponse = await axios.get(quoteUrl)
+        const quote = quoteResponse.data
+        const SP_Price = ethers.formatUnits(quote.otherAmountThreshold, SP_tokenDecimals)
+        logger(`exchangeUSDCToSP success ${_amount} USDC ===> ${SP_Price} SP`)
+        const swapInstructionsResponse = await axios.post('https://quote-api.jup.ag/v6/swap-instructions', {
+            quoteResponse: quote,
+            userPublicKey: ManagerKey.publicKey.toBase58(),
+            wrapAndUnwrapSol: true,
+            dynamicComputeUnitLimit: true,
+        })
+        const {
+            setupInstructions,
+            swapInstruction,
+            cleanupInstruction,
+            addressLookupTableAddresses,
+        } = swapInstructionsResponse.data
+        
+        const deserializeInstruction = (instruction: any) =>
+            new TransactionInstruction({
+                programId: new PublicKey(instruction.programId),
+                keys: instruction.accounts.map((key: any) => ({
+                    pubkey: new PublicKey(key.pubkey),
+                    isSigner: key.isSigner,
+                    isWritable: key.isWritable,
+                    })),
+                data: Buffer.from(instruction.data, 'base64'),
+            })
+            
+        const setupIxs = setupInstructions.map(deserializeInstruction)
+        const swapIx = deserializeInstruction(swapInstruction)
+        const cleanupIxs = Array.isArray(cleanupInstruction) ? cleanupInstruction.map(deserializeInstruction) : [deserializeInstruction(cleanupInstruction)]
+
+        const altAccounts: AddressLookupTableAccount[] = []
+        
+        for (const address of addressLookupTableAddresses) {
+            const altAccountInfo = await connection.getAccountInfo(new PublicKey(address))
+            if (altAccountInfo) {
+                const altAccount = new AddressLookupTableAccount({
+                key: new PublicKey(address),
+                state: AddressLookupTableAccount.deserialize(altAccountInfo.data),
+                });
+                altAccounts.push(altAccount);
+            }
+        }
+
+        const latestBlockhash = await connection.getLatestBlockhash();
+
+        const messageV0 = new web3.TransactionMessage({
+            payerKey: ManagerKey.publicKey,
+            recentBlockhash: latestBlockhash.blockhash,
+            instructions: [...setupIxs, swapIx, ...cleanupIxs],
+        }).compileToV0Message(altAccounts)
+
+        const transaction = new web3.VersionedTransaction(messageV0)
+        transaction.sign([ManagerKey])
+        const anchorWallet = new Wallet(ManagerKey)
+        
+        const anchorProvider = new AnchorProvider(AnchorConnection, anchorWallet,  {
+            preflightCommitment: 'confirmed'
+        })
+
+        const signature = await anchorProvider.sendAndConfirm(transaction, [ManagerKey])
+        console.log('Transaction Signature:', signature)
+
+        logger(`exchangeSolToSP Success!`)
+        return parseFloat(SP_Price)
+    } catch (ex: any) {
+        logger(`exchangeSolToSP Error`, ex.message)
+    }
+    return 0
+
+}
 
 const testExchange = async (publicKey: string, totalSol: number, lockedTmeDays: number, startTimeDays: number) => {
-    const SP_Amount = await exchangeSolToSP(totalSol.toString())
+    
+    const SP_Amount = totalSol > 0 ? await exchangeSolToSP(totalSol.toString()) : await exchangeUSDCToSP(totalUSDC.toString())
+
     logger(`SP_Amount=${SP_Amount}`)
     const [uuu] = await findAndVESTING_ID (publicKey, 0)
     logger(`VESTING_ID = ${uuu}`)
@@ -464,7 +549,9 @@ const [,,...args] = process.argv
 let publicKey = ''
 let lockedTmeDays = 0
 let totalSol = 0
+let totalUSDC = 0
 let startTimeDays = 0
+
 args.forEach ((n, index ) => {
 
 	if (/^P\=/i.test(n)) {
@@ -482,9 +569,13 @@ args.forEach ((n, index ) => {
 	if (/^S\=/i.test(n)) {
 		totalSol = parseFloat(n.split('=')[1])
 	}
+
+    if (/^U\=/i.test(n)) {
+        totalUSDC = parseFloat(n.split('=')[1])
+    }
     
 })
 
-if (publicKey && lockedTmeDays > 0 && totalSol > 0 && startTimeDays > 0) {
+if (publicKey && lockedTmeDays > 0 && (totalSol > 0 || totalUSDC > 0) && startTimeDays > 0) {
     testExchange (publicKey, totalSol, lockedTmeDays, startTimeDays )
 }
