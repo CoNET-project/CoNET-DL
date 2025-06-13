@@ -461,11 +461,11 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
     const amount = ethers.parseUnits(_amount, usdcNumeric)
     const slippageBps = 250; // 1% slippage
     const quoteUrl = `${JUPITER_API}quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
-
+    let SP_Price = '0'
     try {
         const quoteResponse = await axios.get(quoteUrl)
         const quote = quoteResponse.data
-        const SP_Price = ethers.formatUnits(quote.otherAmountThreshold, SP_tokenDecimals)
+        SP_Price = ethers.formatUnits(quote.otherAmountThreshold, SP_tokenDecimals)
         logger(`exchangeUSDCToSP success ${_amount} USDT ===> ${SP_Price} SP`)
         const route = quote
 
@@ -507,6 +507,7 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
         return parseFloat(SP_Price)
     } catch (ex: any) {
         logger(`exchangeSolToSP Error`, ex.message)
+        return parseFloat(SP_Price)
     }
     return 0
 
