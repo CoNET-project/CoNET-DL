@@ -1331,9 +1331,7 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
 
-    let amountUSDC = plan === '0' ? 0 : plan === '299' ? 0.0299 : 0.025
-
-
+    let amountUSDC = plan === '0' ? 0 : plan === '299' ? 0 : 0.025
 
     let amountSP = 0
     let pdaAddress = ''
