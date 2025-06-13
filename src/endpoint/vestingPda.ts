@@ -453,8 +453,9 @@ export const exchangeSolToSP = async (_amount: string): Promise<number> => {
 
 
 const JUPITER_API = "https://quote-api.jup.ag/v6/"
+
 export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
-    const inputMint = USDTAddress
+    const inputMint = USDCAddress
     const outputMint = SP_address
 
     const amount = ethers.parseUnits(_amount, usdcNumeric)
@@ -501,7 +502,7 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
             blockhash: tx.message.recentBlockhash,
             lastValidBlockHeight: await connection.getBlockHeight()
         }, "confirmed")
-        
+
         logger(`exchangeUSDCToSP Success!`)
         return parseFloat(SP_Price)
     } catch (ex: any) {
