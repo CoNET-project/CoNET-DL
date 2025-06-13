@@ -451,7 +451,7 @@ export const exchangeSolToSP = async (_amount: string): Promise<number> => {
 }
 
 export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
-    const inputMint = usdcNumeric
+    const inputMint = USDCAddress
     const outputMint = SP_address
 
     const amount = ethers.parseUnits(_amount, usdcNumeric)
