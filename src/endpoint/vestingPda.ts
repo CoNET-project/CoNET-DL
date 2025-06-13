@@ -459,7 +459,7 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
     const outputMint = SP_address
 
     const amount = ethers.parseUnits(_amount, usdcNumeric)
-    const slippageBps = 100; // 1% slippage
+    const slippageBps = 250; // 1% slippage
     const quoteUrl = `${JUPITER_API}quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`
 
     try {
