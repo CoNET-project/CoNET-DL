@@ -455,7 +455,7 @@ export const exchangeSolToSP = async (_amount: string): Promise<number> => {
 const JUPITER_API = "https://quote-api.jup.ag/v6/"
 
 export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
-    const inputMint = USDCAddress
+    const inputMint = USDTAddress
     const outputMint = SP_address
 
     const amount = ethers.parseUnits(_amount, usdcNumeric)
