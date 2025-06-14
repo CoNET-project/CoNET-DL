@@ -676,7 +676,7 @@ class conet_dl_server {
                 
                 goldRedeem = parseInt(goldRedeem.toString())
                 logger(`/codeToClient Redeem Code [${obj.uuid}] hash=[${obj.hash}] goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
-                
+
                 if (goldRedeem === 0||padID) {
                     logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
                     return res.status(400).json({
@@ -1330,7 +1330,7 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
 
-    let amountUSDC = plan === '0' ? 0 : plan === '299' ? 0 : 0.025
+    let amountUSDC = plan === '3100' ? 0.025 : 0
 
     let amountSP = 0
     let pdaAddress = ''
@@ -1358,7 +1358,8 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
                 plan,
                 pdaAddress,
                 amountSP,
-                HDWallet
+                HDWallet,
+                hash
             })
 
             SPGlodProcess()
@@ -2490,7 +2491,7 @@ const test = async () => {
 // }, 10000)
 
 //createRedeemProcessAdmin ()
-createRedeemWithSPProcessAdmin()
+// createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
