@@ -1144,10 +1144,10 @@ const getPriceFromCryptoName = async (cryptoName: string, plan: '299'|'3100'): P
     await oracolPrice()
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '299' ? parseFloat((0.0299/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((0.031/oracle.bnb).toFixed(6)) : 0
+            return plan === '299' ? parseFloat((2.99/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((31/oracle.bnb).toFixed(6)) : 0
         }
         case 'BSC USDT': {
-            return plan === '299' ? 0.0299 : plan === '3100' ? 0.031 : 0
+            return plan === '299' ? 2.99 : plan === '3100' ? 31 : 0
         }
 
         default: {
@@ -1234,7 +1234,6 @@ const SPGlodProcess = async () => {
     SPGlodProcessSc.unshift(SC)
     return SPGlodProcess()
 }
-
 
 const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string, referee: string) => {
 
@@ -1330,7 +1329,7 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
 
-    let amountUSDC = plan === '3100' ? 0.025 : 0
+    let amountUSDC = plan === '3100' ? 24.99 : 0
 
     let amountSP = 0
     let pdaAddress = ''
