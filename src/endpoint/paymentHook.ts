@@ -1183,7 +1183,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0x2a67c578eee8e30257A617BCe7057E44134ac10D'
+const SPGoldMember_Addr = '0x78df25E5747Fdb033799728dEdbeA9B1b24a0e55'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -1208,7 +1208,7 @@ const SPGlodProcess = async () => {
         SPGlodProceePool.unshift(obj)
         return
     }
-
+    logger(inspect(obj, false, 3, true))
     try {
         let tx
         const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
@@ -1225,10 +1225,10 @@ const SPGlodProcess = async () => {
         
         logger(`SPGlodProcess tx = ${tx.hash}`)
         await tx.wait()
-
         payment_waiting_status.set(obj.HDWallet, NFT.toString())
     } catch (ex: any) {
         payment_waiting_status.set(obj.HDWallet, 0)
+        logger()
         logger(`SPGlodProcess Error`, ex.message)
     }
     SPGlodProcessSc.unshift(SC)
@@ -2454,7 +2454,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('3100')
+        const redeemCode = await createRedeemWithSP ('299')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2466,17 +2466,26 @@ const test = async () => {
     // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
-    setTimeout(async () => {
-        // returnSP('A4y9UWXZ6FYNRuWzm47nWJWdmdcic7p35SdDFHJj3Ei8', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
-        // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
-        // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
-        // logger(kk)
-        //returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
-        // airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
-    }, 10000)
+    // setTimeout(async () => {
+    //     // returnSP('A4y9UWXZ6FYNRuWzm47nWJWdmdcic7p35SdDFHJj3Ei8', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
+    //     // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
+    //     // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+    //     // logger(kk)
+    //     //returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
+    //     // airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
+    // }, 10000)
 
-    // await checkRedeemCode('7Kv8fR7pekSyTaj67Q71Zz')
-    
+    //
+    // SPGlodProceePool.push({
+    //     plan: '3100',
+    //     solana: 'HmnvoHxKMnu6rY7Eo4jt7h2PjjEKRNpgaBCMMfaQKVU4',
+    //     pdaAddress: 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L',
+    //     amountSP: 348150.851069,
+    //     HDWallet: '',
+    //     walletAddress: '0x8C0F2f3c0C46e377e7C6316E28499c4DD2d3Dc18'
+    // })
+
+    SPGlodProcess()
 }
 
 // checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')
