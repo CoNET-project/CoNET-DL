@@ -675,7 +675,8 @@ class conet_dl_server {
                 
                 
                 goldRedeem = parseInt(goldRedeem.toString())
-
+                logger(`/codeToClient Redeem Code [${obj.uuid}] hash=[${obj.hash}] goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
+                
                 if (goldRedeem === 0||padID) {
                     logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
                     return res.status(400).json({
@@ -2489,7 +2490,7 @@ const test = async () => {
 // }, 10000)
 
 //createRedeemProcessAdmin ()
-// createRedeemWithSPProcessAdmin()
+createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
