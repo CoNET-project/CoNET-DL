@@ -664,10 +664,8 @@ class conet_dl_server {
                     error: "SignObj Error!"
                 }).end()
             }
-            
-            const _hash = ethers.solidityPacked(['string'], [obj.uuid])
-            obj.hash = ethers.zeroPadBytes(_hash, 32)
-            logger(`/codeToClient `, inspect(obj, false, 3, true))
+            obj.hash =ethers.solidityPackedKeccak256(['string'], [obj.uuid])
+
             let goldRedeem, padID
             try {
                 [goldRedeem, padID] = await Promise.all([
@@ -1184,7 +1182,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0xb8A072b5aa369E3C006ECd99eFDaCDF00cBC5368'        //'0xCCDB5D3900506AbbE973796f1a15d26dB6571890'
+const SPGoldMember_Addr = '0x2a67c578eee8e30257A617BCe7057E44134ac10D'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -1503,10 +1501,10 @@ const createRedeemWithSPProcess = async () => {
 }
 
 const createRedeemWithSP = async(plan: '299'|'3100'|'0') => {
-    const expiresDayes = plan === '299' ? 31 : plan === '0' ? 30 : 365
+    const expiresDayes = plan === '299' ? 31 : plan === '0' ? 30 : 36500
     const RedeemCode = uuid62.v4()
-    const _hash = ethers.solidityPacked(['string'], [RedeemCode])
-    const hash = ethers.zeroPadBytes(_hash, 32)
+    const hash = ethers.solidityPackedKeccak256(['string'], [RedeemCode])
+
     createRedeemWithSPPool.push({
         expiresDayes,
         redeemCode: hash
@@ -2455,7 +2453,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('299')
+        const redeemCode = await createRedeemWithSP ('3100')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2464,7 +2462,7 @@ const createRedeemWithSPProcessAdmin  = async () => {
 
 
 const test = async () => {
-    returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
+    // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     setTimeout(async () => {
@@ -2475,6 +2473,8 @@ const test = async () => {
         //returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
         // airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
     }, 10000)
+
+    // await checkRedeemCode('7Kv8fR7pekSyTaj67Q71Zz')
     
 }
 
