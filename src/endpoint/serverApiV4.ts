@@ -623,44 +623,6 @@ class conet_dl_server_v4 {
 			return postLocalhost('/api/freePassport', obj, res)
 		})
 
-		router.post('/codeToClient', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /freePassport req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
-			
-			const obj = checkSign (message, signMessage)
-			if ( !obj?.walletAddress|| !obj?.uuid || !obj?.solanaWallet) {
-				
-				logger (Colors.grey(`Router /freePassport checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
-				return res.status(404).json({
-					error: "SignObj Error!"
-				}).end()
-			}
-
-			const _hash = ethers.solidityPacked(['string'], [obj.uuid])
-			obj.hash = ethers.zeroPadBytes(_hash, 32)
-            try {
-                const [,expiresDayes] = await CodeToClientV2_readonly.redeemData(obj.hash)
-                if (expiresDayes === BigInt(0)) {
-                    return res.status(400).json({
-                        error: "Redeem Code Error!"
-                    }).end()
-                }
-            } catch (ex: any) {
-                return res.status(400).json({
-                        error: "Unavailable!"
-                    }).end()
-            }
-			return postLocalhost('/api/codeToClient', obj, res)
-		})
 
 		router.post ('/claimToken', async (req: any, res: any) => {
 

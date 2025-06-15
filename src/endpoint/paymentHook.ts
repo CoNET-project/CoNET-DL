@@ -403,6 +403,33 @@ const getReferrer = async (walletAddress: string): Promise<string> => {
     return ''
 }
 
+const checkRedeemCode = async (redeemCode: string ) => {
+    const hash = ethers.solidityPackedKeccak256(['string'], [redeemCode])
+
+            let goldRedeem, padID
+            try {
+                [goldRedeem, padID] = await Promise.all([
+                    SPGlodManagerSC.redeemData_expiresDayes(hash),
+                    payment_SC_readOnly.getPayID(redeemCode)
+                ])
+                
+                
+                goldRedeem = parseInt(goldRedeem.toString())
+                
+
+                if (goldRedeem === 0 || padID) {
+                    logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} padID = ${padID}`)
+                } else {
+                    logger(`/codeToClient Redeem Code [${redeemCode}] hash=[${hash}] goldRedeem = ${goldRedeem} padID = ${padID}`)
+                }
+
+                
+
+            } catch (ex: any) {
+                logger(`/codeToClient catch ex`, ex.message)
+            }
+}
+
 class conet_dl_server {
 
 	private PORT = 8005
@@ -1183,7 +1210,7 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0x78df25E5747Fdb033799728dEdbeA9B1b24a0e55'
+const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
@@ -1209,8 +1236,10 @@ const SPGlodProcess = async () => {
         return
     }
     logger(inspect(obj, false, 3, true))
+    let tx
+    let NFT = 0
     try {
-        let tx
+        
         const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
         const amountSP = ethers.parseEther(obj.amountSP.toString())
         if (obj?.hash) {
@@ -1232,6 +1261,10 @@ const SPGlodProcess = async () => {
         logger(`SPGlodProcess Error`, ex.message)
     }
     SPGlodProcessSc.unshift(SC)
+    if (tx?.hash && NFT > 100) {
+        checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
+    }
+    
     return SPGlodProcess()
 }
 
@@ -1376,7 +1409,6 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     })
 
     SPGlodProcess()
-    
 
 }
 
@@ -1493,7 +1525,7 @@ const createRedeemWithSPProcess = async () => {
     try {
         const tx = await SC.SPGoldRedeemMint(obj.expiresDayes, obj.redeemCode)
         await tx.wait()
-        logger(`tx = ${tx.hash}`)
+        logger(`${obj.redeemCode} ==> ${obj.expiresDayes} tx = ${tx.hash}`)
     } catch (ex: any) {
         logger(`createRedeemWithSPProcess Error`, ex.message)
     }
@@ -1510,6 +1542,7 @@ const createRedeemWithSP = async(plan: '299'|'3100'|'0') => {
         expiresDayes,
         redeemCode: hash
     })
+
     createRedeemWithSPProcess()
     return RedeemCode
 }
@@ -2463,6 +2496,7 @@ const createRedeemWithSPProcessAdmin  = async () => {
 
 
 const test = async () => {
+    checkRedeemCode('0JBAHfH2q9XaqajV72aAlC')
     // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
