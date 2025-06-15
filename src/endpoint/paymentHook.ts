@@ -2496,7 +2496,7 @@ const createRedeemWithSPProcessAdmin  = async () => {
 
 
 const test = async () => {
-    checkRedeemCode('0JBAHfH2q9XaqajV72aAlC')
+
     // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
