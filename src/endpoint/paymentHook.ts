@@ -1900,7 +1900,7 @@ const mintPassport = async () => {
 
 		const currentNFT: BigInt = await SC.getCurrntPasspurtNumber()
         payment_waiting_status.set(obj.hdWallet||obj.walletAddress, parseInt(currentNFT.toString()) + 1)
-		const ts = await SC.mintPassportAndActive(obj.walletAddress, obj.expiresDays, obj.hash)
+		const ts = await SC.mintPassport(obj.walletAddress, obj.expiresDays, obj.hash)
 		logger(`mintPassport ${ts.hash}`)
 		await ts.wait()
 		
@@ -1910,12 +1910,13 @@ const mintPassport = async () => {
             logger(`mintPassport applePayStatus ${obj.walletAddress} ${ obj.solanaWallet}`)
             await ts.wait()
         }
-
+        checkNFTOwnership(obj.walletAddress, parseInt(currentNFT.toString()) + 1, obj.solanaWallet)
 	} catch (ex: any) {
 		payment_waiting_status.set(obj.hdWallet||obj.walletAddress, 0)
 		logger(`mintPassport Error! ${ex.message}`)
 	}
 	Payment_SCPool.push(SC)
+   
 	return mintPassport()
 }
 
