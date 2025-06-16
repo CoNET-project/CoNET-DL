@@ -2487,7 +2487,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('299')
+        const redeemCode = await createRedeemWithSP ('3100')
         console.log(redeemCode)
     }
     logger(`success!`)

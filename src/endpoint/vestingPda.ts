@@ -382,65 +382,65 @@ export const exchangeSolToSP = async (_amount: string): Promise<number> => {
         const quote = quoteResponse.data
         const SP_Price = ethers.formatUnits(quote.otherAmountThreshold, SP_tokenDecimals)
         logger(`exchangeSolToSP success ${_amount} Sol ===> ${SP_Price} SP`)
-        const swapInstructionsResponse = await axios.post('https://quote-api.jup.ag/v6/swap-instructions', {
-            quoteResponse: quote,
-            userPublicKey: ManagerKey.publicKey.toBase58(),
-            wrapAndUnwrapSol: true,
-            dynamicComputeUnitLimit: true,
-        })
-        const {
-            setupInstructions,
-            swapInstruction,
-            cleanupInstruction,
-            addressLookupTableAddresses,
-        } = swapInstructionsResponse.data
+        // const swapInstructionsResponse = await axios.post('https://quote-api.jup.ag/v6/swap-instructions', {
+        //     quoteResponse: quote,
+        //     userPublicKey: ManagerKey.publicKey.toBase58(),
+        //     wrapAndUnwrapSol: true,
+        //     dynamicComputeUnitLimit: true,
+        // })
+        // const {
+        //     setupInstructions,
+        //     swapInstruction,
+        //     cleanupInstruction,
+        //     addressLookupTableAddresses,
+        // } = swapInstructionsResponse.data
         
-        const deserializeInstruction = (instruction: any) =>
-            new TransactionInstruction({
-                programId: new PublicKey(instruction.programId),
-                keys: instruction.accounts.map((key: any) => ({
-                    pubkey: new PublicKey(key.pubkey),
-                    isSigner: key.isSigner,
-                    isWritable: key.isWritable,
-                    })),
-                data: Buffer.from(instruction.data, 'base64'),
-            })
+        // const deserializeInstruction = (instruction: any) =>
+        //     new TransactionInstruction({
+        //         programId: new PublicKey(instruction.programId),
+        //         keys: instruction.accounts.map((key: any) => ({
+        //             pubkey: new PublicKey(key.pubkey),
+        //             isSigner: key.isSigner,
+        //             isWritable: key.isWritable,
+        //             })),
+        //         data: Buffer.from(instruction.data, 'base64'),
+        //     })
             
-        const setupIxs = setupInstructions.map(deserializeInstruction)
-        const swapIx = deserializeInstruction(swapInstruction)
-        const cleanupIxs = Array.isArray(cleanupInstruction) ? cleanupInstruction.map(deserializeInstruction) : [deserializeInstruction(cleanupInstruction)]
+        // const setupIxs = setupInstructions.map(deserializeInstruction)
+        // const swapIx = deserializeInstruction(swapInstruction)
+        // const cleanupIxs = Array.isArray(cleanupInstruction) ? cleanupInstruction.map(deserializeInstruction) : [deserializeInstruction(cleanupInstruction)]
 
-        const altAccounts: AddressLookupTableAccount[] = []
+        // const altAccounts: AddressLookupTableAccount[] = []
         
-        for (const address of addressLookupTableAddresses) {
-            const altAccountInfo = await connection.getAccountInfo(new PublicKey(address))
-            if (altAccountInfo) {
-                const altAccount = new AddressLookupTableAccount({
-                key: new PublicKey(address),
-                state: AddressLookupTableAccount.deserialize(altAccountInfo.data),
-                });
-                altAccounts.push(altAccount);
-            }
-        }
+        // for (const address of addressLookupTableAddresses) {
+        //     const altAccountInfo = await connection.getAccountInfo(new PublicKey(address))
+        //     if (altAccountInfo) {
+        //         const altAccount = new AddressLookupTableAccount({
+        //         key: new PublicKey(address),
+        //         state: AddressLookupTableAccount.deserialize(altAccountInfo.data),
+        //         });
+        //         altAccounts.push(altAccount);
+        //     }
+        // }
 
-        const latestBlockhash = await connection.getLatestBlockhash();
+        // const latestBlockhash = await connection.getLatestBlockhash();
 
-        const messageV0 = new web3.TransactionMessage({
-            payerKey: ManagerKey.publicKey,
-            recentBlockhash: latestBlockhash.blockhash,
-            instructions: [...setupIxs, swapIx, ...cleanupIxs],
-        }).compileToV0Message(altAccounts)
+        // const messageV0 = new web3.TransactionMessage({
+        //     payerKey: ManagerKey.publicKey,
+        //     recentBlockhash: latestBlockhash.blockhash,
+        //     instructions: [...setupIxs, swapIx, ...cleanupIxs],
+        // }).compileToV0Message(altAccounts)
 
-        const transaction = new web3.VersionedTransaction(messageV0)
-        transaction.sign([ManagerKey])
-        const anchorWallet = new Wallet(ManagerKey)
+        // const transaction = new web3.VersionedTransaction(messageV0)
+        // transaction.sign([ManagerKey])
+        // const anchorWallet = new Wallet(ManagerKey)
         
-        const anchorProvider = new AnchorProvider(AnchorConnection, anchorWallet,  {
-            preflightCommitment: 'confirmed'
-        })
+        // const anchorProvider = new AnchorProvider(AnchorConnection, anchorWallet,  {
+        //     preflightCommitment: 'confirmed'
+        // })
 
-        const signature = await anchorProvider.sendAndConfirm(transaction, [ManagerKey])
-        console.log('Transaction Signature:', signature)
+        // const signature = await anchorProvider.sendAndConfirm(transaction, [ManagerKey])
+        // console.log('Transaction Signature:', signature)
 
         logger(`exchangeSolToSP Success!`)
         return parseFloat(SP_Price)
@@ -469,39 +469,39 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
         logger(`exchangeUSDCToSP success ${_amount} USDT ===> ${SP_Price} SP`)
         const route = quote
 
-        const swapPostRes = await fetch(`${JUPITER_API}swap`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                quoteResponse: route,
-                userPublicKey: ManagerKey.publicKey.toBase58(),
-                wrapUnwrapSOL: false,
-                dynamicComputeUnitLimit: true,
-                prioritizationFeeLamports: null
-            }),
-        })
+        // const swapPostRes = await fetch(`${JUPITER_API}swap`, {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({
+        //         quoteResponse: route,
+        //         userPublicKey: ManagerKey.publicKey.toBase58(),
+        //         wrapUnwrapSOL: false,
+        //         dynamicComputeUnitLimit: true,
+        //         prioritizationFeeLamports: null
+        //     }),
+        // })
 
-        const swapPostJson = await swapPostRes.json()
+        // const swapPostJson = await swapPostRes.json()
 
-        if (!swapPostJson.swapTransaction) {
-            throw new Error("No swapTransaction in Jupiter swap response");
-        }
+        // if (!swapPostJson.swapTransaction) {
+        //     throw new Error("No swapTransaction in Jupiter swap response");
+        // }
 
-        // 3. Deserialize transaction
-        const swapTxBuf = Buffer.from(swapPostJson.swapTransaction, "base64")
-        const tx = VersionedTransaction.deserialize(swapTxBuf)
-        // 4. Sign and send
-        tx.sign([ManagerKey])
+        // // 3. Deserialize transaction
+        // const swapTxBuf = Buffer.from(swapPostJson.swapTransaction, "base64")
+        // const tx = VersionedTransaction.deserialize(swapTxBuf)
+        // // 4. Sign and send
+        // tx.sign([ManagerKey])
 
-        const signature = await connection.sendRawTransaction(tx.serialize())
+        // const signature = await connection.sendRawTransaction(tx.serialize())
 
-        logger("exchangeUSDCToSP:", signature)
+        // logger("exchangeUSDCToSP:", signature)
 
-        await connection.confirmTransaction({
-            signature,
-            blockhash: tx.message.recentBlockhash,
-            lastValidBlockHeight: await connection.getBlockHeight()
-        }, "confirmed")
+        // await connection.confirmTransaction({
+        //     signature,
+        //     blockhash: tx.message.recentBlockhash,
+        //     lastValidBlockHeight: await connection.getBlockHeight()
+        // }, "confirmed")
 
         logger(`exchangeUSDCToSP Success!`)
         return parseFloat(SP_Price)
@@ -509,7 +509,7 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
         logger(`exchangeSolToSP Error`, ex.message)
         return parseFloat(SP_Price)
     }
-    return 0
+    
 
 }
 
