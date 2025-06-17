@@ -1367,36 +1367,36 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
     let amountSP = 0
     let pdaAddress = ''
 
-    if (amountUSDC > 0 ) {
-        const cmd = `node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} U=${amountUSDC}`
-        logger(cmd)
-        return exec(cmd, (error, stdout, stderr) => {
-            const kkk = stdout.split('SP_Amount=')[1]
-            if (kkk) {
-                amountSP = parseFloat(kkk.split('\n')[0])
-            }
-            const kkk1 = stdout.split('escrowTokenAccount=')[1]
-            if (kkk1) {
-                pdaAddress = kkk1.split('\n')[0]
-            }
-            logger(`stdout`, stdout)
-            logger(`stderr`,stderr)
+    // if (amountUSDC > 0 ) {
+    //     const cmd = `node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} U=${amountUSDC}`
+    //     logger(cmd)
+    //     return exec(cmd, (error, stdout, stderr) => {
+    //         const kkk = stdout.split('SP_Amount=')[1]
+    //         if (kkk) {
+    //             amountSP = parseFloat(kkk.split('\n')[0])
+    //         }
+    //         const kkk1 = stdout.split('escrowTokenAccount=')[1]
+    //         if (kkk1) {
+    //             pdaAddress = kkk1.split('\n')[0]
+    //         }
+    //         logger(`stdout`, stdout)
+    //         logger(`stderr`,stderr)
 
-            logger(`vestingPdaExec plan = ${plan} USDC = ${amountUSDC} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress} amountSP = ${amountSP}`)
+    //         logger(`vestingPdaExec plan = ${plan} USDC = ${amountUSDC} startdays = ${startDays} endDays = ${endDays} pdaAddress = ${pdaAddress} amountSP = ${amountSP}`)
 
-            SPGlodProceePool.push({
-                solana,
-                walletAddress,
-                plan,
-                pdaAddress,
-                amountSP,
-                HDWallet,
-                hash
-            })
+    //         SPGlodProceePool.push({
+    //             solana,
+    //             walletAddress,
+    //             plan,
+    //             pdaAddress,
+    //             amountSP,
+    //             HDWallet,
+    //             hash
+    //         })
 
-            SPGlodProcess()
-        })
-    }
+    //         SPGlodProcess()
+    //     })
+    // }
 
     SPGlodProceePool.push({
         solana,

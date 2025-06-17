@@ -469,39 +469,39 @@ export const exchangeUSDCToSP = async (_amount: string): Promise<number> => {
         logger(`exchangeUSDCToSP success ${_amount} USDT ===> ${SP_Price} SP`)
         const route = quote
 
-        // const swapPostRes = await fetch(`${JUPITER_API}swap`, {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({
-        //         quoteResponse: route,
-        //         userPublicKey: ManagerKey.publicKey.toBase58(),
-        //         wrapUnwrapSOL: false,
-        //         dynamicComputeUnitLimit: true,
-        //         prioritizationFeeLamports: null
-        //     }),
-        // })
+        const swapPostRes = await fetch(`${JUPITER_API}swap`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                quoteResponse: route,
+                userPublicKey: ManagerKey.publicKey.toBase58(),
+                wrapUnwrapSOL: false,
+                dynamicComputeUnitLimit: true,
+                prioritizationFeeLamports: null
+            }),
+        })
 
-        // const swapPostJson = await swapPostRes.json()
+        const swapPostJson = await swapPostRes.json()
 
-        // if (!swapPostJson.swapTransaction) {
-        //     throw new Error("No swapTransaction in Jupiter swap response");
-        // }
+        if (!swapPostJson.swapTransaction) {
+            throw new Error("No swapTransaction in Jupiter swap response");
+        }
 
-        // // 3. Deserialize transaction
-        // const swapTxBuf = Buffer.from(swapPostJson.swapTransaction, "base64")
-        // const tx = VersionedTransaction.deserialize(swapTxBuf)
-        // // 4. Sign and send
-        // tx.sign([ManagerKey])
+        // 3. Deserialize transaction
+        const swapTxBuf = Buffer.from(swapPostJson.swapTransaction, "base64")
+        const tx = VersionedTransaction.deserialize(swapTxBuf)
+        // 4. Sign and send
+        tx.sign([ManagerKey])
 
-        // const signature = await connection.sendRawTransaction(tx.serialize())
+        const signature = await connection.sendRawTransaction(tx.serialize())
 
-        // logger("exchangeUSDCToSP:", signature)
+        logger("exchangeUSDCToSP:", signature)
 
-        // await connection.confirmTransaction({
-        //     signature,
-        //     blockhash: tx.message.recentBlockhash,
-        //     lastValidBlockHeight: await connection.getBlockHeight()
-        // }, "confirmed")
+        await connection.confirmTransaction({
+            signature,
+            blockhash: tx.message.recentBlockhash,
+            lastValidBlockHeight: await connection.getBlockHeight()
+        }, "confirmed")
 
         logger(`exchangeUSDCToSP Success!`)
         return parseFloat(SP_Price)
