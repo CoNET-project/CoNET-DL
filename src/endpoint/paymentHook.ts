@@ -1901,7 +1901,7 @@ const mintPassport = async () => {
 		const currentNFT: BigInt = await SC.getCurrntPasspurtNumber()
         payment_waiting_status.set(obj.hdWallet||obj.walletAddress, parseInt(currentNFT.toString()) + 1)
 		const ts = await SC.mintPassport(obj.walletAddress, obj.expiresDays, obj.hash)
-		logger(`mintPassport ${ts.hash}`)
+		logger(`mintPassport obj.hdWallet||obj.walletAddress ${obj.hdWallet||obj.walletAddress} obj.walletAddress = [${obj.walletAddress}] NFT = [${parseInt(currentNFT.toString()) + 1}]${ts.hash}`)
 		await ts.wait()
 		
         const appleID = applePayData.get (obj.hash)
