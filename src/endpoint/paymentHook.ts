@@ -507,13 +507,17 @@ class conet_dl_server {
 
             logger(`/applePayUser `, inspect(data, false, 3, true))
 
-            if (!data?.Solana || !data?.publicKey ||!data?.productId ||!data?.transactionId ) {
-
+            if (!data?.Solana || !data?.publicKey ||!data?.productId ||! data?.transactionId) {
+                logger(`/applePayUser unsupport data format Error!`)
                 return res.status(403).json({error: 'unsupport data format!'}).end()
             }
             
-            //await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
-            
+            const result = await checkAppleReceipt(data.publicKey, data.Solana, data.transactionId, data.productId)
+            if (!result) {
+                logger(`/applePayUser unsupport data format Error!`)
+                return res.status(403).json({error: 'unsupport data format!'}).end()
+            }
+
 			return res.status(200).json({received: true}).end()
         })
 
@@ -717,7 +721,7 @@ class conet_dl_server {
                 goldRedeem = parseInt(goldRedeem.toString())
                 logger(`/codeToClient Redeem Code [${obj.uuid}] hash=[${obj.hash}] goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
 
-                if (goldRedeem === 0||padID) {
+                if ( goldRedeem === 0 || padID ) {
                     logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} padID = ${padID} ${obj.walletAddress}`)
                     return res.status(400).json({
                         error: "Redeem Code Error!"
@@ -735,8 +739,8 @@ class conet_dl_server {
             payment_waiting_status.set(obj.walletAddress, 1)
 
 
-            const plan = goldRedeem < 31 ? '0' : goldRedeem > 365 ? "3100" : '299'
-            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress, obj.uuid)
+            const plan: planStruct = goldRedeem < 31 ? '0' : goldRedeem > 370 ? "3100" : goldRedeem > 365 ? '2400' : '299'
+            execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress, '', obj.uuid)
             return res.status(200).json({
                 status: "1"
             }).end()
@@ -773,14 +777,14 @@ class conet_dl_server {
 
             const error = JSON.stringify({error: 'Format error!'})
             
-            if (!obj||!obj?.solanaWallet||!obj?.data ||!obj.data?.cryptoName||!obj.data?.plan) {
+            if (!obj||!obj?.solanaWallet||!obj?.data ||! obj.data?.cryptoName|| ! obj.data?.plan || obj.data.plan === '0') {
                 logger(`/cryptoPay data format error!`)
                 return res.status(200).json({error}).end()
             }
 
             const cryptoName = obj.data.cryptoName
-            const planName = obj.data.plan
-
+            const planName: planStruct = obj.data.plan
+           
             const plan = await getPriceFromCryptoName (cryptoName, planName)
 
             if (plan === 0) {
@@ -1181,14 +1185,15 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
-const getPriceFromCryptoName = async (cryptoName: string, plan: '299'|'3100'): Promise<number> => {
+const getPriceFromCryptoName = async (cryptoName: string, plan: planStruct): Promise<number> => {
     await oracolPrice()
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '299' ? parseFloat((2.99/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((31/oracle.bnb).toFixed(6)) : 0
+            return plan === '299' ? parseFloat((2.99/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((31/oracle.bnb).toFixed(6)) : plan === '2400' ? parseFloat((24.99/oracle.bnb).toFixed(6)) : 0
         }
+
         case 'BSC USDT': {
-            return plan === '299' ? 2.99 : plan === '3100' ? 31 : 0
+            return plan === '299' ? 2.99 : plan === '3100' ? 31 : plan === '2400' ? 24.99 : 0
         }
 
         default: {
@@ -1210,6 +1215,8 @@ const getAssetERC20Address = (cryptoName: string) => {
     }
 }
 
+
+
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
 const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
@@ -1228,15 +1235,16 @@ const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
-
+type planStruct =  '0'| '299'| '2400' | '3100'
 const SPGlodProceePool: {
     walletAddress: string
-    plan: '299'|'3100'|'0'
+    plan: planStruct
     pdaAddress: string
     solana: string
     amountSP: number
     HDWallet: string
-    hash?: string
+    redeemCode: string
+    paymentID: string
 }[] = []
 
 const SPGlodProcess = async () => {
@@ -1256,17 +1264,26 @@ const SPGlodProcess = async () => {
         
         const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
         const amountSP = ethers.parseEther(obj.amountSP.toString())
-        if (obj?.hash) {
-            tx = await SC.redeemPassport(obj.hash, obj.walletAddress, obj.solana, obj.pdaAddress, amountSP)
+        if (obj.redeemCode) {
+            tx = await SC.redeemPassport(obj.redeemCode, obj.walletAddress, obj.solana, obj.pdaAddress, amountSP)
         } else {
-            if (obj.plan === '3100') {
-                tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), amountSP)
-            } else {
-                tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, v4(), 31, amountSP)
+            switch(obj.plan) {
+                case '299': {
+                    tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, obj.paymentID, 31, amountSP)
+                    break
+                }
+                case '2400': {
+                    tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, obj.paymentID, 366, amountSP)
+                    break
+                }
+                case '3100': {
+                    tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, obj.paymentID, amountSP)
+                }
             }
+            
         }
         
-        logger(`SPGlodProcess tx = ${tx.hash}`)
+        logger(`SPGlodProcess success tx = ${tx.hash}`, inspect(obj, false, 3, true))
         await tx.wait()
         payment_waiting_status.set(obj.HDWallet, NFT.toString())
     } catch (ex: any) {
@@ -1276,7 +1293,7 @@ const SPGlodProcess = async () => {
     }
     SPGlodProcessSc.unshift(SC)
     if (tx?.hash && NFT > 100) {
-        checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
+        await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
     }
     
     return SPGlodProcess()
@@ -1372,7 +1389,7 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
 
 const vestingPdaExec =  join(__dirname,`vestingPda`)
 
-const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana: string, HDWallet: string, hash = '') => {
+const execVesting = async (plan: planStruct, walletAddress: string, solana: string, HDWallet: string,  paymentID: string, redeemCode = '') => {
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
 
@@ -1418,15 +1435,16 @@ const execVesting = async (plan: '299'|'3100'|'0', walletAddress: string, solana
         plan,
         pdaAddress: solana,
         amountSP,
-        hash,
-        HDWallet
+        redeemCode,
+        HDWallet,
+        paymentID
     })
 
     SPGlodProcess()
 
 }
 
-const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3100', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
+const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: planStruct, agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnb_usdt_contract.balanceOf(wallet)
@@ -1454,7 +1472,7 @@ const waitingBNB_USDT = (walletHD: ethers.HDNodeWallet, price: number, plan: '29
 
     logger(`waiting BNB_USDT ${walletHD.address} success got payment ${price}`)
     
-    execVesting(plan, walletAddress, solana, wallet )
+    execVesting(plan, walletAddress, solana, wallet, v4())
     
     storePayment(walletHD, price, 'BNB-USDT', balance, false)
 
@@ -1547,8 +1565,28 @@ const createRedeemWithSPProcess = async () => {
     createRedeemWithSPProcess()
 }
 
-const createRedeemWithSP = async(plan: '299'|'3100'|'0') => {
-    const expiresDayes = plan === '299' ? 31 : plan === '0' ? 30 : 36500
+const getExpiresDayes = (plan: planStruct) => {
+    switch(plan) {
+        case '0' : {
+            return 30
+        }
+        case '299': {
+            return 31
+        }
+        case '2400': {
+            return 366
+        }
+        case '3100': {
+            return 36500
+        }
+        default: {
+            return 0
+        }
+    }
+}
+
+const createRedeemWithSP = async(plan: planStruct) => {
+    const expiresDayes = getExpiresDayes(plan)
     const RedeemCode = uuid62.v4()
     const hash = ethers.solidityPackedKeccak256(['string'], [RedeemCode])
 
@@ -1561,7 +1599,7 @@ const createRedeemWithSP = async(plan: '299'|'3100'|'0') => {
     return RedeemCode
 }
 
-const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3100', agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
+const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: planStruct, agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const initBalance = initWalletBalance.get (wallet)||0
     const _balance = await bnbPrivate.getBalance(wallet)
@@ -1598,12 +1636,12 @@ const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: '299'|'3
     
     logger(`waiting BNB ${walletHD.address} success got payment ${price}`)
     
-    execVesting(plan, walletAddress, solana, wallet )
+    execVesting(plan, walletAddress, solana, wallet, v4() )
 
     storePayment(walletHD, price, 'BNB', balance, false)
 })
 
-const listenTransfer = async (price: number, cryptoName: string, plan: '299'|'3100', walletAddress: string, solana: string): Promise<string> => {
+const listenTransfer = async (price: number, cryptoName: string, plan: planStruct, walletAddress: string, solana: string): Promise<string> => {
     
     const agentWallet = await getReferrer(walletAddress)
     switch(cryptoName) {
@@ -2034,9 +2072,9 @@ const applePayData: Map<string, number> = new Map()
 
 const SilentPassAPPID = 6740261324      // appAppleId is required when the environment is Production
 
-const applePayWaitingList: {
+const applePayWaitingList: Map<string, string> = new Map()
 
-}[] = []
+
 const appleNotification = async (NotificationSignedPayload: string ) => {
 	const enableOnlineChecks = true
 	if (!appleRootCAs) {
@@ -2045,36 +2083,25 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 	const verifier = new SignedDataVerifier( appleRootCAs, enableOnlineChecks, environment, bundleId, SilentPassAPPID)
 	try {
 		const verifiedTransaction = await verifier.verifyAndDecodeNotification(NotificationSignedPayload)
-		
+		logger(`appleNotification got new notificationType: ${verifiedTransaction.notificationType}`)
 		const data = verifiedTransaction?.data
 
         if ( data?.appAppleId === SilentPassAPPID && data?.signedRenewalInfo) {
 			
             const verifiedTransactionRenew = await verifier.verifyAndDecodeRenewalInfo(data.signedRenewalInfo)
-            if (verifiedTransactionRenew) {
-                return logger(inspect(verifiedTransactionRenew, false, 3, true))
+            if (verifiedTransactionRenew?.originalTransactionId && verifiedTransactionRenew?.productId) {
+                const productId = verifiedTransactionRenew.productId
+                if (productId === '001' || productId === '002' || productId === '006') {
+                    applePayWaitingList.set (verifiedTransactionRenew.originalTransactionId, productId)
+                    return logger(`appleNotification added new applePayWaiting transactionId = ${verifiedTransactionRenew.originalTransactionId} productId = ${verifiedTransactionRenew.productId}`)
+
+                }
+                return logger(`appleNotification got unknow productId`, inspect(verifiedTransactionRenew, false, 3, true))
+                
+                
             }
 
-            return logger(`appleNotification verifier.verifyAndDecodeRenewalInfo Error`, inspect(data, false, 3, true))
-
-            // if (verifiedTransactionRenew?.originalTransactionId) {
-                
-                
-
-            //     if (getPassedWallet) {
-            //         const plan = verifiedTransactionRenew.productId
-            //         mintPassportPool.push({
-            //             walletAddress: getPassedWallet.walletAddress, 
-            //             solanaWallet: getPassedWallet.solanaWallet, 
-            //             total: 1,
-            //             expiresDays: plan === '001' ? 31 : 372,
-            //             hash: verifiedTransactionRenew.originalTransactionId
-            //         })
-            //         return mintPassport()
-            //     }
-            //     logger(`appleNotification setup TransactionId [${verifiedTransactionRenew.originalTransactionId}]  ==> AppleID ${appleID}`)
-            //     return applePayData.set (verifiedTransactionRenew.originalTransactionId, appleID)
-            // }
+            return logger(`appleNotification verifier.verifyAndDecodeRenewalInfo Error verifiedTransactionRenew = `, inspect(verifiedTransactionRenew, false, 3, true))
 			
 		}
 
@@ -2106,6 +2133,20 @@ const checkApplePayTransactionId = async (id: string) => {
         return !isHash
     } catch (ex) {}
     return null
+}
+
+const checkAppleReceipt = async (publicKey: string, Solana: string, transactionId: string, productId: string) => {
+    const waitingData = applePayWaitingList.get(transactionId)
+    if (!waitingData || waitingData !== productId) {
+        return false
+    }
+    
+    const wallet = publicKey.toLowerCase()
+    payment_waiting_status.set(wallet, 1)
+
+    execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', wallet, Solana, '', transactionId, '')
+    return true
+
 }
 
 const appleReceipt = async (receipt: string, _walletAddress: string, solanaWallet: string): Promise<boolean> => {
