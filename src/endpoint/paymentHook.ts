@@ -512,7 +512,8 @@ class conet_dl_server {
                 return res.status(403).json({error: 'unsupport data format!'}).end()
             }
             
-            await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+            //await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+            
 			return res.status(200).json({received: true}).end()
         })
 
