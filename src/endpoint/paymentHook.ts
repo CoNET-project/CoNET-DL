@@ -1295,10 +1295,10 @@ const SPGlodProcess = async () => {
 
     }
     SPGlodProcessSc.unshift(SC)
-    
+
     if (tx?.hash && NFT > 100) {
         await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
-        payment_waiting_status.set(obj.HDWallet||obj.walletAddress, NFT.toString())
+        payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
     }
 
     
@@ -2037,7 +2037,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 
         //      notificationType: 
         //          DID_RENEW
-        //          
+        //          SUBSCRIBED
 
 		logger(`appleNotification got new notificationType: ${verifiedTransaction.notificationType}`)
 
@@ -2051,7 +2051,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 
             if (verifiedTransactionRenew?.originalTransactionId && verifiedTransactionRenew?.productId) {
                 const productId = verifiedTransactionRenew.productId
-                const appleID = verifiedTransactionRenew?.appAccountToken
+                const appleID = verifiedTransactionRenew?.appTransactionId
                 if ((productId === '001' || productId === '002' || productId === '006') && appleID) {
 
                     applePayWaitingList.set (verifiedTransactionRenew.originalTransactionId, {productId, appleID})
@@ -2060,7 +2060,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 
                 }
 
-                return logger(`appleNotification got unknow productId`, inspect(verifiedTransactionRenew, false, 3, true))
+                return logger(`appleNotification got unknow productId ${productId}`, inspect(verifiedTransactionRenew, false, 3, true))
                 
                 
             }
