@@ -1236,6 +1236,8 @@ const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MA
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
 type planStruct =  '0'| '299'| '2400' | '3100'
+
+
 const SPGlodProceePool: {
     walletAddress: string
     plan: planStruct
@@ -1299,54 +1301,7 @@ const SPGlodProcess = async () => {
     return SPGlodProcess()
 }
 
-const mintPluePlan = async (hdWallet: string, walletAddress: string, solana: string, referee: string) => {
-
-    await getOracle()
-    
-    if (!oracleData?.data) {
-        logger(`spRate !oracleData?.data Error!`)
-        return {sp:'0', so:'0'}
-    }
-    logger(inspect(oracleData?.data, false, 3, true))
-
-    logger(inspect({hdWallet,walletAddress, solana}))
-    const SP_amount = ethers.parseUnits(oracleData.data.sp2499, spDecimalPlaces)
-    const So_amount = ''
-    returnPool.push({
-        from: solana,
-        SP_amount: SP_amount.toString(),
-        So_amount
-    })
-    mintPassportPool.push({
-        walletAddress,
-        solanaWallet: solana,
-        expiresDays: 93,
-        total: 1,
-        hash: `${new Date().getTime().toString()}`,
-        hdWallet
-    })
-    reword_pool.push({
-        wallet: walletAddress,
-        solana,
-        balance: SP_amount
-    })
-
-    SPClub_Point_Process.push({
-        expiresDayes: 93,
-        wallet: walletAddress,
-        referee,
-
-    })
-    await Promise.all([
-        mintPassport(),
-        returnSP_Pool_process(),
-        process_SPClub_Poing_Process()
-    ])
-	
-    sp_reword_process()
-}
-
-const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'|'12'|'3', agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
+const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: planStruct, agentWallet: string, walletAddress: string, solana: string) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
     const tronWalletAddr = ethToTronAddress(wallet)
     const initBalance = parseFloat(await balanceTron(tronWalletAddr))
@@ -1373,14 +1328,14 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: '1'
 
         logger(`waiting BNB_USDT price needed ${price} real got ${balance} Math.abs(balance-price) ${Math.abs( balance - price )} > price * 0.05 ${ price * 0.05 } SUCCESS!`)
 
-        if (plan !== '3') {
-            const redeemCode = createRedeem (plan, agentWallet)
-            payment_waiting_status.set (wallet, redeemCode)
-        } else {
-            mintPluePlan(wallet, walletAddress, solana, agentWallet)
-        }
+        // if (plan !== '3') {
+        //     const redeemCode = createRedeem (plan, agentWallet)
+        //     payment_waiting_status.set (wallet, redeemCode)
+        // } else {
+        //     mintPluePlan(wallet, walletAddress, solana, agentWallet)
+        // }
         
-        storePayment(walletHD, price, 'BNB-USDT', balance, false)
+        // storePayment(walletHD, price, 'BNB-USDT', balance, false)
     }
 
     checkBalance()
@@ -1499,22 +1454,6 @@ interface ICodeToClient {
     uuid: string
 }
 
-const CodeToClientWaiting: ICodeToClient[] = []
-
-const createRedeem = (plan:'1'|'12' , referee: string) => {
-    const expiresDayes = plan === '1' ? 31 : 365
-    
-    const _referee = !referee ? ethers.ZeroAddress: referee
-    const RedeemCode = uuid62.v4()
-    const _hash = ethers.solidityPacked(['string'], [RedeemCode])
-    const hash = ethers.zeroPadBytes(_hash, 32)
-    createRedeemWaitingPool.push({
-        expiresDayes, _referee,
-        redeemCode: hash
-    })
-    createRedeemProcess()
-    return RedeemCode
-}
 
 const createRedeemProcess = async () => {
     const obj = createRedeemWaitingPool.shift()
@@ -1585,8 +1524,15 @@ const getExpiresDayes = (plan: planStruct) => {
     }
 }
 
+
+
 const createRedeemWithSP = async(plan: planStruct) => {
     const expiresDayes = getExpiresDayes(plan)
+    if (!expiresDayes ) {
+
+        return logger(`createRedeemWithSP got expiresDayes === 0 Error! ${plan}`)
+    }
+
     const RedeemCode = uuid62.v4()
     const hash = ethers.solidityPackedKeccak256(['string'], [RedeemCode])
 
@@ -1598,6 +1544,7 @@ const createRedeemWithSP = async(plan: planStruct) => {
     createRedeemWithSPProcess()
     return RedeemCode
 }
+
 
 const waitingBNB = (walletHD: ethers.HDNodeWallet, price: number, plan: planStruct, agentWallet: string, walletAddress: string, solana: string ) => new Promise(async executor => {
     const wallet = walletHD.address.toLowerCase()
@@ -2072,7 +2019,7 @@ const applePayData: Map<string, number> = new Map()
 
 const SilentPassAPPID = 6740261324      // appAppleId is required when the environment is Production
 
-const applePayWaitingList: Map<string, string> = new Map()
+const applePayWaitingList: Map<string, {productId: string, appleID: string}> = new Map()
 
 
 const appleNotification = async (NotificationSignedPayload: string ) => {
@@ -2083,19 +2030,32 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 	const verifier = new SignedDataVerifier( appleRootCAs, enableOnlineChecks, environment, bundleId, SilentPassAPPID)
 	try {
 		const verifiedTransaction = await verifier.verifyAndDecodeNotification(NotificationSignedPayload)
+
+        //      notificationType: 
+        //          DID_RENEW
+        //          
+
 		logger(`appleNotification got new notificationType: ${verifiedTransaction.notificationType}`)
+
 		const data = verifiedTransaction?.data
 
         if ( data?.appAppleId === SilentPassAPPID && data?.signedRenewalInfo) {
 			
             const verifiedTransactionRenew = await verifier.verifyAndDecodeRenewalInfo(data.signedRenewalInfo)
+
+            logger(inspect(verifiedTransactionRenew, false, 3, true))
+
             if (verifiedTransactionRenew?.originalTransactionId && verifiedTransactionRenew?.productId) {
                 const productId = verifiedTransactionRenew.productId
-                if (productId === '001' || productId === '002' || productId === '006') {
-                    applePayWaitingList.set (verifiedTransactionRenew.originalTransactionId, productId)
+                const appleID = verifiedTransactionRenew?.appAccountToken
+                if ((productId === '001' || productId === '002' || productId === '006') && appleID) {
+
+                    applePayWaitingList.set (verifiedTransactionRenew.originalTransactionId, {productId, appleID})
+
                     return logger(`appleNotification added new applePayWaiting transactionId = ${verifiedTransactionRenew.originalTransactionId} productId = ${verifiedTransactionRenew.productId}`)
 
                 }
+
                 return logger(`appleNotification got unknow productId`, inspect(verifiedTransactionRenew, false, 3, true))
                 
                 
@@ -2137,7 +2097,7 @@ const checkApplePayTransactionId = async (id: string) => {
 
 const checkAppleReceipt = async (publicKey: string, Solana: string, transactionId: string, productId: string) => {
     const waitingData = applePayWaitingList.get(transactionId)
-    if (!waitingData || waitingData !== productId) {
+    if (!waitingData || waitingData.productId !== productId) {
         return false
     }
     
@@ -2601,7 +2561,6 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemWithSPProcessAdmin ()
-// createRedeemWithSPProcessAdmin()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
