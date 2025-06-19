@@ -1110,9 +1110,11 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
         if ( _owner == BigInt(0)) {
             return false
         }
+
         changeActiveNFT_pool.push({
             wallet, nftID, solanaWallet
         })
+
         changeActiveNFT_Process()
         return true
 
@@ -1264,7 +1266,7 @@ const SPGlodProcess = async () => {
     let NFT = 0
     try {
         
-        const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
+        NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
         const amountSP = ethers.parseEther(obj.amountSP.toString())
         if (obj.redeemCode) {
             tx = await SC.redeemPassport(obj.redeemCode, obj.walletAddress, obj.solana, obj.pdaAddress, amountSP)
@@ -1284,8 +1286,6 @@ const SPGlodProcess = async () => {
             }
             
         }
-        
-        logger(`SPGlodProcess success tx = ${tx.hash}`, inspect(obj, false, 3, true))
         await tx.wait()
         
     } catch (ex: any) {
@@ -1294,14 +1294,15 @@ const SPGlodProcess = async () => {
         logger(`SPGlodProcess Error`, ex.message)
 
     }
+
     SPGlodProcessSc.unshift(SC)
+    logger(`SPGlodProcess success tx = ${tx?.hash}`, inspect(obj, false, 3, true))
 
     if (tx?.hash && NFT > 100) {
-        await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
         payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
+        await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
     }
 
-    
     return SPGlodProcess()
 }
 
