@@ -1287,16 +1287,20 @@ const SPGlodProcess = async () => {
         
         logger(`SPGlodProcess success tx = ${tx.hash}`, inspect(obj, false, 3, true))
         await tx.wait()
-        payment_waiting_status.set(obj.HDWallet, NFT.toString())
+        
     } catch (ex: any) {
-        payment_waiting_status.set(obj.HDWallet, 0)
+        payment_waiting_status.set(obj.HDWallet||obj.walletAddress, 0)
         logger()
         logger(`SPGlodProcess Error`, ex.message)
+
     }
     SPGlodProcessSc.unshift(SC)
+    
     if (tx?.hash && NFT > 100) {
         await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
+        payment_waiting_status.set(obj.HDWallet||obj.walletAddress, NFT.toString())
     }
+
     
     return SPGlodProcess()
 }
