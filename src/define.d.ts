@@ -79,6 +79,7 @@ interface ICoNET_DL_masterSetup {
 	
 	web2_PaymentPassport: string
 	stripe_SecretKey: string
+    stripe_SecretKey_test: string
 	passport_codeToClient: string
 	forSPPassportFreeUser: string
 	distributor: string

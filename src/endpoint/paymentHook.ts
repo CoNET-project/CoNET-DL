@@ -441,7 +441,7 @@ interface applePay{
 class conet_dl_server {
 
 	private PORT = 8005
-	private stripe = new Stripe(masterSetup.stripe_SecretKey)
+	private stripe = new Stripe(masterSetup.stripe_SecretKey_test)
 	private initSetupData = async () => {
         await getAllNodes()
 		this.startServer()
@@ -593,20 +593,21 @@ class conet_dl_server {
 
 		router.post('/stripeHook', Express.raw({type: 'application/json'}), async (req: any, res: any) => {
 			let event = req.body
-			// switch (event.type) {
-			// 	case 'invoice.payment_succeeded': {
-			// 		const paymentIntent: Stripe.Invoice = event.data.object
-			// 		searchInvoices (this.stripe, paymentIntent.id)
-			// 		break;
-			// 	}
+			switch (event.type) {
+				case 'invoice.payment_succeeded': {
+					const paymentIntent: Stripe.Invoice = event.data.object
+                    logger(inspect(event.data, false, 4, true))
+					// searchInvoices (this.stripe, paymentIntent)
+					break;
+				}
 
-			// 	default: {
-			// 		// Unexpected event type
-			// 		console.log(`Unhandled event type ${event.type}.`)
-			// 		logger(inspect(event, false, 3, true))
-			// 	}
+				default: {
+					// Unexpected event type
+					console.log(`Unhandled event type ${event.type}.`)
+					logger(inspect(event, false, 3, true))
+				}
 				
-			// }
+			}
 			
 			res.status(200).json({received: true}).end()
 		})
@@ -623,13 +624,15 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			logger(Colors.magenta(`/PurchaseCONETianPlan`), message, signMessage)
+			
 			
 			const obj = checkSign (message, signMessage)
 			const price = obj?.price
 			if (!obj || !obj?.walletAddress||!obj?.solanaWallet|| (price !== 299 && price !== 2499)) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
+
+            logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
 			
 			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
 			payment_waiting_status.set(obj.walletAddress.toLowerCase(), 1)
@@ -750,7 +753,7 @@ class conet_dl_server {
             const body = req.body
             logger(`applePay!`)
 			if (body.signedPayload) {
-				appleNotification(body.signedPayload)
+				await appleNotification(body.signedPayload)
 			}
 
             res.status(200).json({received: true}).end()
@@ -1968,6 +1971,8 @@ const mintPassport = async () => {
 
 const StripeMonthlyID = 'price_1RCRC4FmCrk3Nr7LyuweZ0bn'
 const StripeAnnualID = 'price_1RCREGFmCrk3Nr7LeEDA5JIb'
+const StripeGoldID = ''
+
 
 const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
 	const option: Stripe.PaymentLinkCreateParams = {
@@ -1985,47 +1990,47 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
 	return paymentIntent.url
 }
 
-const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
-	try {
+// const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
+// 	try {
 		
-		const paymentIntent = await stripe.invoices.retrieve(invoicesID)
-		if (paymentIntent.status !== 'paid') {
-			return false
-		}
-		const payAmount = paymentIntent.amount_paid
-		logger(inspect(paymentIntent, false, 3, true))
-		const metadata = paymentIntent.subscription_details?.metadata
-		if ( !metadata?.solanaWallet|| !metadata?.walletAddress) {
-			logger(inspect(paymentIntent))
-			return logger(`stripe Invoices Error!`)
-		}
+// 		const paymentIntent = await stripe.invoices.retrieve(invoicesID)
+// 		if (paymentIntent.status !== 'paid') {
+// 			return false
+// 		}
+// 		const payAmount = paymentIntent.amount_paid
+// 		logger(inspect(paymentIntent, false, 3, true))
+// 		const metadata = paymentIntent
+// 		if ( !metadata?.solanaWallet|| !metadata?.walletAddress) {
+// 			logger(inspect(paymentIntent))
+// 			return logger(`stripe Invoices Error!`)
+// 		}
 
-		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
-        const walletAddress = metadata.walletAddress.toLowerCase()
-        payment_waiting_status.set(walletAddress, 1)
-		mintPassportPool.push({
-			walletAddress,
-			solanaWallet: metadata.solanaWallet,
-			expiresDays: payAmount === 299 ? 31: 372,
-			total: 1,
-			hash: paymentIntent.id
-		})
-		mintPassport()
-        if (payAmount !== 299 && metadata.solanaWallet) {
-            makeSolanaProm(metadata.solanaWallet)
-        }
-        SPClub_Point_Process.push({
-            expiresDayes: payAmount === 299 ? 31: 372,
-            wallet: walletAddress,
-            referee: await getReferrer(walletAddress)
-        })
-        process_SPClub_Poing_Process()
+// 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
+//         const walletAddress = metadata.walletAddress.toLowerCase()
+//         payment_waiting_status.set(walletAddress, 1)
+// 		mintPassportPool.push({
+// 			walletAddress,
+// 			solanaWallet: metadata.solanaWallet,
+// 			expiresDays: payAmount === 299 ? 31: 372,
+// 			total: 1,
+// 			hash: paymentIntent.id
+// 		})
+// 		mintPassport()
+//         if (payAmount !== 299 && metadata.solanaWallet) {
+//             makeSolanaProm(metadata.solanaWallet)
+//         }
+//         SPClub_Point_Process.push({
+//             expiresDayes: payAmount === 299 ? 31: 372,
+//             wallet: walletAddress,
+//             referee: await getReferrer(walletAddress)
+//         })
+//         process_SPClub_Poing_Process()
 		
-	} catch (ex: any) {
-		logger(ex.message)
-		return false
-	}
-}
+// 	} catch (ex: any) {
+// 		logger(ex.message)
+// 		return false
+// 	}
+// }
 
 let appleRootCAs: any = null
 
@@ -2147,7 +2152,6 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                             }
                             
                             if (obj.productId === productId && obj?.publicKey && obj?.Solana) {
-
                                 return execVesting(productId === '001' ? '299' : '2400', obj.publicKey, obj.Solana, '', paymentID,'', appleID)
                             }
 
@@ -2198,8 +2202,10 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                         }
                         return logger(`ONE_TIME_CHARGE productId ${productId} === '006' && appleID ${appleID} && paymentID ${paymentID} ERROR!`)
                     }
+                    
                     return logger(`ONE_TIME_CHARGE verifiedTransactionRenew?.originalTransactionId = ${verifiedTransactionRenew?.originalTransactionId} && verifiedTransactionRenew?.productId ${ verifiedTransactionRenew?.productId} === false`)
                 }
+
                 default: {
                     return logger(`appleNotification got unknow notificationType ${notificationType}`)
                 }
