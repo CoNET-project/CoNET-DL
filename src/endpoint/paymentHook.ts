@@ -2124,22 +2124,22 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 
                     //      SUBSCRIBED
 
-                    const obj = applePayWaitingList.get (appleID)
+                    const obj = applePayWaitingList.get (paymentID)
                     
                     if (!obj) {
                         
                         const paymentID = verifiedTransactionRenew?.originalTransactionId
                         if (paymentID) {
                             logger(`appleNotification new verifiedTransactionRenew ${notificationType} hasn't obj setup OBJ with appleID = ${appleID}`, inspect({productId, paymentID}, false, 3, true))
-                            return applePayWaitingList.set(appleID, {productId, paymentID})
+                            return applePayWaitingList.set(paymentID, {productId, appleID})
                         }
 
                         return logger(`appleNotification Error! appleID ${appleID} hasn't verifiedTransactionRenew.originalTransactionId`, inspect(verifiedTransactionRenew, false, 3, true))
                     }
                     
-                    if (obj.productId === productId && obj?.publicKey && obj?.Solana && paymentID === obj?.paymentID) {
+                    if (obj.productId === productId && obj?.publicKey && obj?.Solana) {
 
-                        return execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', obj.publicKey, obj.Solana, '', paymentID, appleID)
+                        return execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', obj.publicKey, obj.Solana, '', paymentID,'', appleID)
                     }
 
                     logger(inspect(obj))
@@ -2185,26 +2185,23 @@ const checkApplePayTransactionId = async (id: string) => {
     return null
 }
 
-const applePayWaitingList: Map<string, {productId: string, Solana?: string, publicKey?: string, paymentID: string}> = new Map()
+const applePayWaitingList: Map<string, {productId: string, Solana?: string, publicKey?: string, appleID: string}> = new Map()
 
 const checkAppleReceipt = async (publicKey: string, Solana: string, transactionId: string, productId: string) => {
     const waitingData = applePayWaitingList.get(transactionId)
 
     if (!waitingData) {
         applePayWaitingList.set(transactionId, {
-            productId, Solana, publicKey, paymentID: ''
+            productId, Solana, publicKey, appleID: ''
         })
-
-
         payment_waiting_status.set(publicKey, 1)
         logger(`checkAppleReceipt hasn't any waiting! transactionId = ${transactionId}, productId = ${productId}, Solana = ${Solana}, publicKey = ${publicKey}` )
         return true
     }
     
     const wallet = publicKey.toLowerCase()
-    payment_waiting_status.set(wallet, 1)
 
-    execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', wallet, Solana, '', waitingData.paymentID, transactionId)
+    execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', wallet, Solana, '', transactionId, '', waitingData.appleID)
     return true
 
 }
