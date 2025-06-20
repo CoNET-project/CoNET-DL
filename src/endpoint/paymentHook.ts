@@ -593,20 +593,20 @@ class conet_dl_server {
 
 		router.post('/stripeHook', Express.raw({type: 'application/json'}), async (req: any, res: any) => {
 			let event = req.body
-			switch (event.type) {
-				case 'invoice.payment_succeeded': {
-					const paymentIntent: Stripe.Invoice = event.data.object
-					searchInvoices (this.stripe, paymentIntent.id)
-					break;
-				}
+			// switch (event.type) {
+			// 	case 'invoice.payment_succeeded': {
+			// 		const paymentIntent: Stripe.Invoice = event.data.object
+			// 		searchInvoices (this.stripe, paymentIntent.id)
+			// 		break;
+			// 	}
 
-				default: {
-					// Unexpected event type
-					console.log(`Unhandled event type ${event.type}.`)
-					logger(inspect(event, false, 3, true))
-				}
+			// 	default: {
+			// 		// Unexpected event type
+			// 		console.log(`Unhandled event type ${event.type}.`)
+			// 		logger(inspect(event, false, 3, true))
+			// 	}
 				
-			}
+			// }
 			
 			res.status(200).json({received: true}).end()
 		})
