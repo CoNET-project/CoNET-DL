@@ -2074,11 +2074,12 @@ const appleNotification_DID_RENEW = async (productId: appleProductType, appleID:
     const hash = ethers.solidityPackedKeccak256(['string'], [appleID])
     try {
         const [publicKey, Solana] = await payment_SC_readOnly.getAppleIDInfo(hash)
-        if (publicKey !== ethers.ZeroAddress) {
+        if (publicKey && publicKey !== ethers.ZeroAddress) {
+            logger(`appleNotification_DID_RENEW await payment_SC_readOnly.getAppleIDInfo(hash) = ${hash} publicKey ${publicKey} Solana ${Solana}`)
             return execVesting(project, publicKey, Solana, '', paymentID, '',appleID)
         }
 
-        logger(`appleNotification_DID_RENEW appleID = ${appleID} paymentID = ${paymentID} got publicKey ${publicKey} & Solana ${Solana} NULL Error! `)
+        logger(`appleNotification_DID_RENEW.  payment_SC_readOnly.getAppleIDInfo(hash) ${hash} Error  appleID =  ${appleID} paymentID = ${paymentID} got publicKey ${publicKey} & Solana ${Solana} NULL Error! `)
     } catch (ex: any) {
         logger(`appleNotification_DID_RENEW await payment_SC_readOnly.getAppleIDInfo(hash) appleID = ${appleID} Error`, ex.message)
     }
@@ -2137,7 +2138,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                     }
                     
                     if (obj.productId === productId && obj?.publicKey && obj?.Solana && paymentID === obj?.paymentID) {
-                        
+
                         return execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', obj.publicKey, obj.Solana, '', paymentID, appleID)
                     }
 
