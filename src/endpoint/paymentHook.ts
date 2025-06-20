@@ -1394,7 +1394,7 @@ const execVesting = async (plan: planStruct, walletAddress: string, solana: stri
     //     })
     // }
 
-    SPGlodProceePool.push({
+    const data = {
         solana,
         walletAddress,
         plan,
@@ -1404,7 +1404,11 @@ const execVesting = async (plan: planStruct, walletAddress: string, solana: stri
         HDWallet,
         paymentID,
         appleID
-    })
+    }
+
+    SPGlodProceePool.push(data)
+
+    logger(`execVesting`, inspect(data, false, 3, true))
 
     SPGlodProcess()
 
@@ -2066,11 +2070,12 @@ const appleNotification_DID_RENEW = async (productId: appleProductType, appleID:
     if (project === '0') {
         return logger(`appleNotification_DID_RENEW appleID = ${appleID} paymentID = ${paymentID} productId = ${productId} !== '001'|'002'|'006' Error!`)
     }
+
     const hash = ethers.solidityPackedKeccak256(['string'], [appleID])
     try {
         const [publicKey, Solana] = await payment_SC_readOnly.getAppleIDInfo(hash)
         if (publicKey !== ethers.ZeroAddress) {
-            return execVesting(project, publicKey, Solana, '', paymentID, appleID)
+            return execVesting(project, publicKey, Solana, '', paymentID, '',appleID)
         }
 
         logger(`appleNotification_DID_RENEW appleID = ${appleID} paymentID = ${paymentID} got publicKey ${publicKey} & Solana ${Solana} NULL Error! `)
@@ -2125,8 +2130,10 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                         
                         const paymentID = verifiedTransactionRenew?.originalTransactionId
                         if (paymentID) {
+
                             return applePayWaitingList.set(appleID, {productId, paymentID})
                         }
+
                         return logger(`appleNotification Error! appleID ${appleID} hasn't verifiedTransactionRenew.originalTransactionId`, inspect(verifiedTransactionRenew, false, 3, true))
                     }
                     
@@ -2192,7 +2199,7 @@ const checkAppleReceipt = async (publicKey: string, Solana: string, transactionI
 
 
         payment_waiting_status.set(publicKey, 1)
-        logger(`checkAppleReceipt hasn't any waiting Data Error! transactionId = ${transactionId}, productId = ${productId}, Solana = ${Solana}, publicKey = ${publicKey}` )
+        logger(`checkAppleReceipt hasn't any waiting! transactionId = ${transactionId}, productId = ${productId}, Solana = ${Solana}, publicKey = ${publicKey}` )
         return true
     }
     
