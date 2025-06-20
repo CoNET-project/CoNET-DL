@@ -512,12 +512,8 @@ class conet_dl_server {
                 return res.status(403).json({error: 'unsupport data format!'}).end()
             }
             
-            const result = await checkAppleReceipt(data.publicKey, data.Solana, data.transactionId, data.productId)
-            if (!result) {
-                logger(`/applePayUser unsupport data format Error!`)
-                return res.status(403).json({error: 'unsupport data format!'}).end()
-            }
-
+            await checkAppleReceipt(data.publicKey.toLowerCase(), data.Solana, data.transactionId, data.productId)
+           
 			return res.status(200).json({received: true}).end()
         })
 
@@ -1249,6 +1245,7 @@ const SPGlodProceePool: {
     HDWallet: string
     redeemCode: string
     paymentID: string
+    appleID: string
 }[] = []
 
 const SPGlodProcess = async () => {
@@ -1357,7 +1354,7 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: pla
 
 const vestingPdaExec =  join(__dirname,`vestingPda`)
 
-const execVesting = async (plan: planStruct, walletAddress: string, solana: string, HDWallet: string,  paymentID: string, redeemCode = '') => {
+const execVesting = async (plan: planStruct, walletAddress: string, solana: string, HDWallet: string,  paymentID: string, redeemCode = '', appleID = '') => {
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
 
@@ -1405,7 +1402,8 @@ const execVesting = async (plan: planStruct, walletAddress: string, solana: stri
         amountSP,
         redeemCode,
         HDWallet,
-        paymentID
+        paymentID,
+        appleID
     })
 
     SPGlodProcess()
@@ -1947,8 +1945,9 @@ const mintPassport = async () => {
 		
         const appleID = applePayData.get (obj.hash)
         if (appleID) {
-            const ts = await SC.applePayStatus(ethers.id(appleID.toString()), obj.walletAddress, obj.solanaWallet)
-            logger(`mintPassport applePayStatus ${obj.walletAddress} ${ obj.solanaWallet}`)
+            const hash = ethers.solidityPackedKeccak256(['string'], [appleID])
+            const ts = await SC.applePayStatus(hash, obj.walletAddress, obj.solanaWallet)
+            logger(`mintPassport applePayStatus ${obj.walletAddress} ${ obj.solanaWallet} hash = ${ts.hash}`)
             await ts.wait()
         }
         checkNFTOwnership(obj.walletAddress, parseInt(currentNFT.toString()) + 1, obj.solanaWallet)
@@ -2061,8 +2060,28 @@ const applePayData: Map<string, number> = new Map()
 
 const SilentPassAPPID = 6740261324      // appAppleId is required when the environment is Production
 
-const applePayWaitingList: Map<string, {productId: string, appleID: string}> = new Map()
+type appleProductType = '001'|'002'|'006'
 
+const appleNotification_DID_RENEW = async (productId: appleProductType, appleID: string, paymentID: string) => {
+    logger(`appleNotification_DID_RENEW appleID = ${appleID} productId = ${productId}`)
+    const project = productId === '001' ? '299' : productId === '002' ? '2400' : productId ==='006' ? '3100' : '0'
+    if (project === '0') {
+        return logger(`appleNotification_DID_RENEW appleID = ${appleID} paymentID = ${paymentID} productId = ${productId} !== '001'|'002'|'006' Error!`)
+    }
+    const hash = ethers.solidityPackedKeccak256(['string'], [appleID])
+    try {
+        const [publicKey, Solana] = await payment_SC_readOnly.getAppleIDInfo(hash)
+        if (publicKey !== ethers.ZeroAddress) {
+            return execVesting(project, publicKey, Solana, '', paymentID, appleID)
+        }
+
+        logger(`appleNotification_DID_RENEW appleID = ${appleID} paymentID = ${paymentID} got publicKey ${publicKey} & Solana ${Solana} NULL Error! `)
+    } catch (ex: any) {
+        logger(`appleNotification_DID_RENEW await payment_SC_readOnly.getAppleIDInfo(hash) appleID = ${appleID} Error`, ex.message)
+    }
+    
+    
+}
 
 const appleNotification = async (NotificationSignedPayload: string ) => {
 	const enableOnlineChecks = true
@@ -2080,8 +2099,9 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
 		logger(`appleNotification got new notificationType: ${verifiedTransaction.notificationType}`)
 
 		const data = verifiedTransaction?.data
+        const notificationType = verifiedTransaction?.notificationType
 
-        if ( data?.appAppleId === SilentPassAPPID && data?.signedRenewalInfo) {
+        if ( data?.appAppleId === SilentPassAPPID && data?.signedRenewalInfo && (notificationType === 'SUBSCRIBED' || notificationType === 'DID_RENEW')) {
 			
             const verifiedTransactionRenew = await verifier.verifyAndDecodeRenewalInfo(data.signedRenewalInfo)
 
@@ -2090,11 +2110,36 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
             if (verifiedTransactionRenew?.originalTransactionId && verifiedTransactionRenew?.productId) {
                 const productId = verifiedTransactionRenew.productId
                 const appleID = verifiedTransactionRenew?.appTransactionId
-                if ((productId === '001' || productId === '002' || productId === '006') && appleID) {
+                const paymentID =  verifiedTransactionRenew?.originalTransactionId
+                if ((productId === '001' || productId === '002' || productId === '006') && appleID && paymentID) {
 
-                    applePayWaitingList.set (verifiedTransactionRenew.originalTransactionId, {productId, appleID})
+                    if (notificationType === 'DID_RENEW') {
+                        const renewID = verifiedTransactionRenew?.renewalDate?.toString() || v4()
+                        return appleNotification_DID_RENEW (productId, appleID, renewID)
+                    }
 
-                    return logger(`appleNotification added new applePayWaiting transactionId = ${verifiedTransactionRenew.originalTransactionId} productId = ${verifiedTransactionRenew.productId}`)
+                    //      SUBSCRIBED
+
+                    const obj = applePayWaitingList.get (appleID)
+                    
+                    if (!obj) {
+                        
+                        
+                        const paymentID = verifiedTransactionRenew?.originalTransactionId
+                        if (paymentID) {
+                            return applePayWaitingList.set(appleID, {productId, paymentID})
+                        }
+                        return logger(`appleNotification Error! appleID ${appleID} hasn't verifiedTransactionRenew.originalTransactionId`, inspect(verifiedTransactionRenew, false, 3, true))
+                    }
+                    
+                    if (obj.productId === productId && obj?.publicKey && obj?.Solana && paymentID === obj?.paymentID) {
+
+                        return execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', obj.publicKey, obj.Solana, '', paymentID, appleID)
+                    }
+
+                    logger(inspect(obj))
+
+                    return logger(`appleNotification added new applePayWaiting paymentID[${paymentID}] productId[${productId}] Error!`)
 
                 }
 
@@ -2137,17 +2182,26 @@ const checkApplePayTransactionId = async (id: string) => {
     return null
 }
 
+const applePayWaitingList: Map<string, {productId: string, Solana?: string, publicKey?: string, paymentID: string}> = new Map()
+
 const checkAppleReceipt = async (publicKey: string, Solana: string, transactionId: string, productId: string) => {
     const waitingData = applePayWaitingList.get(transactionId)
-    if (!waitingData || waitingData.productId !== productId) {
+
+    if (!waitingData) {
+        applePayWaitingList.set(transactionId, {
+            productId, Solana, publicKey, paymentID: ''
+        })
+
+
+        payment_waiting_status.set(publicKey, 1)
         logger(`checkAppleReceipt hasn't any waiting Data Error! transactionId = ${transactionId}, productId = ${productId}, Solana = ${Solana}, publicKey = ${publicKey}` )
-        return false
+        return true
     }
     
     const wallet = publicKey.toLowerCase()
     payment_waiting_status.set(wallet, 1)
 
-    execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', wallet, Solana, '', transactionId, '')
+    execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', wallet, Solana, '', waitingData.paymentID, transactionId)
     return true
 
 }
