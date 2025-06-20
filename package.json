@@ -70,7 +70,7 @@
 		"bs58": "^6.0.0",
 		"@solana/spl-token": "^0.4.13",
 		"gill": "^0.10.2",
-		"stripe": "^18.2.1",
+		"stripe": "^17.1.0",
 		"@apple/app-store-server-library": "^1.6.0",
         "@solana-developers/helpers": "^2.8.1",
         "uuid62": "^1.0.2",
