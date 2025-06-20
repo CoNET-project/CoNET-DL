@@ -1298,9 +1298,10 @@ const SPGlodProcess = async () => {
         payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
         await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
     }
-    if (obj.paymentID) {
+    if (obj.appleID) {
+        const hash = ethers.solidityPackedKeccak256(['string'], [obj.appleID])
         applepayInfo.push({
-            appTransactionId: obj.paymentID,
+            appTransactionId: hash,
             walletAddress: obj.walletAddress,
             solanaWallet: obj.solana
         })
