@@ -1634,8 +1634,6 @@ const listenTransfer = async (price: number, cryptoName: string, plan: planStruc
     
 }
 
-
-
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)       //      0x784985d7dC024fE8a08519Bba16EA72f8170b5c2
 // const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
 const SPClubPointManagerV2 = '0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb'
@@ -2612,7 +2610,7 @@ new conet_dl_server ()
 
 const createRedeemWithSPProcessAdmin  = async () => {
     for (let i = 0; i < 10; i ++) {
-        const redeemCode = await createRedeemWithSP ('0')
+        const redeemCode = await createRedeemWithSP ('3100')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2657,7 +2655,7 @@ const test = async () => {
 //     check()
 // }, 10000)
 
-// createRedeemWithSPProcessAdmin ()
+createRedeemWithSPProcessAdmin ()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
