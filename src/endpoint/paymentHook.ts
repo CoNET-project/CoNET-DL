@@ -1290,7 +1290,6 @@ const SPGlodProcess = async () => {
         
     } catch (ex: any) {
         payment_waiting_status.set(obj.HDWallet||obj.walletAddress, 0)
-        logger()
         logger(`SPGlodProcess Error`, ex.message)
 
     }
@@ -1301,6 +1300,15 @@ const SPGlodProcess = async () => {
     if (tx?.hash && NFT > 100) {
         payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
         await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
+    }
+    if (obj.paymentID) {
+        applepayInfo.push({
+            appTransactionId: obj.paymentID,
+            walletAddress: obj.walletAddress,
+            solanaWallet: obj.solana
+        })
+        
+        addedApplepayInfo()
     }
 
     return SPGlodProcess()
@@ -1880,6 +1888,35 @@ const checkHash = async (hash_temp: string): Promise<undefined|string> => {
     
 }
 
+const applepayInfo: {
+    appTransactionId: string
+    walletAddress: string
+    solanaWallet: string
+}[] = []
+
+const addedApplepayInfo = async () => {
+    const obj = applepayInfo.shift()
+    if (!obj) {
+        return
+    }
+    const SC = Payment_SCPool.shift()
+	if (!SC) {
+		applepayInfo.push(obj)
+		return
+	}
+
+    try {
+        const tx = await SC.applePayStatus(obj.appTransactionId, obj.walletAddress, obj.solanaWallet)
+        await tx.wait()
+    } catch (ex: any) {
+        logger(`addedApplepayInfo Error!`,ex.message)
+    }
+
+    Payment_SCPool.unshift(SC)
+    addedApplepayInfo()
+
+}
+
 const mintPassport = async () => {
 	const obj = mintPassportPool.shift()
 	if (!obj) {
@@ -2103,6 +2140,7 @@ const checkApplePayTransactionId = async (id: string) => {
 const checkAppleReceipt = async (publicKey: string, Solana: string, transactionId: string, productId: string) => {
     const waitingData = applePayWaitingList.get(transactionId)
     if (!waitingData || waitingData.productId !== productId) {
+        logger(`checkAppleReceipt hasn't any waiting Data Error! transactionId = ${transactionId}, productId = ${productId}, Solana = ${Solana}, publicKey = ${publicKey}` )
         return false
     }
     
