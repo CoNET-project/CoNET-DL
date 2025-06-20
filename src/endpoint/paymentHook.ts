@@ -2127,10 +2127,9 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                     
                     if (!obj) {
                         
-                        
                         const paymentID = verifiedTransactionRenew?.originalTransactionId
                         if (paymentID) {
-
+                            logger(`appleNotification new verifiedTransactionRenew ${notificationType} hasn't obj setup OBJ with appleID = ${appleID}`, inspect({productId, paymentID}, false, 3, true))
                             return applePayWaitingList.set(appleID, {productId, paymentID})
                         }
 
@@ -2138,7 +2137,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                     }
                     
                     if (obj.productId === productId && obj?.publicKey && obj?.Solana && paymentID === obj?.paymentID) {
-
+                        
                         return execVesting(productId === '001' ? '299' : productId === '002' ? '2400' : '3100', obj.publicKey, obj.Solana, '', paymentID, appleID)
                     }
 
@@ -2149,8 +2148,6 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                 }
 
                 return logger(`appleNotification got unknow productId ${productId}`, inspect(verifiedTransactionRenew, false, 3, true))
-                
-                
             }
 
             return logger(`appleNotification verifier.verifyAndDecodeRenewalInfo Error verifiedTransactionRenew = `, inspect(verifiedTransactionRenew, false, 3, true))
