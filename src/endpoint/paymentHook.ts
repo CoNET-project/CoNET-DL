@@ -525,7 +525,7 @@ class conet_dl_server {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /addReferral req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
 			
@@ -553,7 +553,7 @@ class conet_dl_server {
 				signMessage = req.body.signMessage
 
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /paypal_fx168 req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
 			//		
@@ -655,10 +655,12 @@ class conet_dl_server {
 			}
 			const wallet = obj.walletAddress.toLowerCase()
 			const status = payment_waiting_status.get(wallet)
+
 			if (!status) {
 				logger(`/payment_stripe_waiting ${obj.walletAddress} got unknow status! ${status}`)
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
+            
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 			return res.status(200).json({ status }).end()
 		})
@@ -669,7 +671,7 @@ class conet_dl_server {
 			try {
 				wallet = req.body?.wallet?.toLowerCase()
 			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /payment_stripe_waiting req.body ERROR!`), inspect(req.body))
+				logger (Colors.grey(`${ipaddress} request /cryptoPayment_waiting req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
 
