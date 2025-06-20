@@ -660,7 +660,7 @@ class conet_dl_server {
 				logger(`/payment_stripe_waiting ${obj.walletAddress} got unknow status! ${status}`)
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
-            
+
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 			return res.status(200).json({ status }).end()
 		})
@@ -2197,7 +2197,6 @@ const checkAppleReceipt = async (publicKey: string, Solana: string, transactionI
         applePayWaitingList.set(transactionId, {
             productId, Solana, publicKey, appleID: ''
         })
-        payment_waiting_status.set(publicKey, 1)
         logger(`checkAppleReceipt hasn't any waiting! transactionId = ${transactionId}, productId = ${productId}, Solana = ${Solana}, publicKey = ${publicKey}` )
         return true
     }
