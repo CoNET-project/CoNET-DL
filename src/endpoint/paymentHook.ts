@@ -628,13 +628,16 @@ class conet_dl_server {
 			
 			const obj = checkSign (message, signMessage)
 			const price = obj?.price
-			if (!obj || !obj?.walletAddress||!obj?.solanaWallet|| (price !== 299 && price !== 2499)) {
+            
+			if (!obj || !obj?.walletAddress||!obj?.solanaWallet ||!price) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
 
+            const price1 = getStripePlanID(price, true)
+
             logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
 			
-			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price)
+			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price1)
 			payment_waiting_status.set(obj.walletAddress.toLowerCase(), 1)
 			return res.status(200).json({url}).end()
 		})
@@ -1971,13 +1974,36 @@ const mintPassport = async () => {
 
 const StripeMonthlyID = 'price_1RCRC4FmCrk3Nr7LyuweZ0bn'
 const StripeAnnualID = 'price_1RCREGFmCrk3Nr7LeEDA5JIb'
-const StripeGoldID = ''
+const StripeMonthlyID_test = 'price_1RcI24FmCrk3Nr7LUeU5yXec'
+const StripeYearID_test = 'price_1RcHomFmCrk3Nr7LlLRvdOjB'
+const StripeGenesis_Circle = 'price_1RcHxMFmCrk3Nr7LziGOoDDm'
 
+const getStripePlanID = (price: string, testMode: boolean): string => {
+    switch(price) {
+        default: 
+        case '0': {
+            return ''
+        }
+        case '299': {
+            return testMode ? StripeMonthlyID_test : StripeMonthlyID
+        }
 
-const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, price: number) => {
+        case '2400': {
+            return testMode ? StripeYearID_test : StripeAnnualID
+        }
+
+        case '3100': {
+             return testMode ? StripeGenesis_Circle : StripeGenesis_Circle
+        }
+
+    }
+}
+
+const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, _price: string ) => {
+    const price = getStripePlanID(_price, true)
 	const option: Stripe.PaymentLinkCreateParams = {
 		line_items: [{
-			price: price === 299 ? StripeMonthlyID: StripeAnnualID,
+			price,
 			quantity: 1
 		}],
 		subscription_data: {
@@ -2701,7 +2727,12 @@ const test = async () => {
     //     walletAddress: '0x8C0F2f3c0C46e377e7C6316E28499c4DD2d3Dc18'
     // })
 
-    SPGlodProcess()
+    // SPGlodProcess()
+    const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
+    const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
+    const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
+    const kk = await makePaymentLink(stripe, testAddr, testSolana, '299')
+    logger(kk)
 }
 
 // checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')

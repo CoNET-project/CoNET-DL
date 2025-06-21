@@ -293,7 +293,7 @@ interface minerObj {
 	serverIPAddress?: string
 	result?: twitterResult
 	solanaWallet?: string
-	price?: number
+	price?: string
 }
 
 interface nodeType {
