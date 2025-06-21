@@ -52,6 +52,8 @@ const filePath = masterSetup.apple.encodedKeyPath
 const appleRoot = masterSetup.apple.appleRootCA
 const sp_team = '2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q'
 const fx168PublicKey = `0xB83A30169F696fc3B997F87eAfe85894235f7d77`.toLowerCase()
+const SPClubAddress = `0x9D27BEdb1d093F38726F60551CfefaD83fA838a2`
+const ReferralsV3Address = '0xE235f3b481270F5DF2362c25FF5ED8Bdc834DcE9'
 
 const cryptoPayWallet = ethers.Wallet.fromPhrase(masterSetup.cryptoPayWallet)
 const environment = Environment.SANDBOX
@@ -175,8 +177,9 @@ const oracolPrice = async () => {
 const monitorRewardWaitingMins = 15
 
 const SPClub_airdrop_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
-const SPClub_Airdrop_manager = new ethers.Wallet(masterSetup.SP_Club_Airdrop, CONET_MAINNET)
+const SPClub_Airdrop_manager = new ethers.Wallet(masterSetup.SP_Club_Airdrop, CONET_MAINNET)        //      0xbFD582466561155F56430E8f55f473a9696afEA9
 const SPClub_Airdrop_Contract_pool = [new ethers.Contract(SPClub_airdrop_addr, SPClub_Airdrop_ABI, SPClub_Airdrop_manager)]
+
 
 const SPClub_AirdropPool: {
     walletAddress: string
@@ -186,6 +189,8 @@ const SPClub_AirdropPool: {
     referrer?: string
     referrerSolana?: string
 }[] = []
+
+
 
 const SPClub_AirdropProcess = async () => {
     const obj = SPClub_AirdropPool.shift()
@@ -597,7 +602,7 @@ class conet_dl_server {
 				case 'invoice.payment_succeeded': {
 					const paymentIntent: Stripe.Invoice = event.data.object
                     logger(inspect(event.data, false, 4, true))
-					// searchInvoices (this.stripe, paymentIntent)
+					searchInvoices (this.stripe, paymentIntent.id)
 					break;
 				}
 
@@ -927,10 +932,10 @@ class conet_dl_server {
 			
 			const obj = checkSign (message, signMessage)
             
-            const isAddress = ethers.isAddress(obj?.referrer)
+            const isWalletAddress = ethers.isAddress(obj?.referrer)
             
 
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress || !isAddress ||!obj?.referrer) {
+			if ( !obj?.referrer || !obj?.walletAddress || !isWalletAddress ) {
                 logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
@@ -938,45 +943,58 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
+
+
             
             const referrer = obj.referrer.toLowerCase()
+            const isReff = await getReferrer(obj.walletAddress)
 
-            if (ipaddress === '73.189.157.190') {
-                ipaddress = v4()
+            if (isReff && obj.walletAddress === referrer) {
+                return res.status(403).json({
+                    error: 'Already exists!'
+                }).end()
             }
-            
-            const [status, balance] = await Promise.all([
-                checkAirDropForSPReffers(obj.walletAddress, obj.solanaWallet, ipaddress, referrer),
-                checkIsHoldSP(obj.solanaWallet)
-            ])
-            const key = new PublicKey( obj.solanaWallet).toBase58()
-
-            if (!status||!key) {
-                return res.status(404).json({
-					error: 'Unavailable!'
-				}).end()
-            }
-            const isWhiteList = reffAddressList.findIndex(n => n === referrer)
-            obj.ipAddress = ipaddress
-
-            const amount = isWhiteList < 0 ? 0 : balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
-            
-
-            SPClub_AirdropPool.push({
-                walletAddress: obj.walletAddress,
-                solanaWallet: obj.solanaWallet,
-                ipaddress,
-                amount,
-                referrer: obj.referrer,
-                referrerSolana: reffSOlanaAddressList[isWhiteList]
+            addReferralsPool.push({
+                wallet: obj.walletAddress,
+                referrer: referrer
             })
+            
+            addReferralsProcess()
+            
+            // if (ipaddress === '73.189.157.190') {
+            //     ipaddress = v4()
+            // }
+            
+            
 
-            logger(inspect(obj, false, 3, true))
-            SPClub_AirdropProcess()
+            // const key = new PublicKey( obj.solanaWallet).toBase58()
+
+            // if (!status||!key) {
+            //     return res.status(404).json({
+			// 		error: 'Unavailable!'
+			// 	}).end()
+            // }
+            // const isWhiteList = reffAddressList.findIndex(n => n === referrer)
+            // obj.ipAddress = ipaddress
+
+            // const amount = isWhiteList < 0 ? 0 : balance ? 1000 * 10 ** spDecimalPlaces : 100 * 10 ** spDecimalPlaces
+            
+
+            // SPClub_AirdropPool.push({
+            //     walletAddress: obj.walletAddress,
+            //     solanaWallet: obj.solanaWallet,
+            //     ipaddress,
+            //     amount,
+            //     referrer: obj.referrer,
+            //     referrerSolana: reffSOlanaAddressList[isWhiteList]
+            // })
+
+            // logger(inspect(obj, false, 3, true))
+            // SPClub_AirdropProcess()
 
             return res.status(200).json({
                 status: true,
-                amount: amount / 10 ** spDecimalPlaces
+                amount: 0
             }).end()
 
         })
@@ -1128,8 +1146,7 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
     
 }
 
-const SPClubAddress = `0x9D27BEdb1d093F38726F60551CfefaD83fA838a2`
-const ReferralsV3Address = '0xE235f3b481270F5DF2362c25FF5ED8Bdc834DcE9'
+
 
 const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)
 const SPClubContract = new ethers.Contract(SPClubAddress, SPClubPoint, SPClubWallet)
@@ -2016,47 +2033,49 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
 	return paymentIntent.url
 }
 
-// const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
-// 	try {
+const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
+	try {
 		
-// 		const paymentIntent = await stripe.invoices.retrieve(invoicesID)
-// 		if (paymentIntent.status !== 'paid') {
-// 			return false
-// 		}
-// 		const payAmount = paymentIntent.amount_paid
-// 		logger(inspect(paymentIntent, false, 3, true))
-// 		const metadata = paymentIntent
-// 		if ( !metadata?.solanaWallet|| !metadata?.walletAddress) {
-// 			logger(inspect(paymentIntent))
-// 			return logger(`stripe Invoices Error!`)
-// 		}
+		const paymentIntent = await stripe.invoices.retrieve(invoicesID)
+		if (paymentIntent.status !== 'paid') {
+			return false
+		}
+		const payAmount = paymentIntent.amount_paid
+		logger(inspect(paymentIntent, false, 3, true))
+		const metadata = paymentIntent.subscription_details?.metadata
+       
+        
+		if ( !metadata?.solanaWallet|| !metadata?.walletAddress) {
+			logger(inspect(paymentIntent.subscription_details))
+			return logger(`stripe Invoices subscription_details Error!`)
+		}
 
-// 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
-//         const walletAddress = metadata.walletAddress.toLowerCase()
-//         payment_waiting_status.set(walletAddress, 1)
-// 		mintPassportPool.push({
-// 			walletAddress,
-// 			solanaWallet: metadata.solanaWallet,
-// 			expiresDays: payAmount === 299 ? 31: 372,
-// 			total: 1,
-// 			hash: paymentIntent.id
-// 		})
-// 		mintPassport()
-//         if (payAmount !== 299 && metadata.solanaWallet) {
-//             makeSolanaProm(metadata.solanaWallet)
-//         }
-//         SPClub_Point_Process.push({
-//             expiresDayes: payAmount === 299 ? 31: 372,
-//             wallet: walletAddress,
-//             referee: await getReferrer(walletAddress)
-//         })
-//         process_SPClub_Poing_Process()
+		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
+        const walletAddress = metadata.walletAddress.toLowerCase()
+        payment_waiting_status.set(walletAddress, 1)
+		mintPassportPool.push({
+			walletAddress,
+			solanaWallet: metadata.solanaWallet,
+			expiresDays: payAmount === 299 ? 31: 372,
+			total: 1,
+			hash: paymentIntent.id
+		})
+		mintPassport()
+        if (payAmount !== 299 && metadata.solanaWallet) {
+            makeSolanaProm(metadata.solanaWallet)
+        }
+        SPClub_Point_Process.push({
+            expiresDayes: payAmount === 299 ? 31: 372,
+            wallet: walletAddress,
+            referee: await getReferrer(walletAddress)
+        })
+        process_SPClub_Poing_Process()
 		
-// 	} catch (ex: any) {
-// 		logger(ex.message)
-// 		return false
-// 	}
-// }
+	} catch (ex: any) {
+		logger(ex.message)
+		return false
+	}
+}
 
 let appleRootCAs: any = null
 
@@ -2728,11 +2747,11 @@ const test = async () => {
     // })
 
     // SPGlodProcess()
-    const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
-    const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
+    // const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
+    // const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
     const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
-    const kk = await makePaymentLink(stripe, testAddr, testSolana, '299')
-    logger(kk)
+    // const kk = await makePaymentLink(stripe, testAddr, testSolana, '2400')
+    searchInvoices(stripe, 'in_1RcIMKFmCrk3Nr7LCfVae2gA')
 }
 
 // checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')
