@@ -675,6 +675,7 @@ class conet_dl_server {
 			const plan = StripePlan(price1)
 
             if (plan === '0') {
+                logger()
                 return res.status(402).json({error: 'No necessary parameters'}).end()
             }
 
