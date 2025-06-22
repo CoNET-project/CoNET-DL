@@ -619,18 +619,21 @@ class conet_dl_server {
 				case 'invoice.payment_succeeded': {
                     logger(`invoice.payment_succeeded`)
 					const paymentIntent: Stripe.Invoice = event.data.object
+                    
                     logger(inspect(event.data, false, 4, true))
-					searchInvoices (this.stripe, paymentIntent.id)
+                    searchInvoices (this.stripe, paymentIntent.id)
+                    
+                    
 					break;
 				}
 
                 case 'checkout.session.completed': {
                     logger(`checkout.session.completed`)
                     const session = event.data.object
-                    if (session.subscription) {
+                    if (!session.subscription) {
                         searchSession(this.stripe, session.id)
                     }
-                    logger(inspect(event.data, false, 4, true))
+                
                     break;
                 }
 
@@ -2854,9 +2857,9 @@ const test = async () => {
     const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
     const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
 
-    //const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
+    const kk = await makePaymentLink(stripe, testAddr, testSolana, '299')
     //logger(`makePaymentLink return kk = ${kk}`)
-    searchSession(stripe, 'cs_test_a1PjLBhilSBizVk0kNKipgfuJTqS6xiXzrQ3wHpL446IDNjCM7hXbMR41A')
+    // searchSession(stripe, 'cs_test_a1PjLBhilSBizVk0kNKipgfuJTqS6xiXzrQ3wHpL446IDNjCM7hXbMR41A')
 }
 
 // checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')
@@ -2870,7 +2873,7 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemWithSPProcessAdmin ()
-test()
+// test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
