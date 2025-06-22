@@ -626,6 +626,10 @@ class conet_dl_server {
 
                 case 'checkout.session.completed': {
                     logger(`checkout.session.completed`)
+                    const session = event.data.object
+                    if (session.subscription) {
+                        searchSession(this.stripe, session.id)
+                    }
                     logger(inspect(event.data, false, 4, true))
                     break;
                 }
@@ -2128,7 +2132,7 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		}
 
 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
-        const walletAddress = metadata.walletAddress.toLowerCase()
+        const walletAddress = metadata.walletAddress?.toLowerCase()
         const plan = getPlan(payAmount)
         if (plan === '0') {
             return logger(`searchInvoices invoicesID = ${invoicesID} Plan Error payAmount = ${payAmount}`)
@@ -2161,6 +2165,19 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		logger(ex.message)
 		return false
 	}
+}
+
+const searchSession = async (stripe: Stripe, sessionId: string) => {
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    const payAmount = session?.amount_total
+    const metadata = session?.metadata
+    const status = session?.payment_status
+    if (status !== 'paid' || !payAmount || !metadata?.solanaWallet|| !metadata?.walletAddress ) {
+        return logger(`searchSession id ${sessionId} hasn't status paid status = ${status} Error!`)
+    }
+    const plan = getPlan(payAmount)
+   // await execVesting(plan, metadata.walletAddress?.toLowerCase(), metadata.solanaWallet, '', sessionId)
+    logger(`searchSession ${sessionId} plan ${plan} [${metadata.walletAddress}] Success `)
 }
 
 let appleRootCAs: any = null
@@ -2837,9 +2854,9 @@ const test = async () => {
     const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
     const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
 
-    const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
-    logger(`makePaymentLink return kk = ${kk}`)
-    //searchInvoices(stripe, 'in_1RcZnOFmCrk3Nr7LzagIVk5c')
+    //const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
+    //logger(`makePaymentLink return kk = ${kk}`)
+    searchSession(stripe, 'cs_test_a1PjLBhilSBizVk0kNKipgfuJTqS6xiXzrQ3wHpL446IDNjCM7hXbMR41A')
 }
 
 // checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')
@@ -2853,7 +2870,7 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemWithSPProcessAdmin ()
-// test()
+test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
