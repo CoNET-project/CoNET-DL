@@ -2179,7 +2179,7 @@ const searchSession = async (stripe: Stripe, sessionId: string) => {
         return logger(`searchSession id ${sessionId} hasn't status paid status = ${status} Error!`)
     }
     const plan = getPlan(payAmount)
-   // await execVesting(plan, metadata.walletAddress?.toLowerCase(), metadata.solanaWallet, '', sessionId)
+    await execVesting(plan, metadata.walletAddress?.toLowerCase(), metadata.solanaWallet, '', sessionId)
     logger(`searchSession ${sessionId} plan ${plan} [${metadata.walletAddress}] Success `)
 }
 
@@ -2857,7 +2857,7 @@ const test = async () => {
     const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
     const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
 
-    const kk = await makePaymentLink(stripe, testAddr, testSolana, '299')
+    const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
     //logger(`makePaymentLink return kk = ${kk}`)
     // searchSession(stripe, 'cs_test_a1PjLBhilSBizVk0kNKipgfuJTqS6xiXzrQ3wHpL446IDNjCM7hXbMR41A')
 }
@@ -2873,7 +2873,7 @@ const test = async () => {
 // }, 10000)
 
 // createRedeemWithSPProcessAdmin ()
-// test()
+test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
