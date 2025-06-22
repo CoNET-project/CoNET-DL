@@ -668,18 +668,23 @@ class conet_dl_server {
 			if (!obj || !obj?.walletAddress||!obj?.solanaWallet ||!price) {
 				return res.status(402).json({error: 'No necessary parameters'}).end()
 			}
-
-            const price1 = getStripePlanID(price, true)
+            const plan = StripePlan(price)
+            
 
             logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
-			const plan = StripePlan(price1)
+			
 
             if (plan === '0') {
-                logger(`payment_stripe price1 [${price1}] got zoro plan ${plan} Error!`)
+                logger(`payment_stripe price [${price}] got zoro plan ${plan} Error!`)
                 return res.status(402).json({error: 'No necessary parameters'}).end()
             }
 
 			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, plan)
+            if (!url) {
+                logger(`payment_stripe makePaymentLink  got null URL Error!`)
+                return res.status(402).json({error: 'No necessary parameters'}).end()
+            }
+            
 			payment_waiting_status.set(obj.walletAddress.toLowerCase(), 1)
 			return res.status(200).json({url}).end()
 		})
