@@ -463,7 +463,7 @@ const StripePlan = (price: string): planStruct => {
 class conet_dl_server {
 
 	private PORT = 8005
-	private stripe = new Stripe(masterSetup.stripe_SecretKey_test)
+	private stripe = new Stripe(masterSetup.stripe_SecretKey)
 	private initSetupData = async () => {
         await getAllNodes()
 		this.startServer()
@@ -2043,11 +2043,12 @@ const mintPassport = async () => {
 }
 
 
-const StripeMonthlyID = 'price_1RCRC4FmCrk3Nr7LyuweZ0bn'
-const StripeAnnualID = 'price_1RCREGFmCrk3Nr7LeEDA5JIb'
+const StripeMonthlyID = 'price_1RcsePFmCrk3Nr7LtmKsjGb6'                    //      $3.29 / month
+const StripeAnnualID = 'price_1RcsePFmCrk3Nr7L5nMhJXaI'                     //      $27.49 / year
 const StripeMonthlyID_test = 'price_1RcI24FmCrk3Nr7LUeU5yXec'
 const StripeYearID_test = 'price_1RcHomFmCrk3Nr7LlLRvdOjB'
-const StripeGenesis_Circle = 'price_1RcHxMFmCrk3Nr7LziGOoDDm'
+const StripeGenesis_Circle_test = 'price_1RcHxMFmCrk3Nr7LziGOoDDm'
+const StripeGenesis_Circle = 'price_1RcsePFmCrk3Nr7LGR2GPS37'                 //        $34.10
 
 const getStripePlanID = (price: string, testMode: boolean): string => {
     switch(price) {
@@ -2058,20 +2059,20 @@ const getStripePlanID = (price: string, testMode: boolean): string => {
         case '299': {
             return testMode ? StripeMonthlyID_test : StripeMonthlyID
         }
-
+        //      $27.49 / year
         case '2400': {
             return testMode ? StripeYearID_test : StripeAnnualID
         }
 
         case '3100': {
-             return testMode ? StripeGenesis_Circle : StripeGenesis_Circle
+             return testMode ? StripeGenesis_Circle_test : StripeGenesis_Circle
         }
 
     }
 }
 
 const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, _price: planStruct ): Promise<string> => {
-    const price = getStripePlanID(_price, true)
+    const price = getStripePlanID(_price, false)
     if (!price) {
         return ''
     }
@@ -2855,7 +2856,7 @@ const test = async () => {
     // SPGlodProcess()
     const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
     const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
-    const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
+    const stripe = new Stripe(masterSetup.stripe_SecretKey)
 
     const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
     //logger(`makePaymentLink return kk = ${kk}`)
