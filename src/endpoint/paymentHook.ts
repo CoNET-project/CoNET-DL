@@ -443,6 +443,23 @@ interface applePay{
 	productId: string
 }
 
+const StripePlan = (price: string): planStruct => {
+    switch(price) {
+        case '329' : {
+            return '299'
+        }
+        case '2749': {
+            return '2400'
+        }
+        case '3410': {
+            return '3100'
+        }
+        default: {
+            return '0'
+        }
+    }
+}
+
 class conet_dl_server {
 
 	private PORT = 8005
@@ -600,11 +617,18 @@ class conet_dl_server {
 			let event = req.body
 			switch (event.type) {
 				case 'invoice.payment_succeeded': {
+                    logger(`invoice.payment_succeeded`)
 					const paymentIntent: Stripe.Invoice = event.data.object
                     logger(inspect(event.data, false, 4, true))
 					searchInvoices (this.stripe, paymentIntent.id)
 					break;
 				}
+
+                case 'checkout.session.completed': {
+                    logger(`checkout.session.completed`)
+                    logger(inspect(event.data, false, 4, true))
+                    break;
+                }
 
 				default: {
 					// Unexpected event type
@@ -641,8 +665,13 @@ class conet_dl_server {
             const price1 = getStripePlanID(price, true)
 
             logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
-			
-			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, price1)
+			const plan = StripePlan(price1)
+
+            if (plan === '0') {
+                return res.status(402).json({error: 'No necessary parameters'}).end()
+            }
+
+			const url = await makePaymentLink(this.stripe, obj.walletAddress, obj.solanaWallet, plan)
 			payment_waiting_status.set(obj.walletAddress.toLowerCase(), 1)
 			return res.status(200).json({url}).end()
 		})
@@ -1380,6 +1409,17 @@ const waitingTron_trx = (walletHD: ethers.HDNodeWallet, price: number, plan: pla
 
 const vestingPdaExec =  join(__dirname,`vestingPda`)
 
+
+const checkPaymentID = async (paymentID: string): Promise<boolean> => {
+    try {
+        const status: boolean = await payment_SC_readOnly.getPayID(paymentID)
+        return status
+    } catch (ex: any) {
+        return true
+    }
+    
+}
+
 const execVesting = async (plan: planStruct, walletAddress: string, solana: string, HDWallet: string,  paymentID: string, redeemCode = '', appleID = '') => {
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
@@ -1389,6 +1429,13 @@ const execVesting = async (plan: planStruct, walletAddress: string, solana: stri
     let amountSP = 0
     let pdaAddress = ''
 
+
+    if (paymentID) {
+        const status = await checkPaymentID(paymentID)
+        if (status) {
+            return logger(`execVesting used paymentID ${paymentID} Error! plan[${plan}], walletAddress[${walletAddress}],solana[${solana}] appleID[${appleID}] `)
+        }
+    }   
     // if (amountUSDC > 0 ) {
     //     const cmd = `node ${vestingPdaExec} P=${solana} E=${endDays} L=${startDays} U=${amountUSDC}`
     //     logger(cmd)
@@ -2016,21 +2063,51 @@ const getStripePlanID = (price: string, testMode: boolean): string => {
     }
 }
 
-const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, _price: string ) => {
+const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWallet: string, _price: planStruct ): Promise<string> => {
     const price = getStripePlanID(_price, true)
-	const option: Stripe.PaymentLinkCreateParams = {
+    if (!price) {
+        return ''
+    }
+	const option: Stripe.PaymentLinkCreateParams = _price !== '3100' ? {
 		line_items: [{
 			price,
 			quantity: 1
 		}],
+
 		subscription_data: {
 			metadata:{walletAddress,solanaWallet}
 		}
 		
-	}
+	} :
+    {
+        line_items: [{
+			price,
+			quantity: 1
+		}],
+		metadata: {walletAddress,solanaWallet}
+    }
+
 	const paymentIntent = await stripe.paymentLinks.create(option)
 	logger(inspect(paymentIntent, false, 3, true))
 	return paymentIntent.url
+}
+
+const getPlan = (payAmount: number): planStruct => {
+    switch(payAmount) {
+        case 2749: {
+            return '2400'
+        }
+        case 329: {
+            return '299'
+        }
+        case 3410: {
+            return '3100'
+        }
+
+        default: {
+            return '0'
+        }
+    }
 }
 
 const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
@@ -2041,7 +2118,7 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 			return false
 		}
 		const payAmount = paymentIntent.amount_paid
-		logger(inspect(paymentIntent, false, 3, true))
+		
 		const metadata = paymentIntent.subscription_details?.metadata
        
         
@@ -2052,24 +2129,33 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 
 		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
         const walletAddress = metadata.walletAddress.toLowerCase()
-        payment_waiting_status.set(walletAddress, 1)
-		mintPassportPool.push({
-			walletAddress,
-			solanaWallet: metadata.solanaWallet,
-			expiresDays: payAmount === 299 ? 31: 372,
-			total: 1,
-			hash: paymentIntent.id
-		})
-		mintPassport()
-        if (payAmount !== 299 && metadata.solanaWallet) {
-            makeSolanaProm(metadata.solanaWallet)
+        const plan = getPlan(payAmount)
+        if (plan === '0') {
+            return logger(`searchInvoices invoicesID = ${invoicesID} Plan Error payAmount = ${payAmount}`)
         }
-        SPClub_Point_Process.push({
-            expiresDayes: payAmount === 299 ? 31: 372,
-            wallet: walletAddress,
-            referee: await getReferrer(walletAddress)
-        })
-        process_SPClub_Poing_Process()
+        await execVesting(plan, walletAddress, metadata.solanaWallet, '', invoicesID)
+
+
+
+
+        // payment_waiting_status.set(walletAddress, 1)
+		// mintPassportPool.push({
+		// 	walletAddress,
+		// 	solanaWallet: metadata.solanaWallet,
+		// 	expiresDays: payAmount === 299 ? 31: 372,
+		// 	total: 1,
+		// 	hash: paymentIntent.id
+		// })
+		// mintPassport()
+        // if (payAmount !== 299 && metadata.solanaWallet) {
+        //     makeSolanaProm(metadata.solanaWallet)
+        // }
+        // SPClub_Point_Process.push({
+        //     expiresDayes: payAmount === 299 ? 31: 372,
+        //     wallet: walletAddress,
+        //     referee: await getReferrer(walletAddress)
+        // })
+        // process_SPClub_Poing_Process()
 		
 	} catch (ex: any) {
 		logger(ex.message)
@@ -2747,11 +2833,13 @@ const test = async () => {
     // })
 
     // SPGlodProcess()
-    // const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
-    // const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
+    const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
+    const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
     const stripe = new Stripe(masterSetup.stripe_SecretKey_test)
-    // const kk = await makePaymentLink(stripe, testAddr, testSolana, '2400')
-    searchInvoices(stripe, 'in_1RcIMKFmCrk3Nr7LCfVae2gA')
+
+    const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
+    logger(`makePaymentLink return kk = ${kk}`)
+    //searchInvoices(stripe, 'in_1RcZnOFmCrk3Nr7LzagIVk5c')
 }
 
 // checkSolanaPayment('2cCyqNKdMCHKm8htLopues7eDNze84MV4u6ta5Vh8ch82ajRoU5QHHQ2mQBqDLvMDu8jaqf165uTDMkm1dyZCkdM','0x32EEb20b97fa7F71aF881618E1a7A4460474B73e')
