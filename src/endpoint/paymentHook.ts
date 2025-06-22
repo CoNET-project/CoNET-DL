@@ -675,7 +675,7 @@ class conet_dl_server {
 			const plan = StripePlan(price1)
 
             if (plan === '0') {
-                logger()
+                logger(`payment_stripe price1 [${price1}] got zoro plan ${plan} Error!`)
                 return res.status(402).json({error: 'No necessary parameters'}).end()
             }
 
