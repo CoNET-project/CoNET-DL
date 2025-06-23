@@ -993,7 +993,7 @@ class conet_dl_server {
 
             logger(`getAirDropForSPReff isReff = ${isReff} obj.walletAddress[ ${obj.walletAddress}] === referrer [${referrer}] ${obj.walletAddress === referrer}`)
 
-            if (isReff && obj.walletAddress === referrer) {
+            if (isReff || obj.walletAddress === referrer) {
                 return res.status(403).json({
                     error: 'Already exists!'
                 }).end()
