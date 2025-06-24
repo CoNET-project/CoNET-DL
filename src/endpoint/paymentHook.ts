@@ -809,6 +809,21 @@ class conet_dl_server {
             res.status(200).json({received: true}).end()
         })
 
+        router.post('/applePayUserRecover', async (req: any, res: any) => {
+            const data = req.body
+
+            logger(`/applePayUserRecover `, inspect(data, false, 3, true))
+
+            if (!data?.solanaWallet || !data?.walletAddress || !data?.receipt) {
+                logger(`/applePayUserRecover unsupport data format Error!`)
+                return res.status(403).json({error: 'unsupport data format!'}).end()
+            }
+            
+            await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+           
+			return res.status(200).json({received: true}).end()
+        })
+
 		router.post('/cryptoPay', async (req: any, res: any) => {
 
             const ipaddress = getIpAddressFromForwardHeader(req)
@@ -2447,22 +2462,24 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
                     if (n) {
                         const walletAddress = _walletAddress.toLowerCase()
                         payment_waiting_status.set(walletAddress, 1)
-                        logger(`appleReceipt start PURCHASE success ${walletAddress}`)
-                        mintPassportPool.push({
-                            walletAddress, solanaWallet, total: 1,
-                            expiresDays: n.plan === '001' ? 31 : 372,
-                            hash: n.hash
-                        })
-                        SPClub_Point_Process.push({
-                            expiresDayes: n.plan === '001' ? 31 : 372,
-                            wallet: walletAddress,
-                            referee: await getReferrer(walletAddress)
-                        })
-                        process_SPClub_Poing_Process()
-                        mintPassport()
-                        if (n.plan === '002') {
-                            makeSolanaProm(solanaWallet)
-                        }
+
+                        logger(`appleReceipt start PURCHASE success ${_walletAddress} `, inspect(n, false, 3, true))
+
+                        // mintPassportPool.push({
+                        //     walletAddress, solanaWallet, total: 1,
+                        //     expiresDays: n.plan === '001' ? 31 : 372,
+                        //     hash: n.hash
+                        // })
+                        // SPClub_Point_Process.push({
+                        //     expiresDayes: n.plan === '001' ? 31 : 372,
+                        //     wallet: walletAddress,
+                        //     referee: await getReferrer(walletAddress)
+                        // })
+                        // process_SPClub_Poing_Process()
+                        // mintPassport()
+                        // if (n.plan === '002') {
+                        //     makeSolanaProm(solanaWallet)
+                        // }
                         return true
                     }
                })
