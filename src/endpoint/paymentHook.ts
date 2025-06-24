@@ -819,7 +819,11 @@ class conet_dl_server {
                 return res.status(403).json({error: 'unsupport data format!'}).end()
             }
             
-            await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+            const kk = await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+            if (!kk) {
+                logger(`/applePayUserRecover unsupport data format Error!`)
+                return res.status(403).json({error: 'unsupport data format!'}).end()
+            }
            
 			return res.status(200).json({received: true}).end()
         })
@@ -2209,9 +2213,11 @@ const searchSession = async (stripe: Stripe, sessionId: string) => {
 }
 
 let appleRootCAs: any = null
-
-const appleVerificationUsage = async (transactionPayload: string): Promise<false|{plan: '001'|'002', hash: string}> => {
+const oneDay = 1000 * 60 * 60 * 24
+const appleVerificationUsage = async (transactionPayload: string): Promise<false|{plan: '001'|'002'|'006', appID: string, transactionId: string}> => {
     const enableOnlineChecks = true
+    const didRecover = false
+    const now = new Date().getTime()
     const appAppleId = 6740261324 // appAppleId is required when the environment is Production
 	if (!appleRootCAs) {
 		appleRootCAs = appleRoot.map(n => readFileSync(n))
@@ -2222,17 +2228,16 @@ const appleVerificationUsage = async (transactionPayload: string): Promise<false
         logger(inspect(verifiedTransaction, false, 3, true))
         const plan = verifiedTransaction.productId
         const transactionId = verifiedTransaction.transactionId
-        if (transactionId) {
-            const appleID = applePayData.get(transactionId)
-
-            //      support PURCHASE 
-            //      RENEWAL not support
-            if ((plan == '001' || plan == '002') && appleID && verifiedTransaction.transactionReason === 'PURCHASE') {
-                const ret = await checkApplePayTransactionId(transactionId)
-                if (ret) {
-                    return {plan, hash: transactionId}
-                }
+        const expiresDateNumber = verifiedTransaction.expiresDate
+        if ((plan === '001'||plan==='002'||plan=== '006') && transactionId && expiresDateNumber && verifiedTransaction.appTransactionId) {
+            if (plan=== '006') {
+                return { plan, appID: verifiedTransaction.appTransactionId, transactionId }
             }
+
+            if ((plan === '001' || plan==='002') && expiresDateNumber + oneDay > now) {
+                return { plan, appID: verifiedTransaction.appTransactionId, transactionId }
+            }
+            
         }
 		
     } catch (ex: any) {
@@ -2443,6 +2448,7 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
 	const encodedKey = readFileSync(filePath, 'binary')
 	const client = new AppStoreServerAPIClient(encodedKey, keyId, issuerId, bundleId, environment)
 	const receiptUtil = new ReceiptUtility()
+    let didProcess = false
 	const transactionId = receiptUtil.extractTransactionIdFromAppReceipt(receipt)
 	if (transactionId != null) {
 		const transactionHistoryRequest: TransactionHistoryRequest = {
@@ -2459,12 +2465,14 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
                const process = response.signedTransactions.map(n => appleVerificationUsage(n))
 			   const resoule = await Promise.all(process)
                resoule.forEach(async n => {
-                    if (n) {
+                    if (n && !didProcess) {
+                        didProcess = true
                         const walletAddress = _walletAddress.toLowerCase()
                         payment_waiting_status.set(walletAddress, 1)
 
                         logger(`appleReceipt start PURCHASE success ${_walletAddress} `, inspect(n, false, 3, true))
-
+                        const plan: planStruct = n.plan === '001' ? '299' : n.plan === '002'? '2400' : '3100'
+                        execVesting(plan,_walletAddress.toLowerCase(), solanaWallet, '', v4(),'', n.appID)
                         // mintPassportPool.push({
                         //     walletAddress, solanaWallet, total: 1,
                         //     expiresDays: n.plan === '001' ? 31 : 372,
@@ -2854,7 +2862,6 @@ const createRedeemWithSPProcessAdmin  = async () => {
 }
 
 
-
 const test = async () => {
 
     // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
@@ -2883,8 +2890,9 @@ const test = async () => {
     const testAddr = '0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff'
     const testSolana = 'BDPDbQs5MANK7LCCeCzaMxaJt4BcBBv5ZsEw8SJcQP4L'
     const stripe = new Stripe(masterSetup.stripe_SecretKey)
-
-    const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
+    const re = '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'
+    // const kk = await makePaymentLink(stripe, testAddr, testSolana, '3100')
+    appleReceipt(re, '0x3eE8b6034611A09d8370F515D9a68e90a3AebeB6', 'BNYDdehXqvmerxBsCAmTKd9DD2VbouCrZzQe8zH1vu4m')
     //logger(`makePaymentLink return kk = ${kk}`)
     // searchSession(stripe, 'cs_test_a1PjLBhilSBizVk0kNKipgfuJTqS6xiXzrQ3wHpL446IDNjCM7hXbMR41A')
 }
