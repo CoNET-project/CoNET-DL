@@ -302,7 +302,7 @@ const checkPrice: (_amount: string) => Promise<planStruct> = async (_amount: str
     return resolve('0')
 })
 
-const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _solanaWallet: string): Promise<boolean> => new Promise(async executor => {
+const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWallet: string): Promise<boolean> => new Promise(async executor => {
 
     //		from: J3qsMcDnE1fSmWLd1WssMBE5wX77kyLpyUxckf73w9Cs
     //		to: 2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q
@@ -313,8 +313,13 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _sola
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
     })
-
-    const tx = await SOLANA_CONNECTION.getTransaction(solanaTx, {maxSupportedTransactionVersion: 0})
+    let tx
+    try {
+        tx = await SOLANA_CONNECTION.getTransaction(solanaTx, {maxSupportedTransactionVersion: 0})
+    } catch (ex) {
+        return executor (false)
+    }
+    
     const meta = tx?.meta
     if (meta) {
         // logger(inspect(meta, false, 3, true))
@@ -372,11 +377,12 @@ const checkSolanaPayment = async (solanaTx: string, walletAddress: string, _sola
             executor(false)
             return logger(Colors.magenta(`NFT Errot! from ${solanaWallet} preTokenBalances[0].mint === SP_address ${preTokenBalances[0].mint === SP_address} preTokenBalances[0].owner === sp_team ${preTokenBalances[0].owner === sp_team}`))
         }
-        executor(false)
-        return logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length}postTokenBalances?.length ${postTokenBalances?.length} Error!`))
+        logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length} postTokenBalances?.length ${postTokenBalances?.length} Error!`))
+       
     }
     
-})
+    executor(false)
+
 
 const getReferrer = async (walletAddress: string): Promise<string> => {
     try {
