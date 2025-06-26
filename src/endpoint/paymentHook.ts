@@ -713,8 +713,9 @@ class conet_dl_server {
 				logger(`/payment_stripe_waiting ${obj.walletAddress} got unknow status! ${status}`)
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
-
+            payment_waiting_status.delete(wallet)
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
+
 			return res.status(200).json({ status }).end()
 		})
 
@@ -2854,8 +2855,8 @@ new conet_dl_server ()
 
 
 const createRedeemWithSPProcessAdmin  = async () => {
-    for (let i = 0; i < 10; i ++) {
-        const redeemCode = await createRedeemWithSP ('3100')
+    for (let i = 0; i < 5; i ++) {
+        const redeemCode = await createRedeemWithSP ('0')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2907,7 +2908,7 @@ const test = async () => {
 //     check()
 // }, 10000)
 
-// createRedeemWithSPProcessAdmin ()
+createRedeemWithSPProcessAdmin ()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
