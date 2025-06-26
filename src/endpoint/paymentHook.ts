@@ -35,6 +35,8 @@ import { balanceTron, ethToTronAddress } from './tron'
 import {exec} from 'node:child_process'
 import {join} from 'node:path'
 import SPGlodMemberABI from './SPGlodMember_ABI.json'
+import nacl from 'tweetnacl'
+
 import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -458,6 +460,24 @@ const StripePlan = (price: string): planStruct => {
             return '0'
         }
     }
+}
+
+const checkPurchasePassport = async (obj: minerObj): Promise<planStruct|''> => {
+    const _sign: string = obj.data
+    if (!_sign || !obj.solanaWallet) {
+        return ''
+    }
+    const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
+    const encodedMessage = new TextEncoder().encode(obj.walletAddress)
+    const signature = Bs58.decode(_sign)
+    const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
+
+    if (!isValid) {
+        logger(`/purchasePassportBySP isValid Error! ${isValid}`)
+        return ''
+    }
+    
+    return '0'
 }
 
 class conet_dl_server {
@@ -1119,22 +1139,12 @@ class conet_dl_server {
                 }).end()
             }
             
-            return res.status(403).json({
+            const kkk = checkPurchasePassport(obj)
+            if (!kkk) {
+                return res.status(403).json({
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
-
-            // const _sign: string = obj.data
-            // const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
-            // const encodedMessage = new TextEncoder().encode(obj.walletAddress)
-            // const signature = Bs58.decode(_sign)
-            // const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
-
-            // if (!isValid) {
-            //     logger(`/purchasePassportBySP isValid Error! ${isValid}`)
-            //     return res.status(403).json({
-            //         error: 'message & signMessage Object walletAddress or solanaWallet Error!'
-            //     }).end()
-            // }
+            }
             
             // const status = await checkSolanaPayment(obj.hash, obj.walletAddress, obj.solanaWallet)
 
@@ -1144,9 +1154,9 @@ class conet_dl_server {
             //     }).end()
             // }
 
-            // return res.status(200).json({
-            //     status: true
-            // }).end()
+            return res.status(200).json({
+                status: true
+            }).end()
 
         })
 
@@ -2908,7 +2918,7 @@ const test = async () => {
 //     check()
 // }, 10000)
 
-createRedeemWithSPProcessAdmin ()
+// createRedeemWithSPProcessAdmin ()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
