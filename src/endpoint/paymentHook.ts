@@ -269,7 +269,13 @@ const reffSOlanaAddressList = [
     '8DgvFpNUW8ZLx8aoUYuYe38JaYK96pHz9r3upPufY7Lf'
 ]
 
-
+const storeRedeem = async (redeemCode: string, address: string, tx: string) => {
+    const date = new Date()
+    const obj = {address,  redeemCode, tx}
+    const data = JSON.stringify(obj)
+    const fileName = `${redeemPaymentPath}${redeemCode}-${date.toJSON()}`
+    await writeFileSync (fileName, data, 'utf8')
+}
 
 const checkPrice: (_amount: string) => Promise<planStruct> = async (_amount: string) => new Promise( async resolve=>{
     await getOracle()
@@ -384,8 +390,6 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
     executor(false)
 
 })
-
-
 
 const getReferrer = async (walletAddress: string): Promise<string> => {
     try {
@@ -793,6 +797,8 @@ class conet_dl_server {
 
             const plan: planStruct = goldRedeem < 31 ? '0' : goldRedeem > 370 ? "3100" : goldRedeem > 365 ? '2400' : '299'
             execVesting(plan, obj.walletAddress, obj.solanaWallet, obj.walletAddress, '', obj.uuid)
+
+
             return res.status(200).json({
                 status: "1"
             }).end()
@@ -1290,6 +1296,7 @@ const getAssetERC20Address = (cryptoName: string) => {
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
 const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
+const redeemPaymentPath = '/home/peter/.data/redeem/'
 const initWalletBalance: Map<string, number> = new Map()
 const bnb_usdt_contract = new ethers.Contract('0x55d398326f99059fF775485246999027B3197955', ERC20_ABI, bnbPrivate)
 
@@ -1369,6 +1376,9 @@ const SPGlodProcess = async () => {
     if (tx?.hash && NFT > 100) {
         payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
         await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
+        if (obj.redeemCode) {
+            await storeRedeem(obj.redeemCode, obj.walletAddress, tx.hash, )
+        }
     }
     if (obj.appleID) {
         const hash = ethers.solidityPackedKeccak256(['string'], [obj.appleID])
@@ -1380,6 +1390,10 @@ const SPGlodProcess = async () => {
         
         addedApplepayInfo()
     }
+
+    
+
+    
 
     return SPGlodProcess()
 }
