@@ -380,8 +380,11 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
         logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length} postTokenBalances?.length ${postTokenBalances?.length} Error!`))
        
     }
-    
+
     executor(false)
+
+})
+
 
 
 const getReferrer = async (walletAddress: string): Promise<string> => {
