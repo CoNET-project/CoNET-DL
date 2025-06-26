@@ -728,35 +728,23 @@ class conet_dl_server {
 			}
 			const wallet = obj.walletAddress.toLowerCase()
 			const status = payment_waiting_status.get(wallet)
+            waitingList.set(wallet, 0)
 
 			if (!status) {
 				logger(`/payment_stripe_waiting ${obj.walletAddress} got unknow status! ${status}`)
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
-            payment_waiting_status.delete(wallet)
+
+            
+            const _status = parseInt(status.toString())
+            if (_status > 3000) {
+                payment_waiting_status.delete(wallet)
+            }
+
+            
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 
 			return res.status(200).json({ status }).end()
-		})
-
-        router.post('/cryptoPayment_waiting', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let wallet
-			try {
-				wallet = req.body?.wallet?.toLowerCase()
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /cryptoPayment_waiting req.body ERROR!`), inspect(req.body))
-				return res.status(402).json({error: 'Data format error!'}).end()
-			}
-
-			const status = payment_waiting_status.get(wallet)
-			if (!status) {
-				logger(`/cryptoPayment_waiting ${inspect(req.body, false, 3, true)} got unknow status! ${status}`)
-				return res.status(402).json({error: `No status`}).end()
-			}
-			logger(`/cryptoPayment_waiting ${wallet} got ${status}`)
-            waitingList.set(wallet, 0)
-			return res.status(200).json({ status: status }).end()
 		})
 
         router.post('/codeToClient', async (req: any, res: any) => {
