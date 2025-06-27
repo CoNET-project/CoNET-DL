@@ -1131,7 +1131,7 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
-
+            logger(`/purchasePassportBySP success!`, inspect(obj, false, 3, true))
             return res.status(200).json({
                 status: true
             }).end()
