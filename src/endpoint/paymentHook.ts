@@ -328,14 +328,15 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
     
     const meta = tx?.meta
     if (meta) {
-        // logger(inspect(meta, false, 3, true))
+        
         const postTokenBalances = meta.postTokenBalances
         const preTokenBalances = meta.preTokenBalances
         if (preTokenBalances?.length == 2 && postTokenBalances?.length == 2) {
             const solanaWallet = postTokenBalances[0].owner
+             logger(`checkSolanaPayment index preTokenBalances?.length == 2 && postTokenBalances?.length == 2`)
             if (solanaWallet === _solanaWallet && preTokenBalances[0].mint === SP_address && (preTokenBalances[0].owner === sp_team || preTokenBalances[1].owner === sp_team)) {
                 const index = preTokenBalances[0].owner === sp_team ? 0 : 1
-
+                logger(`checkSolanaPayment index ${index}`)
                 if (postTokenBalances[index].uiTokenAmount && preTokenBalances[index].uiTokenAmount) {
                     const preAmount = parseFloat(preTokenBalances[index].uiTokenAmount.uiAmount ? preTokenBalances[index].uiTokenAmount.uiAmount.toString() : "0")
                     const postAmount = parseFloat( postTokenBalances[index].uiTokenAmount.uiAmount ? postTokenBalances[index].uiTokenAmount.uiAmount.toString() : "0")
@@ -2894,6 +2895,17 @@ const test = async () => {
     // searchSession(stripe, 'cs_test_a1PjLBhilSBizVk0kNKipgfuJTqS6xiXzrQ3wHpL446IDNjCM7hXbMR41A')
 }
 
+const postData1 = async () => {
+    const obj = {
+        walletAddress: '0x737fcfcece98cf6fd980209fbfa32d051da6170a',
+        solanaWallet: 'GmjaU5o7sFf7LrRnE6utF4gxE3RkjzHrtq5wXhA9wXj6',
+        hash: 'THyvbAxdB8jhJygzm4qFEuFLPFg8DdU5xD7N5qgqdhgQdZ4g2m8QPproBcKv1G6U3bUMGZY5taeRymZ1aypxGmi',
+        data: 'zEVDaLyjBZNx3eeR18N4pg7a3sMY1G3SawCB4575tRAV8GtosgqHi5rpYy7zqA73rBNjsjQsMG49sQmLUKS1PkX',
+        uuid: ''
+    }
+    const rrr = await checkPurchasePassport(obj)
+
+}
 
 const postData = async () => {
     const kkk = {
@@ -2928,6 +2940,6 @@ const postData = async () => {
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
-// postData()
+// postData1()
 
 // testApple()
