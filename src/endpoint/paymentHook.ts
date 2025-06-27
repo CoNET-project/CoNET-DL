@@ -347,7 +347,6 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
                         checkPrice(_amount.toFixed(4))
                     ])
                     
-                    
                     if (nftType === '0'|| !hash ) {
                         logger(Colors.magenta(`checkSolanaPayment Pay ${solanaTx} $SP${_amount} nftType=${nftType} hash=${hash} not correct f${_amount}  [${solanaWallet}] ethWallet ${walletAddress}`))
                         return executor(false)
@@ -364,7 +363,7 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
                         
                         // return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
                     }
-                    execVesting(nftType, walletAddress, _solanaWallet, '', solanaTx)
+                    await execVesting(nftType, walletAddress, _solanaWallet, '', solanaTx)
                     
                     logger(Colors.magenta(`Purchase ${walletAddress} NFT ${nftType}`))
                     executor(true)
@@ -383,6 +382,7 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
             executor(false)
             return logger(Colors.magenta(`NFT Errot! from ${solanaWallet} preTokenBalances[0].mint === SP_address ${preTokenBalances[0].mint === SP_address} preTokenBalances[0].owner === sp_team ${preTokenBalances[0].owner === sp_team}`))
         }
+
         logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length} postTokenBalances?.length ${postTokenBalances?.length} Error!`))
        
     }
