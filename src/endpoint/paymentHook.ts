@@ -322,7 +322,8 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
     let tx
     try {
         tx = await SOLANA_CONNECTION.getTransaction(solanaTx, {maxSupportedTransactionVersion: 0})
-    } catch (ex) {
+    } catch (ex: any) {
+        logger(`checkSolanaPayment SOLANA_CONNECTION.getTransaction Error`, ex.message)
         return executor (false)
     }
     
@@ -473,7 +474,7 @@ const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
         logger(`/purchasePassportBySP isValid Error! ${isValid}`)
         return false
     }
-    
+
     logger(inspect(obj, false, 3, true))
 
     const kkk = await checkSolanaPayment (obj.hash, obj.walletAddress, obj.solanaWallet)
