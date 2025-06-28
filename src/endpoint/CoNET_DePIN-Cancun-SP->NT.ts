@@ -305,7 +305,7 @@ const checkts = async (solanaTx: string, ethWallet: string) => {
 						return logger(Colors.magenta(`check = false back amount! ${amount} to address [${from}]`))
 					}
 
-					logger(Colors.magenta(`Purchase ${ethWallet} NFT ${nftType}`))
+					logger(Colors.magenta(`Purchase ${ethWallet} NFT Type = ${nftType}`))
 					process_mintNFT_pool.push(
 						{
 							to: ethWallet,

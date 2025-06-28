@@ -2903,10 +2903,10 @@ const test = async () => {
 
 const postData1 = async () => {
     const obj = {
-        "walletAddress": "0x3e4e71e1906c8e3fe4c47531f30b0ebcac8b768f",
-        "solanaWallet": "BWrnFsjqLqKJ79y9GzLxYVanuC1wwCK34q9m8kRqVa7W",
-        "hash": "3T4u3XoYKbbwJ8N2oPh8cBewVQMLiTH6dH4sn5Xdmum1aHVuKSLnCEQAgveit6qMBTfDU15VLyqHcPbx6mvnMMH5",
-        "data": "34KuYr5pApQG9YMi8NTPxGYb7FegrbDdzEZ6SxK1s9yW2JuL1WUhiAYThqs4fBNA2jzkFRaK2ncqsRDkq8ZyQbiQ",
+        "walletAddress": "0xf54f8a7aac17d88fe0046b65044caeb7581be2f2",
+        "solanaWallet": "5gSqUiC8UNMEiiuLVnUhmi1UD3y2U87de6Hk5KVR6R9W",
+        "hash": "5oY6VwGF6z18UaUNfGWWk5ekup8rQ1NLgojdAuWeQwQBaGFgFLZK2PaK3gft2wqcznqdcfsgCBXjyMaudZTyfAK1",
+        "data": "vzfPvNgt4HebmLefkSNLZWZXFzRnFJkov3hmwCzYUPbgb84PGj3Q5SaM2doiYCtGus6uCHTe3Se3irbtwEYSApi",
         uuid: ''
     }
     const rrr = await checkPurchasePassport(obj)
@@ -2946,6 +2946,6 @@ const postData = async () => {
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
-// postData()
+postData1()
 
 // testApple()
