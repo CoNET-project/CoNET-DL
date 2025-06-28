@@ -319,7 +319,9 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
         commitment: "confirmed",
         disableRetryOnRateLimit: false,
     })
+
     let tx
+
     try {
         tx = await SOLANA_CONNECTION.getTransaction(solanaTx, {maxSupportedTransactionVersion: 0})
     } catch (ex: any) {
@@ -329,9 +331,10 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
     
     const meta = tx?.meta
     if (meta) {
-        
+        logger(`checkSolanaPayment meta pass 1`)
         const postTokenBalances = meta.postTokenBalances
         const preTokenBalances = meta.preTokenBalances
+
         if (preTokenBalances?.length == 2 && postTokenBalances?.length == 2) {
             const solanaWallet = postTokenBalances[0].owner
              logger(`checkSolanaPayment index preTokenBalances?.length == 2 && postTokenBalances?.length == 2`)
@@ -461,7 +464,7 @@ const StripePlan = (price: string): planStruct => {
 const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
     const _sign: string = obj.data
     if (!_sign || !obj.solanaWallet) {
-        logger(`checkPurchasePassport`)
+        logger(`checkPurchasePassport Error 1`)
         return false
     }
     const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
@@ -474,7 +477,7 @@ const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
         logger(`/purchasePassportBySP isValid Error! ${isValid}`)
         return false
     }
-
+    logger(`checkPurchasePassport pass1`)
     logger(inspect(obj, false, 3, true))
 
     const kkk = await checkSolanaPayment (obj.hash, obj.walletAddress, obj.solanaWallet)
@@ -2905,7 +2908,7 @@ const postData1 = async () => {
     const obj = {
         "walletAddress": "0xf54f8a7aac17d88fe0046b65044caeb7581be2f2",
         "solanaWallet": "5gSqUiC8UNMEiiuLVnUhmi1UD3y2U87de6Hk5KVR6R9W",
-        "hash": "5oY6VwGF6z18UaUNfGWWk5ekup8rQ1NLgojdAuWeQwQBaGFgFLZK2PaK3gft2wqcznqdcfsgCBXjyMaudZTyfAK1",
+        "hash": "41P2e7LCqsTx7pizJEWQxMCpzM2zQKdS75pfurzMMidWrnwh9JopPALwJ6JHFTRk1YNNKJhynYtwkv54jhbzjq4s",
         "data": "vzfPvNgt4HebmLefkSNLZWZXFzRnFJkov3hmwCzYUPbgb84PGj3Q5SaM2doiYCtGus6uCHTe3Se3irbtwEYSApi",
         uuid: ''
     }
