@@ -308,7 +308,7 @@ const checkPrice: (_amount: string) => Promise<planStruct> = async (_amount: str
     return resolve('0')
 })
 
-const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWallet: string): Promise<boolean> => new Promise(async executor => {
+const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWallet: string, waiting = false): Promise<boolean> => new Promise(async executor => {
 
     //		from: J3qsMcDnE1fSmWLd1WssMBE5wX77kyLpyUxckf73w9Cs
     //		to: 2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q
@@ -391,8 +391,13 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
         logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length} postTokenBalances?.length ${postTokenBalances?.length} Error!`))
        
     }
+    
     logger(`checkSolanaPayment meta error!`)
     logger(inspect(tx, false, 3, true))
+    if (!waiting) {
+        await new Promise(_executor => setTimeout(()=> _executor(true), 5000))
+        return executor (await checkSolanaPayment(solanaTx, walletAddress, _solanaWallet, true))
+    }
     executor(false)
 
 })
