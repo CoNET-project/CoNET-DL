@@ -1128,6 +1128,7 @@ class conet_dl_server {
             
             const kkk = await checkPurchasePassport(obj)
             if (!kkk) {
+                logger (Colors.grey(`Router /purchasePassportBySP checkPurchasePassport Error! ${!kkk} !ipaddress ${!ipaddress}`))
                 return res.status(403).json({
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
@@ -2909,8 +2910,8 @@ const postData1 = async () => {
 
 const postData = async () => {
     const kkk = {
-        "message": "{\"walletAddress\":\"0x737fCfCEcE98cF6fD980209fbfA32d051DA6170A\",\"solanaWallet\":\"GmjaU5o7sFf7LrRnE6utF4gxE3RkjzHrtq5wXhA9wXj6\",\"hash\":\"3xbYqHSLvNLWnWpGVHANb7BHngP6cS4BGVBuP8ScKJYeuCJu8cqj6LrJc6T4TGDHXK6xNGiWYNw5t9EX2eSpsoo4\",\"data\":\"zEVDaLyjBZNx3eeR18N4pg7a3sMY1G3SawCB4575tRAV8GtosgqHi5rpYy7zqA73rBNjsjQsMG49sQmLUKS1PkX\"}",
-        "signMessage": "0x77ecab2a2c6b8329b5d9d3a049c8d68f0595137fec61e401bd06662b28236d9a1000a469c92726d76fe51617aa4ba598a2400c5a135be3a71375f41f764fcee41c"
+        "message": "{\"walletAddress\":\"0x737fCfCEcE98cF6fD980209fbfA32d051DA6170A\",\"solanaWallet\":\"GmjaU5o7sFf7LrRnE6utF4gxE3RkjzHrtq5wXhA9wXj6\",\"hash\":\"5CguR88cUNaXH6k6nrTUKrryvSE3eLwVt3WS2tVHYNVu4ZfAg691WjUwthoWBaqvuQsqZsGyPEBquPHxsca8zgJ2\",\"data\":\"zEVDaLyjBZNx3eeR18N4pg7a3sMY1G3SawCB4575tRAV8GtosgqHi5rpYy7zqA73rBNjsjQsMG49sQmLUKS1PkX\"}",
+        "signMessage": "0x9039f3090a41ae7bd2ecc017e4dc89fd3d86ec9029a30d27646c91af58aef7590ca45c2e3039849a9a6ae2c7610a7c33ca9698ae6d9aa36b83561ae478bd001c1b"
     }
     const obj = checkSign (kkk.message, kkk.signMessage)
     if (!obj) {
@@ -2940,6 +2941,6 @@ const postData = async () => {
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
-// postData1()
+// postData()
 
 // testApple()
