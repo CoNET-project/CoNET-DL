@@ -1126,7 +1126,7 @@ class conet_dl_server {
                 }).end()
             }
             
-            const kkk = checkPurchasePassport(obj)
+            const kkk = await checkPurchasePassport(obj)
             if (!kkk) {
                 return res.status(403).json({
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
@@ -2897,20 +2897,20 @@ const test = async () => {
 
 const postData1 = async () => {
     const obj = {
-        walletAddress: '0x737fcfcece98cf6fd980209fbfa32d051da6170a',
-        solanaWallet: 'GmjaU5o7sFf7LrRnE6utF4gxE3RkjzHrtq5wXhA9wXj6',
-        hash: 'THyvbAxdB8jhJygzm4qFEuFLPFg8DdU5xD7N5qgqdhgQdZ4g2m8QPproBcKv1G6U3bUMGZY5taeRymZ1aypxGmi',
-        data: 'zEVDaLyjBZNx3eeR18N4pg7a3sMY1G3SawCB4575tRAV8GtosgqHi5rpYy7zqA73rBNjsjQsMG49sQmLUKS1PkX',
+        "walletAddress": "0x3e4e71e1906c8e3fe4c47531f30b0ebcac8b768f",
+        "solanaWallet": "BWrnFsjqLqKJ79y9GzLxYVanuC1wwCK34q9m8kRqVa7W",
+        "hash": "3T4u3XoYKbbwJ8N2oPh8cBewVQMLiTH6dH4sn5Xdmum1aHVuKSLnCEQAgveit6qMBTfDU15VLyqHcPbx6mvnMMH5",
+        "data": "34KuYr5pApQG9YMi8NTPxGYb7FegrbDdzEZ6SxK1s9yW2JuL1WUhiAYThqs4fBNA2jzkFRaK2ncqsRDkq8ZyQbiQ",
         uuid: ''
     }
     const rrr = await checkPurchasePassport(obj)
-
+    logger(`postData1 checkPurchasePassport success! ${rrr}`)
 }
 
 const postData = async () => {
     const kkk = {
-        "message": "{\"walletAddress\":\"0x737fCfCEcE98cF6fD980209fbfA32d051DA6170A\",\"solanaWallet\":\"GmjaU5o7sFf7LrRnE6utF4gxE3RkjzHrtq5wXhA9wXj6\",\"hash\":\"4Lwr2HVteDLyFF5GtiyLEw9rPBPEiemthzMMk28vvxfxESpoHt55knNzURY4PkVtpSjMBNZuLWqWK11SpQ2qCr7q\",\"data\":\"zEVDaLyjBZNx3eeR18N4pg7a3sMY1G3SawCB4575tRAV8GtosgqHi5rpYy7zqA73rBNjsjQsMG49sQmLUKS1PkX\"}",
-        "signMessage": "0x035c3c7325ad5fad99904646615a31bf3066bab80ea4158a9ca0544851cc809e5e7d48fd10a35e197da113dbf8a430e5c29d5259e500524c5c2d7fc6361a6e321b"
+        "message": "{\"walletAddress\":\"0x737fCfCEcE98cF6fD980209fbfA32d051DA6170A\",\"solanaWallet\":\"GmjaU5o7sFf7LrRnE6utF4gxE3RkjzHrtq5wXhA9wXj6\",\"hash\":\"3xbYqHSLvNLWnWpGVHANb7BHngP6cS4BGVBuP8ScKJYeuCJu8cqj6LrJc6T4TGDHXK6xNGiWYNw5t9EX2eSpsoo4\",\"data\":\"zEVDaLyjBZNx3eeR18N4pg7a3sMY1G3SawCB4575tRAV8GtosgqHi5rpYy7zqA73rBNjsjQsMG49sQmLUKS1PkX\"}",
+        "signMessage": "0x77ecab2a2c6b8329b5d9d3a049c8d68f0595137fec61e401bd06662b28236d9a1000a469c92726d76fe51617aa4ba598a2400c5a135be3a71375f41f764fcee41c"
     }
     const obj = checkSign (kkk.message, kkk.signMessage)
     if (!obj) {
