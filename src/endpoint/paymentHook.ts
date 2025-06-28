@@ -468,11 +468,14 @@ const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
     const signature = Bs58.decode(_sign)
     const isValid = nacl.sign.detached.verify(encodedMessage, signature, solanaWalletPublicKey.toBytes())
 
+
     if (!isValid||!obj.hash) {
         logger(`/purchasePassportBySP isValid Error! ${isValid}`)
         return false
     }
     
+    logger(inspect(obj, false, 3, true))
+
     const kkk = await checkSolanaPayment (obj.hash, obj.walletAddress, obj.solanaWallet)
     return kkk
     
