@@ -460,6 +460,7 @@ const StripePlan = (price: string): planStruct => {
 const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
     const _sign: string = obj.data
     if (!_sign || !obj.solanaWallet) {
+        logger(`checkPurchasePassport`)
         return false
     }
     const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
@@ -1118,7 +1119,7 @@ class conet_dl_server {
 			const obj = checkSign (message, signMessage)
 
 			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !obj?.hash || !obj?.data) {
-                logger (Colors.grey(`Router /purchasePassportBySP checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
+                logger (Colors.grey(`Router /purchasePassportBySP checkSignObj obj Error! !obj ${!obj} `))
                 logger(inspect(obj, false, 3, true))
 
                 return res.status(403).json({
@@ -1128,7 +1129,7 @@ class conet_dl_server {
             
             const kkk = await checkPurchasePassport(obj)
             if (!kkk) {
-                logger (Colors.grey(`Router /purchasePassportBySP checkPurchasePassport Error! ${!kkk} !ipaddress ${!ipaddress}`))
+                logger (Colors.grey(`Router /purchasePassportBySP checkPurchasePassport = ${kkk}`))
                 return res.status(403).json({
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
