@@ -391,7 +391,8 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
         logger(Colors.magenta(`NFT Errot! preTokenBalances?.length ${ preTokenBalances?.length} postTokenBalances?.length ${postTokenBalances?.length} Error!`))
        
     }
-
+    logger(`checkSolanaPayment meta error!`)
+    logger(inspect(tx, false, 3, true))
     executor(false)
 
 })
@@ -467,6 +468,7 @@ const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
         logger(`checkPurchasePassport Error 1`)
         return false
     }
+
     const solanaWalletPublicKey = new PublicKey(obj.solanaWallet)
     const encodedMessage = new TextEncoder().encode(obj.walletAddress)
     const signature = Bs58.decode(_sign)
@@ -477,6 +479,7 @@ const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
         logger(`/purchasePassportBySP isValid Error! ${isValid}`)
         return false
     }
+
     logger(`checkPurchasePassport pass1`)
     logger(inspect(obj, false, 3, true))
 
@@ -1135,6 +1138,7 @@ class conet_dl_server {
             }
             
             const kkk = await checkPurchasePassport(obj)
+
             if (!kkk) {
                 logger (Colors.grey(`Router /purchasePassportBySP checkPurchasePassport = ${kkk}`))
                 return res.status(403).json({
