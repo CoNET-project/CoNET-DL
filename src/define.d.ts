@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    duplicateFactoryManager: string
     SPClubGlod_Manager: string
     SP_Club_Manager: string
     tronAPIKey: string

@@ -24,7 +24,7 @@ import {readFile} from 'node:fs/promises'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import AirDropForSPABI from './AirDropForSP.ABI.json'
 import {v4} from 'uuid'
-
+import duplicateFactoryABI from './duplicateFactory.ABI.json'
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
@@ -254,6 +254,21 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
     }
 }
 
+const duplicateFactoryAddr = '0xAa32961a4756E7E45bEFC5c2740cc836A53fe661'
+const duplicateFactory_readonly = new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, mainnetEndpoint)
+
+const checkDuplicate = async (wallet: string, hash: string): Promise<string|null> => {
+    try {
+        const [duplicateList, redeemCodeHash] = await  Promise.all([
+            duplicateFactory_readonly.duplicateList(wallet),
+            duplicateFactory_readonly.redeemCodeHashToDuplicate (hash)
+        ])
+        return (duplicateList )
+    } catch (ex: any) {
+        console.log (`checkDuplicate Error`, ex.message)
+        return null
+    }
+}
 
 const countAccessPool: Map<string, number[]> = new Map()
 class conet_dl_server_v4 {
@@ -686,6 +701,46 @@ class conet_dl_server_v4 {
 
             }
             return res.status(200).json({status}).end()
+		})
+
+        router.post('/duplicate', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /duplicate req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			
+			const obj = checkSign (message, signMessage)
+
+			if ( !obj?.walletAddress || !obj?.hash) {
+				logger (Colors.grey(`Router /duplicate checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(404).json({
+					error: "SignObj Error!"
+				}).end()
+			}
+
+
+
+			const result = await checkDuplicate(obj.walletAddress, obj.hash)
+			if (result === null) {
+				return res.status(403).json({
+					error: "system Error!"
+				}).end()
+			}
+
+			if (!result) {
+				return res.status(404).json({
+					error: "Duplicate already exists"
+				}).end()
+			}
+            logger(Colors.magenta(`/duplicate`), inspect(obj, false, 3, true))
+            
+			return postLocalhost('/api/duplicate', obj, res)
 		})
 
 

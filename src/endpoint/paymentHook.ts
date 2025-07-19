@@ -1243,7 +1243,7 @@ const addReferralsProcess = async () => {
         }, 5000)
     }
     try {
-        const tx = await SC.initAddReferrer(obj.referrer, obj.wallet )
+        const tx = await SC.initAddReferrer(obj.referrer, obj.wallet)
         await tx.wait()
         logger(`addReferralsProcess ${obj.wallet} => ${obj.referrer} success ${tx.hash}`)
     } catch (ex:any) {
@@ -1331,7 +1331,7 @@ const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
-type planStruct =  '0'| '299'| '2400' | '3100'
+type planStruct =  '1'|'0'| '299'| '2400' | '3100'
 
 
 const SPGlodProceePool: {
@@ -1409,9 +1409,6 @@ const SPGlodProcess = async () => {
         
         addedApplepayInfo()
     }
-
-    
-
     
 
     return SPGlodProcess()
@@ -1645,6 +1642,9 @@ const createRedeemWithSPProcess = async () => {
 
 const getExpiresDayes = (plan: planStruct) => {
     switch(plan) {
+        case '1' : {
+            return 7
+        }
         case '0' : {
             return 30
         }
@@ -1668,19 +1668,20 @@ const getExpiresDayes = (plan: planStruct) => {
 const createRedeemWithSP = async(plan: planStruct) => {
     const expiresDayes = getExpiresDayes(plan)
     if (!expiresDayes ) {
-
         return logger(`createRedeemWithSP got expiresDayes === 0 Error! ${plan}`)
     }
 
     const RedeemCode = uuid62.v4()
     const hash = ethers.solidityPackedKeccak256(['string'], [RedeemCode])
-
-    createRedeemWithSPPool.push({
-        expiresDayes,
+    const data = {
+         expiresDayes,
         redeemCode: hash
-    })
+    }
 
-    createRedeemWithSPProcess()
+    createRedeemWithSPPool.push(data)
+
+    // createRedeemWithSPProcess()
+    logger(`RedeemCode = ${RedeemCode}`,inspect(data, false, 3, true))
     return RedeemCode
 }
 
@@ -2869,9 +2870,9 @@ logger(solana_account_privatekey.publicKey)
 new conet_dl_server ()
 
 
-const createRedeemWithSPProcessAdmin  = async () => {
+const createRedeemWithSPProcessAdmin = async (): Promise<void> => {
     for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('0')
+        const redeemCode = await createRedeemWithSP ('1')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2953,11 +2954,11 @@ const postData = async () => {
 //     check()
 // }, 10000)
 
-// createRedeemWithSPProcessAdmin ()
+createRedeemWithSPProcessAdmin ()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
 
-postData1()
+// postData1()
 
 // testApple()

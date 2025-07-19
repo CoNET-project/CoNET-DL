@@ -26,7 +26,7 @@ import Bs58 from 'bs58'
 import passport_distributor_ABI from './passport_distributor-ABI.json'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
-
+import duplicateFactoryABI from './duplicateFactory.ABI.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -216,6 +216,47 @@ interface iEPOCH_DATA {
 }
 let EPOCH_DATA: iEPOCH_DATA
 
+const duplicateFactoryAddr = '0xAa32961a4756E7E45bEFC5c2740cc836A53fe661'
+const duplicateFactoryManagsr = new ethers.Wallet(masterSetup.duplicateFactoryManager, mainnet_rpc)        //  0x23576F564C1467a42d565A3604585bEF1F499BB0
+const duplicateFactoryPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateFactoryManagsr)]
+
+const duplicateProcessPool: {
+    wallet: string
+    hash: string
+    res: any
+    data: string
+}[] = []
+
+const duplicateProcess = async () => {
+    const obj = duplicateProcessPool.shift()
+    if (!obj) {
+        return null
+    }
+    const SC = duplicateFactoryPool.shift()
+    if (!SC) {
+        duplicateProcessPool.unshift(obj)
+        return null
+    }
+    try {
+        const tx = await SC.createDuplicate(obj.wallet, obj.hash, obj.data)
+        await tx.wait()
+        const ret = await SC.duplicateList(obj.wallet)
+        if (ret !== ethers.ZeroAddress) {
+            obj.res.status(200).json({status: ret}).end()
+        } else {
+            obj.res.status(404).json({error: 'Duplicate not found'}).end()
+        }
+    } catch (ex: any) {
+        logger(Colors.red(`duplicateProcess Error!`), ex.message)
+        obj.res.status(403).json({
+            error: 'Service temporarily unavailable'
+        }).end()
+        
+        
+    }
+    duplicateFactoryPool.push(SC)
+    duplicateProcess()
+}
 
 class conet_dl_server {
 
@@ -422,6 +463,24 @@ class conet_dl_server {
 			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
 		})
 
+        router.post('/duplicate', async (req: any, res: any) => {
+			const obj: minerObj = req.body
+			if (!obj?.hash) {
+                return res.status(404).json({
+                    error: 'has no walletAddress or hash or data'
+                }).end()
+            }
+
+			duplicateProcessPool.push ({
+				res,
+				wallet: obj.walletAddress,
+				hash: obj.hash,
+                data: obj?.data||''
+			})
+			startCodeToClientProcess()
+			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
+		})
+
 
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress
@@ -431,7 +490,6 @@ class conet_dl_server {
 			}
 		})
 		
-
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			logger (Colors.grey(`Router /api get unknow router [${ ipaddress }] => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
