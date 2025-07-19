@@ -480,7 +480,7 @@ class conet_dl_server {
 			}
 
 			duplicateProcessPool.push (duplicateProcessPoolObj)
-            logger(Colors.blue(`duplicateProcess start ${inspect(duplicateProcessPoolObj, false, 3, true)}`))
+            logger(Colors.blue(`duplicateProcess start ${inspect({wallet: duplicateProcessPoolObj.wallet, hash: duplicateProcessPoolObj.hash, data: duplicateProcessPoolObj.data}, false, 3, true)}`))
 			duplicateProcess()
 			
 		})
