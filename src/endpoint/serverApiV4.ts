@@ -738,6 +738,7 @@ class conet_dl_server_v4 {
 					error: "Duplicate already exists"
 				}).end()
 			}
+            
             logger(Colors.magenta(`/duplicate`), inspect(obj, false, 3, true))
             
 			return postLocalhost('/api/duplicate', obj, res)

@@ -465,20 +465,24 @@ class conet_dl_server {
 
         router.post('/duplicate', async (req: any, res: any) => {
 			const obj: minerObj = req.body
+            
 			if (!obj?.hash) {
+                logger(Colors.red(`duplicateProcess !obj?.hash Error!`), inspect(obj, false, 3, true))
                 return res.status(404).json({
                     error: 'has no walletAddress or hash or data'
                 }).end()
             }
-
-			duplicateProcessPool.push ({
+            const duplicateProcessPoolObj = {
 				res,
 				wallet: obj.walletAddress,
 				hash: obj.hash,
                 data: obj?.data||''
-			})
-			startCodeToClientProcess()
-			logger(Colors.blue(`codeToClient start ${obj.walletAddress}`))
+			}
+
+			duplicateProcessPool.push (duplicateProcessPoolObj)
+            logger(Colors.blue(`duplicateProcess start ${inspect(duplicateProcessPoolObj, false, 3, true)}`))
+			duplicateProcess()
+			
 		})
 
 
