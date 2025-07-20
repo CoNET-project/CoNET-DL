@@ -216,7 +216,7 @@ interface iEPOCH_DATA {
 }
 let EPOCH_DATA: iEPOCH_DATA
 
-const duplicateFactoryAddr = '0x1D0E135Ba27fFb45F880f493F3dc762013DBbbE5'
+const duplicateFactoryAddr = '0xb8777d4b0e1c07dF073fAf75a5F42D9e29BfD0F5'
 const duplicateFactoryManagsr = new ethers.Wallet(masterSetup.duplicateFactoryManager, mainnet_rpc)        //  0x23576F564C1467a42d565A3604585bEF1F499BB0
 const duplicateFactoryPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateFactoryManagsr)]
 const duplicateRestore = new ethers.Wallet(masterSetup.duplicateRestore, mainnet_rpc)        //  0x3126e640CBF00d694c111F661F80734cA689cE29 
