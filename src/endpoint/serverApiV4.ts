@@ -254,7 +254,7 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
     }
 }
 
-const duplicateFactoryAddr = '0xAa32961a4756E7E45bEFC5c2740cc836A53fe661'
+const duplicateFactoryAddr = '0x0282589DC14c0303a4Be55a7204A9855df83AaaB'
 const duplicateFactory_readonly = new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, mainnetEndpoint)
 
 const checkDuplicate = async (wallet: string, hash: string): Promise<string|null> => {
@@ -267,6 +267,12 @@ const checkDuplicate = async (wallet: string, hash: string): Promise<string|null
     } catch (ex: any) {
         console.log (`checkDuplicate Error`, ex.message)
         return null
+    }
+}
+
+const checkRestore = (wallet: string, hash: string): Promise<string> => {
+    try {
+        return duplicateFactory_readonly.restoreList(wallet, hash)
     }
 }
 
@@ -725,7 +731,6 @@ class conet_dl_server_v4 {
 			}
 
 
-
 			const result = await checkDuplicate(obj.walletAddress, obj.hash)
 			if (result === null) {
 				return res.status(403).json({
@@ -744,7 +749,44 @@ class conet_dl_server_v4 {
 			return postLocalhost('/api/duplicate', obj, res)
 		})
 
+        router.post('/restore', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /duplicate req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			
+			const obj = checkSign (message, signMessage)
 
+			if ( !obj?.walletAddress || !obj?.hash) {
+				logger (Colors.grey(`Router /duplicate checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(404).json({
+					error: "SignObj Error!"
+				}).end()
+			}
+
+			const result = await checkDuplicate(obj.walletAddress, obj.hash)
+			if (result === null) {
+				return res.status(403).json({
+					error: "system Error!"
+				}).end()
+			}
+
+			if (!result) {
+				return res.status(404).json({
+					error: "Duplicate already exists"
+				}).end()
+			}
+            
+            logger(Colors.magenta(`/duplicate`), inspect(obj, false, 3, true))
+            
+			return postLocalhost('/api/duplicate', obj, res)
+		})
 
 		
 		router.all ('*', (req: any, res: any) =>{
