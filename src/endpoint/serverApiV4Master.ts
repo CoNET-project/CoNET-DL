@@ -232,7 +232,8 @@ const duplicateRestorePool: {
     hash: string
     data: string
     wallet: string,
-    newHash: string
+    newHash: string,
+    res: any
 }[] = []
 
 const duplicateProcess = async () => {
@@ -277,12 +278,23 @@ const duplicateRestoreProcess = async () => {
         duplicateRestorePool.unshift(obj)
         return null
     }
+    const hash = ethers.solidityPackedKeccak256(['string'], [obj.hash])
     try {
+        const duplicateAddress = await SC.redeemCodeHashToDuplicate(hash)
+        if (duplicateAddress === ethers.ZeroAddress) {
+            logger(Colors.red(`duplicateRestoreProcess Error!`), `Duplicate not found for obj.hash ${obj.hash} ==> hash: ${hash}`)
+            obj.res.status(404).json({error: 'Duplicate not found'}).end()
+            return
+        }
+
         const tx = await SC.restore(obj.hash, obj.wallet, obj.data, obj.newHash)
         await tx.wait()
-        
+        obj.res.status(200).json({status: duplicateAddress}).end()
     } catch (ex: any) {
         logger(Colors.red(`duplicateRestoreProcess Error!`), ex.message)
+        obj.res.status(403).json({
+            error: 'Service temporarily unavailable'
+        }).end()
     }
     duplicateRestoreSCPool.push(SC)
     duplicateRestoreProcess()
@@ -524,12 +536,13 @@ class conet_dl_server {
                     error: 'has no walletAddress or hash or data'
                 }).end()
             }
-            res.status(200).json({status: 'processing'}).end()
+            
             const duplicateProcessPoolObj = {
 				wallet: obj.walletAddress,
 				hash: obj.hash,
                 data: obj?.data||'',
-                newHash: obj.uuid
+                newHash: obj.uuid,
+                res
 			}
 
 			duplicateRestorePool.push (duplicateProcessPoolObj)
@@ -831,3 +844,14 @@ const startCodeToClientProcess = async () => {
 }
 
 export default conet_dl_server
+
+
+const test = async () => {
+    const SC = duplicateRestoreSCPool[0]
+    const hash = ethers.solidityPackedKeccak256(['string'], ['2hW83P8s47y0mT9ff70GYB'])
+    logger(`duplicateRestoreProcess ${hash}`)
+    const duplicateAddress = await SC.redeemCodeHashToDuplicate(hash)
+    logger(`duplicateRestoreProcess ${duplicateAddress}`)
+}
+
+test()
