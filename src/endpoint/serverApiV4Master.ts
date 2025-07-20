@@ -219,7 +219,8 @@ let EPOCH_DATA: iEPOCH_DATA
 const duplicateFactoryAddr = '0x0282589DC14c0303a4Be55a7204A9855df83AaaB'
 const duplicateFactoryManagsr = new ethers.Wallet(masterSetup.duplicateFactoryManager, mainnet_rpc)        //  0x23576F564C1467a42d565A3604585bEF1F499BB0
 const duplicateFactoryPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateFactoryManagsr)]
-
+const duplicateRestore = new ethers.Wallet(masterSetup.duplicateRestore, mainnet_rpc)        //  0x3126e640CBF00d694c111F661F80734cA689cE29 
+const duplicateRestoreSCPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateRestore)]
 const duplicateProcessPool: {
     wallet: string
     hash: string
@@ -227,7 +228,12 @@ const duplicateProcessPool: {
     data: string
 }[] = []
 
-
+const duplicateRestorePool: {
+    hash: string
+    data: string
+    wallet: string,
+    newHash: string
+}[] = []
 
 const duplicateProcess = async () => {
     const obj = duplicateProcessPool.shift()
@@ -258,6 +264,28 @@ const duplicateProcess = async () => {
     }
     duplicateFactoryPool.push(SC)
     duplicateProcess()
+}
+
+const duplicateRestoreProcess = async () => {
+    const obj = duplicateRestorePool.shift()
+    if (!obj) {
+        return null
+    }
+
+    const SC = duplicateRestoreSCPool.shift()
+    if (!SC) {
+        duplicateRestorePool.unshift(obj)
+        return null
+    }
+    try {
+        const tx = await SC.restore(obj.hash, obj.wallet, obj.data, obj.newHash)
+        await tx.wait()
+        
+    } catch (ex: any) {
+        logger(Colors.red(`duplicateRestoreProcess Error!`), ex.message)
+    }
+    duplicateRestoreSCPool.push(SC)
+    duplicateRestoreProcess()
 }
 
 class conet_dl_server {
@@ -484,6 +512,29 @@ class conet_dl_server {
 			duplicateProcessPool.push (duplicateProcessPoolObj)
             logger(Colors.blue(`duplicateProcess start ${inspect({wallet: duplicateProcessPoolObj.wallet, hash: duplicateProcessPoolObj.hash, data: duplicateProcessPoolObj.data}, false, 3, true)}`))
 			duplicateProcess()
+			
+		})
+
+        router.post('/restore', async (req: any, res: any) => {
+			const obj: minerObj = req.body
+            
+			if (!obj?.hash) {
+                logger(Colors.red(`duplicateProcess !obj?.hash Error!`), inspect(obj, false, 3, true))
+                return res.status(404).json({
+                    error: 'has no walletAddress or hash or data'
+                }).end()
+            }
+            res.status(200).json({status: 'processing'}).end()
+            const duplicateProcessPoolObj = {
+				wallet: obj.walletAddress,
+				hash: obj.hash,
+                data: obj?.data||'',
+                newHash: obj.uuid
+			}
+
+			duplicateRestorePool.push (duplicateProcessPoolObj)
+            logger(Colors.blue(`duplicateProcess start ${inspect({wallet: duplicateProcessPoolObj.wallet, hash: duplicateProcessPoolObj.hash, data: duplicateProcessPoolObj.data}, false, 3, true)}`))
+			duplicateRestoreProcess()
 			
 		})
 

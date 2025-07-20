@@ -270,9 +270,13 @@ const checkDuplicate = async (wallet: string, hash: string): Promise<string|null
     }
 }
 
-const checkRestore = (wallet: string, hash: string): Promise<string> => {
+const checkRestore = async ( hash: string): Promise<boolean|null> => {
     try {
-        return duplicateFactory_readonly.restoreList(wallet, hash)
+        return await duplicateFactory_readonly.isRestore(hash)
+
+    } catch (ex: any) {
+        console.log (`checkRestore Error`, ex.message)
+        return null
     }
 }
 
@@ -770,7 +774,7 @@ class conet_dl_server_v4 {
 				}).end()
 			}
 
-			const result = await checkDuplicate(obj.walletAddress, obj.hash)
+			const result = await checkRestore(obj.hash)
 			if (result === null) {
 				return res.status(403).json({
 					error: "system Error!"
@@ -779,13 +783,13 @@ class conet_dl_server_v4 {
 
 			if (!result) {
 				return res.status(404).json({
-					error: "Duplicate already exists"
+					error: "Duplicate Not exists"
 				}).end()
 			}
             
-            logger(Colors.magenta(`/duplicate`), inspect(obj, false, 3, true))
+            logger(Colors.magenta(`/restore`), inspect(obj, false, 3, true))
             
-			return postLocalhost('/api/duplicate', obj, res)
+			return postLocalhost('/api/restore', obj, res)
 		})
 
 		
