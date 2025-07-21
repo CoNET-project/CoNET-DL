@@ -1331,24 +1331,26 @@ const SPGlodProcess = async () => {
     logger(inspect(obj, false, 3, true))
     let tx
     let NFT = 0
+    let assetAccount = ''
     try {
-        
+        const duplicateAccount = await SPDuplicateFactoryContract.duplicateList(obj.walletAddress)
+        assetAccount = duplicateAccount === ethers.ZeroAddress ? obj.walletAddress : duplicateAccount
         NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
         const amountSP = ethers.parseEther(obj.amountSP.toString())
         if (obj.redeemCode) {
-            tx = await SC.redeemPassport(obj.redeemCode, obj.walletAddress, obj.solana, obj.pdaAddress, amountSP)
+            tx = await SC.redeemPassport(obj.redeemCode, assetAccount, obj.solana, obj.pdaAddress, amountSP)
         } else {
             switch(obj.plan) {
                 case '299': {
-                    tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, obj.paymentID, 31, amountSP)
+                    tx = await SC.initSPMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, 31, amountSP)
                     break
                 }
                 case '2400': {
-                    tx = await SC.initSPMember(obj.walletAddress, obj.solana, obj.pdaAddress, obj.paymentID, 366, amountSP)
+                    tx = await SC.initSPMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, 366, amountSP)
                     break
                 }
                 case '3100': {
-                    tx = await SC.initSPGoldMember(obj.walletAddress, obj.solana, obj.pdaAddress, obj.paymentID, amountSP)
+                    tx = await SC.initSPGoldMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, amountSP)
                 }
             }
             
@@ -1366,16 +1368,16 @@ const SPGlodProcess = async () => {
 
     if (tx?.hash && NFT > 100) {
         payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
-        await checkNFTOwnership(obj.walletAddress, NFT, obj.solana)
+        await checkNFTOwnership(assetAccount, NFT, obj.solana)
         if (obj.redeemCode) {
-            await storeRedeem(obj.redeemCode, obj.walletAddress, tx.hash, )
+            await storeRedeem(obj.redeemCode, assetAccount, tx.hash, )
         }
     }
     if (obj.appleID) {
         const hash = ethers.solidityPackedKeccak256(['string'], [obj.appleID])
         applepayInfo.push({
             appTransactionId: hash,
-            walletAddress: obj.walletAddress,
+            walletAddress: assetAccount,
             solanaWallet: obj.solana
         })
         
@@ -1448,7 +1450,6 @@ const execVesting = async (plan: planStruct, walletAddress: string, solana: stri
 
     let amountSP = 0
     let pdaAddress = ''
-
 
     if (paymentID) {
         const status = await checkPaymentID(paymentID)
