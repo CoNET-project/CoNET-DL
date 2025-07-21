@@ -36,7 +36,7 @@ import {exec} from 'node:child_process'
 import {join} from 'node:path'
 import SPGlodMemberABI from './SPGlodMember_ABI.json'
 import nacl from 'tweetnacl'
-
+import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -403,8 +403,9 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
 })
 
 const getReferrer = async (walletAddress: string): Promise<string> => {
+    
     try {
-        const reffers = await ReferralsV3Contract_readonly.getReferrer(walletAddress)
+        const reffers = await SPClub_Airdrop_Contract_pool[0].getReferrer(walletAddress)
         if (reffers !== ethers.ZeroAddress) {
             return reffers
         }
@@ -571,32 +572,6 @@ class conet_dl_server {
            
 			return res.status(200).json({received: true}).end()
         })
-
-        router.post('/addReferral', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
-
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /addReferral req.body ERROR!`), inspect(req.body))
-				return res.status(402).json({error: 'Data format error!'}).end()
-			}
-			
-			const obj = checkSign (message, signMessage)
-			
-			if (!obj || !obj?.walletAddress|| !obj?.referrer) {
-				return res.status(402).json({error: 'No necessary parameters'}).end()
-			}
-			const wallet = obj.walletAddress.toLowerCase()
-			const ret = await addedReffer(wallet, obj.referrer)
-            if (ret) {
-                return res.status(200).json({ wallet, referrer: obj.referrer }).end()
-            }
-            return res.status(402).json({error: 'Not allowed'}).end()
-			
-		})
 
 		router.post('/paypal_fx168', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -1017,10 +992,8 @@ class conet_dl_server {
 			
 			const obj = checkSign (message, signMessage)
             
-            const isWalletAddress = ethers.isAddress(obj?.referrer)
-            
 
-			if ( !obj?.referrer || !obj?.walletAddress || !isWalletAddress ) {
+			if ( !obj?.referrer || !obj?.walletAddress ) {
                 logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
@@ -1218,12 +1191,13 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
     
 }
 
+const duplicateFactoryAddr = '0xb8777d4b0e1c07dF073fAf75a5F42D9e29BfD0F5'
+
+const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)      //      0x9D27BEdb1d093F38726F60551CfefaD83fA838a2
+const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, duplicateFactory_ABI, SPClubWallet)
 
 
-const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)
-const SPClubContract = new ethers.Contract(SPClubAddress, SPClubPoint, SPClubWallet)
-const ReferralsV3Contract_readonly = new ethers.Contract(ReferralsV3Address, ReferralsV3ABI, CONET_MAINNET)
-const SPClubManager = [SPClubContract]
+const SPClubManager = [SPDuplicateFactoryContract]
 
 const addReferralsPool: {
     wallet: string
@@ -1253,23 +1227,6 @@ const addReferralsProcess = async () => {
     return setTimeout(() => {
         addReferralsProcess()
     }, 1000)
-}
-
-const addedReffer = async (wallet: string, referrer: string) => {
-    const _referrer = referrer.toLowerCase()
-    if (_referrer !== wallet) {
-         try {
-            const isReady = await ReferralsV3Contract_readonly.getReferrer(wallet)
-            if (isReady === ethers.ZeroAddress) {
-                addReferralsPool.push({wallet, referrer})
-                addReferralsProcess()
-                return true
-            }
-        } catch (ex) {
-            
-        }
-    }
-    return false
 }
 
 let cryptopWaymentWallet = 0
@@ -2704,9 +2661,10 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string, priva
 
 const getRandomNode = () => {
     const _node1 = Guardian_Nodes[Math.floor(Math.random() * (Guardian_Nodes.length - 1))]
-    return `https://${_node1.domain}.conet.network/solana-rpc`
+    // return `https://${_node1.domain}.conet.network/solana-rpc`
+    return solanaRPC_host
 }
-
+const solanaRPC_host = 'api.mainnet-beta.solana.com'
 const getBalance_SP = async (solanaWallet: string): Promise<number|null> => {
     const payload = {
         jsonrpc: "2.0",
@@ -2720,7 +2678,7 @@ const getBalance_SP = async (solanaWallet: string): Promise<number|null> => {
     }
     const _node1 = Guardian_Nodes[Math.floor(Math.random() * (Guardian_Nodes.length - 1))]
 
-    const ret: any = await HTTPS_PostTohost_JSON(`${_node1.domain}.conet.network`, '/solana-rpc', payload)
+    const ret: any = await HTTPS_PostTohost_JSON(`${getRandomNode()}`, '/', payload)
     if (ret === null || typeof ret === 'boolean') {
         return null
     }
@@ -2846,7 +2804,7 @@ const testApple = async () => {
 //     const kk = await spRewardCheck ('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff', 'CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 //     logger(inspect(kk, false, 3, true))
 // }
-// getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+
 
 // const testPaymentLink = async() => {
 // 	const walletAddress = ''
@@ -2954,11 +2912,11 @@ const postData = async () => {
 //     check()
 // }, 10000)
 
-createRedeemWithSPProcessAdmin ()
+// createRedeemWithSPProcessAdmin ()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
-
+//getReferrer('0x5616754A0027810cdCd4787eE1F761966F41450C')
 // postData1()
-
+// getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 // testApple()

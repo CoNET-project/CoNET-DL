@@ -161,6 +161,25 @@
     {
         "inputs": [
             {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "duplicateOwner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "to",
                 "type": "address"
@@ -206,6 +225,25 @@
                 "internalType": "address",
                 "name": "",
                 "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "_redeemCode",
+                "type": "string"
+            }
+        ],
+        "name": "getEncryptoString",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
             }
         ],
         "stateMutability": "view",
@@ -498,34 +536,6 @@
             }
         ],
         "name": "restore",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "_restoreCode",
-                "type": "string"
-            },
-            {
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
-            },
-            {
-                "internalType": "string",
-                "name": "_encryptoString",
-                "type": "string"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "new_restoreHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "restoreAccount",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"

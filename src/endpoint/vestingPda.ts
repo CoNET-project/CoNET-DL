@@ -307,7 +307,7 @@ export const claimPDA = async (BENEFICIARY: web3.Keypair) => {
         )
         const transactionSignature = await anchorConnection.sendTransaction(tx, [BENEFICIARY])
         logger(`claimPDA have no Account Info creatr ${recipientTokenAddress.toBase58()} ${transactionSignature}`)
-         await new Promise(executor => {setTimeout(() => executor(true), 5000)})
+        await new Promise(executor => {setTimeout(() => executor(true), 5000)})
     }
     
     // const [beneficiaryAta] = await PublicKey.findProgramAddressSync(
