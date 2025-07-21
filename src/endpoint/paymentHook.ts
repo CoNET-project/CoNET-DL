@@ -402,18 +402,29 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
 
 })
 
-const getReferrer = async (walletAddress: string): Promise<string> => {
+const getReferrer = async (walletAddress: string, reffer=ethers.ZeroAddress): Promise<string> => {
     
     try {
-        const reffers = await SPClub_Airdrop_Contract_pool[0].getReferrer(walletAddress)
+        const [ reffers, duplicates, code ] = await Promise.all([
+            SPDuplicateFactoryContract.getReferrer(walletAddress),
+            SPDuplicateFactoryContract.getDuplicateAddress(walletAddress),
+            CONET_MAINNET.getCode(reffer)
+        ])
         if (reffers !== ethers.ZeroAddress) {
             return reffers
         }
+        //      code 检查 reffer 是否是合约地址，duplicates 检查，walletAddress 是否有合约地址 及 reffer 不可指向walletAddress自身的合约地址
+        if (code === "0x" || code === "0x0" || duplicates === ethers.ZeroAddress || duplicates.toLowerCase() === reffer.toLowerCase()) {
+            return ''
+        }
         
-    } catch (ex) {
         
+    } catch (ex: any) {
+        logger(`getReferrer Error`, ex.message)
+        return ''
     }
-    return ''
+    return ethers.ZeroAddress
+    
 }
 
 const checkRedeemCode = async (redeemCode: string ) => {
@@ -992,8 +1003,7 @@ class conet_dl_server {
 			
 			const obj = checkSign (message, signMessage)
             
-
-			if ( !obj?.referrer || !obj?.walletAddress ) {
+			if ( !obj?.referrer || !obj?.walletAddress) {
                 logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
@@ -1002,14 +1012,19 @@ class conet_dl_server {
                 }).end()
             }
 
-
-            
             const referrer = obj.referrer.toLowerCase()
-            const isReff = await getReferrer(obj.walletAddress)
+            if (referrer === obj.walletAddress) {
+                
+                return res.status(403).json({
+                    error: 'Referrer can not be yourself!'
+                }).end()
+            }
+            
+            const isReff = await getReferrer(obj.walletAddress, referrer)
 
             logger(`getAirDropForSPReff isReff = ${isReff} obj.walletAddress[ ${obj.walletAddress}] === referrer [${referrer}] ${obj.walletAddress === referrer}`)
 
-            if (isReff || obj.walletAddress === referrer) {
+            if (isReff !== ethers.ZeroAddress) {
                 return res.status(403).json({
                     error: 'Already exists!'
                 }).end()
@@ -1939,7 +1954,7 @@ const process_SPClub_Poing_Process = async () => {
         
         const tx1 = await SC.mint (obj.wallet, SubscriptionPoint, obj.expiresDayes)
         await tx1.wait()
-        if (obj.referee) {
+        if (obj.referee && obj.referee !== ethers.ZeroAddress) {
             const tx2 = await SC.mint (obj.referee, RefferentSubscriptionPoint, obj.expiresDayes)
             await tx2.wait()
         }
@@ -2916,7 +2931,7 @@ const postData = async () => {
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
-//getReferrer('0x5616754A0027810cdCd4787eE1F761966F41450C')
+// getReferrer('0x878a0F282fd87790633dc73D2aB58479CEc48D4B')
 // postData1()
 // getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 // testApple()
