@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    duplicatePasscodManager: string
     duplicateRestore: string
     duplicateFactoryManager: string
     SPClubGlod_Manager: string

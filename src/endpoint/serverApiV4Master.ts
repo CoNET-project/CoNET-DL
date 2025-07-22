@@ -530,6 +530,28 @@ class conet_dl_server {
 			
 		})
 
+        router.post('/duplicatePasscode', async (req: any, res: any) => {
+			const obj: minerObj = req.body
+            
+			if (!obj?.hash|| !obj?.data) {
+                logger(Colors.red(`duplicateProcess !obj?.hash Error!`), inspect(obj, false, 3, true))
+                return res.status(404).json({
+                    error: 'has no walletAddress or hash or data'
+                }).end()
+            }
+            res.status(200).json({status: 'processing'}).end()
+
+            const duplicateProcessPoolObj = {
+				hash: obj.hash,
+                data: obj?.data||''
+			}
+
+			duplicatePasscodrPool.push (duplicateProcessPoolObj)
+            logger(Colors.blue(`duplicateProcess start ${inspect({wallet: obj.walletAddress, hash: duplicateProcessPoolObj.hash, data: duplicateProcessPoolObj.data}, false, 3, true)}`))
+			duplicatePasscode()
+			
+		})
+
         router.post('/restore', async (req: any, res: any) => {
 			const obj: minerObj = req.body
             
@@ -812,6 +834,35 @@ const checkCodeToClientV2 = (obj: ICodeToClient, nftID: string): Promise<boolean
     CodeToClientV2ContractPool.push(SC)
     return ret
 })
+
+const  duplicatePasscodrPool: {
+    hash: string,
+    data: string
+} [] = []
+const duplicatePasscodrManager = new ethers.Wallet(masterSetup.duplicatePasscodManager, mainnet_rpc)        //  0x89d026C8CA7245Bf62e2d83659224d759469BEEF
+const duplicatePasscodeManagerPool: ethers.Contract[] = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicatePasscodrManager)]
+
+const duplicatePasscode = async () => {
+    const obj = duplicatePasscodrPool.shift()
+    if (!obj) {
+        return null
+    }
+    const SC = duplicatePasscodeManagerPool.shift()
+    if (!SC) {
+        duplicatePasscodrPool.unshift(obj)
+        return null
+    }
+    
+    try {
+        const tx = await SC.changeEncryptoString(obj.hash, obj.data)
+        await tx.wait()
+        logger(Colors.blue(`duplicatePasscodrPasscode success ${tx.hash}`))
+    } catch (ex: any) {
+        logger(Colors.red(`duplicatePasscodrPasscode Error!`), ex.message)
+    }
+    duplicatePasscodeManagerPool.push(SC)
+    return duplicatePasscode()
+}
 
 
 const startCodeToClientProcess = async () => {

@@ -257,13 +257,17 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
 const duplicateFactoryAddr = '0x5f758d675F588a124d7b44c62a8EC8FfA5d01463'
 const duplicateFactory_readonly = new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, mainnetEndpoint)
 
-const checkDuplicate = async (wallet: string, hash: string): Promise<string|null> => {
+const checkDuplicate = async (wallet: string, hash: string = ''): Promise<string|null> => {
     try {
-        const [duplicateList, redeemCodeHash] = await  Promise.all([
+        const [duplicateList, Owner] = await  Promise.all([
             duplicateFactory_readonly.duplicateList(wallet),
-            duplicateFactory_readonly.redeemCodeHashToDuplicate (hash)
+            hash && duplicateFactory_readonly.duplicateOwner(hash)
         ])
-        return (duplicateList )
+        if (duplicateList === ethers.ZeroAddress|| hash && Owner.toLowerCase() !== wallet.toLowerCase()) {
+            return ''
+        }
+        
+        return duplicateList
     } catch (ex: any) {
         console.log (`checkDuplicate Error`, ex.message)
         return null
@@ -735,6 +739,46 @@ class conet_dl_server_v4 {
 			}
 
 
+			const result = await checkDuplicate(obj.walletAddress)
+			if (result === null) {
+				return res.status(403).json({
+					error: "system Error!"
+				}).end()
+			}
+
+			if (result) {
+				return res.status(404).json({
+					error: "Duplicate already exists"
+				}).end()
+			}
+            
+            logger(Colors.magenta(`/duplicate`), inspect(obj, false, 3, true))
+            
+			return postLocalhost('/api/duplicate', obj, res)
+		})
+
+        router.post('/duplicatePasscode', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /duplicatePasscode req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			
+			const obj = checkSign (message, signMessage)
+
+			if ( !obj?.walletAddress || !obj?.hash || !obj?.data) {
+				logger (Colors.grey(`Router /duplicatePasscode checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(404).json({
+					error: "SignObj Error!"
+				}).end()
+			}
+
+
 			const result = await checkDuplicate(obj.walletAddress, obj.hash)
 			if (result === null) {
 				return res.status(403).json({
@@ -744,13 +788,14 @@ class conet_dl_server_v4 {
 
 			if (!result) {
 				return res.status(404).json({
-					error: "Duplicate already exists"
+					error: "Duplicate not exists"
 				}).end()
 			}
+            res.status(200).json({
+                status: true
+            }).end()
             
-            logger(Colors.magenta(`/duplicate`), inspect(obj, false, 3, true))
-            
-			return postLocalhost('/api/duplicate', obj, res)
+			return postLocalhost('/api/duplicatePasscode', obj, res)
 		})
 
         router.post('/restore', async (req: any, res: any) => {
@@ -981,3 +1026,8 @@ const checkFreePassport = async (wallet: string) => {
 }
 
 export default conet_dl_server_v4
+
+const test = async () => {
+    logger(await checkDuplicate('0x908304Aa26023ebB28EB76022A42a8D4F4C18125', '0xbda2f1fed961d5ffe61002817be164a6dd2244b75de3b1cccfbb775836746d96'))
+}
+test()
