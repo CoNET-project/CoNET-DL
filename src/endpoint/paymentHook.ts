@@ -1206,7 +1206,7 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
     
 }
 
-const duplicateFactoryAddr = '0xb8777d4b0e1c07dF073fAf75a5F42D9e29BfD0F5'
+const duplicateFactoryAddr = '0x5f758d675F588a124d7b44c62a8EC8FfA5d01463'
 
 const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)      //      0x9D27BEdb1d093F38726F60551CfefaD83fA838a2
 const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, duplicateFactory_ABI, SPClubWallet)

@@ -254,7 +254,7 @@ const checkAirDropForSP = async (wallet: string, solana: string, ipaddress: stri
     }
 }
 
-const duplicateFactoryAddr = '0xb8777d4b0e1c07dF073fAf75a5F42D9e29BfD0F5'
+const duplicateFactoryAddr = '0x5f758d675F588a124d7b44c62a8EC8FfA5d01463'
 const duplicateFactory_readonly = new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, mainnetEndpoint)
 
 const checkDuplicate = async (wallet: string, hash: string): Promise<string|null> => {
