@@ -1206,7 +1206,7 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
     
 }
 
-const duplicateFactoryAddr = '0x5f758d675F588a124d7b44c62a8EC8FfA5d01463'
+const duplicateFactoryAddr = '0x87A70eD480a2b904c607Ee68e6C3f8c54D58FB08'
 
 const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)      //      0x9D27BEdb1d093F38726F60551CfefaD83fA838a2
 const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, duplicateFactory_ABI, SPClubWallet)
@@ -2853,7 +2853,7 @@ const createRedeemWithSPProcessAdmin = async (): Promise<void> => {
 }
 
 
-const test = async () => {
+const test1 = async () => {
 
     // returnSP('CpAhvs19ymPEM6otAbumfKgxSgDRMxCsqtckBYA4s789',(0.1 * 10 ** spDecimalPlaces).toString(), '', solana_account)
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
@@ -2936,3 +2936,8 @@ const postData = async () => {
 // postData1()
 // getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 // testApple()
+
+const test2 = async () => {
+    await execVesting('0', '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc','','', '5KbgRUNI5ypnWIGiydXq4d', '')
+}
+test2()
