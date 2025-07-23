@@ -1028,7 +1028,7 @@ const checkFreePassport = async (wallet: string) => {
 
 export default conet_dl_server_v4
 
-const test = async () => {
-    logger(await checkDuplicate('0x908304Aa26023ebB28EB76022A42a8D4F4C18125', '0xbda2f1fed961d5ffe61002817be164a6dd2244b75de3b1cccfbb775836746d96'))
-}
-test()
+// const test = async () => {
+//     logger(await checkDuplicate('0x36e2e8687e2b5d14c8e61f1587e51a8a8ee817cc', '0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470'))
+// }
+// test()
