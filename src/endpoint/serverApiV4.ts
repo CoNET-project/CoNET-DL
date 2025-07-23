@@ -758,6 +758,7 @@ class conet_dl_server_v4 {
 		})
 
         router.post('/duplicatePasscode', async (req: any, res: any) => {
+            logger(`/duplicatePasscode`)
 			const ipaddress = getIpAddressFromForwardHeader(req)
 			let message, signMessage
 			try {
@@ -794,7 +795,7 @@ class conet_dl_server_v4 {
             res.status(200).json({
                 status: true
             }).end()
-            
+            logger(`forward to master /duplicatePasscode`)
 			return postLocalhost('/api/duplicatePasscode', obj, res)
 		})
 
