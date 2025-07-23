@@ -779,7 +779,7 @@ class conet_dl_server_v4 {
 				}).end()
 			}
 
-
+            logger(inspect(obj, false, 3, true))
 			const result = await checkDuplicate(obj.walletAddress, obj.hash)
 			if (result === null) {
 				return res.status(403).json({
