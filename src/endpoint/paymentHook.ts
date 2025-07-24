@@ -851,7 +851,7 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			logger(Colors.magenta(`/spReward`), message, signMessage)
+			logger(Colors.magenta(`/cryptoPay`), message, signMessage)
 			
 			const obj = checkSign (message, signMessage)
 
@@ -917,6 +917,7 @@ class conet_dl_server {
                 solana,
                 balance: ethers.parseUnits(balance.toString(), spDecimalPlaces)
             })
+
             sp_reword_process()
             setTimeout(() => {
                 monitorReward(obj.walletAddress, solana, balance, 0)
@@ -1653,8 +1654,8 @@ const createRedeemWithSP = async(plan: planStruct) => {
 
     createRedeemWithSPPool.push(data)
 
-    // createRedeemWithSPProcess()
-    logger(`RedeemCode = ${RedeemCode}`,inspect(data, false, 3, true))
+    createRedeemWithSPProcess()
+    // logger(`RedeemCode = ${RedeemCode}`,inspect(data, false, 3, true))
     return RedeemCode
 }
 
@@ -1760,14 +1761,17 @@ const sp_reword_process = async () => {
     
 
     try {
+
+        const duplicateAccount = await SPDuplicateFactoryContract.duplicateList(obj.wallet)
+        const assetAccount = duplicateAccount === ethers.ZeroAddress ? obj.wallet : duplicateAccount
         const [tx, currentNFT] = await Promise.all([
-            SC.mintReword(obj.wallet, obj.solana, obj.balance),
+            SC.mintReword(assetAccount, obj.solana, obj.balance),
             payment_SC_readOnly.getCurrntPasspurtNumber()
             
         ])
         
         await tx.wait()
-        logger(`sp_reword_process ${obj.wallet}:${obj.solana} success, tx= ${tx.hash}`)
+        logger(`sp_reword_process ${assetAccount}:${obj.solana} success, tx= ${tx.hash}`)
         payment_waiting_status.set(obj.wallet, parseInt(currentNFT.toString()) + 1)
 
     } catch (ex: any) {
@@ -1867,9 +1871,11 @@ const checkIsHoldSP = async (solana: string) => {
 const spRewardCheck = async (wallet: string, solana: string): Promise<false|number> => {
 
     try {
-
+        const duplicateAccount = await SPDuplicateFactoryContract.duplicateList(wallet)
+        const toAccount = duplicateAccount === ethers.ZeroAddress ? wallet : duplicateAccount
+        
         const [status, balance] = await Promise.all([
-            sp_reword_contract.isReadyReword(wallet, solana),
+            sp_reword_contract.isReadyReword(toAccount, solana),
             getBalance_SP(solana),
             getOracle()
         ])
@@ -1881,7 +1887,7 @@ const spRewardCheck = async (wallet: string, solana: string): Promise<false|numb
         const initBalance = parseInt(ethers.formatUnits(status[1], spDecimalPlaces))
         const price = parseInt(oracleData.data?.sp2499)
         
-        if (!status[0] || typeof balance !== 'number'  || balance < price && (initBalance === 0 || initBalance > 0 && initBalance > balance)) {
+        if (!status[0] ||typeof balance !== 'number'  || balance < price && (initBalance === 0 || initBalance > 0 && initBalance > balance)) {
             return false
         }
 
@@ -2845,8 +2851,8 @@ new conet_dl_server ()
 
 
 const createRedeemWithSPProcessAdmin = async (): Promise<void> => {
-    for (let i = 0; i < 5; i ++) {
-        const redeemCode = await createRedeemWithSP ('1')
+    for (let i = 0; i < 50; i ++) {
+        const redeemCode = await createRedeemWithSP ('3100')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -2859,10 +2865,10 @@ const test1 = async () => {
     // returnSP('81i2Ed2cK6xN8DFsJjwX2tkadGnYggjXss9bg19i97D5', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
     // returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     // setTimeout(async () => {
-    //     // returnSP('A4y9UWXZ6FYNRuWzm47nWJWdmdcic7p35SdDFHJj3Ei8', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
-    //     // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
-    //     // const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
-    //     // logger(kk)
+        // returnSP('A4y9UWXZ6FYNRuWzm47nWJWdmdcic7p35SdDFHJj3Ei8', (0.1 * 10 ** spDecimalPlaces).toString(), '', masterSetup.SP_Club_Airdrop_solana)
+        // const kk = await spRewardCheck('0x8c82B65E05336924723bEf6E7536997B8bf27e82','7ivGrVLkvmkUFwK3qXfuKvkNfuhjjXozz48qsbeyUdHi')
+        const kk = await spRewardCheck('0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff','CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
+        logger(kk)
     //     //returnSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8',(100 * 10 ** spDecimalPlaces).toString(), '')
     //     // airDropForSP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8', 1 * 10 ** spDecimalPlaces)
     // }, 10000)
@@ -2938,6 +2944,8 @@ const postData = async () => {
 // testApple()
 
 const test2 = async () => {
-    await execVesting('0', '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc','','', '5KbgRUNI5ypnWIGiydXq4d', '')
+    // await execVesting('0', '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc','','', '5KbgRUNI5ypnWIGiydXq4d', '')
+    const kk = await spRewardCheck('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw')
+    logger(kk)
 }
-test2()
+// test2()
