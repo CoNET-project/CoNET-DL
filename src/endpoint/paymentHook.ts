@@ -1470,7 +1470,7 @@ const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) =>
             obj.So_amount = (parseFloat(usd1So.toFixed(6)) * 10 ** 6).toFixed(0)
             returnPool.push(obj)
 
-            // await returnSP_Pool_process()
+            await returnSP_Pool_process()
             
         }
         logger(`Plan2860`, inspect(obj, false, 3, true))
