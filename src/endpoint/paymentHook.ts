@@ -473,6 +473,10 @@ const StripePlan = (price: string): planStruct => {
         case '3410': {
             return '3100'
         }
+        
+        case '2750': {
+            return '2750'
+        }
         default: {
             return '0'
         }
@@ -1304,7 +1308,7 @@ const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
-type planStruct =  '1'|'0'| '299'| '2400' | '3100'
+type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2750'
 
 
 const SPGlodProceePool: {
@@ -1738,7 +1742,7 @@ const listenTransfer = async (price: number, cryptoName: string, plan: planStruc
 }
 
 const wallet_sp_reword = new ethers.Wallet( masterSetup.sp_reword, CONET_MAINNET)       //      0x784985d7dC024fE8a08519Bba16EA72f8170b5c2
-// const sp_reword_address = '0xEDea8558BA486e21180d7b9656A973cdE46593db'
+
 const SPClubPointManagerV2 = '0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb'
 const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPointManagerABI, wallet_sp_reword)
 
@@ -2073,6 +2077,7 @@ const StripeMonthlyID_test = 'price_1RcI24FmCrk3Nr7LUeU5yXec'
 const StripeYearID_test = 'price_1RcHomFmCrk3Nr7LlLRvdOjB'
 const StripeGenesis_Circle_test = 'price_1RcHxMFmCrk3Nr7LziGOoDDm'
 const StripeGenesis_Circle = 'price_1RcsePFmCrk3Nr7LGR2GPS37'                 //        $34.10
+const StripeDeposit = 'price_1RpOZiFmCrk3Nr7L70iUvKdz'                     //      $27.49 / year
 
 const getStripePlanID = (price: string, testMode: boolean): string => {
     switch(price) {
@@ -2088,6 +2093,10 @@ const getStripePlanID = (price: string, testMode: boolean): string => {
             return testMode ? StripeYearID_test : StripeAnnualID
         }
 
+        case '2750': {
+            return StripeDeposit 
+        }
+
         case '3100': {
              return testMode ? StripeGenesis_Circle_test : StripeGenesis_Circle
         }
@@ -2100,7 +2109,7 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
     if (!price) {
         return ''
     }
-	const option: Stripe.PaymentLinkCreateParams = _price !== '3100' ? {
+	const option: Stripe.PaymentLinkCreateParams = /!(31|37)00/.test(_price) ? {
 		line_items: [{
 			price,
 			quantity: 1
@@ -2134,6 +2143,9 @@ const getPlan = (payAmount: number): planStruct => {
         }
         case 3410: {
             return '3100'
+        }
+        case 2750: {
+            return '2750'
         }
 
         default: {
@@ -2945,7 +2957,11 @@ const postData = async () => {
 
 const test2 = async () => {
     // await execVesting('0', '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc','','', '5KbgRUNI5ypnWIGiydXq4d', '')
-    const kk = await spRewardCheck('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw')
+    // const kk = await spRewardCheck('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw')
+    // logger(kk)
+    const stripe = new Stripe(masterSetup.stripe_SecretKey)
+
+    const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2750')
     logger(kk)
 }
 // test2()
