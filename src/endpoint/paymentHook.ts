@@ -1467,7 +1467,7 @@ const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) =>
             const usd1So = 1/parseFloat(price.so)
             obj.SP_amount = (parseFloat(price.sp2499) * 10 ** 6).toFixed(0)
 
-            obj.So_amount = (parseFloat(usd1So.toFixed(6)) * 10 ** 6).toFixed(0)
+            obj.So_amount = (parseFloat(usd1So.toFixed(6)) * 10 ** 9).toFixed(0)
             returnPool.push(obj)
 
             await returnSP_Pool_process()
