@@ -2990,8 +2990,8 @@ const test2 = async () => {
     // logger(kk)
     const stripe = new Stripe(masterSetup.stripe_SecretKey)
 
-    const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')
-    logger(kk)
-    //Plan2860('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '' )
+    // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')
+    // logger(kk)
+    Plan2860('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '' )
 }
 test2()
