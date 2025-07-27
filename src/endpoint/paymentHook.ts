@@ -1,3 +1,8 @@
+/**
+ *              return SP account = A8Vk2LsNqKktabs4xPY4YUmYxBoDqcTdxY5em4EQm8v1
+ * 
+ */
+
 import Express, { Router } from 'express'
 import {logger} from '../util/logger'
 import Colors from 'colors/safe'
@@ -45,7 +50,6 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	}
 	return ipaddress
 }
-
 
 const issuerId = masterSetup.apple.apple_issuerId
 const keyId = masterSetup.apple.keyId
@@ -1284,8 +1288,6 @@ const getAssetERC20Address = (cryptoName: string) => {
     }
 }
 
-
-
 const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org/')
 const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
@@ -1447,8 +1449,8 @@ const checkPaymentID = async (paymentID: string): Promise<boolean> => {
 
 
 const storePlan2860 = async (wallet: string, HDWallet: string, obj: {So_amount: string, SP_amount: string, from: string}) => {
-    const date = new Date().toUTCString()
-    const path2860 = `${plan2860Path}${date}-HDWallet[${HDWallet ? HDWallet: ''}]-clientWallet[${wallet}]-SP[${obj.SP_amount}].json`
+    const date = new Date().toJSON()
+    const path2860 = `${plan2860Path}${date}-[${HDWallet ? HDWallet: ''}]-client[${wallet}]-SP[${obj.SP_amount}].json`
     await writeFileSync (path2860, JSON.stringify(obj), 'utf8')
 }
 
@@ -1456,19 +1458,22 @@ const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) =>
         await getOracle()
         logger(inspect(oracleData, false, 3, true))
         const obj = {
-                So_amount: '0',
-                SP_amount: '0',
-                from : SolanaAddr
-            }
+            So_amount: '0',
+            SP_amount: '0',
+            from : SolanaAddr
+        }
         if (oracleData?.data) {
             const price = oracleData.data
             const usd1So = 1/parseFloat(price.so)
-            obj.SP_amount = price.sp2499
+            obj.SP_amount = (parseFloat(price.sp2499) * 10 ** 6).toFixed(0)
 
-            obj.So_amount = usd1So.toFixed(6)
-            logger(`Plan2860`, inspect(obj, false, 3, true))
+            obj.So_amount = (parseFloat(usd1So.toFixed(6)) * 10 ** 6).toFixed(0)
+            returnPool.push(obj)
+
+            // await returnSP_Pool_process()
             
         }
+        logger(`Plan2860`, inspect(obj, false, 3, true))
         await storePlan2860(wallet, HDWallet, obj)
         return logger(`Plan2860 !oracleData.data wallet = ${wallet}  HDWallet = ${HDWallet}`)
 
@@ -2534,9 +2539,11 @@ const appleReceipt = async (receipt: string, _walletAddress: string, solanaWalle
     return false
 }
 
-const solana_account = masterSetup.solana_return_manager
+const solana_account = masterSetup.solana_return_manager                    //              A8Vk2LsNqKktabs4xPY4YUmYxBoDqcTdxY5em4EQm8v1
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
 const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
+
+
 
 const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 
@@ -2879,7 +2886,6 @@ const testApple = async () => {
 // testPaymentLink()
 // appleReceipt(kk, kk1, kk2)
 
-logger(solana_account_privatekey.publicKey)
 // spRate()
 
 //	curl -v -X POST -H "Content-Type: application/json" -d '{"message": "{\"walletAddress\":\"0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff\",\"solanaWallet\":\"CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8\",\"price\":299}","signMessage": "0xe8fd970a419449edf4f0f5fc0cf4adc7a7954317e05f2f53fa488ad5a05900667ec7575ad154db554cf316f43454fa73c1fdbfed15e91904b1cc9c7f89ea51841c"}' https://hooks.conet.network/api/payment_stripe
@@ -2992,6 +2998,6 @@ const test2 = async () => {
 
     // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')
     // logger(kk)
-    Plan2860('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '' )
+    Plan2860('0x645cB92752Ef1BDF173ec085C2d8640b9dA2dD8E','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw', '' )
 }
 test2()
