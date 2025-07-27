@@ -473,9 +473,8 @@ const StripePlan = (price: string): planStruct => {
         case '3410': {
             return '3100'
         }
-        
-        case '2750': {
-            return '2750'
+        case '2860': {
+            return '2860'
         }
         default: {
             return '0'
@@ -696,7 +695,6 @@ class conet_dl_server {
 
             logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
 			
-
             if (plan === '0') {
                 logger(`payment_stripe price [${price}] got zoro plan ${plan} Error!`)
                 return res.status(402).json({error: 'No necessary parameters'}).end()
@@ -1149,7 +1147,6 @@ class conet_dl_server {
             }).end()
 
         })
-
         
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -1293,6 +1290,7 @@ const bnbPrivate = new ethers.JsonRpcProvider('https://bsc-dataseed.bnbchain.org
 const waitingList: Map<string, number> = new Map()
 const cryptoPaymentPath = '/home/peter/.data/cryptoPayment/'
 const redeemPaymentPath = '/home/peter/.data/redeem/'
+const plan2860Path = '/home/peter/.data/2860/'
 const initWalletBalance: Map<string, number> = new Map()
 const bnb_usdt_contract = new ethers.Contract('0x55d398326f99059fF775485246999027B3197955', ERC20_ABI, bnbPrivate)
 
@@ -1308,7 +1306,7 @@ const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
 const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
 const SPGlodProcessSc = [SPGlodManagerSC]
-type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2750'
+type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'
 
 
 const SPGlodProceePool: {
@@ -1447,6 +1445,35 @@ const checkPaymentID = async (paymentID: string): Promise<boolean> => {
     
 }
 
+
+const storePlan2860 = async (wallet: string, HDWallet: string, obj: {So_amount: string, SP_amount: string, from: string}) => {
+    const date = new Date().toUTCString()
+    const path2860 = `${plan2860Path}${date}-HDWallet[${HDWallet ? HDWallet: ''}]-clientWallet[${wallet}]-SP[${obj.SP_amount}].json`
+    await writeFileSync (path2860, JSON.stringify(obj), 'utf8')
+}
+
+const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) => {
+        await getOracle()
+        logger(inspect(oracleData, false, 3, true))
+        const obj = {
+                So_amount: '0',
+                SP_amount: '0',
+                from : SolanaAddr
+            }
+        if (oracleData?.data) {
+            const price = oracleData.data
+            const usd1So = 1/parseFloat(price.so)
+            obj.SP_amount = price.sp2499
+
+            obj.So_amount = usd1So.toFixed(6)
+            logger(`Plan2860`, inspect(obj, false, 3, true))
+            
+        }
+        await storePlan2860(wallet, HDWallet, obj)
+        return logger(`Plan2860 !oracleData.data wallet = ${wallet}  HDWallet = ${HDWallet}`)
+
+}
+
 const execVesting = async (plan: planStruct, walletAddress: string, solana: string, HDWallet: string,  paymentID: string, redeemCode = '', appleID = '') => {
     const startDays = plan === '299' ? 30 : 365
     const endDays = plan === '299' ? 1 : 5 * 365
@@ -1492,6 +1519,10 @@ const execVesting = async (plan: planStruct, walletAddress: string, solana: stri
     //         SPGlodProcess()
     //     })
     // }
+
+    if(plan === '2860') {
+        return Plan2860(walletAddress, solana, HDWallet)
+    }
 
     const data = {
         solana,
@@ -1640,8 +1671,6 @@ const getExpiresDayes = (plan: planStruct) => {
         }
     }
 }
-
-
 
 const createRedeemWithSP = async(plan: planStruct) => {
     const expiresDayes = getExpiresDayes(plan)
@@ -2077,7 +2106,7 @@ const StripeMonthlyID_test = 'price_1RcI24FmCrk3Nr7LUeU5yXec'
 const StripeYearID_test = 'price_1RcHomFmCrk3Nr7LlLRvdOjB'
 const StripeGenesis_Circle_test = 'price_1RcHxMFmCrk3Nr7LziGOoDDm'
 const StripeGenesis_Circle = 'price_1RcsePFmCrk3Nr7LGR2GPS37'                 //        $34.10
-const StripeDeposit = 'price_1RpOZiFmCrk3Nr7L70iUvKdz'                     //      $27.49 / year
+const StripeDeposit = 'price_1RpaLHFmCrk3Nr7LCjufawYq'                     //      $28.6 24.99 SP + 1usd Sol
 
 const getStripePlanID = (price: string, testMode: boolean): string => {
     switch(price) {
@@ -2093,7 +2122,7 @@ const getStripePlanID = (price: string, testMode: boolean): string => {
             return testMode ? StripeYearID_test : StripeAnnualID
         }
 
-        case '2750': {
+        case '2860': {
             return StripeDeposit 
         }
 
@@ -2144,8 +2173,8 @@ const getPlan = (payAmount: number): planStruct => {
         case 3410: {
             return '3100'
         }
-        case 2750: {
-            return '2750'
+        case 2860: {
+            return '2860'
         }
 
         default: {
@@ -2961,7 +2990,8 @@ const test2 = async () => {
     // logger(kk)
     const stripe = new Stripe(masterSetup.stripe_SecretKey)
 
-    const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2750')
+    const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')
     logger(kk)
+    //Plan2860('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '' )
 }
-// test2()
+test2()
