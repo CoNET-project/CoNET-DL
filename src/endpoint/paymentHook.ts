@@ -741,11 +741,7 @@ class conet_dl_server {
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
 
-            const _status = parseInt(status.toString())
-            if (_status > 3000) {
-                payment_waiting_status.delete(wallet)
-            }
-            
+            payment_waiting_status.delete(wallet)
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 
 			return res.status(200).json({ status }).end()
