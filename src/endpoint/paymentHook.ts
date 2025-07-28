@@ -3044,5 +3044,5 @@ const test2 = async () => {
     console.log(kkk)
 }
 
-test2()
+// test2()
 
