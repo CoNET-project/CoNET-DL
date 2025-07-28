@@ -180,6 +180,7 @@ const oracolPrice = async () => {
     oracle.bnb = parseFloat(bnb)
     oracle.eth = parseFloat(eth)
 }
+
 const monitorRewardWaitingMins = 15
 
 const SPClub_airdrop_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
@@ -740,12 +741,10 @@ class conet_dl_server {
 				return res.status(402).json({error: `No ${obj.walletAddress} status`}).end()
 			}
 
-            
             const _status = parseInt(status.toString())
             if (_status > 3000) {
                 payment_waiting_status.delete(wallet)
             }
-
             
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 
@@ -874,14 +873,16 @@ class conet_dl_server {
             const plan = await getPriceFromCryptoName (cryptoName, planName)
 
             if (plan === 0) {
-                logger(`/cryptoPay plan format error!`)
+                logger(`/cryptoPay  getPriceFromCryptoName !plan error!`)
+                logger(inspect(obj.data, false, 3, true))
                 return res.status(200).json({error}).end()
             }
 
             const waitingAddress = await listenTransfer(plan, cryptoName, planName, obj.walletAddress, obj.solanaWallet)
 
             if (!waitingAddress) {
-                logger(`/cryptoPay plan format error!`)
+                logger(inspect(obj.data, false, 3, true))
+                logger(`/cryptoPay plan listenTransfer !waitingAddress error!`)
                 return res.status(200).json({error}).end()
             }
 
@@ -1151,6 +1152,7 @@ class conet_dl_server {
             }).end()
 
         })
+
         
 		router.all ('*', (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -1258,15 +1260,59 @@ const getNextWallet = () => {
 
 const agentWalletWhiteList: string[] = ['0x5f1A13189b5FA49baE8630bdc40d365729bC6629']
 
+
+const getBNBPriceNumber = (plan: planStruct): number => {
+    switch(plan) {
+        default: {
+            return 0
+        }
+        case '299': {
+            return parseFloat((2.99/oracle.bnb).toFixed(6))
+        }
+        case '3100': {
+            return parseFloat((31/oracle.bnb).toFixed(6)) 
+        }
+        case '2400': {
+            return parseFloat((24.99/oracle.bnb).toFixed(6))
+        }
+
+        case '2860': {
+            return parseFloat((28.6/oracle.bnb).toFixed(6))
+        }
+
+    }
+}
+const getUSDTPriceNumber = (plan: planStruct): number => {
+    switch(plan) {
+        default: {
+            return 0
+        }
+        case '299': {
+            return 2.99
+        }
+        case '3100': {
+            return 31
+        }
+        case '2400': {
+            return 24.99
+        }
+
+        case '2860': {
+            return 28.6
+        }
+
+    }
+}
+
 const getPriceFromCryptoName = async (cryptoName: string, plan: planStruct): Promise<number> => {
     await oracolPrice()
     switch (cryptoName) {
         case 'BNB': {
-            return plan === '299' ? parseFloat((2.99/oracle.bnb).toFixed(6)): plan === '3100' ? parseFloat((31/oracle.bnb).toFixed(6)) : plan === '2400' ? parseFloat((24.99/oracle.bnb).toFixed(6)) : 0
+            return getBNBPriceNumber(plan)
         }
 
         case 'BSC USDT': {
-            return plan === '299' ? 2.99 : plan === '3100' ? 31 : plan === '2400' ? 24.99 : 0
+            return getUSDTPriceNumber(plan)
         }
 
         default: {
@@ -1460,7 +1506,8 @@ const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) =>
         const obj = {
             So_amount: '0',
             SP_amount: '0',
-            from : SolanaAddr
+            from : SolanaAddr,
+            wallet
         }
         if (oracleData?.data) {
             const price = oracleData.data
@@ -1470,12 +1517,12 @@ const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) =>
             obj.So_amount = (parseFloat(usd1So.toFixed(6)) * 10 ** 9).toFixed(0)
             returnPool.push(obj)
 
-            await returnSP_Pool_process()
+            returnSP_Pool_process()
             
         }
+        payment_waiting_status.get(wallet)
         logger(`Plan2860`, inspect(obj, false, 3, true))
         await storePlan2860(wallet, HDWallet, obj)
-        return logger(`Plan2860 !oracleData.data wallet = ${wallet}  HDWallet = ${HDWallet}`)
 
 }
 
@@ -2543,8 +2590,6 @@ const solana_account = masterSetup.solana_return_manager                    //  
 const solana_account_privatekeyArray = Bs58.decode(solana_account)
 const solana_account_privatekey = Keypair.fromSecretKey(solana_account_privatekeyArray)
 
-
-
 const SP_address = 'Bzr4aEQEXrk7k8mbZffrQ9VzX6V3PAH4LvWKXkKppump'
 
 const spDecimalPlaces = 6
@@ -2556,6 +2601,7 @@ let oracleData: OracleData = {
 const SP_Oracle_Addr = '0x96B2d95084C0D4b0dD67461Da06E22451389dE23'
 const SP_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
 const returnPool: {
+    wallet: string
 	from: string
 	SP_amount: string
     So_amount: string
@@ -2587,19 +2633,6 @@ const getOracle = async () => {
     }
 }
 
-const makeSolanaProm = async (solanaWallet: string) => {
-    const getSP = await spRate()
-    if (getSP.so == '0') {
-        return logger(`makeSolanaProm getSP return NULL error!`, inspect(solanaWallet, false, 3, true))
-    }
-
-    returnPool.push({
-        from: solanaWallet,
-        SP_amount: getSP.sp,
-        So_amount: getSP.so
-    })
-    returnSP_Pool_process()
-}
 
 
 const spRate = async(): Promise<{sp: string, so: string}> => {
@@ -2700,8 +2733,9 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string, priva
         tx.recentBlockhash = latestBlockHash.blockhash
         
         const transactionSignature = await SOLANA_CONNECTION.sendTransaction(tx, [fromKeypair])
-
+        
         logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP = ${ethers.formatUnits(SP_amount, spDecimalPlaces)} Sol = ${SOL_amount ? ethers.formatUnits(SOL_amount, solanaDecimalPlaces): null} hash = ${transactionSignature} success!`))
+        return transactionSignature
     } catch (ex: any) {
         logger(Colors.magenta(`returnSP from ${fromKeypair.publicKey} SP =  ${ethers.formatUnits(SP_amount, spDecimalPlaces)} Sol = ${ethers.formatUnits(SOL_amount, solanaDecimalPlaces)} Error! ${ex.message}`))
     }
@@ -2727,6 +2761,8 @@ const returnSP = async (to: string, SP_Amount: string, Sol_Amount: string, priva
     // } catch (ex: any) {
     //     logger(Colors.red(`returnSP sendAndConfirmTransaction Error! ${ex.message}`))
     // }
+
+    return ''
 }
 
 const getRandomNode = () => {
@@ -2792,7 +2828,9 @@ const returnSP_Pool_process = async () => {
     logger(inspect({publicKey: solana_account_privatekey.publicKey, returnData}, false, 3, true))
     returnSP_Pool_processing = true
 
-    await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount, solana_account)
+    const tx = await returnSP (returnData.from, returnData.SP_amount, returnData.So_amount, solana_account)
+    
+    payment_waiting_status.set(returnData.wallet, tx)
     
 	returnSP_Pool_processing = false
     
@@ -2990,14 +3028,25 @@ const postData = async () => {
 // getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 // testApple()
 
+/**
+ *                  getPriceFromCryptoName
+ *                  2782 returnSP_Pool_process
+ */
+
+
+
 const test2 = async () => {
     // await execVesting('0', '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc','','', '5KbgRUNI5ypnWIGiydXq4d', '')
     // const kk = await spRewardCheck('0xF1a784ab7FdF578d79C74D6fE68017F2bEAb40Fe','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw')
     // logger(kk)
     const stripe = new Stripe(masterSetup.stripe_SecretKey)
 
-    // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')
+    // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')       2782 returnSP_Pool_process
     // logger(kk)
-    Plan2860('0x645cB92752Ef1BDF173ec085C2d8640b9dA2dD8E','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw', '' )
+    //Plan2860('0x645cB92752Ef1BDF173ec085C2d8640b9dA2dD8E','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw', '' )
+    const kkk = await getPriceFromCryptoName('BSC USDT', '2860')
+    console.log(kkk)
 }
+
 test2()
+
