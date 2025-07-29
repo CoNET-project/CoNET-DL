@@ -1492,7 +1492,7 @@ const checkPaymentID = async (paymentID: string): Promise<boolean> => {
 
 const storePlan2860 = async (wallet: string, HDWallet: string, obj: {So_amount: string, SP_amount: string, from: string}) => {
     const date = new Date().toJSON()
-    const path2860 = `${plan2860Path}${date}-[${HDWallet ? HDWallet: ''}]-client[${wallet}]-SP[${obj.SP_amount}].json`
+    const path2860 = `${plan2860Path}client[${wallet}]-${date}-[${HDWallet ? HDWallet: ''}]-SP[${obj.SP_amount}].json`
     await writeFileSync (path2860, JSON.stringify(obj), 'utf8')
 }
 
