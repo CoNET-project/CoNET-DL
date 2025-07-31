@@ -43,6 +43,10 @@ import SPGlodMemberABI from './SPGlodMember_ABI.json'
 import nacl from 'tweetnacl'
 import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
+import ChannelPartnersABI from './ChannelPartnersABI.json'
+
+
+
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
 	if (!ipaddress||typeof ipaddress !== 'string') {
@@ -1212,6 +1216,8 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
 
 const duplicateFactoryAddr = '0x87A70eD480a2b904c607Ee68e6C3f8c54D58FB08'
 
+const ChannelPartners = '0x2E2fd2A910E4b27946A30C00FD7F2A32069e52CC'
+
 const SPClubWallet = new ethers.Wallet(masterSetup.ReferralManager, CONET_MAINNET)      //      0x9D27BEdb1d093F38726F60551CfefaD83fA838a2
 const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, duplicateFactory_ABI, SPClubWallet)
 
@@ -1347,8 +1353,14 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
 }
 
 const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
+
+
+
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
-const SPGlodManagerSC = new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPGlodManager)
+const SPGlodManagerSC = new ethers.Contract(ChannelPartners, ChannelPartnersABI, SPGlodManager)
+
+
+
 const SPGlodProcessSc = [SPGlodManagerSC]
 type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'
 
@@ -2897,8 +2909,6 @@ const testApple = async () => {
 }
 
 
-
-
 // new conet_dl_server()
 
 // const test = async () => {
@@ -2932,8 +2942,8 @@ new conet_dl_server ()
 
 
 const createRedeemWithSPProcessAdmin = async (): Promise<void> => {
-    for (let i = 0; i < 50; i ++) {
-        const redeemCode = await createRedeemWithSP ('3100')
+    for (let i = 0; i < 1; i ++) {
+        const redeemCode = await createRedeemWithSP ('0')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -3015,7 +3025,7 @@ const postData = async () => {
 //     check()
 // }, 10000)
 
-// createRedeemWithSPProcessAdmin ()
+createRedeemWithSPProcessAdmin ()
 // test()
 
 ///                 sudo journalctl  -n 1000 --no-pager -f -u conetPayment.service 
@@ -3023,6 +3033,8 @@ const postData = async () => {
 // postData1()
 // getBalance_SP('CdBCKJB291Ucieg5XRpgu7JwaQGaFpiqBumdT6MwJNR8')
 // testApple()
+
+//  sudo journalctl -u conetPayment.service -n 10000 --no-pager
 
 /**
  *                  getPriceFromCryptoName

@@ -27,6 +27,7 @@ import passport_distributor_ABI from './passport_distributor-ABI.json'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 import duplicateFactoryABI from './duplicateFactory.ABI.json'
+import channelPartnersABI from './ChannelPartnersABI.json'
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -217,8 +218,9 @@ interface iEPOCH_DATA {
 let EPOCH_DATA: iEPOCH_DATA
 
 const duplicateFactoryAddr = '0x87A70eD480a2b904c607Ee68e6C3f8c54D58FB08'
+const channelPartnersAddr = '0x2E2fd2A910E4b27946A30C00FD7F2A32069e52CC'
 const duplicateFactoryManagsr = new ethers.Wallet(masterSetup.duplicateFactoryManager, mainnet_rpc)        //  0x23576F564C1467a42d565A3604585bEF1F499BB0
-const duplicateFactoryPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateFactoryManagsr)]
+const duplicateFactoryPool = [new ethers.Contract(channelPartnersAddr, channelPartnersABI, duplicateFactoryManagsr)]
 const duplicateRestore = new ethers.Wallet(masterSetup.duplicateRestore, mainnet_rpc)        //  0x3126e640CBF00d694c111F661F80734cA689cE29 
 const duplicateRestoreSCPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateRestore)]
 const duplicateProcessPool: {
@@ -226,6 +228,8 @@ const duplicateProcessPool: {
     hash: string
     res: any
     data: string
+    channelPartners: string
+
 }[] = []
 
 const duplicateRestorePool: {
@@ -247,7 +251,7 @@ const duplicateProcess = async () => {
         return null
     }
     try {
-        const tx = await SC.createDuplicate(obj.wallet, obj.hash, obj.data)
+        const tx = await SC.createDuplicate(obj.wallet, obj.hash, obj.data, obj.channelPartners)
         await tx.wait()
 
         logger(Colors.blue(`duplicateProcess success ${tx.hash}`))
@@ -302,6 +306,21 @@ const duplicateRestoreProcess = async () => {
     duplicateRestoreSCPool.push(SC)
     duplicateRestoreProcess()
 }
+
+const SP_channelPartners = '0x8dAe61E86D276CEB88a4B2E82E062e167DFf06be'
+
+const isContract = async (address: string|undefined) => {
+    if (!address || address === ethers.ZeroAddress) {
+        return null
+    }
+    try {
+        const code = await mainnet_rpc.getCode(address)
+        return code !== '0x' ? address : null
+    } catch (ex) {
+        return null
+    }
+}
+
 
 class conet_dl_server {
 
@@ -521,7 +540,8 @@ class conet_dl_server {
 				res,
 				wallet: obj.walletAddress,
 				hash: obj.hash,
-                data: obj?.data||''
+                data: obj?.data||'',
+                channelPartners: await isContract(obj?.referrer)||SP_channelPartners
 			}
 
 			duplicateProcessPool.push (duplicateProcessPoolObj)
@@ -901,11 +921,12 @@ export default conet_dl_server
 
 
 const test = async () => {
-    const SC = duplicateRestoreSCPool[0]
-    const hash = ethers.solidityPackedKeccak256(['string'], ['2hW83P8s47y0mT9ff70GYB'])
-    logger(`duplicateRestoreProcess ${hash}`)
-    const duplicateAddress = await SC.redeemCodeHashToDuplicate(hash)
-    logger(`duplicateRestoreProcess ${duplicateAddress}`)
+    // const SC = duplicateRestoreSCPool[0]
+    // const hash = ethers.solidityPackedKeccak256(['string'], ['2hW83P8s47y0mT9ff70GYB'])
+    // logger(`duplicateRestoreProcess ${hash}`)
+    // const duplicateAddress = await SC.redeemCodeHashToDuplicate(hash)
+    // logger(`duplicateRestoreProcess ${duplicateAddress}`)
+    logger(await isContract(SP_channelPartners))
 }
 
-// test()
+test()
