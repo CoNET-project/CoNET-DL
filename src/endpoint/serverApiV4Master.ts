@@ -255,7 +255,7 @@ const duplicateProcess = async () => {
         await tx.wait()
 
         logger(Colors.blue(`duplicateProcess success ${tx.hash}`))
-        const ret = await SC.duplicateList(obj.wallet)
+        const ret = await duplicateRestoreSCPool[0].duplicateList(obj.wallet)
         logger(Colors.blue(`duplicateProcess success ${tx.hash} wallet ${obj.wallet} duplicate account ${ret}`))
         if (ret !== ethers.ZeroAddress) {
             obj.res.status(200).json({status: ret}).end()
