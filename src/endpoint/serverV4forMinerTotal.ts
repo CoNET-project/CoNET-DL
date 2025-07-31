@@ -103,6 +103,8 @@ const epoch_mining_info_cancun_addr = '0x31680dc539cb1835d7C1270527bD5D209DfBC54
 const epoch_mining_info_mainnet_addr = '0xbC713Fef0c7Bb178151cE45eFF1FD17d020a9ecD'
 
 const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provide_mainnet)
+
+logger(`masterSetup.epochManagre = ${epoch_mining_manager.address}`)
 const epoch_mining_sc = new ethers.Contract(epoch_mining_info_mainnet_addr, epoch_info_ABI, epoch_mining_manager)
 
 const CONET_Guardian_cancun_addr = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
