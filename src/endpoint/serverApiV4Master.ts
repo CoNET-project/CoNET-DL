@@ -541,7 +541,7 @@ class conet_dl_server {
 				wallet: obj.walletAddress,
 				hash: obj.hash,
                 data: obj?.data||'',
-                channelPartners: await isContract(obj?.referrer)||SP_channelPartners
+                channelPartners: await isContract(obj?.channelPartners)||SP_channelPartners
 			}
 
 			duplicateProcessPool.push (duplicateProcessPoolObj)

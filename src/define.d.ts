@@ -297,6 +297,7 @@ interface minerObj {
 	result?: twitterResult
 	solanaWallet?: string
 	price?: string
+    channelPartners?: string
 }
 
 interface nodeType {
