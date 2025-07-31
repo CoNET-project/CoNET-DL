@@ -702,7 +702,7 @@ class conet_dl_server {
             const plan = StripePlan(price)
             
 
-            logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
+            //logger(Colors.magenta(`/payment_stripe`), inspect(obj, false, 3, true))
 			
             if (plan === '0') {
                 logger(`payment_stripe price [${price}] got zoro plan ${plan} Error!`)
@@ -2218,7 +2218,6 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
     }
 
 	const paymentIntent = await stripe.paymentLinks.create(option)
-	logger(inspect(paymentIntent, false, 3, true))
 	return paymentIntent.url
 }
 
