@@ -521,102 +521,102 @@ class conet_dl_server_v4 {
 			return getreferralsCount(addr, res)
 		})
 
-		router.post('/spclub', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/spclub`))
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
+		// router.post('/spclub', async (req: any, res: any) => {
+		// 	const ipaddress = getIpAddressFromForwardHeader(req)
+		// 	logger(Colors.magenta(`/spclub`))
+		// 	let message, signMessage
+		// 	try {
+		// 		message = req.body.message
+		// 		signMessage = req.body.signMessage
 
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
-				return res.status(404).json({
-					error: 'message & signMessage Object Error!'
-				}).end()
-			}
+		// 	} catch (ex) {
+		// 		logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
+		// 		return res.status(404).json({
+		// 			error: 'message & signMessage Object Error!'
+		// 		}).end()
+		// 	}
 
-			logger(Colors.magenta(`/spclub`), message, signMessage)
-			const obj = checkSign (message, signMessage)
+		// 	logger(Colors.magenta(`/spclub`), message, signMessage)
+		// 	const obj = checkSign (message, signMessage)
 	
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet ) {
-				logger (Colors.grey(`Router /spclub checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
+		// 	if (!obj || !obj?.walletAddress || !obj?.solanaWallet ) {
+		// 		logger (Colors.grey(`Router /spclub checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+		// 		logger(inspect(obj, false, 3, true))
 
-				return res.status(403).json({
-					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
-				}).end()
-			}
+		// 		return res.status(403).json({
+		// 			error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+		// 		}).end()
+		// 	}
 
-			const check = await proCheckSPClubMember (obj)
-			logger(`check = await proCheckSPClubMember (obj) == ${check}`)
-			if (check === null) {
+		// 	const check = await proCheckSPClubMember (obj)
+		// 	logger(`check = await proCheckSPClubMember (obj) == ${check}`)
+		// 	if (check === null) {
 				
-				return res.status(403).json({
-					error: 'Service temporarily unavailable'
-				}).end()
-			}
+		// 		return res.status(403).json({
+		// 			error: 'Service temporarily unavailable'
+		// 		}).end()
+		// 	}
 
-			if (check === false) {
-				obj.referrer = obj.referrer||'0x0000000000000000000000000000000000000000'
-				try {
-					obj.referrer = ethers.getAddress(obj.referrer)
-				} catch(ex) {
-					return res.status(403).json({
-						error: 'referrer address Error!'
-					}).end()
-				}
-				logger(Colors.blue(`/api/spclub POST to local master!`))
-				return postLocalhost('/api/spclub', obj, res)
-			}
+		// 	if (check === false) {
+		// 		obj.referrer = obj.referrer||'0x0000000000000000000000000000000000000000'
+		// 		try {
+		// 			obj.referrer = ethers.getAddress(obj.referrer)
+		// 		} catch(ex) {
+		// 			return res.status(403).json({
+		// 				error: 'referrer address Error!'
+		// 			}).end()
+		// 		}
+		// 		logger(Colors.blue(`/api/spclub POST to local master!`))
+		// 		return postLocalhost('/api/spclub', obj, res)
+		// 	}
 
-			if (check === true) {
-				return res.status(403).json({
-					error: 'You have no valid Silent Pass Passport'
-				}).end()
-			}
+		// 	if (check === true) {
+		// 		return res.status(403).json({
+		// 			error: 'You have no valid Silent Pass Passport'
+		// 		}).end()
+		// 	}
 
-			if (check > 0) {
-				return res.status(403).json({
-					error: `You are already membership ${check}`
-				}).end()
-			}
+		// 	if (check > 0) {
+		// 		return res.status(403).json({
+		// 			error: `You are already membership ${check}`
+		// 		}).end()
+		// 	}
 
-		})
+		// })
 
-		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/fx169HappyNewYear`))
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
+		// router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
+		// 	const ipaddress = getIpAddressFromForwardHeader(req)
+		// 	logger(Colors.magenta(`/fx169HappyNewYear`))
+		// 	let message, signMessage
+		// 	try {
+		// 		message = req.body.message
+		// 		signMessage = req.body.signMessage
 
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
-				return res.status(404).end()
-			}
+		// 	} catch (ex) {
+		// 		logger (Colors.grey(`${ipaddress} request /fx169HappyNewYear req.body ERROR!`), inspect(req.body))
+		// 		return res.status(404).end()
+		// 	}
 
-			logger(Colors.magenta(`/fx168HappyNewYear`), message, signMessage)
-			const obj = checkSign (message, signMessage)
+		// 	logger(Colors.magenta(`/fx168HappyNewYear`), message, signMessage)
+		// 	const obj = checkSign (message, signMessage)
 	
-			if ( !obj?.walletAddress ) {
-				logger (Colors.grey(`Router /fx169HappyNewYear checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
-				return res.status(404).json(req.body).end()
-			}
+		// 	if ( !obj?.walletAddress ) {
+		// 		logger (Colors.grey(`Router /fx169HappyNewYear checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+		// 		logger(inspect(obj, false, 3, true))
+		// 		return res.status(404).json(req.body).end()
+		// 	}
 
-			getReferrer(obj.walletAddress, (err, data) => {
-				if (err) {
-					return res.status(503).json({error: "Server isn't available Error"})
-				}
-				if ( !data?.address || data.address === '0x0000000000000000000000000000000000000000'|| data.address?.toLowerCase() !== fx168_Referrer ) {
-					return res.status(403).json({error: "user wallet has not Fx168 referrer Error!"})
-				}
+		// 	getReferrer(obj.walletAddress, (err, data) => {
+		// 		if (err) {
+		// 			return res.status(503).json({error: "Server isn't available Error"})
+		// 		}
+		// 		if ( !data?.address || data.address === '0x0000000000000000000000000000000000000000'|| data.address?.toLowerCase() !== fx168_Referrer ) {
+		// 			return res.status(403).json({error: "user wallet has not Fx168 referrer Error!"})
+		// 		}
 
-				postLocalhost('/api/fx168HappyNewYear', {wallet: obj.walletAddress.toLowerCase()}, res)
-			})
-		})
+		// 		postLocalhost('/api/fx168HappyNewYear', {wallet: obj.walletAddress.toLowerCase()}, res)
+		// 	})
+		// })
 
 		router.post('/freePassport', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -680,42 +680,42 @@ class conet_dl_server_v4 {
 			return res.status(200).json({"success": true}).end()
 		})
 
-        router.post('/airDropForSP', async (req: any, res: any) => {
-			let ipaddress = getIpAddressFromForwardHeader(req)
-			logger(Colors.magenta(`/airDropForSP`))
-			let message, signMessage
-			try {
-				message = req.body.message
-				signMessage = req.body.signMessage
+        // router.post('/airDropForSP', async (req: any, res: any) => {
+		// 	let ipaddress = getIpAddressFromForwardHeader(req)
+		// 	logger(Colors.magenta(`/airDropForSP`))
+		// 	let message, signMessage
+		// 	try {
+		// 		message = req.body.message
+		// 		signMessage = req.body.signMessage
 
-			} catch (ex) {
-				logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
-				return res.status(404).json({
-					error: 'message & signMessage Object Error!'
-				}).end()
-			}
+		// 	} catch (ex) {
+		// 		logger (Colors.grey(`${ipaddress} request /spclub req.body ERROR!`), inspect(req.body))
+		// 		return res.status(404).json({
+		// 			error: 'message & signMessage Object Error!'
+		// 		}).end()
+		// 	}
 
 			
-			const obj = checkSign (message, signMessage)
+		// 	const obj = checkSign (message, signMessage)
 	
-			if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
-				logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
-				logger(inspect(obj, false, 3, true))
+		// 	if (!obj || !obj?.walletAddress || !obj?.solanaWallet || !ipaddress ) {
+		// 		logger (Colors.grey(`Router /airDropForSP checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+		// 		logger(inspect(obj, false, 3, true))
 
-				return res.status(403).json({
-					error: 'message & signMessage Object walletAddress or solanaWallet Error!'
-				}).end()
-			}
-            if (ipaddress === '73.189.157.190') {
-                ipaddress = v4()
-            }
-            logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
-            const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
-            if (!status) {
+		// 		return res.status(403).json({
+		// 			error: 'message & signMessage Object walletAddress or solanaWallet Error!'
+		// 		}).end()
+		// 	}
+        //     if (ipaddress === '73.189.157.190') {
+        //         ipaddress = v4()
+        //     }
+        //     logger(Colors.magenta(`/airDropForSP`), inspect({obj, ipaddress}, false, 3, true))
+        //     const status = await checkAirDropForSP(obj.walletAddress, obj.solanaWallet, ipaddress)
+        //     if (!status) {
 
-            }
-            return res.status(200).json({status}).end()
-		})
+        //     }
+        //     return res.status(200).json({status}).end()
+		// })
 
         router.post('/duplicate', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
