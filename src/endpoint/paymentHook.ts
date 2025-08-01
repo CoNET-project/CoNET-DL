@@ -417,20 +417,13 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
 const getReferrer = async (walletAddress: string, reffer=ethers.ZeroAddress): Promise<string> => {
     
     try {
-        const [ reffers, duplicates, code ] = await Promise.all([
+        const [ reffers] = await Promise.all([
             SPDuplicateFactoryContract.getReferrer(walletAddress),
-            SPDuplicateFactoryContract.getDuplicateAddress(walletAddress),
-            CONET_MAINNET.getCode(reffer)
         ])
+
         if (reffers !== ethers.ZeroAddress) {
             return reffers
         }
-        //      code 检查 reffer 是否是合约地址，duplicates 检查，walletAddress 是否有合约地址 及 reffer 不可指向walletAddress自身的合约地址
-        if (code === "0x" || code === "0x0" || duplicates === ethers.ZeroAddress || duplicates.toLowerCase() === reffer.toLowerCase()) {
-            return ''
-        }
-        
-        
     } catch (ex: any) {
         logger(`getReferrer Error`, ex.message)
         return ''
@@ -988,7 +981,7 @@ class conet_dl_server {
 			
 			const obj = checkSign (message, signMessage)
             
-			if ( !obj?.referrer || !obj?.walletAddress) {
+			if ( !obj?.referrer || !obj?.walletAddress || obj.referrer === ethers.ZeroAddress || obj.walletAddress === ethers.ZeroAddress) {
                 logger (Colors.grey(`Router /getAirDropForSPReff checkSignObj obj Error! !obj ${!obj} !ipaddress ${!ipaddress}`))
                 logger(inspect(obj, false, 3, true))
 
@@ -1004,20 +997,42 @@ class conet_dl_server {
                     error: 'Referrer can not be yourself!'
                 }).end()
             }
-            
-            const isReff = await getReferrer(obj.walletAddress, referrer)
 
-            logger(`getAirDropForSPReff isReff = ${isReff} obj.walletAddress[ ${obj.walletAddress}] === referrer [${referrer}] ${obj.walletAddress === referrer}`)
+            let walletAddressSC = '', referrerSC = ''
+            try {
+                const [isreferrerCode, iswalletAddressCode, reCode, waCode] = await Promise.all([
+                    CONET_MAINNET.getCode(referrer),
+                    CONET_MAINNET.getCode(obj.walletAddress),
+                    SPDuplicateFactoryContract.getDuplicateAddress(referrer),
+                    SPDuplicateFactoryContract.getDuplicateAddress(obj.walletAddress)
+                ])
+                referrerSC = isreferrerCode === '0x' ? (reCode !== ethers.ZeroAddress ? reCode : '') : referrer
+                walletAddressSC = iswalletAddressCode === '0x' ? (waCode !== ethers.ZeroAddress ? waCode : '') : obj.walletAddress
 
-            if (isReff !== ethers.ZeroAddress) {
-                return res.status(403).json({
-                    error: 'Already exists!'
+            } catch (ex) {
+                return res.status(404).json({
+                    error: 'Service unreachable!'
                 }).end()
             }
 
+            if (!walletAddressSC || !referrerSC) {
+                return res.status(403).json({
+                    error: 'walletAddress or referrer Error!'
+                }).end()
+            }
+            
+            const isReff = await getReferrer(walletAddressSC, referrerSC)
+
+            if (isReff !== ethers.ZeroAddress) {
+                return res.status(403).json({
+                    error: 'Referrer Already exists!'
+                }).end()
+            }
+            
+
             addReferralsPool.push({
-                wallet: obj.walletAddress,
-                referrer: referrer
+                wallet: walletAddressSC,
+                referrer: referrerSC
             })
             
             addReferralsProcess()
@@ -1221,7 +1236,9 @@ const addReferralsProcess = async () => {
             addReferralsProcess()
         }, 5000)
     }
+
     try {
+        
         const tx = await SC.initAddReferrer(obj.referrer, obj.wallet)
         await tx.wait()
         logger(`addReferralsProcess ${obj.wallet} => ${obj.referrer} success ${tx.hash}`)
