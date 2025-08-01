@@ -44,7 +44,7 @@ import nacl from 'tweetnacl'
 import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
 import ChannelPartnersABI from './ChannelPartnersABI.json'
-
+import initReferralsV3ABI from './initReferralsV3ABI.json'
 
 
 const getIpAddressFromForwardHeader = (req: Request) => {
@@ -1200,6 +1200,9 @@ const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, dup
 
 
 const SPClubManager = [SPDuplicateFactoryContract]
+const initReferralsV3 = '0x2e6dF4aE1Fb0ed28C8955c94245e8E791393Da13'
+
+const SPClubManagerPool = [new ethers.Contract(initReferralsV3, initReferralsV3ABI, SPClubWallet)]
 
 const addReferralsPool: {
     wallet: string
@@ -1211,7 +1214,7 @@ const addReferralsProcess = async () => {
     if (!obj) {
         return
     }
-    const SC = SPClubManager.shift()
+    const SC = SPClubManagerPool.shift()
     if (!SC) {
         addReferralsPool.unshift(obj)
         return setTimeout(() => {
@@ -1225,7 +1228,7 @@ const addReferralsProcess = async () => {
     } catch (ex:any) {
         logger(`addReferralsProcess ${obj.wallet} => ${obj.referrer} Error ${ex.message}`)
     }
-    SPClubManager.push(SC)
+    SPClubManagerPool.push(SC)
     return setTimeout(() => {
         addReferralsProcess()
     }, 1000)
