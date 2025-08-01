@@ -32,7 +32,7 @@ import ReferralsV3ABI from './ReferralsV3.json'
 import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import GuardianNodesV2ABI from './CGPNv7New.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
-import {createMessage, encrypt, enums, readKey,generateKey, GenerateKeyOptions, readPrivateKey, decryptKey} from 'openpgp'
+import {createMessage, encrypt, enums, readKey,generateKey, readPrivateKey, decryptKey} from 'openpgp'
 import {mapLimit} from 'async'
 import CoNET_DePIN_SpClub_ABI from './CoNET_DePIN-SPClub.ABI.json'
 import SPClub_Airdrop_ABI from './AirDropForSP.ABI.json'
@@ -191,6 +191,9 @@ const SPClub_airdrop_addr = '0x3fcbbBDA3F548E07Af6Ea3990945FB60416707d8'
 const SPClub_Airdrop_manager = new ethers.Wallet(masterSetup.SP_Club_Airdrop, CONET_MAINNET)        //      0xbFD582466561155F56430E8f55f473a9696afEA9
 const SPClub_Airdrop_Contract_pool = [new ethers.Contract(SPClub_airdrop_addr, SPClub_Airdrop_ABI, SPClub_Airdrop_manager)]
 
+
+const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
+const SPGlodProcessSc = [new ethers.Contract(SPGoldMember_Addr, SPGlodMemberABI, SPClub_Airdrop_manager)]
 
 const SPClub_AirdropPool: {
     walletAddress: string
@@ -436,32 +439,6 @@ const getReferrer = async (walletAddress: string, reffer=ethers.ZeroAddress): Pr
     
 }
 
-const checkRedeemCode = async (redeemCode: string ) => {
-    const hash = ethers.solidityPackedKeccak256(['string'], [redeemCode])
-
-            let goldRedeem, padID
-            try {
-                [goldRedeem, padID] = await Promise.all([
-                    SPGlodManagerSC.redeemData_expiresDayes(hash),
-                    payment_SC_readOnly.getPayID(redeemCode)
-                ])
-                
-                
-                goldRedeem = parseInt(goldRedeem.toString())
-                
-
-                if (goldRedeem === 0 || padID) {
-                    logger(`/codeToClient Redeem Code Error! goldRedeem = ${goldRedeem} padID = ${padID}`)
-                } else {
-                    logger(`/codeToClient Redeem Code [${redeemCode}] hash=[${hash}] goldRedeem = ${goldRedeem} padID = ${padID}`)
-                }
-
-                
-
-            } catch (ex: any) {
-                logger(`/codeToClient catch ex`, ex.message)
-            }
-}
 
 interface applePay{
 	total: string
@@ -777,7 +754,7 @@ class conet_dl_server {
             let goldRedeem, padID
             try {
                 [goldRedeem, padID] = await Promise.all([
-                    SPGlodManagerSC.redeemData_expiresDayes(obj.hash),
+                    SPGlodProcessSc[0].redeemData_expiresDayes(obj.hash),
                     payment_SC_readOnly.getPayID(obj.uuid)
                 ])
                 
@@ -1352,16 +1329,16 @@ const storePayment = async (wallet: ethers.HDNodeWallet, price: number, cryptoNa
     await writeFileSync (fileName, data, 'utf8')
 }
 
-const SPGoldMember_Addr = '0x646dD90Da8f683fE80C0eAE251a23524afB3d926'
+
 
 
 
 const SPGlodManager = new ethers.Wallet(masterSetup.SPClubGlod_Manager, CONET_MAINNET)              //          0xD603f2c8c774E7c9540c9564aaa7D94C34835858
-const SPGlodManagerSC = new ethers.Contract(ChannelPartners, ChannelPartnersABI, SPGlodManager)
+const ChannelPartnersSC = new ethers.Contract(ChannelPartners, ChannelPartnersABI, SPGlodManager)
 
 
 
-const SPGlodProcessSc = [SPGlodManagerSC]
+const ChannelPartnersSCPool = [ChannelPartnersSC]
 type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'
 
 
@@ -1382,7 +1359,7 @@ const SPGlodProcess = async () => {
     if (!obj) {
         return
     }
-    const SC = SPGlodProcessSc.shift() 
+    const SC = ChannelPartnersSCPool.shift() 
     if (!SC) {
         SPGlodProceePool.unshift(obj)
         return
@@ -1422,7 +1399,7 @@ const SPGlodProcess = async () => {
 
     }
 
-    SPGlodProcessSc.unshift(SC)
+    ChannelPartnersSCPool.unshift(SC)
     logger(`SPGlodProcess success tx = ${tx?.hash}`, inspect(obj, false, 3, true))
 
     if (tx?.hash && NFT > 100) {
