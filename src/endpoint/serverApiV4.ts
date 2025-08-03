@@ -721,6 +721,7 @@ class conet_dl_server_v4 {
 
         router.post('/duplicate', async (req: any, res: any) => {
 			const ipaddress = getIpAddressFromForwardHeader(req)
+            logger(inspect({ipaddress, body: req.body.message}, true, 3, false))
 			let message, signMessage
 			try {
 				message = req.body.message
@@ -743,6 +744,7 @@ class conet_dl_server_v4 {
 
 			const result = await checkDuplicate(obj.walletAddress)
 			if (result === null) {
+
 				return res.status(403).json({
 					error: "system Error!"
 				}).end()
