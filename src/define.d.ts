@@ -59,6 +59,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    downloadLinkManager: string
     duplicatePasscodManager: string
     duplicateRestore: string
     duplicateFactoryManager: string

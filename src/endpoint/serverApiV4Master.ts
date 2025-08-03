@@ -221,6 +221,8 @@ const duplicateFactoryAddr = '0x87A70eD480a2b904c607Ee68e6C3f8c54D58FB08'
 const channelPartnersAddr = '0x2E2fd2A910E4b27946A30C00FD7F2A32069e52CC'
 const duplicateFactoryManagsr = new ethers.Wallet(masterSetup.duplicateFactoryManager, mainnet_rpc)        //  0x23576F564C1467a42d565A3604585bEF1F499BB0
 const duplicateFactoryPool = [new ethers.Contract(channelPartnersAddr, channelPartnersABI, duplicateFactoryManagsr)]
+const downloadLinkManagerWallet = new ethers.Wallet(masterSetup.downloadLinkManager, mainnet_rpc)
+const downloadLinkchannelPartnersPool = [new ethers.Contract(channelPartnersAddr, channelPartnersABI, downloadLinkManagerWallet)]
 const duplicateRestore = new ethers.Wallet(masterSetup.duplicateRestore, mainnet_rpc)        //  0x3126e640CBF00d694c111F661F80734cA689cE29 
 const duplicateRestoreSCPool = [new ethers.Contract(duplicateFactoryAddr, duplicateFactoryABI, duplicateRestore)]
 const duplicateProcessPool: {
@@ -230,6 +232,14 @@ const duplicateProcessPool: {
     data: string
     channelPartners: string
 
+}[] = []
+
+
+
+const downloadLinkDataPool: {
+    wallet: string
+    ipaddress: string
+    
 }[] = []
 
 const duplicateRestorePool: {
@@ -596,6 +606,14 @@ class conet_dl_server {
 			
 		})
 
+        router.post('/downloadLink', async (req: any, res: any) => {
+			const obj: minerObj = req.body
+            
+            logger(`downloadLink`, inspect(obj, false, 3, true))
+            
+
+			
+		})
 
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
 			const wallet = req.body.walletAddress

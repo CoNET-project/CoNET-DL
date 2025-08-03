@@ -25,6 +25,10 @@ import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import AirDropForSPABI from './AirDropForSP.ABI.json'
 import {v4} from 'uuid'
 import duplicateFactoryABI from './duplicateFactory.ABI.json'
+
+import channelPartnersABI from './ChannelPartnersABI.json'
+
+
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 
@@ -160,7 +164,7 @@ const getLocalhostData = async (path: string, obj: any, callback: (data: any) =>
 	req.end()
 }
 
-const postLocalhost = async (path: string, obj: any, _res: Response)=> {
+const postLocalhost = async (path: string, obj: any, _res: Response|null = null)=> {
 	
 	const option: RequestOptions = {
 		hostname: 'localhost',
@@ -174,15 +178,19 @@ const postLocalhost = async (path: string, obj: any, _res: Response)=> {
 	}
 	
 	const req = await request (option, res => {
-		res.pipe(_res)
+        if (_res) {
+            res.pipe(_res)
+        }
+		
 	})
 
 	req.once('error', (e) => {
 		console.error(`postLocalhost to master ${path} on Error! ${e.message}`,)
-		if (_res.writable && !_res.writableEnded) {
+		if (_res && _res.writable && !_res.writableEnded) {
 			_res.status(503).json({error: "Server isn't available Error!"}).end()
+            _res.socket?.destroy()
 		}
-		_res.socket?.destroy()
+		
 	})
 
 	req.write(JSON.stringify(obj))
@@ -321,12 +329,6 @@ class conet_dl_server_v4 {
 
 			const head = req.headers['host']
 			
-			if (!head || !/apiv4\.conet\.network/i.test(head)) {
-				logger(Colors.magenta(`!/apiv3\.conet\.network/i.test(${head}) Error`))
-				logger(inspect(req.headers, false, 3, true))
-				res.status(404).end()
-				return res.socket?.end().destroy()
-			}
 			
 			const timeStamp = new Date().getTime()
 			const count = countAccessPool.get(ipaddress)
@@ -838,6 +840,52 @@ class conet_dl_server_v4 {
 			return postLocalhost('/api/restore', obj, res)
 		})
 
+        router.post('/downloadLink', async (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			let message, signMessage
+			try {
+				message = req.body.message
+				signMessage = req.body.signMessage
+			} catch (ex) {
+				logger (Colors.grey(`${ipaddress} request /downloadLink req.body ERROR!`), inspect(req.body))
+				return res.status(404).end()
+			}
+			
+			const obj = checkSign (message, signMessage)
+
+			if ( !obj?.walletAddress ) {
+				logger (Colors.grey(`Router /downloadLink checkSignObj obj Error! !obj ${!obj} !obj?.data ${!obj?.data}`))
+				logger(inspect(obj, false, 3, true))
+				return res.status(404).json({
+					error: "SignObj Error!"
+				}).end()
+			}
+
+            obj.ipAddress = ipaddress
+
+			const result = await checkDownload(obj)
+
+			if (result === null) {
+				return res.status(403).json({
+					error: "system Error!"
+				}).end()
+			}
+
+			if (!result) {
+				return res.status(404).json({
+					error: "exists"
+				}).end()
+			}
+            
+            logger(Colors.magenta(`/downloadLink`), inspect(obj, false, 3, true))
+
+            res.status(200).json({
+                status: true
+            }).end()
+
+			return postLocalhost('/api/downloadLink', obj)
+		})
+
 		
 		router.all ('*', (req: any, res: any) =>{
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -846,6 +894,22 @@ class conet_dl_server_v4 {
 			return res.socket?.end().destroy()
 		})
 	}
+}
+const channelPartnersAddr = '0x2E2fd2A910E4b27946A30C00FD7F2A32069e52CC'
+const duplicateFactoryPool = new ethers.Contract(channelPartnersAddr, channelPartnersABI, mainnetEndpoint)
+const checkDownload = async (obj: minerObj): Promise<boolean|null> => {
+    try {
+        const [ipaddressMax, downloadZero] = await Promise.all([
+            duplicateFactoryPool.isMaxDownloadLinkIpaddress(obj.ipAddress),
+            duplicateFactoryPool.downloadUserList(obj.walletAddress)
+        ])
+        if (!ipaddressMax || downloadZero > 0) {
+            return false
+        }
+    }catch (ex) {
+        return null
+    }
+    return true
 }
 
 const cryptoPayment_waiting_path = '/home/peter/.data/cryptoWaiting/'
