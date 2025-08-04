@@ -28,6 +28,8 @@ import SPClubPointManagerABI from './SPClubPointManagerABI.json'
 import SP_ABI from './CoNET_DEPIN-mainnet_SP-API.json'
 import duplicateFactoryABI from './duplicateFactory.ABI.json'
 import channelPartnersABI from './ChannelPartnersABI.json'
+import downloadABI from './downloadLinkABI.json'
+
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
@@ -610,7 +612,31 @@ class conet_dl_server {
 			const obj: minerObj = req.body
             
             logger(`downloadLink`, inspect(obj, false, 3, true))
+            const ipaddress = obj.ipAddress||''
+            const link = obj.hash||''
+            const channelPartners = obj.channelPartners||'0xEF282E148e7B3D4131c45ac2eD922EdA7A8F2FAE'
+            const data = obj?.data
+            const referrals =  obj.referrer||ethers.ZeroAddress
+            if (!data) {
+                return res.status(200).end()
+            }
 
+            const area = data?.area
+            const usedNode = data?.usedNode
+
+            if (!ipaddress||!link||!usedNode||!area) {
+                return res.status(200).end()
+            }
+
+            downloadManagerProcessPool.push({
+                wallet: obj.walletAddress,
+                ipaddress,
+                link,
+                channelPartners,
+                area,
+                usedNode,
+                referrals
+            })
 
 			
 		})
@@ -630,6 +656,47 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 	}
+}
+
+
+
+
+const DownloadLinkAddr = '0x1409fed21dB5c64D1194B87c2c359cEA42E7BAc5'
+const downloadManager = new ethers.Wallet(masterSetup.downloadLinkManager, mainnet_rpc)
+const downloadManagerSCPool = [new ethers.Contract(DownloadLinkAddr, downloadABI, downloadManager)]
+
+logger(`downloadManager ${downloadManager.address}`)
+
+
+const downloadManagerProcessPool: {
+    wallet: string
+    ipaddress: string
+    link: string
+    referrals: string
+    channelPartners: string
+    area: string
+    usedNode: string
+} []= []
+
+const downloadManagerProcess = async () => {
+    const obj = downloadManagerProcessPool.shift()
+    if (!obj) {
+        return
+    }
+    const SC = downloadManagerSCPool.shift()
+    if (!SC) {
+        downloadManagerProcessPool.unshift(obj)
+        return
+    }
+    try {
+        const tx = await SC.downloadLink(obj.wallet, obj.ipaddress, obj.link, obj.referrals, obj.channelPartners,obj.usedNode,obj.area)
+        logger(`downloadManagerProcess tx = ${tx}`)
+
+    } catch (ex: any) {
+        logger(ex.message)
+    }
+    downloadManagerSCPool.unshift(SC)
+    await downloadManagerProcess() 
 }
 
 
@@ -944,7 +1011,26 @@ const test = async () => {
     // logger(`duplicateRestoreProcess ${hash}`)
     // const duplicateAddress = await SC.redeemCodeHashToDuplicate(hash)
     // logger(`duplicateRestoreProcess ${duplicateAddress}`)
-    logger(await isContract(SP_channelPartners))
+
+    const obj = {
+        walletAddress: '0xef282e148e7b3d4131c45ac2ed922eda7a8f2fae',
+        channelPartners: '0xa168698d41ec175a975b79e2113652c1f7069cad',
+        hash: 'iOS',
+        referrals: '0x8dAe61E86D276CEB88a4B2E82E062e167DFf06be',
+        ipAddress: '73.189.157.190'
+    }
+
+    downloadManagerProcessPool.push({
+        wallet: obj.walletAddress,
+        ipaddress: obj.ipAddress,
+        link: obj.hash,
+        referrals: obj.referrals,
+        channelPartners: obj.channelPartners,
+        usedNode: 'US',
+        area: 'US'
+    })
+    await downloadManagerProcess()
+    
 }
 
-test()
+// test()

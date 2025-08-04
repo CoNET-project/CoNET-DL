@@ -299,6 +299,7 @@ interface minerObj {
 	solanaWallet?: string
 	price?: string
     channelPartners?: string
+    
 }
 
 interface nodeType {
