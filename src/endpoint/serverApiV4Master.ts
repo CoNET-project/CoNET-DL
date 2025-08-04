@@ -610,7 +610,7 @@ class conet_dl_server {
 			const obj: minerObj = req.body
             
             logger(`downloadLink`, inspect(obj, false, 3, true))
-            
+
 
 			
 		})
