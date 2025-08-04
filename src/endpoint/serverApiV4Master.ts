@@ -617,15 +617,16 @@ class conet_dl_server {
             const channelPartners = obj.channelPartners||'0xEF282E148e7B3D4131c45ac2eD922EdA7A8F2FAE'
             const data = obj?.data
             const referrals =  obj.referrer||ethers.ZeroAddress
+            res.status(200).end()
             if (!data) {
-                return res.status(200).end()
+                return 
             }
 
             const area = data?.area
             const usedNode = data?.usedNode
 
             if (!ipaddress||!link||!usedNode||!area) {
-                return res.status(200).end()
+                return 
             }
 
             downloadManagerProcessPool.push({
@@ -638,7 +639,7 @@ class conet_dl_server {
                 referrals
             })
 
-			
+			downloadManagerProcess()
 		})
 
 		router.post ('/fx168HappyNewYear', async (req: any, res: any) => {
