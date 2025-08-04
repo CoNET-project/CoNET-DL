@@ -862,9 +862,9 @@ class conet_dl_server_v4 {
 					error: "SignObj Error!"
 				}).end()
 			}
-
+            
             obj.ipAddress = ipaddress
-
+            logger(Colors.magenta(`/downloadLink`), inspect(obj, false, 3, true))
 			const result = await checkDownload(obj)
 
 			if (result === null) {
@@ -873,13 +873,7 @@ class conet_dl_server_v4 {
 				}).end()
 			}
 
-			if (!result) {
-				return res.status(404).json({
-					error: "exists"
-				}).end()
-			}
             
-            logger(Colors.magenta(`/downloadLink`), inspect(obj, false, 3, true))
 
             res.status(200).json({
                 status: true
