@@ -691,7 +691,7 @@ const downloadManagerProcess = async () => {
     }
     try {
         const tx = await SC.downloadLink(obj.wallet, obj.ipaddress, obj.link, obj.referrals, obj.channelPartners,obj.usedNode,obj.area)
-        logger(`downloadManagerProcess tx = ${tx}`)
+        logger(`downloadManagerProcess tx = ${tx.hash}`)
 
     } catch (ex: any) {
         logger(ex.message)
