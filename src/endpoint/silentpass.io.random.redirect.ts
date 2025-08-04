@@ -126,7 +126,7 @@ class conet_dl_server {
 
             }
 			
-            logger(`url = ${req.url} Search = ${logger}`)
+            logger(`url = ${req.url} Search = ${search}`)
             const node = getRandomNode()
 
             if (!node) {
