@@ -508,8 +508,6 @@ class conet_dl_server {
 		const app = Express()
 		const router = Router ()
 		app.disable('x-powered-by')
-		const Cors = require('cors')
-		// app.use(Cors ())
         app.use((err: any, req: any, res: any, next: any) => {
             if (err) {
                 console.error(err)
@@ -3036,8 +3034,6 @@ const postData = async () => {
  *                  getPriceFromCryptoName
  *                  2782 returnSP_Pool_process
  */
-
-
 
 const test2 = async () => {
     // await execVesting('0', '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc','','', '5KbgRUNI5ypnWIGiydXq4d', '')
