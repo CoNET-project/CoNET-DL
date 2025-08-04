@@ -116,25 +116,18 @@ class conet_dl_server {
 
 		const server = createServer(app)
 
-        app.get('/', (req, res) => {
-            const url = new URL (req.url)
+		app.all ('*', (req: any, res: any) => {
+			const url = new URL (req.url)
             const search = url.search
             const node = getRandomNode()
 
             if (!node) {
                 return res.redirect(301, `https://silentpass.io/download/index.html`)
             }
-            
+
             res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
-        })
-
-
-		app.all ('*', (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
-			res.status(404).end ()
-			return res.socket?.end().destroy()
 		})
+
         await getAllNodes()
 		logger(`start master server!`)
 
