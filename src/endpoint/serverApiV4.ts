@@ -872,7 +872,11 @@ class conet_dl_server_v4 {
 					error: "system Error!"
 				}).end()
 			}
-
+            if (!result) {
+                return res.status(403).json({
+					error: "Already!"
+				}).end()
+            }
             
 
             res.status(200).json({
@@ -900,7 +904,7 @@ const checkDownload = async (obj: minerObj): Promise<boolean|null> => {
             duplicateFactoryPool.isMaxDownloadLinkIpaddress(obj.ipAddress),
             duplicateFactoryPool.downloadUserList(obj.walletAddress)
         ])
-        if (!ipaddressMax || downloadZero > 0) {
+        if (ipaddressMax || downloadZero > 0) {
             return false
         }
     }catch (ex) {
@@ -1089,7 +1093,15 @@ const checkFreePassport = async (wallet: string) => {
 
 export default conet_dl_server_v4
 
-// const test = async () => {
-//     logger(await checkDuplicate('0x36e2e8687e2b5d14c8e61f1587e51a8a8ee817cc', '0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470'))
-// }
-// test()
+const test = async () => {
+    const obj = {
+        walletAddress: '0xef282e148e7b3d4131c45ac2ed922eda7a8f2fae',
+        channelPartners: '0xa168698d41ec175a975b79e2113652c1f7069cad',
+        hash: 'iOS',
+        referrals: '0x8dAe61E86D276CEB88a4B2E82E062e167DFf06be',
+        ipAddress: '73.189.157.190'
+    }
+    //@ts-ignore
+    const kkk = await checkDownload(obj)
+}
+test()
