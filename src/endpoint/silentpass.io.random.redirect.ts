@@ -117,15 +117,15 @@ class conet_dl_server {
 		const server = createServer(app)
 
 		app.all ('*', (req: any, res: any) => {
-            logger(req.url)
+            
             let search = ''
             try {
-               const url = new URL (req.url)
-               search = url.search
+                const url = new URL(req.url, `https://${req.headers.host}`)
+                search = url.search
             } catch (ex) {
-
+                logger(`URL parse error: ${ex}`)
             }
-			
+
             logger(`url = ${req.url} Search = ${search}`)
             const node = getRandomNode()
 
