@@ -662,7 +662,7 @@ class conet_dl_server {
 
 
 
-const DownloadLinkAddr = '0xAd15F9D9BC99Dd451a5D68ad7dcA9d9195F874a8'
+const DownloadLinkAddr = '0xC92D9FBf764fADc281003bf2b2eC0332cd0F7845'
 const downloadManager = new ethers.Wallet(masterSetup.downloadLinkManager, mainnet_rpc)
 const downloadManagerSCPool = [new ethers.Contract(DownloadLinkAddr, downloadABI, downloadManager)]
 

@@ -1186,7 +1186,9 @@ const changeActiveNFT_Process = async () => {
 
 const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: string) => {
     try {
-        const _owner: bigint = await SP_Passport_SC_readonly.balanceOf(wallet, nftID)
+        const duplicateAccount = await SPDuplicateFactoryContract.duplicateList(wallet)
+        const ownerAddr = duplicateAccount !== ethers.ZeroAddress ? duplicateAccount : wallet
+        const _owner: bigint = await SP_Passport_SC_readonly.balanceOf(ownerAddr, nftID)
         if ( _owner == BigInt(0)) {
             return false
         }
