@@ -2031,7 +2031,7 @@ const spRewardCheck = async (wallet: string, solana: string): Promise<false|numb
         const initBalance = parseInt(ethers.formatUnits(status[1], spDecimalPlaces))
         const price = parseInt(oracleData.data?.sp2499)
         
-        if (!status[0] ||typeof balance !== 'number'  || balance < price && (initBalance === 0 || initBalance > 0 && initBalance > balance)) {
+        if (!status[0] ||typeof balance !== 'number'  || balance < (price * 0.94) && (initBalance === 0 || initBalance > 0 && initBalance > balance)) {
             return false
         }
 
