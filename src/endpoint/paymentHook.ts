@@ -1114,7 +1114,7 @@ class conet_dl_server {
 				logger (Colors.grey(`${ipaddress} request /registerReferrer req.body ERROR!`), inspect(req.body))
 				return res.status(402).json({error: 'Data format error!'}).end()
 			}
-			logger(Colors.magenta(`/activeNFT`), message, signMessage)
+			// logger(Colors.magenta(`/activeNFT`), message, signMessage)
 			
 			const obj = checkSign (message, signMessage)
 
