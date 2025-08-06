@@ -617,12 +617,25 @@ class conet_dl_server {
 			switch (event.type) {
 				case 'invoice.payment_succeeded': {
                     logger(`invoice.payment_succeeded`)
-					const paymentIntent: Stripe.Invoice = event.data.object
+					const _paymentIntent = event.data.object
                     logger(inspect(event.data, false, 4, true))
-                    if (!paymentIntent.id) {
+
+                    if (!_paymentIntent?.subscription) {
                         logger(`paymentIntent.id Error!`)
                     } else {
-                        //searchInvoices (this.stripe, paymentIntent.id)
+                        // 一次性支付
+                        const subscription  = await this.stripe.subscriptions.retrieve(_paymentIntent.subscription, {
+                            expand: ['latest_invoice']
+                        })
+                        const latest_invoice = subscription.latest_invoice
+                        if (subscription.status === 'active' && typeof latest_invoice === 'object') {
+                        
+                            const metadata = subscription.metadata
+                            const price = latest_invoice?.total
+                            
+                            //@ts-ignore
+                            makeExecVesting(metadata, price, session.subscription)
+                        }
                     }
                     
 					break;
@@ -635,20 +648,18 @@ class conet_dl_server {
                     if (session.mode === 'payment' && session.payment_intent) {
 
 
-
-                            // 一次性支付
-                            const paymentIntent = await this.stripe.paymentIntents.retrieve(session.payment_intent)
-                            const metadata = paymentIntent.metadata;
-                            const price = paymentIntent.amount
-                            logger(inspect(paymentIntent))
-                            if (paymentIntent.status === 'succeeded') {
-                                //@ts-ignore
-                                makeExecVesting(metadata, price, paymentIntent.id)
-                            }
-                            
-                            
-                        } else if (session.mode === 'subscription' && session.subscription) {
-                             const subscription  = await this.stripe.subscriptions.retrieve(session.subscription, {
+                        // 一次性支付
+                        const paymentIntent = await this.stripe.paymentIntents.retrieve(session.payment_intent)
+                        const metadata = paymentIntent.metadata;
+                        const price = paymentIntent.amount
+                        logger(inspect(paymentIntent))
+                        if (paymentIntent.status === 'succeeded') {
+                            //@ts-ignore
+                            makeExecVesting(metadata, price, paymentIntent.id)
+                        }
+                        
+                    } else if (session.mode === 'subscription' && session.subscription) {
+                            const subscription  = await this.stripe.subscriptions.retrieve(session.subscription, {
                                 expand: ['latest_invoice']
                             })
 
@@ -663,9 +674,9 @@ class conet_dl_server {
                             }
                             
 
-                        } else {
-                            logger(`unknow session mode!!!!!!!!!!!!!!!!!!!!!!!!!`)
-                        }
+                    } else {
+                        logger(`unknow session mode!!!!!!!!!!!!!!!!!!!!!!!!!`)
+                    }
                     break;
                 }
 
@@ -747,6 +758,12 @@ class conet_dl_server {
 			}
 
             payment_waiting_status.delete(wallet)
+            payment_waiting_status.forEach((value, key) => {
+                if (value === status) {
+                    payment_waiting_status.delete(key)
+                }
+            })
+            
 			logger(`/payment_stripe_waiting ${obj.walletAddress} got ${status}`)
 
 			return res.status(200).json({ status }).end()
@@ -927,6 +944,7 @@ class conet_dl_server {
             })
 
             sp_reword_process()
+
             setTimeout(() => {
                 monitorReward(obj.walletAddress, solana, balance, 0)
             }, 1000 * 60 * monitorRewardWaitingMins * Math.random())
@@ -1314,6 +1332,7 @@ const getBNBPriceNumber = (plan: planStruct): number => {
 
     }
 }
+
 const getUSDTPriceNumber = (plan: planStruct): number => {
     switch(plan) {
         default: {
@@ -1456,7 +1475,9 @@ const SPGlodProcess = async () => {
     logger(`SPGlodProcess success tx = ${tx?.hash}`, inspect(obj, false, 3, true))
 
     if (tx?.hash && NFT > 100) {
-        payment_waiting_status.set(obj.HDWallet || obj.walletAddress, NFT.toString())
+        payment_waiting_status.set(obj.HDWallet, NFT.toString())
+        payment_waiting_status.set(obj.walletAddress, NFT.toString())
+
         await checkNFTOwnership(assetAccount, NFT, obj.solana)
         if (obj.redeemCode) {
             await storeRedeem(obj.redeemCode, assetAccount, tx.hash, )
