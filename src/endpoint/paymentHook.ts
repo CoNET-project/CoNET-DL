@@ -618,10 +618,12 @@ class conet_dl_server {
 				case 'invoice.payment_succeeded': {
                     logger(`invoice.payment_succeeded`)
 					const paymentIntent: Stripe.Invoice = event.data.object
-                    
                     logger(inspect(event.data, false, 4, true))
-                    searchInvoices (this.stripe, paymentIntent.id)
-                    
+                    if (!paymentIntent.id) {
+                        logger(`paymentIntent.id Error!`)
+                    } else {
+                        //searchInvoices (this.stripe, paymentIntent.id)
+                    }
                     
 					break;
 				}
@@ -629,10 +631,37 @@ class conet_dl_server {
                 case 'checkout.session.completed': {
                     logger(`checkout.session.completed`)
                     const session = event.data.object
-                    if (!session.subscription) {
-                        searchSession(this.stripe, session.id)
-                    }
-                
+                    logger(inspect(session, false, 3, true))
+                    if (session.mode === 'payment' && session.payment_intent) {
+                            // 一次性支付
+                            const paymentIntent = await this.stripe.paymentIntents.retrieve(session.payment_intent)
+                            const metadata = paymentIntent.metadata;
+                            logger(inspect(paymentIntent))
+                            if (paymentIntent.status === 'succeeded') {
+                                
+                                //makeExecVesting(metadata, paymentIntent.amount)
+                            }
+                            
+                            
+                        } else if (session.mode === 'subscription' && session.subscription) {
+                             const subscription  = await this.stripe.subscriptions.retrieve(session.subscription, {
+                                expand: ['latest_invoice']
+                            })
+
+                            const latest_invoice = subscription.latest_invoice
+                            if (subscription.status === 'active' && typeof latest_invoice === 'object') {
+                            
+                                const metadata = subscription.metadata
+                                const price = latest_invoice?.total
+                                
+                                //@ts-ignore
+                                makeExecVesting(metadata, price, session.subscription)
+                            }
+                            
+
+                        } else {
+                            logger(`unknow session mode!!!!!!!!!!!!!!!!!!!!!!!!!`)
+                        }
                     break;
                 }
 
@@ -2195,26 +2224,36 @@ const makePaymentLink = async (stripe: Stripe,  walletAddress: string, solanaWal
     if (!price) {
         return ''
     }
-	const option: Stripe.PaymentLinkCreateParams = /!(31|37)00/.test(_price) ? {
-		line_items: [{
-			price,
-			quantity: 1
-		}],
-
-		subscription_data: {
-			metadata:{walletAddress,solanaWallet}
-		}
-		
-	} :
+    const subscription = /^299|^2400/.test(_price)
+	const params: Stripe.Checkout.SessionCreateParams = subscription ? 
     {
+        mode: subscription ? 'subscription' : 'payment',
         line_items: [{
 			price,
 			quantity: 1
 		}],
-		metadata: {walletAddress,solanaWallet}
+		subscription_data: {
+            metadata: { walletAddress, solanaWallet }
+        },
+        success_url:'https://silentpass.io/'
+    } : {
+        mode: subscription ? 'subscription' : 'payment',
+        line_items: [{
+			price,
+			quantity: 1
+		}],
+		metadata: {walletAddress,solanaWallet},
+        success_url:'https://silentpass.io/',
+        payment_intent_data: {
+            metadata:{walletAddress,solanaWallet}
+        }
     }
 
-	const paymentIntent = await stripe.paymentLinks.create(option)
+    
+	const paymentIntent = await stripe.checkout.sessions.create(params)
+    if (!paymentIntent?.url) {
+        return ''
+    }
 	return paymentIntent.url
 }
 
@@ -2239,31 +2278,17 @@ const getPlan = (payAmount: number): planStruct => {
     }
 }
 
-const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
+const makeExecVesting  = async (metadata: {walletAddress: string,solanaWallet: string}, payAmount: number, invoicesID: string ) => {
 	try {
 		
-		const paymentIntent = await stripe.invoices.retrieve(invoicesID)
-		if (paymentIntent.status !== 'paid') {
-			return false
-		}
-		const payAmount = paymentIntent.amount_paid
-		
-		const metadata = paymentIntent.subscription_details?.metadata
-       
-        
-		if ( !metadata?.solanaWallet|| !metadata?.walletAddress) {
-			logger(inspect(paymentIntent.subscription_details))
-			return logger(`stripe Invoices subscription_details Error!`)
-		}
-
-		console.log(`PaymentIntent for ${paymentIntent.id} ${payAmount} was successful! wallets = ${inspect(metadata, false, 3, true)}`)
         const walletAddress = metadata.walletAddress?.toLowerCase()
         const plan = getPlan(payAmount)
-        if (plan === '0') {
-            return logger(`searchInvoices invoicesID = ${invoicesID} Plan Error payAmount = ${payAmount}`)
-        }
         await execVesting(plan, walletAddress, metadata.solanaWallet, '', invoicesID)
 
+        // if (plan === '0') {
+        //     return logger(`searchInvoices invoicesID = ${invoicesID} Plan Error payAmount = ${payAmount}`)
+        // }
+        // 
 
 
 
@@ -2291,6 +2316,8 @@ const searchInvoices = async (stripe: Stripe, invoicesID: string) => {
 		return false
 	}
 }
+
+
 
 const searchSession = async (stripe: Stripe, sessionId: string) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
@@ -3043,12 +3070,27 @@ const test2 = async () => {
     // logger(kk)
     const stripe = new Stripe(masterSetup.stripe_SecretKey)
 
-    // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '2860')       2782 returnSP_Pool_process
+    // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '299')       //2782 returnSP_Pool_process
     // logger(kk)
     //Plan2860('0x645cB92752Ef1BDF173ec085C2d8640b9dA2dD8E','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw', '' )
-    const kkk = await getPriceFromCryptoName('BSC USDT', '2860')
-    console.log(kkk)
+    // const kkk = await getPriceFromCryptoName('BSC USDT', '2860')
+    // console.log(kkk)
+    //searchInvoices(stripe,'in_1RsuicFmCrk3Nr7LK54BZCXj')
+    const subscription  = await stripe.subscriptions.retrieve('sub_1RsxFAFmCrk3Nr7LV9EAZQYM', {
+        expand: ['latest_invoice']
+    })
+
+    const latest_invoice = subscription.latest_invoice
+    if (subscription.status === 'active' && typeof latest_invoice === 'object') {
+       
+        const metadata = subscription.metadata
+        const price = latest_invoice?.total
+        //@ts-ignore
+        // const success = await searchInvoices(metadata, subscription.latest_invoice)
+        logger(inspect({metadata, price}, false, 3, true))
+    }
+    
 }
 
-// test2()
+test2()
 
