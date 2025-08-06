@@ -633,13 +633,17 @@ class conet_dl_server {
                     const session = event.data.object
                     logger(inspect(session, false, 3, true))
                     if (session.mode === 'payment' && session.payment_intent) {
+
+
+
                             // 一次性支付
                             const paymentIntent = await this.stripe.paymentIntents.retrieve(session.payment_intent)
                             const metadata = paymentIntent.metadata;
+                            const price = paymentIntent.amount
                             logger(inspect(paymentIntent))
                             if (paymentIntent.status === 'succeeded') {
-                                
-                                //makeExecVesting(metadata, paymentIntent.amount)
+                                //@ts-ignore
+                                makeExecVesting(metadata, price, paymentIntent.id)
                             }
                             
                             
@@ -3076,10 +3080,14 @@ const test2 = async () => {
     // const kkk = await getPriceFromCryptoName('BSC USDT', '2860')
     // console.log(kkk)
     //searchInvoices(stripe,'in_1RsuicFmCrk3Nr7LK54BZCXj')
-    // const subscription  = await stripe.subscriptions.retrieve('sub_1RsxFAFmCrk3Nr7LV9EAZQYM', {
-    //     expand: ['latest_invoice']
-    // })
-
+    const paymentIntent = await stripe.paymentIntents.retrieve('pi_3RsxkTFmCrk3Nr7L1oxpcmiZ')
+    const metadata = paymentIntent.metadata;
+    const price = paymentIntent.amount
+    logger(inspect(paymentIntent))
+    if (paymentIntent.status === 'succeeded') {
+        
+        logger(`paymentIntent.status metadata = ${inspect(metadata, false, 3, true)} price = ${price}`)
+    }
     // const latest_invoice = subscription.latest_invoice
     // if (subscription.status === 'active' && typeof latest_invoice === 'object') {
        
@@ -3092,5 +3100,5 @@ const test2 = async () => {
     
 }
 
-// test2()
+
 
