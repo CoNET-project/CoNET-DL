@@ -1223,7 +1223,7 @@ const checkNFTOwnership = async (wallet: string, nftID: number, solanaWallet: st
         }
 
         changeActiveNFT_pool.push({
-            wallet, nftID, solanaWallet
+            wallet: ownerAddr, nftID, solanaWallet
         })
 
         changeActiveNFT_Process()
@@ -2198,7 +2198,7 @@ const getStripePlanID = (price: string, testMode: boolean): string => {
     switch(price) {
         default: 
         case '0': {
-            return ''
+            return 'price_1RsxTOFmCrk3Nr7LFdjbUR8y'           //      test
         }
         case '299': {
             return testMode ? StripeMonthlyID_test : StripeMonthlyID
@@ -3070,27 +3070,27 @@ const test2 = async () => {
     // logger(kk)
     const stripe = new Stripe(masterSetup.stripe_SecretKey)
 
-    // const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '299')       //2782 returnSP_Pool_process
-    // logger(kk)
+    const kk = await makePaymentLink(stripe, '0x908304aa26023ebb28eb76022a42a8d4f4c18125', 'FpxFE6uegP6j5pmr7fhx543BYr5NTwa75CG2JCgGf3Hc', '0')       //2782 returnSP_Pool_process
+    logger(kk)
     //Plan2860('0x645cB92752Ef1BDF173ec085C2d8640b9dA2dD8E','CVUGfqihk2owM3GF5UmPNskAUFdpzrPDyoDrkWRdzXw', '' )
     // const kkk = await getPriceFromCryptoName('BSC USDT', '2860')
     // console.log(kkk)
     //searchInvoices(stripe,'in_1RsuicFmCrk3Nr7LK54BZCXj')
-    const subscription  = await stripe.subscriptions.retrieve('sub_1RsxFAFmCrk3Nr7LV9EAZQYM', {
-        expand: ['latest_invoice']
-    })
+    // const subscription  = await stripe.subscriptions.retrieve('sub_1RsxFAFmCrk3Nr7LV9EAZQYM', {
+    //     expand: ['latest_invoice']
+    // })
 
-    const latest_invoice = subscription.latest_invoice
-    if (subscription.status === 'active' && typeof latest_invoice === 'object') {
+    // const latest_invoice = subscription.latest_invoice
+    // if (subscription.status === 'active' && typeof latest_invoice === 'object') {
        
-        const metadata = subscription.metadata
-        const price = latest_invoice?.total
-        //@ts-ignore
-        // const success = await searchInvoices(metadata, subscription.latest_invoice)
-        logger(inspect({metadata, price}, false, 3, true))
-    }
+    //     const metadata = subscription.metadata
+    //     const price = latest_invoice?.total
+    //     //@ts-ignore
+    //     // const success = await searchInvoices(metadata, subscription.latest_invoice)
+    //     logger(inspect({metadata, price}, false, 3, true))
+    // }
     
 }
 
-test2()
+// test2()
 
