@@ -320,7 +320,7 @@ const checkPrice: (_amount: string) => Promise<planStruct> = async (_amount: str
     return resolve('0')
 })
 
-const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWallet: string, waiting = false): Promise<boolean> => new Promise(async executor => {
+const checkSolanaPayment_old = (solanaTx: string, walletAddress: string, _solanaWallet: string, waiting = false): Promise<boolean> => new Promise(async executor => {
 
     //		from: J3qsMcDnE1fSmWLd1WssMBE5wX77kyLpyUxckf73w9Cs
     //		to: 2UbwygKpWguH6miUbDro8SNYKdA66qXGdqqvD6diuw3q
@@ -408,10 +408,104 @@ const checkSolanaPayment = (solanaTx: string, walletAddress: string, _solanaWall
     logger(inspect(tx, false, 3, true))
     if (!waiting) {
         await new Promise(_executor => setTimeout(()=> _executor(true), 5000))
-        return executor (await checkSolanaPayment(solanaTx, walletAddress, _solanaWallet, true))
+        return executor (await checkSolanaPayment1(solanaTx, walletAddress, _solanaWallet, true))
     }
     executor(false)
 
+})
+
+const checkSolanaPayment1 = (solanaTx: string, walletAddress: string, _solanaWallet: string, waiting = false): Promise<boolean> => new Promise(async executor => {
+    
+    // 建议将 sp_team 和 SP_address 定义为常量或从配置中获取
+    // const sp_team = 'YOUR_SP_TEAM_WALLET_ADDRESS';
+    // const SP_address = 'YOUR_SP_TOKEN_MINT_ADDRESS';
+
+    const connect = masterSetup.solana_rpc;
+    const SOLANA_CONNECTION = new Connection(connect, {
+        commitment: "confirmed",
+        disableRetryOnRateLimit: false,
+    });
+
+    let tx
+    try {
+        tx = await SOLANA_CONNECTION.getTransaction(solanaTx, { maxSupportedTransactionVersion: 0 });
+    } catch (ex: any) {
+        logger(`checkSolanaPayment: SOLANA_CONNECTION.getTransaction Error for tx ${solanaTx}`, ex.message)
+        return executor(false)
+    }
+
+    if (!tx || !tx.meta) {
+        logger(`checkSolanaPayment: Failed to get transaction meta for ${solanaTx}`)
+        if (!waiting) {
+            // 如果第一次获取失败，可能是交易尚未最终确认，等待5秒后重试一次
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            return executor(await checkSolanaPayment1(solanaTx, walletAddress, _solanaWallet, true))
+        }
+        return executor(false)
+    }
+
+    const { preTokenBalances, postTokenBalances } = tx.meta
+
+    if (!preTokenBalances || !postTokenBalances || preTokenBalances.length === 0 || postTokenBalances.length === 0) {
+        logger(Colors.red(`NFT Error! Token balances are missing for tx ${solanaTx}`))
+        return executor(false);
+    }
+
+    // --- 核心修改：动态查找账户，而不是依赖固定索引 ---
+    // 查找 sp_team 钱包在交易前后的 SP 代币账户信息
+    const teamPreBalance = preTokenBalances.find(b => b.owner === sp_team && b.mint === SP_address)
+    const teamPostBalance = postTokenBalances.find(b => b.owner === sp_team && b.mint === SP_address)
+
+    // 查找付款方钱包在交易前后的 SP 代币账户信息
+    const userPreBalance = preTokenBalances.find(b => b.owner === _solanaWallet && b.mint === SP_address)
+    const userPostBalance = postTokenBalances.find(b => b.owner === _solanaWallet && b.mint === SP_address)
+    
+    // 验证是否找到了所有必要的账户信息
+    if (!teamPreBalance || !teamPostBalance || !userPreBalance || !userPostBalance) {
+        logger(Colors.magenta(`NFT Error! Could not find all required token accounts in tx ${solanaTx}.`))
+        logger(inspect({ teamPreBalance, teamPostBalance, userPreBalance, userPostBalance }, false, 3, true))
+        return executor(false);
+    }
+    
+    // 使用 uiAmountString 避免浮点数精度问题
+    const preAmount = parseFloat(teamPreBalance.uiTokenAmount?.uiAmountString ?? "0")
+    const postAmount = parseFloat(teamPostBalance.uiTokenAmount?.uiAmountString ?? "0")
+    const receivedAmount = postAmount - preAmount;
+
+    // 添加一个额外的验证：确保发送方确实减少了相应数量的代币
+    const userPreAmount = parseFloat(userPreBalance.uiTokenAmount?.uiAmountString ?? "0")
+    const userPostAmount = parseFloat(userPostBalance.uiTokenAmount?.uiAmountString ?? "0")
+    const sentAmount = userPreAmount - userPostAmount;
+    
+    // 收到的金额必须大于0，并且与发送的金额相符
+    if (receivedAmount <= 0 || receivedAmount.toFixed(9) !== sentAmount.toFixed(9)) {
+        logger(Colors.red(`NFT Error! Amount mismatch or invalid amount for tx ${solanaTx}. Received: ${receivedAmount}, Sent: ${sentAmount}`))
+        return executor(false)
+    }
+
+    logger(Colors.blue(`Transfer amount verified for tx ${solanaTx}: ${receivedAmount}`))
+
+    try {
+        const [hash, nftType] = await Promise.all([
+            checkHash(solanaTx),
+            checkPrice(receivedAmount.toFixed(4)) // 使用验证后的金额
+        ]);
+
+        if (nftType === '0' || !hash) {
+            logger(Colors.magenta(`checkSolanaPayment: Pay ${solanaTx} $SP ${receivedAmount} failed validation. nftType=${nftType}, hash=${hash}`))
+            // 此处可以添加退款逻辑
+            return executor(false)
+        }
+
+        await execVesting(nftType, walletAddress, _solanaWallet, '', solanaTx)
+        
+        logger(Colors.magenta(`Purchase success for ${walletAddress}: NFT ${nftType}, tx: ${solanaTx}`))
+        executor(true)
+
+    } catch (error: any) {
+        logger(Colors.red(`Error during post-payment processing for tx ${solanaTx}:`), error.message)
+        executor(false)
+    }
 })
 
 const getReferrer = async (walletAddress: string, reffer=ethers.ZeroAddress): Promise<string> => {
@@ -482,7 +576,7 @@ const checkPurchasePassport = async (obj: minerObj): Promise<boolean> => {
     logger(`checkPurchasePassport pass1`)
     logger(inspect(obj, false, 3, true))
 
-    const kkk = await checkSolanaPayment (obj.hash, obj.walletAddress, obj.solanaWallet)
+    const kkk = await checkSolanaPayment1 (obj.hash, obj.walletAddress, obj.solanaWallet)
     return kkk
     
 }
@@ -3142,7 +3236,8 @@ const test2 = async () => {
 
 
 const test4 = async () => {
-    await execVesting('3', '0xc74866D94e0E836AD99cEf963cFfB199a81Cb5ef', '', '', v4())
+    // await execVesting('3', '0xc74866D94e0E836AD99cEf963cFfB199a81Cb5ef', '', '', v4())
+    checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
 }
 
 // test4()
