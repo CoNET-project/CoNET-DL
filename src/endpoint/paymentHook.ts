@@ -1116,7 +1116,7 @@ class conet_dl_server {
 
             // logger(inspect(obj, false, 3, true))
             // SPClub_AirdropProcess()
-            await execVesting('3', walletAddressSC,'', '', v4(), '')
+            
             return res.status(200).json({
                 status: true,
                 amount: 0
@@ -1266,7 +1266,7 @@ const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, dup
 
 
 const SPClubManager = [SPDuplicateFactoryContract]
-const initReferralsV3 = '0x2e6dF4aE1Fb0ed28C8955c94245e8E791393Da13'
+const initReferralsV3 = '0x81f89a5C66a64D8132bC8c24F9A7e83a98a340B6'
 
 const SPClubManagerPool = [new ethers.Contract(initReferralsV3, initReferralsV3ABI, SPClubWallet)]
 
@@ -1290,7 +1290,7 @@ const addReferralsProcess = async () => {
 
     try {
         
-        const tx = await SC.initAddReferrer(obj.referrer, obj.wallet)
+        const tx = await SC.initAddReferrer(obj.referrer, obj.wallet, v4())
         await tx.wait()
         logger(`addReferralsProcess ${obj.wallet} => ${obj.referrer} success ${tx.hash}`)
     } catch (ex:any) {
@@ -1437,7 +1437,7 @@ const SPGlodProcess = async () => {
         return
     }
     logger(inspect(obj, false, 3, true))
-    let tx
+    let tx = null
     let NFT = 0
     let assetAccount = ''
     try {
@@ -1463,11 +1463,18 @@ const SPGlodProcess = async () => {
                 }
                 case '3100': {
                     tx = await SC.initSPGoldMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, amountSP)
+                    break
+                }
+                default: {
+                    break
                 }
             }
             
         }
-        await tx.wait()
+        if (tx) {
+            await tx.wait()
+        }
+        
         
     } catch (ex: any) {
         payment_waiting_status.set(obj.HDWallet||obj.walletAddress, 0)
@@ -3129,7 +3136,7 @@ const test2 = async () => {
 
 
 const test4 = async () => {
-    await execVesting('3', '0xFE11cc0D9e4661F20837e8a2d31F8adD220dADf3', '', '', v4())
+    await execVesting('3', '0xc74866D94e0E836AD99cEf963cFfB199a81Cb5ef', '', '', v4())
 }
 
 // test4()
