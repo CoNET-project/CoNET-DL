@@ -1451,6 +1451,7 @@ const SPGlodProcess = async () => {
             switch(obj.plan) {
                 case '3': {
                     tx = await SC.initSPMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, 3, amountSP)
+                    break
                 }
                 case '299': {
                     tx = await SC.initSPMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, 31, amountSP)
