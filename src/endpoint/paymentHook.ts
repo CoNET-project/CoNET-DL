@@ -629,12 +629,16 @@ class conet_dl_server {
                         })
                         const latest_invoice = subscription.latest_invoice
                         if (subscription.status === 'active' && typeof latest_invoice === 'object') {
-                        
+                            const payID = latest_invoice?.id||v4()
                             const metadata = subscription.metadata
-                            const price = latest_invoice?.total
+                            const price = latest_invoice?.total||0
+
+                            if (price > 0) {
+                                //              
+                                makeExecVesting(metadata, price, payID)
+                            }
                             
-                            //@ts-ignore
-                            makeExecVesting(metadata, price, session.subscription)
+                            
                         }
                     }
                     
@@ -667,10 +671,12 @@ class conet_dl_server {
                             if (subscription.status === 'active' && typeof latest_invoice === 'object') {
                             
                                 const metadata = subscription.metadata
-                                const price = latest_invoice?.total
+                                const price = latest_invoice?.total||0
+                                if (price > 0 ) {
+                                    makeExecVesting(metadata, price, subscription.id)
+                                }
                                 
-                                //@ts-ignore
-                                makeExecVesting(metadata, price, session.subscription)
+                                
                             }
                             
 
@@ -2314,7 +2320,7 @@ const getPlan = (payAmount: number): planStruct => {
     }
 }
 
-const makeExecVesting  = async (metadata: {walletAddress: string,solanaWallet: string}, payAmount: number, invoicesID: string ) => {
+const makeExecVesting  = async (metadata: any, payAmount: number, invoicesID: string ) => {
 	try {
 		
         const walletAddress = metadata.walletAddress?.toLowerCase()
