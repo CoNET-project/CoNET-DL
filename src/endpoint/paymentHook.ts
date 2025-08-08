@@ -1116,7 +1116,7 @@ class conet_dl_server {
 
             // logger(inspect(obj, false, 3, true))
             // SPClub_AirdropProcess()
-            execVesting('3', walletAddressSC,'', '', v4(), '')
+            await execVesting('3', walletAddressSC,'', '', v4(), '')
             return res.status(200).json({
                 status: true,
                 amount: 0
@@ -3122,8 +3122,14 @@ const test2 = async () => {
     //     // const success = await searchInvoices(metadata, subscription.latest_invoice)
     //     logger(inspect({metadata, price}, false, 3, true))
     // }
+
+
     
 }
 
 
+const test4 = async () => {
+    await execVesting('3', '0xFE11cc0D9e4661F20837e8a2d31F8adD220dADf3', '', '', v4())
+}
 
+// test4()
