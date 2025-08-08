@@ -662,7 +662,7 @@ class conet_dl_server {
 
 
 
-const DownloadLinkAddr = '0xC92D9FBf764fADc281003bf2b2eC0332cd0F7845'
+const DownloadLinkAddr = '0x14Ba856309092433704d457Fcba37feaCd6195b7'
 const downloadManager = new ethers.Wallet(masterSetup.downloadLinkManager, mainnet_rpc)
 const downloadManagerSCPool = [new ethers.Contract(DownloadLinkAddr, downloadABI, downloadManager)]
 
@@ -691,7 +691,7 @@ const downloadManagerProcess = async () => {
     }
     try {
         const tx = await SC.downloadLink(obj.wallet, obj.ipaddress, obj.link, obj.referrals, obj.channelPartners,obj.usedNode,obj.area)
-        logger(`downloadManagerProcess tx = ${tx.hash}`)
+        logger(`downloadManagerProcess ${inspect(obj, false, 3, true)} tx = ${tx.hash}`)
 
     } catch (ex: any) {
         logger(ex.message)

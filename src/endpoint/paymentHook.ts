@@ -1116,7 +1116,7 @@ class conet_dl_server {
 
             // logger(inspect(obj, false, 3, true))
             // SPClub_AirdropProcess()
-
+            execVesting('3', walletAddressSC, obj?.solanaWallet||'', '', v4(), '')
             return res.status(200).json({
                 status: true,
                 amount: 0
@@ -1411,7 +1411,7 @@ const ChannelPartnersSC = new ethers.Contract(ChannelPartners, ChannelPartnersAB
 
 
 const ChannelPartnersSCPool = [ChannelPartnersSC]
-type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'
+type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'|'3'
 
 
 const SPGlodProceePool: {
@@ -1449,6 +1449,9 @@ const SPGlodProcess = async () => {
             tx = await SC.redeemPassport(obj.redeemCode, assetAccount, obj.solana, obj.pdaAddress, amountSP)
         } else {
             switch(obj.plan) {
+                case '3': {
+                    tx = await SC.initSPMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, 3, amountSP)
+                }
                 case '299': {
                     tx = await SC.initSPMember(assetAccount, obj.solana, obj.pdaAddress, obj.paymentID, 31, amountSP)
                     break
