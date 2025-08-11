@@ -17,11 +17,12 @@ import {masterSetup} from './util'
 import faucet_v3_ABI from '../endpoint/faucet_v3.abi.json'
 import CONETPassportABI from './CoNET_Cancun_passportABI.json'
 const conet_rpc = 'https://cancun-rpc.conet.network'
+import newNodeInfoABI from '../endpoint/newNodeInfoABI.json'
 
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const CONET_Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 
-const provider_cancun = new ethers.JsonRpcProvider(conet_rpc)
+
 const launchMap: Map<string, boolean> = new Map()
 const epochTotal: Map<string, number> = new Map()
 
@@ -318,131 +319,40 @@ let didResponseNode: string[] = []
 const rateAddr = '0x467c9F646Da6669C909C72014C20d85fc0A9636A'.toLowerCase()
 const filePath = '/home/peter/.data/v2/'
 
-const moveData = async () => {
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provider_cancun)
-	const rate = parseFloat(ethers.formatEther(await rateSC.rate()))
 
-	const block = currentEpoch - 1
-	
-	let _wallets: string[] = []
-	let _users: string[] = []
-	const obj = listenPool.get (block)
-	const objuser = userPool.get(block)
-	if (!obj||!objuser) {
-		return logger(Colors.red(`moveData Error! listenPool hasn't Epoch ${block} data! `))
-	}
-
-	obj.forEach((v, keys) => {
-		_wallets = [..._wallets, ...v]
-	})
-
-	objuser.forEach((v,keys) => {
-		_users = [..._users, ...v]
-	})
-
-	
-	const totalUsrs = _users.length
-	const totalMiners = _wallets.length + totalUsrs
-	const minerRate = (rate/totalMiners)/12
-
-	
-
-	logger(Colors.magenta(`${block} move data ${_start}~${_end} connecting = ${obj.size} total [${totalMiners}] miners [${_wallets.length}] users [${_users.length}] rate ${minerRate}`))
-	const filename = `${filePath}${block}.wallet`
-	const filename1 = `${filePath}${block}.total`
-	const filename2 = `${filePath}${block}.users`
-	const timeOverNodes: nodeInfo[] = []
-
-	Guardian_Nodes.forEach(n => {
-		if (typeof n.lastEposh === 'undefined') {
-			timeOverNodes.push(n)
-
-		} else if (block - n.lastEposh > 2) {
-			timeOverNodes.push(n)
-		}
-
-	})
-
-	timeOverNodes.forEach(n => {
-		connectToGossipNode(n)
-	})
-
-
-	logger(Colors.red(`moveData timeout nodes is ${timeOverNodes.map(n => n.ip_addr)} ${timeOverNodes.map(n=>n.lastEposh)}`))
-	// await Promise.all ([
-	// 	writeFile(filename, JSON.stringify(minerPreviousGossipStatus)),
-	// 	writeFile(filename1, JSON.stringify({totalMiners, minerRate, totalUsrs})),
-	// 	writeFile(filename2, JSON.stringify(userPreviousGossipStatus))
-	// ])
-
-	
-	
-}
 
 const listenPool: Map<number, Map<string, string[]>> = new Map()
 const userPool: Map<number, Map<string, string[]>> = new Map()
 
 let currentEpoch = 0
-
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
+const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
+const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 const getAllNodes = () => new Promise(async resolve=> {
-	
-	if (getAllNodesProcess) {
-		return resolve (true)
-	}
 
-	getAllNodesProcess = true
-
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_cancun, GuardianNodesV2ABI, provider_cancun)
-	let scanNodes = 0
-	try {
-		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
-		scanNodes = parseInt(maxNodes.toString())
-
-	} catch (ex) {
-		resolve (false)
-		return logger (`getAllNodes currentNodeID Error`, ex)
-	}
-	if (!scanNodes) {
-		resolve (false)
-		return logger(`getAllNodes STOP scan because scanNodes == 0`)
-	}
-
-	Guardian_Nodes = []
-
-	for (let i = 0; i < scanNodes; i ++) {
-		Guardian_Nodes.push({
-			region: '',
-			ip_addr: '',
-			armoredPublicKey: '',
-			nftNumber: 100 + i,
-			domain: ''
-		})
-	}
-		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider_cancun)
-	let i = 0
-	
-	await mapLimit(Guardian_Nodes, 5, async (n: nodeInfo, next) => {
-		i = n.nftNumber
-		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
-		n.region = nodeInfo.regionName
-		n.ip_addr = nodeInfo.ipaddress
-		n.armoredPublicKey = Buffer.from(nodeInfo.pgp,'base64').toString()
-		const pgpKey1 = await readKey({ armoredKey: n.armoredPublicKey})
-		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase() + '.conet.network'
-		
-	}).catch(ex=> {
-		
-	})
-
-	const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
-	const end = _end > index ? index : _end
-	Guardian_Nodes = Guardian_Nodes.slice(_start, end)
-	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
-	resolve (true)
+    const _nodes = await GuardianNodesMainnet.getAllNodes(0, 1000)
+    for (let i = 0; i < _nodes.length; i ++) {
+        const node = _nodes[i]
+        const id = parseInt(node[0].toString())
+        const pgpString: string = Buffer.from( node[1], 'base64').toString()
+        const domain: string = node[2]
+        const ipAddr: string = node[3]
+        const region: string = node[4]
+        const itemNode: nodeInfo = {
+            ip_addr: ipAddr,
+            armoredPublicKey: pgpString,
+            domain: domain,
+            nftNumber: id,
+            region: region
+        }
+    
+        Guardian_Nodes.push(itemNode)
+    }
+    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+    resolve(true)
 })
 
 let allNodeAddr: string[] = []
@@ -467,7 +377,7 @@ const start = async () => {
 	startGossipListening()
 	managerWallet = Math.round(_start / 100)
 
-	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], provider_cancun)
+	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], CONET_MAINNET)
 	const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
 	CoNET_passport_SC.push(sc)
 }

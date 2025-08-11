@@ -13,10 +13,15 @@ import {getRandomValues} from 'node:crypto'
 import {RequestOptions, request } from 'node:http'
 import {request as httpsRequest } from 'node:https'
 import ReferrerV3 from './ReferralsV3.json'
+
+
+import newNodeInfoABI from './newNodeInfoABI.json'
+
+
+
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 const ReferrerV3Addr = '0xbd67716ab31fc9691482a839117004497761D0b9'
-const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 const apiEndpoint = `https://apiv4.conet.network/api/`
 
 
@@ -25,6 +30,10 @@ let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
 const epochTotal: Map<number, Map<string, boolean>> = new Map()
+const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
+
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
+const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 const getAllNodes = () => new Promise(async resolve=> {
 	
@@ -34,56 +43,32 @@ const getAllNodes = () => new Promise(async resolve=> {
 
 	getAllNodesProcess = true
 
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
-	let scanNodes = 0
-	try {
-		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
-		scanNodes = parseInt(maxNodes.toString())
-
-	} catch (ex) {
-		resolve (false)
-		return logger (`getAllNodes currentNodeID Error`, ex)
-	}
-	if (!scanNodes) {
-		resolve (false)
-		return logger(`getAllNodes STOP scan because scanNodes == 0`)
-	}
-
-	Guardian_Nodes = []
-
-	for (let i = 0; i < scanNodes; i ++) {
-		Guardian_Nodes.push({
-			region: '',
-			ip_addr: '',
-			armoredPublicKey: '',
-			nftNumber: 100 + i,
-			domain: ''
-		})
-	}
-		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)
-	let i = 0
-	mapLimit(Guardian_Nodes, 10, async (n: nodeInfo, next) => {
-		i = n.nftNumber
-		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
-		n.region = nodeInfo.regionName
-		n.ip_addr = nodeInfo.ipaddress
-		n.armoredPublicKey = Buffer.from(nodeInfo.pgp,'base64').toString()
-		const pgpKey1 = await readKey({ armoredKey: n.armoredPublicKey})
-		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase()
-	}, err => {
-		const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
-		Guardian_Nodes = Guardian_Nodes.slice(0, index)
-		logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
-		Guardian_Nodes = Guardian_Nodes.filter(n => n.armoredPublicKey)
-		resolve(true)
-	})
+	const _nodes = await GuardianNodesMainnet.getAllNodes(0, 1000)
+	for (let i = 0; i < _nodes.length; i ++) {
+		const node = _nodes[i]
+		const id = parseInt(node[0].toString())
+		const pgpString: string = Buffer.from( node[1], 'base64').toString()
+		const domain: string = node[2]
+		const ipAddr: string = node[3]
+		const region: string = node[4]
+		const itemNode: nodeInfo = {
+			ip_addr: ipAddr,
+			armoredPublicKey: pgpString,
+			domain: domain,
+			nftNumber: id,
+			region: region
+		}
+	
+		Guardian_Nodes.push(itemNode)
+  	}
+	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+	resolve(true)
 })
 
 const listenEposh = async () => {
-	let currentEpoch = await provider.getBlockNumber()
+	let currentEpoch = await CONET_MAINNET.getBlockNumber()
 	logger(Colors.magenta(`listenEposh EPOCH ${currentEpoch} Started!`))
-	provider.on('block', block => {
+	CONET_MAINNET.on('block', block => {
 		if (block % 2) {
 			return
 		}
@@ -99,34 +84,6 @@ const listenEposh = async () => {
 	})
 }
 
-const addReferrer = (privateKeyArmor: string) => new Promise (async resolve => {
-	const wallet = new ethers.Wallet(privateKeyArmor, provider)
-	const ReferrerV3SC = new ethers.Contract(ReferrerV3Addr, ReferrerV3, wallet)
-	
-	try {
-		const CoNETBalance = await provider.getBalance(wallet.address)
-		const eth = ethers.formatEther(CoNETBalance.toString())
-		if (eth < '0.0001') {
-			logger(`addReferrer skip ${wallet.address} because CONET = ${CoNETBalance.toString()}`)
-			return resolve(false)
-		}
-		logger(Colors.blue(`addReferrer for ${wallet.address} balance = ${eth}`))
-		const getReferrer = await ReferrerV3SC.getReferrer(wallet.address)
-		if (getReferrer === '0x0000000000000000000000000000000000000000') {
-			const tx = await ReferrerV3SC.addReferrer('0x454428D883521C8aF9E88463e97e4D343c600914')
-			logger(tx)
-		}
-		
-		setTimeout(() => {
-			return resolve(true)
-		}, 1000)
-		
-
-	} catch (ex: any) {
-		logger(`addReferrer ${wallet.address} Error  ${ex.message}`)
-		return resolve(false)
-	}
-})
 
 
 const getWallet = async (SRP: string, max: number, __start: number) => {

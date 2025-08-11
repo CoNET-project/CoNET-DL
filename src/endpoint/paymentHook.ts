@@ -45,7 +45,7 @@ import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import {getUSDT2Sol_Price, findAndVESTING_ID} from './vestingPda'
 import ChannelPartnersABI from './ChannelPartnersABI.json'
 import initReferralsV3ABI from './initReferralsV3ABI.json'
-
+import newNodeInfoABI from './newNodeInfoABI.json'
 
 const getIpAddressFromForwardHeader = (req: Request) => {
 	const ipaddress = req.headers['X-Real-IP'.toLowerCase()]
@@ -3008,53 +3008,32 @@ const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLow
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 let Guardian_Nodes: nodeInfo[] = []
+const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
+const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
+
 
 const getAllNodes = () => new Promise(async resolve=> {
 
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
-	let scanNodes = 0
-	try {
-		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
-		scanNodes = parseInt(maxNodes.toString())
-
-	} catch (ex) {
-		resolve (false)
-		return logger (`getAllNodes currentNodeID Error`, ex)
-	}
-	if (!scanNodes) {
-		resolve (false)
-		return logger(`getAllNodes STOP scan because scanNodes == 0`)
-	}
-
-	Guardian_Nodes = []
-
-	for (let i = 0; i < scanNodes; i ++) {
-		Guardian_Nodes.push({
-			region: '',
-			ip_addr: '',
-			armoredPublicKey: '',
-			nftNumber: 100 + i,
-			domain: ''
-		})
-	}
-		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)
-	let i = 0
-	mapLimit(Guardian_Nodes, 10, async (n: nodeInfo, next) => {
-		i = n.nftNumber
-		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
-		n.region = nodeInfo.regionName
-		n.ip_addr = nodeInfo.ipaddress
-		n.armoredPublicKey = Buffer.from(nodeInfo.pgp,'base64').toString()
-		const pgpKey1 = await readKey({ armoredKey: n.armoredPublicKey})
-		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase()
-	}, err => {
-		const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
-		Guardian_Nodes = Guardian_Nodes.slice(0, index)
-		logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
-		Guardian_Nodes = Guardian_Nodes.filter(n => n.armoredPublicKey)
-		resolve(true)
-	})
+	const _nodes = await GuardianNodesMainnet.getAllNodes(0, 1000)
+	for (let i = 0; i < _nodes.length; i ++) {
+		const node = _nodes[i]
+		const id = parseInt(node[0].toString())
+		const pgpString: string = Buffer.from( node[1], 'base64').toString()
+		const domain: string = node[2]
+		const ipAddr: string = node[3]
+		const region: string = node[4]
+		const itemNode: nodeInfo = {
+			ip_addr: ipAddr,
+			armoredPublicKey: pgpString,
+			domain: domain,
+			nftNumber: id,
+			region: region
+		}
+	
+		Guardian_Nodes.push(itemNode)
+  	}
+	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+	resolve(true)
 })
 
 const testApple = async () => {

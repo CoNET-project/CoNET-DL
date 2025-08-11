@@ -56,9 +56,11 @@ interface nodeInfo {
 	nftNumber: number
 	domain: string
 	lastEposh?: number
+    owner?: string
 }
 
 interface ICoNET_DL_masterSetup {
+    GuardianNodesInfoManager: string
     downloadLinkManager: string
     duplicatePasscodManager: string
     duplicateRestore: string

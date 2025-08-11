@@ -16,6 +16,7 @@ import {request as httpsRequest } from 'node:https'
 import ReferrerV3 from './ReferralsV3.json'
 import CoNETDePINHoleskyABI from './CoNETDePINHolesky.json'
 import CONET_Point_ABI from '../util/cCNTP.json'
+import newNodeInfoABI from './newNodeInfoABI.json'
 
 const GuardianNodesInfoV6 = '0x9e213e8B155eF24B466eFC09Bcde706ED23C537a'
 const CONET_Guardian_PlanV7 = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'.toLowerCase()
@@ -30,59 +31,6 @@ let Guardian_Nodes: nodeInfo[] = []
 
 const epochTotal: Map<number, Map<string, boolean>> = new Map()
 
-const getAllNodes = () => new Promise(async resolve=> {
-	
-	if (getAllNodesProcess) {
-		return resolve (true)
-	}
-
-	getAllNodesProcess = true
-
-	const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
-	let scanNodes = 0
-	try {
-		const maxNodes: BigInt = await GuardianNodes.currentNodeID()
-		scanNodes = parseInt(maxNodes.toString())
-
-	} catch (ex) {
-		resolve (false)
-		return logger (`getAllNodes currentNodeID Error`, ex)
-	}
-	if (!scanNodes) {
-		resolve (false)
-		return logger(`getAllNodes STOP scan because scanNodes == 0`)
-	}
-
-	Guardian_Nodes = []
-
-	for (let i = 0; i < scanNodes; i ++) {
-		Guardian_Nodes.push({
-			region: '',
-			ip_addr: '',
-			armoredPublicKey: '',
-			nftNumber: 100 + i,
-			domain: ''
-		})
-	}
-		
-	const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6, NodesInfoABI, provider)
-	let i = 0
-	mapLimit(Guardian_Nodes, 10, async (n: nodeInfo, next) => {
-		i = n.nftNumber
-		const nodeInfo = await GuardianNodesInfo.getNodeInfoById(n.nftNumber)
-		n.region = nodeInfo.regionName
-		n.ip_addr = nodeInfo.ipaddress
-		n.armoredPublicKey = Buffer.from(nodeInfo.pgp,'base64').toString()
-		const pgpKey1 = await readKey({ armoredKey: n.armoredPublicKey})
-		n.domain = pgpKey1.getKeyIDs()[1].toHex().toUpperCase()
-	}, err => {
-		const index = Guardian_Nodes.findIndex(n => n.nftNumber === i) - 1
-		Guardian_Nodes = Guardian_Nodes.slice(0, index)
-		logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
-		Guardian_Nodes = Guardian_Nodes.filter(n => n.armoredPublicKey)
-		resolve(true)
-	})
-})
 
 
 
