@@ -45,7 +45,7 @@ const getAllNodes = () => new Promise(async resolve=> {
     
         Guardian_Nodes.push(itemNode)
     }
-    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+    logger(Colors.red(`getAllNodes success, Guardian_Nodes = ${Guardian_Nodes.length} `))
     resolve(true)
 })
 
