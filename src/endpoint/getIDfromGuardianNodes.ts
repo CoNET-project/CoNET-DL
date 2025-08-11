@@ -148,5 +148,13 @@ class conet_dl_server {
 
 }
 
+
+const test = async (_id: number) => {
+    const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
+    const id = await GuardianNodes.getOwnership(_id)
+    logger(`Ownership ID for node ${_id}: ${id}`)
+}
+
+test(548)
 // new conet_dl_server ()
 

@@ -120,7 +120,7 @@ const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback
 
 		if (res.statusCode !==200) {
 			relaunch()
-			return logger(`startGossip ${node.ip_addr} got statusCode = [${res.statusCode}] != 200 error! relaunch !!!`)
+			return logger(`startGossip ${node.ip_addr}:${node.domain} got statusCode = [${res.statusCode}] != 200 error! relaunch !!!`)
 		}
 		
 		res.on ('data', _data => {
@@ -221,6 +221,7 @@ let epoch = 0
 let faucetProcess = false
 let  PassportPoolProcessCount = 0
 const nodeDate: Map<string, string> = new Map()
+
 const connectToGossipNode = async (node: nodeInfo ) => {
 	const walletAddress = wallet.address.toLowerCase()
 	
@@ -243,7 +244,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 	const postData = await encrypt (encryptObj)
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
 	
-	startGossip(node.ip_addr+ walletAddress,node, JSON.stringify({data: postData}), async (err, _data ) => {
+	startGossip(node.ip_addr + walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
 		}
