@@ -155,6 +155,6 @@ const test = async (_id: number) => {
     logger(`Ownership ID for node ${_id}: ${id}`)
 }
 
-test(548)
+test(551)
 // new conet_dl_server ()
 

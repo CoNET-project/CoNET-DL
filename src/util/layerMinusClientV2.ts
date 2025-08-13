@@ -6,48 +6,21 @@ import {logger} from './logger'
 import {inspect} from 'node:util'
 import {RequestOptions, request } from 'node:http'
 import {createMessage, encrypt, enums, readKey, Key} from 'openpgp'
-import GuardianNodesV2ABI from '../endpoint/CGPNv7New.json'
-import {mapLimit} from 'async'
-import NodesInfo from '../endpoint/CONET_nodeInfo.ABI.json'
 import {getRandomValues} from 'node:crypto'
-import { writeFile} from 'node:fs/promises'
-import rateABI from '../endpoint/conet-rate.json'
-import NodesInfoABI from '../endpoint/CONET_nodeInfo.ABI.json'
 import {masterSetup} from './util'
-import faucet_v3_ABI from '../endpoint/faucet_v3.abi.json'
 import CONETPassportABI from './CoNET_Cancun_passportABI.json'
-const conet_rpc = 'https://cancun-rpc.conet.network'
 import newNodeInfoABI from '../endpoint/newNodeInfoABI.json'
 
-const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
-const CONET_Guardian_cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 
 
 const launchMap: Map<string, boolean> = new Map()
 const epochTotal: Map<string, number> = new Map()
 
-const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
 const CoNET_passport_SC: ethers.Contract[] = []
 
-const getFaucet = async (nodeWallets: string[], ipAddress: string[]) => {
-
-
-	const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, wallet)
-	logger(inspect(wallet))
-	logger(inspect(ipAddress))
-	try {
-		const tx = await faucet_v3_Contract.getFaucet(nodeWallets, ipAddress)
-		await tx.wait()
-		logger(Colors.blue(`getFaucet for all nodes success ${tx.hash}`))
-	} catch (ex: any) {
-		logger(Colors.red(`getFaucet error! ${ex.message}`))
-	}
-
-}
 
 const addNodeToPassportPool: string[] = []
-const didToPassportPool: Map<string, boolean> = new Map()
 const PassportPoolProcess = async () => {
 	const node = addNodeToPassportPool.shift()
 	if (!node) {
@@ -73,9 +46,6 @@ const PassportPoolProcess = async () => {
 	CoNET_passport_SC.unshift(sc)
 	PassportPoolProcess()
 }
-
-
-
 
 
 const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
@@ -370,6 +340,31 @@ const startGossipListening = () => {
 	})
 	
 }
+const checkNodeUpdate = async(block: number) => {
+	const blockTs = await CONET_MAINNET.getBlock(block)
+	
+	if (!blockTs?.transactions) {
+		return 
+	}
+
+
+	for (let tx of blockTs.transactions) {
+
+		const event = await CONET_MAINNET.getTransactionReceipt(tx)
+		if ( event?.to?.toLowerCase() === GuardianNodeInfo_mainnet) {
+			getAllNodes()
+		}
+		
+	}
+}
+const startEPOCH_EventListeningForMining = async () => {
+
+	CONET_MAINNET.on('block', block => {
+
+		checkNodeUpdate(block)
+
+	})
+}
 
 const start = async () => {
 	logger(Colors.blue(`Layer Minus listenning V2 start from (${_start}) to (${_end})`))
@@ -381,6 +376,8 @@ const start = async () => {
 	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], CONET_MAINNET)
 	const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
 	CoNET_passport_SC.push(sc)
+    startEPOCH_EventListeningForMining()
+
 }
 
 
