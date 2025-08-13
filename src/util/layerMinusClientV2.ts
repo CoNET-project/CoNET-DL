@@ -48,18 +48,18 @@ const PassportPoolProcess = async () => {
 }
 
 
-const startGossip = (connectHash: string, node: nodeInfo, POST: string, callback?: (err?: string, data?: string) => void) => {
-	
-	
+const startGossip = (connectHash: string, nodeIndex: number, POST: string, callback?: (err?: string, data?: string) => void) => {
+
+	const node = Guardian_Nodes.get(nodeIndex)
 	const launch = launchMap.get (connectHash)||false
-	if (launch) {
+	if (launch || !node) {
 		return
 	}
 
 	launchMap.set (connectHash, true)
 
 	const relaunch = () => setTimeout(() => {
-		startGossip(connectHash, node, POST, callback)
+		startGossip(connectHash, nodeIndex, POST, callback)
 	}, 1000)
 
 	const waitingTimeout = setTimeout(() => {
@@ -190,9 +190,13 @@ let sendCount = 0
 let epoch = 0
 let faucetProcess = false
 let  PassportPoolProcessCount = 0
-const nodeDate: Map<string, string> = new Map()
 
-const connectToGossipNode = async (node: nodeInfo ) => {
+const connectToGossipNode = async (nodeIndex: number) => {
+    const node = Guardian_Nodes.get(nodeIndex)
+    if (!node) {
+        return logger(Colors.red(`connectToGossipNode Error! nodeIndex ${nodeIndex} not found!`))
+    }
+
 	const walletAddress = wallet.address.toLowerCase()
 	
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
@@ -214,7 +218,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 	const postData = await encrypt (encryptObj)
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
 	
-	startGossip(node.ip_addr + walletAddress, node, JSON.stringify({data: postData}), async (err, _data ) => {
+	startGossip(node.ip_addr + walletAddress, node.nftNumber, JSON.stringify({data: postData}), async (err, _data ) => {
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
 		}
@@ -238,20 +242,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			if (!total) {
 				logger(`******************************************* didResponseNode Total send to local ${sendCount}`, inspect(didResponseNode, false, 3, true), '*******************************************')
 				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
-				// if (!faucetProcess && nodeDate.size == _end - _start) {
-				// 	logger(Colors.magenta(`Start node getFaucet for all node ${nodeDate.size}`))
-				// 	faucetProcess = true
-				// 	const _wallets: string[] = []
-				// 	const ipaddress: string[] = []
-				// 	nodeDate.forEach((v, key) => {
-				// 		ipaddress.push(key)
-				// 		_wallets.push(v)
-				// 	})
-				// 	getFaucet(_wallets, ipaddress)
 
-				// } else{
-				// 	logger(Colors.magenta(`nodes = ${nodeDate.size}`))
-				// }
 
 			}
 			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
@@ -266,14 +257,7 @@ const connectToGossipNode = async (node: nodeInfo ) => {
 			if (postLocal) {
 				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: nodeWallet})
 			}
-			// nodeDate.set(node.ip_addr, data.nodeWallet)
-			// const didU = didToPassportPool.get(data.nodeWallet)
-			// if (!didU) {
-			// 	didToPassportPool.set (data.nodeWallet, true)
-			// 	addNodeToPassportPool.push(data.nodeWallet)
-			// 	PassportPoolProcessCount ++
-			// 	PassportPoolProcess()
-			// }
+
 
 			logger(Colors.grey(`PassportPoolProcessCount = [${PassportPoolProcessCount}]startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
 		} catch (ex) {
@@ -298,9 +282,11 @@ const userPool: Map<number, Map<string, string[]>> = new Map()
 let currentEpoch = 0
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 let getAllNodesProcess = false
-let Guardian_Nodes: nodeInfo[] = []
+let Guardian_Nodes: Map<number, nodeInfo> = new Map()
 const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
+
+
 
 const getAllNodes = () => new Promise(async resolve=> {
 
@@ -320,23 +306,23 @@ const getAllNodes = () => new Promise(async resolve=> {
             region: region
         }
     
-        Guardian_Nodes.push(itemNode)
+        Guardian_Nodes.set(id, itemNode)
     }
-    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.size} `))
     resolve(true)
 })
 
 let allNodeAddr: string[] = []
 const startGossipListening = () => {
-	if (!Guardian_Nodes.length) {
+	if (!Guardian_Nodes.size) {
 		return logger(Colors.red(`startGossipListening Error! gossipNodes is null!`))
 	}
 
-	logger(Colors.blue(`startGossipListening gossipNodes = ${Guardian_Nodes.length}`))
+	logger(Colors.blue(`startGossipListening gossipNodes = ${Guardian_Nodes.size}`))
 	
-	Guardian_Nodes.forEach(n => {
+	Guardian_Nodes.forEach((n, key) => {
 		allNodeAddr.push (n.ip_addr)
-		connectToGossipNode(n)
+		connectToGossipNode(key)
 	})
 	
 }
