@@ -79,7 +79,10 @@ const aplleStoreObjProcess = async () => {
 
     }
     appleStoreSC.unshift(SC)
-    aplleStoreObjProcess()
+    setTimeout(() => {
+        aplleStoreObjProcess()
+    }, 3000)
+    
 }
 
 
