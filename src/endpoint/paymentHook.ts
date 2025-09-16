@@ -2493,7 +2493,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                             //      SUBSCRIBED
 
                             const obj = applePayWaitingList.get (paymentID)
-                            
+                            logger(`SUBSCRIBED obj = `,inspect(obj))
                             if (!obj) {
                                 
                                 const paymentID = verifiedTransactionRenew?.originalTransactionId
@@ -2506,6 +2506,7 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
                             }
                             
                             if (obj.productId === productId && obj?.publicKey && obj?.Solana) {
+                                
                                 return execAppleVesting(paymentID, obj.publicKey, obj.Solana, productId === '001' ? '299' : '2400')
                                 //return execVesting(productId === '001' ? '299' : '2400', obj.publicKey, obj.Solana, '', paymentID,'', appleID)
                             }
