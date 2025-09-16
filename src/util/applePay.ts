@@ -4,7 +4,7 @@ import {masterSetup} from './util'
 import {ethers} from 'ethers'
 import AppleStoreSubscriptionABI from './appleSubscription.ABI.json'
 import SP_ABI from '../endpoint/CoNET_DEPIN-mainnet_SP-API.json'
-
+import duplicateFactory_ABI from '../endpoint/duplicateFactory.ABI.json'
 /**
  * 改造成支持 “JWS（按行分隔）” 的恢复校验。
  * @param receipt   iOS 端上传的 JWS 串，可能多条，以 \n 分隔
@@ -27,8 +27,8 @@ const aplleStoreObjPool: {
     restore: boolean
 
 }[] = []
-
-
+const duplicateFactoryAddr = '0x87A70eD480a2b904c607Ee68e6C3f8c54D58FB08'
+const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, duplicateFactory_ABI, CONET_MAINNET)
 
 const aplleStoreObjProcess = async () => {
     const obj = aplleStoreObjPool.shift()
@@ -46,18 +46,20 @@ const aplleStoreObjProcess = async () => {
     
     let tx = null
     const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
+    const duplicateAccount = await SPDuplicateFactoryContract.duplicateList(obj.to)
+    const assetAccount = duplicateAccount === ethers.ZeroAddress ? obj.to : duplicateAccount
     try {
         switch(obj.plan) {
             case '299': {
-                tx = obj.restore ? await  SC.restoreSPMember(obj.to, obj.transactionId, obj.solana, v4()) :  await SC.initSPMember(obj.to, obj.transactionId, obj.solana, 31, v4())
+                tx = obj.restore ? await  SC.restoreSPMember(assetAccount, obj.transactionId, obj.solana, v4()) :  await SC.initSPMember(assetAccount, obj.transactionId, obj.solana, 31, v4())
                 break
             }
             case '2400': {
-                tx = obj.restore ? await  SC.restoreSPMember(obj.to, obj.transactionId, obj.solana, v4()) : await SC.initSPMember(obj.to, obj.transactionId, obj.solana, 366, v4())
+                tx = obj.restore ? await  SC.restoreSPMember(assetAccount, obj.transactionId, obj.solana, v4()) : await SC.initSPMember(assetAccount, obj.transactionId, obj.solana, 366, v4())
                 break
             }
             case '3100': {
-                tx = obj.restore ? await  SC.restoreGoldMember(obj.to, obj.transactionId, obj.solana, v4()) : await SC.initSPGoldMember(obj.to, obj.transactionId, obj.solana,v4())
+                tx = obj.restore ? await  SC.restoreGoldMember(assetAccount, obj.transactionId, obj.solana, v4()) : await SC.initSPGoldMember(assetAccount, obj.transactionId, obj.solana,v4())
                 break
             }
             default: {

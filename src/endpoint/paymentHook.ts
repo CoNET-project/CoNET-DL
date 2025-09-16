@@ -2577,27 +2577,6 @@ const appleNotification = async (NotificationSignedPayload: string ) => {
     
 }
 
-const checkAppleID = async (appleid: string) => {
-    try {
-        const hash = ethers.id (appleid)
-        let walletAddress: string
-        let solanaWallet: string
-        [walletAddress, solanaWallet] = await payment_SC_readOnly.getAppleIDInfo(hash)
-        if (walletAddress && walletAddress !== ethers.ZeroAddress) {
-            walletAddress = walletAddress.toLowerCase()
-            return {walletAddress, solanaWallet}
-        }
-    } catch (ex) {}
-    return null
-}
-
-const checkApplePayTransactionId = async (id: string) => {
-    try {
-        const isHash = await payment_SC_readOnly.getPayID(id)
-        return !isHash
-    } catch (ex) {}
-    return null
-}
 
 const applePayWaitingList: Map<string, {productId: string, Solana?: string, publicKey?: string, appleID: string}> = new Map()
 
