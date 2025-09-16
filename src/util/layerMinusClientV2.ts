@@ -197,6 +197,8 @@ const connectToGossipNode = async (nodeIndex: number) => {
         return logger(Colors.red(`connectToGossipNode Error! nodeIndex ${nodeIndex} not found!`))
     }
 
+    logger(Colors.green(`connectToGossipNode ${node.domain} ${node.ip_addr} ${node.nftNumber} start...`))
+
 	const walletAddress = wallet.address.toLowerCase()
 	
 	const key = Buffer.from(getRandomValues(new Uint8Array(16))).toString('base64')
@@ -209,11 +211,23 @@ const connectToGossipNode = async (nodeIndex: number) => {
 	
 	const message =JSON.stringify(command)
 	const signMessage = await wallet.signMessage(message)
-	const encryptObj = {
-        message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
-		encryptionKeys: await readKey({armoredKey: node.armoredPublicKey}),
-		config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
+    if (!node.armoredPublicKey) {
+        logger(inspect(node, false, 3, true))
+        return logger(Colors.red(`connectToGossipNode Error! nodeIndex ${nodeIndex} armoredPublicKey is null!`))
     }
+    let encryptObj
+    try {
+        encryptObj = {
+            message: await createMessage({text: Buffer.from(JSON.stringify ({message, signMessage})).toString('base64')}),
+            encryptionKeys: await readKey({armoredKey: node.armoredPublicKey}),
+            config: { preferredCompressionAlgorithm: enums.compression.zlib } 		// compress the data with zlib
+        }
+    } catch (ex) {
+        logger(inspect(node, false, 3, true))
+        logger(Colors.red(`connectToGossipNode ${node.ip_addr} createMessage Error!`), ex)
+        return
+    }
+	
 
 	const postData = await encrypt (encryptObj)
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
@@ -285,7 +299,6 @@ let getAllNodesProcess = false
 let Guardian_Nodes: Map<number, nodeInfo> = new Map()
 const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
-
 
 
 const getAllNodes = () => new Promise(async resolve=> {

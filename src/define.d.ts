@@ -60,6 +60,7 @@ interface nodeInfo {
 }
 
 interface ICoNET_DL_masterSetup {
+    appleStore:string
     GuardianNodesInfoManager: string
     downloadLinkManager: string
     duplicatePasscodManager: string
@@ -473,3 +474,5 @@ interface OracleData {
 	timeStamp: number
 	data: spOracle| null
 }
+
+type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'|'3'

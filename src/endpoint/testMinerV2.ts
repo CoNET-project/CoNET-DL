@@ -62,6 +62,7 @@ const getAllNodes = () => new Promise(async resolve=> {
 		Guardian_Nodes.push(itemNode)
   	}
 	logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.length} `))
+    console.log(inspect(Guardian_Nodes, false, 3, true))
 	resolve(true)
 })
 
