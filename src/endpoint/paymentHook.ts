@@ -956,7 +956,7 @@ class conet_dl_server {
             }
 
 
-            const status = await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
+            const status = await appleReceipt(data.receipt, data.publicKey, data.Solana)
             // const kk = await appleReceipt(data.receipt, data.walletAddress, data.solanaWallet)
             // if (!kk) {
             //     logger(`/applePayUserRecover unsupport data format Error! appleReceipt return false!`)
