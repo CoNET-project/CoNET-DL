@@ -5,6 +5,8 @@ import {ethers} from 'ethers'
 import AppleStoreSubscriptionABI from './appleSubscription.ABI.json'
 import SP_ABI from '../endpoint/CoNET_DEPIN-mainnet_SP-API.json'
 import duplicateFactory_ABI from '../endpoint/duplicateFactory.ABI.json'
+import SPClubPointManagerABI from '../endpoint/SPClubPointManagerABI.json'
+
 /**
  * 改造成支持 “JWS（按行分隔）” 的恢复校验。
  * @param receipt   iOS 端上传的 JWS 串，可能多条，以 \n 分隔
@@ -18,6 +20,9 @@ const appleStoreWallet = new ethers.Wallet(masterSetup.appleStore, CONET_MAINNET
 
 const appleStoreSC = [new ethers.Contract('0x92FF779aF409Fb399Be9C8dDD91C08d50e90F2fA', AppleStoreSubscriptionABI, appleStoreWallet)]
 const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, CONET_MAINNET)
+
+const SPClubPointManagerV2 = '0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb'
+const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPointManagerABI, appleStoreWallet)
 
 const aplleStoreObjPool: {
     transactionId: string
@@ -76,6 +81,8 @@ const aplleStoreObjProcess = async () => {
         if (payment_waiting_status) {
             payment_waiting_status.set(obj.to.toLowerCase(), NFT)
         }
+        const ts = await sp_reword_contract._changeActiveNFT(duplicateAccount, NFT, obj.solana)
+        await ts.wait()
 
     }
     appleStoreSC.unshift(SC)
