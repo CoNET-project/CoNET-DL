@@ -950,7 +950,7 @@ class conet_dl_server {
 
             logger(`/applePayUserRecover `, inspect(data, false, 3, true))
 
-            if (!data?.solanaWallet || !data?.walletAddress || !data?.receipt) {
+            if (!data?.Solana || !data?.publicKey || !data?.receipt) {
                 logger(`/applePayUserRecover unsupport data format Error!`)
                 return res.status(403).json({error: 'unsupport data format!'}).end()
             }
