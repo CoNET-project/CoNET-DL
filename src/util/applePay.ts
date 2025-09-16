@@ -251,6 +251,7 @@ export const setup_payment_waiting_status = (_status: Map<string, number|string>
 
 
 export const execAppleVesting = (transactionId: string, to: string, solana: string, plan: planStruct, ) => {
+    
     aplleStoreObjPool.push({
         transactionId,
         to,
@@ -258,6 +259,8 @@ export const execAppleVesting = (transactionId: string, to: string, solana: stri
         plan,
         restore: false
     })
+    logger(`execAppleVesting`)
+    aplleStoreObjProcess()
 }
 
 //  0x31e95B9B1a7DE73e4C911F10ca9de21c969929ff
