@@ -16,7 +16,7 @@ const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.netw
 const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 const appleStoreWallet = new ethers.Wallet(masterSetup.appleStore, CONET_MAINNET)
 
-const appleStoreSC = [new ethers.Contract('0x92FF779aF409Fb399Be9C8dDD91C08d50e90F2fA', AppleStoreSubscriptionABI, appleStoreWallet)]
+const appleStoreSC = [new ethers.Contract('0xA00B479efeB9C61715b860A3CCbd4B5C5bAEb971', AppleStoreSubscriptionABI, appleStoreWallet)]
 const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, CONET_MAINNET)
 
 const aplleStoreObjPool: {
