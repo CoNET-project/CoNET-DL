@@ -13,8 +13,6 @@ import newNodeInfoABI from '../endpoint/newNodeInfoABI.json'
 
 
 
-const launchMap: Map<string, boolean> = new Map()
-const activeRequests: Map<string, ReturnType<typeof request>> = new Map()
 const epochTotal: Map<string, number> = new Map()
 
 const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
@@ -63,11 +61,8 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 		startGossip(connectHash, nodeIndex, POST, callback)
 	}, 1000)
 
-	// declare request handle to allow timeout to abort it
-	let kkk: ReturnType<typeof request> | null = null as any
 	const waitingTimeout = setTimeout(() => {
 		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
-		if (kkk) { try { kkk.destroy(new Error('timeout')); } catch {} }
 		launchMap.set(connectHash, false)
 		relaunch()
 	}, 5 * 1000)
@@ -85,14 +80,12 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 
 	let first = true
 
-	// if an older request is still around, close it before starting new one
-	const old = activeRequests.get(connectHash); if (old) { try { old.destroy(new Error('relaunch')); } catch {} }
-	kkk = request(option, res => { activeRequests.set(connectHash, kkk as any);
+	const kkk = request(option, res => {
 		clearTimeout(waitingTimeout)
 
 		let data = ''
 		let _Time: NodeJS.Timeout
-		// keep launch flag until stream ends/error to avoid duplicate connections
+		launchMap.set(connectHash, false)
 
 		if (res.statusCode !==200) {
 			relaunch()
@@ -127,21 +120,20 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 
 				_Time = setTimeout(() => {
 					logger(Colors.red(`startGossip [${node.ip_addr}] has 2 EPOCH got NONE Gossip Error! Try to restart! `))
-					kkk?.destroy()
+					kkk.destroy()
 					relaunch()
 				}, 24 * 1000)
 			}
 		})
 
-		res.once('error', err => { activeRequests.delete(connectHash);
+		res.once('error', err => {
 			relaunch()
 			logger(Colors.red(`startGossip [${node.ip_addr}] res on ERROR! Try to restart! `), err.message)
 		})
 
-		res.once('end', () => { activeRequests.delete(connectHash);
+		res.once('end', () => {
 
-			if (kkk) { try { kkk.destroy(); } catch {} }
-			launchMap.set(connectHash, false)
+			kkk.destroy()
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
 				relaunch()
@@ -152,13 +144,9 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 	})
 
 	kkk.on('error', err => {
-		activeRequests.delete(connectHash);
-		launchMap.set(connectHash, false)
 		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! no call relaunch`), err.message)
 	})
 
-	kkk.setTimeout(5000, () => { try { kkk?.destroy(new Error('timeout')); } catch {} });
-	activeRequests.set(connectHash, kkk as any);
 	kkk.end(POST)
 
 }
@@ -202,6 +190,13 @@ let epoch = 0
 let faucetProcess = false
 let  PassportPoolProcessCount = 0
 
+
+const launchMap: Map<string, boolean> = new Map()
+const activeRequests: Map<string, ReturnType<typeof request>> = new Map()
+
+
+
+
 const connectToGossipNode = async (nodeIndex: number) => {
     const node = Guardian_Nodes.get(nodeIndex)
     if (!node) {
@@ -244,6 +239,8 @@ const connectToGossipNode = async (nodeIndex: number) => {
 	logger(Colors.blue(`connectToGossipNode ${node.domain}:${node.ip_addr}`))
 	
 	startGossip(node.ip_addr + walletAddress, node.nftNumber, JSON.stringify({data: postData}), async (err, _data ) => {
+
+        
 		if (!_data) {
 			return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
 		}
@@ -270,6 +267,9 @@ const connectToGossipNode = async (nodeIndex: number) => {
 
 
 			}
+
+
+
 			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
 			didResponseNode.splice(index, 1)
 			epochTotal.set(data.epoch.toString(), total +1 )
@@ -277,6 +277,7 @@ const connectToGossipNode = async (nodeIndex: number) => {
 				epoch = data.epoch
 				sendCount = 0
 			}
+
 			sendCount ++
 			let kk = null
 			if (postLocal) {
@@ -284,13 +285,18 @@ const connectToGossipNode = async (nodeIndex: number) => {
 			}
 
 
-			logger(Colors.grey(`PassportPoolProcessCount = [${PassportPoolProcessCount}]startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
+			logger(Colors.grey(`PassportPoolProcessCount = [${PassportPoolProcessCount}] startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
 		} catch (ex) {
 			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
 			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
 		}
 	})
+
 }
+
+let kkk: ReturnType<typeof request> | null = null as any
+
+
 
 
 let didResponseNode: string[] = []
@@ -348,6 +354,14 @@ const startGossipListening = () => {
 		allNodeAddr.push (n.ip_addr)
 		connectToGossipNode(key)
 	})
+
+    // const node = Guardian_Nodes.get(100)
+    // if (node) {
+    //     allNodeAddr.push (node.ip_addr)
+    //     connectToGossipNode(100)
+    // }
+
+
 	
 }
 const checkNodeUpdate = async(block: number) => {
