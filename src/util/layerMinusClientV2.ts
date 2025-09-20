@@ -357,16 +357,16 @@ const startGossipListening = () => {
 
 	logger(Colors.blue(`startGossipListening gossipNodes = ${Guardian_Nodes.size}`))
 	
-	// Guardian_Nodes.forEach((n, key) => {
-	// 	allNodeAddr.push (n.ip_addr)
-	// 	connectToGossipNode(key)
-	// })
+	Guardian_Nodes.forEach((n, key) => {
+		allNodeAddr.push (n.ip_addr)
+		connectToGossipNode(key)
+	})
 
-    const node = Guardian_Nodes.get(600)
-    if (node) {
-        allNodeAddr.push (node.ip_addr)
-        connectToGossipNode(600)
-    }
+    // const node = Guardian_Nodes.get(600)
+    // if (node) {
+    //     allNodeAddr.push (node.ip_addr)
+    //     connectToGossipNode(600)
+    // }
 
 
 	
