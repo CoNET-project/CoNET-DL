@@ -14,6 +14,7 @@ import newNodeInfoABI from '../endpoint/newNodeInfoABI.json'
 
 
 const launchMap: Map<string, boolean> = new Map()
+const activeRequests: Map<string, ReturnType<typeof request>> = new Map()
 const epochTotal: Map<string, number> = new Map()
 
 const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
@@ -62,8 +63,11 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 		startGossip(connectHash, nodeIndex, POST, callback)
 	}, 1000)
 
+	// declare request handle to allow timeout to abort it
+	let kkk: ReturnType<typeof request> | null = null as any
 	const waitingTimeout = setTimeout(() => {
 		logger(Colors.red(`startGossip on('Timeout') [${node.ip_addr}:${node.nftNumber}]!`))
+		if (kkk) { try { kkk.destroy(new Error('timeout')); } catch {} }
 		launchMap.set(connectHash, false)
 		relaunch()
 	}, 5 * 1000)
@@ -81,12 +85,14 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 
 	let first = true
 
-	const kkk = request(option, res => {
+	// if an older request is still around, close it before starting new one
+	const old = activeRequests.get(connectHash); if (old) { try { old.destroy(new Error('relaunch')); } catch {} }
+	kkk = request(option, res => { activeRequests.set(connectHash, kkk as any);
 		clearTimeout(waitingTimeout)
 
 		let data = ''
 		let _Time: NodeJS.Timeout
-		launchMap.set(connectHash, false)
+		// keep launch flag until stream ends/error to avoid duplicate connections
 
 		if (res.statusCode !==200) {
 			relaunch()
@@ -121,20 +127,21 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 
 				_Time = setTimeout(() => {
 					logger(Colors.red(`startGossip [${node.ip_addr}] has 2 EPOCH got NONE Gossip Error! Try to restart! `))
-					kkk.destroy()
+					kkk?.destroy()
 					relaunch()
 				}, 24 * 1000)
 			}
 		})
 
-		res.once('error', err => {
+		res.once('error', err => { activeRequests.delete(connectHash);
 			relaunch()
 			logger(Colors.red(`startGossip [${node.ip_addr}] res on ERROR! Try to restart! `), err.message)
 		})
 
-		res.once('end', () => {
+		res.once('end', () => { activeRequests.delete(connectHash);
 
-			kkk.destroy()
+			if (kkk) { try { kkk.destroy(); } catch {} }
+			launchMap.set(connectHash, false)
 			if (typeof callback === 'function') {
 				logger(Colors.red(`startGossip [${node.ip_addr}] res on END! Try to restart! `))
 				relaunch()
@@ -145,9 +152,13 @@ const startGossip = (connectHash: string, nodeIndex: number, POST: string, callb
 	})
 
 	kkk.on('error', err => {
+		activeRequests.delete(connectHash);
+		launchMap.set(connectHash, false)
 		logger(Colors.red(`startGossip on('error') [${node.ip_addr}] requestHttps on Error! no call relaunch`), err.message)
 	})
 
+	kkk.setTimeout(5000, () => { try { kkk?.destroy(new Error('timeout')); } catch {} });
+	activeRequests.set(connectHash, kkk as any);
 	kkk.end(POST)
 
 }

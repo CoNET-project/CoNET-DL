@@ -155,6 +155,19 @@ const test = async (_id: number) => {
     logger(`Ownership ID for node ${_id}: ${id}`)
 }
 
-test(363)
-// new conet_dl_server ()
+let ID = 0
+const [,,...args] = process.argv
+
+args.forEach ((n, index ) => {
+	if (/^ID\=/i.test(n)) {
+		ID = parseInt(n.split('=')[1])
+	}
+})
+
+if (ID > 0) {
+    test(ID)
+}
+
+
+
 
