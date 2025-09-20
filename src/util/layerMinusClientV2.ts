@@ -20,6 +20,7 @@ const CoNET_passport_SC: ethers.Contract[] = []
 
 
 const addNodeToPassportPool: string[] = []
+
 const PassportPoolProcess = async () => {
 	const node = addNodeToPassportPool.shift()
 	if (!node) {
@@ -320,7 +321,10 @@ const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNo
 
 const getAllNodes = () => new Promise(async resolve=> {
 
-    const _nodes = await GuardianNodesMainnet.getAllNodes(0, 1000)
+    const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
+    const _nodes2 = await GuardianNodesMainnet.getAllNodes(400, 800)
+    const _nodes = [..._nodes1, ..._nodes2]
+
     for (let i = 0; i < _nodes.length; i ++) {
         const node = _nodes[i]
         const id = parseInt(node[0].toString())
@@ -328,6 +332,9 @@ const getAllNodes = () => new Promise(async resolve=> {
         const domain: string = node[2]
         const ipAddr: string = node[3]
         const region: string = node[4]
+        if (i == 499) {
+            logger(i)
+        }
         const itemNode: nodeInfo = {
             ip_addr: ipAddr,
             armoredPublicKey: pgpString,
@@ -350,16 +357,16 @@ const startGossipListening = () => {
 
 	logger(Colors.blue(`startGossipListening gossipNodes = ${Guardian_Nodes.size}`))
 	
-	Guardian_Nodes.forEach((n, key) => {
-		allNodeAddr.push (n.ip_addr)
-		connectToGossipNode(key)
-	})
+	// Guardian_Nodes.forEach((n, key) => {
+	// 	allNodeAddr.push (n.ip_addr)
+	// 	connectToGossipNode(key)
+	// })
 
-    // const node = Guardian_Nodes.get(100)
-    // if (node) {
-    //     allNodeAddr.push (node.ip_addr)
-    //     connectToGossipNode(100)
-    // }
+    const node = Guardian_Nodes.get(600)
+    if (node) {
+        allNodeAddr.push (node.ip_addr)
+        connectToGossipNode(600)
+    }
 
 
 	
