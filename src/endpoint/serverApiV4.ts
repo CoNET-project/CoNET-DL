@@ -488,6 +488,14 @@ class conet_dl_server_v4 {
 			return res.status(200).json(eposh_total).end()
 		})
 
+        router.post('/miningRate', async (req: any, res: any) => {
+
+			const query = req.query
+			const epoch = currentEpoch
+			
+			return res.status(200).json(eposh_total).end()
+		})
+
 		router.post ('/PurchaseCONETianPlan', async (req: any, res: any) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
