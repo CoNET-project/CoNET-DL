@@ -24,7 +24,7 @@ import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {readKey} from 'openpgp'
 import {mapLimit, retry} from 'async'
 import epoch_info_ABI from './epoch_info_managerABI.json'
-
+import GB_airdropABI from './ABI/CONET _sGB.ABI.json'
 
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
@@ -45,6 +45,9 @@ const provide_cancun = new ethers.JsonRpcProvider(conet_cancun_rpc)
 const provide_mainnet = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 
 export const checkGasPrice = 1550000
+const GB_airdropWallet = new ethers.Wallet(masterSetup.GB_airdrop, provide_mainnet)                 //          0x42aD56d9CE0f2c38c3Ba83b8DB51b7E58A656F07
+const eGB_addr = '0x84aAD9aD5BbdDfC0cCcb6A599DFadaEFaF6B497E'
+const GB_airdropSCPool = [new ethers.Contract(eGB_addr, GB_airdropABI, GB_airdropWallet)]
 
 
 //			getIpAddressFromForwardHeader(req.header(''))
@@ -156,7 +159,6 @@ const stratlivenessV2 = async (eposh: number) => {
 	])
 }
 
-
 const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
@@ -165,7 +167,6 @@ const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provide_ca
 logger(Colors.magenta(`faucetWallet = ${faucetWallet.address}`))
 const faucetContract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
 const faucet_v3_Contract_Pool = [faucetContract]
-
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provide_cancun)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provide_cancun)
@@ -178,18 +179,13 @@ interface faucetRequest {
 }
 
 export const checkGasPriceFordailyTaskPool = 25000000
-
-
+const eGB_Pool: Map<string, number> = new Map()
+export const GB_airdropPool: Map<string, number> = new Map()
 
 let faucetWaitingPool: faucetRequest[] = []
 
 let currentEpoch = 0
 
-interface InodeEpochData {
-	wallets: string[]
-	users: string[]
-    nodeWallet: string
-}
 
 const addTofaucetPool = async (wallet: string, ipAddress: string) => {
 	const index = faucetWaitingPool.findIndex(n => n.wallet === wallet)
@@ -239,7 +235,22 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalConnectNode += 1
 
 	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} [${body.wallets.length}:${ body.users.length}]`))
-    logger('transfer', inspect(body?.transfer))
+    
+    const transfer: transferGB[] = body?.transfer
+    
+    if (!transfer) {
+        logger(`${body.ipaddress}. ***** transfer undefine!!!`)
+    } else {
+        transfer.forEach(n => {
+            const wallet = n.wallet.toLowerCase()
+            const transferData = eGB_Pool.get(wallet)||0
+            const total = transferData + n.bytes
+            eGB_Pool.set(wallet, total)
+        })
+        
+    }
+
+
 	addTofaucetPool(body.nodeWallet, body.ipaddress)
 	return res.status(200).end()
 }
@@ -263,15 +274,39 @@ const filePath = '/home/peter/.data/v2/'
 const ReferralsMap: Map<string, string> = new Map()
 const initV3Map: Map<string, boolean> = new Map()
 
-interface iEPOCH_DATA {
-	totalMiners: number
-	minerRate: number
-	totalUsrs: number
-	epoch: number
-    nodeWallets: {ipAddr:string, wallet: string}[]
-}
 
 let EPOCH_DATA: iEPOCH_DATA
+
+const GB_airdrop = async () => {
+    const SC = GB_airdropSCPool.shift()
+    if (!SC) {
+        return
+    }
+    const wallets: string[] = []
+    const airdropGBs: number[] = []
+    let total = 0
+    GB_airdropPool.forEach((val,key) => {
+        wallets.push(key)
+        airdropGBs.push(val)
+        total += val
+
+        GB_airdropPool.delete(key)
+    })
+    if (wallets.length > 0) {
+        try {
+            const ts = await SC.issueGBBatch(wallets, airdropGBs)
+            await ts.wait()
+            logger(`GB_airdrop *********** wallets length = ${wallets.length} TOTAL GB = ${total}`)
+        } catch (ex: any) {
+            logger(`GB_airdrop ERROR: ${ex.message}`)
+        }
+    }
+
+    GB_airdropSCPool.unshift(SC)
+
+
+}
+
 
 
 const moveData = async (epoch: number) => {
@@ -330,10 +365,25 @@ const moveData = async (epoch: number) => {
 	const filename3 = `${filePath}current.wallet`
 	const filename4 = `${filePath}current.total`
 	const filename5 = `${filePath}current.users`
+    const filename6 = `${filePath}current.GB`
 
 	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block, nodeWallets}
 	
-	logger(inspect(EPOCH_DATA, false, 3, true))
+
+        const eposhGB_wallet: string[] = []
+        const eposhGB: number[] = []
+        const eposhStore: {wallet: string, GB: number}[] = []
+
+        eGB_Pool.forEach((val, key) => {
+            eposhGB_wallet.push(key)
+            const GB = Math.floor(val)
+            eposhGB.push(GB)
+            eposhStore.push({wallet: key, GB})
+            eGB_Pool.delete(key)
+            const GB_airdrop = GB_airdropPool.get(key)||0
+            GB_airdropPool.set(key, GB_airdrop+GB)
+        })
+
 	await Promise.all ([
 		updateEpochToSC(EPOCH_DATA),
 		writeFile(filename, JSON.stringify([..._wallets_.keys()]), 'utf8'),
@@ -341,12 +391,12 @@ const moveData = async (epoch: number) => {
 		writeFile(filename2, JSON.stringify([..._users_.keys()]), 'utf8'),
 		writeFile(filename3, JSON.stringify([..._wallets_.keys()]), 'utf8'),
 		writeFile(filename4, JSON.stringify(EPOCH_DATA), 'utf8'),
-		writeFile(filename5, JSON.stringify([..._users_.keys()]), 'utf8')
+		writeFile(filename5, JSON.stringify([..._users_.keys()]), 'utf8'),
+        writeFile(filename6, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
-
-
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
+    GB_airdrop()
 	
 }
 

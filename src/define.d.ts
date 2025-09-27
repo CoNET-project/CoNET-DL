@@ -59,7 +59,23 @@ interface nodeInfo {
     owner?: string
 }
 
+interface InodeEpochData {
+	wallets: string[]
+	users: string[]
+    nodeWallet: string
+}
+
+
+interface iEPOCH_DATA {
+	totalMiners: number
+	minerRate: number
+	totalUsrs: number
+	epoch: number
+    nodeWallets: {ipAddr:string, wallet: string}[]
+}
+
 interface ICoNET_DL_masterSetup {
+    GB_airdrop: string
     appleStore:string
     GuardianNodesInfoManager: string
     downloadLinkManager: string
@@ -477,3 +493,9 @@ interface OracleData {
 }
 
 type planStruct =  '1'| '0'| '299'| '2400' | '3100' |'2860'|'3'
+
+
+interface transferGB {
+    wallet: string
+    bytes: number
+}
