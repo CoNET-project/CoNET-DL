@@ -220,7 +220,7 @@ const miningData = (body: any, res: Response) => {
 		epochNodeData.set(ephchKey, eposh)
 	}
 
-	eposh.set (body.ipaddress, {wallets: [body.wallets, body.nodeWallet], users: body.users})
+	eposh.set (body.ipaddress, {wallets: [...body.wallets, body.nodeWallet], users: body.users})
 
 	let epochTotal = epochTotalData.get (ephchKey)
 	if (!epochTotal) {
