@@ -31,6 +31,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 
 //	for production
 	import {createServer} from 'node:http'
+import { log } from 'node:console'
 
 
 //	for debug
@@ -292,16 +293,18 @@ const moveData = async (epoch: number) => {
 
 
 	epochAll.forEach((v, keys) => {
+        logger(`v.wallets: `,inspect(v.wallets, false, 3, true))
+        
 		v.wallets.forEach(n => _wallets_.set(n.toLowerCase(), true))
-	})
 
-	epochAll.forEach((v, keys) => {
-		v.users.forEach(n => {
+        logger(`v.users: `,inspect(v.users, false, 3, true))
+        v.users.forEach(n => {
 			const k = n.toLowerCase()
 			_users_.set(k, true)
 			_wallets_.delete(k)
 		})
 	})
+
 	
 
 	
