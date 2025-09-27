@@ -251,7 +251,10 @@ const miningData = (body: any, res: Response) => {
             eGB_Pool.set(wallet, total)
         })
 
-        eGB_Pool.set(nodeWallet, nodeTotal)
+        if (nodeTotal>0) {
+            eGB_Pool.set(nodeWallet, nodeTotal)
+        }
+        
         
     }
 
@@ -291,10 +294,12 @@ const GB_airdrop = async () => {
     const airdropGBs: number[] = []
     let total = 0
     GB_airdropPool.forEach((val,key) => {
-        wallets.push(key)
-        airdropGBs.push(val)
-        total += val
-
+        if (val > 0) {
+            wallets.push(key)
+            airdropGBs.push(val)
+            total += val
+        }
+        
         GB_airdropPool.delete(key)
     })
     logger(inspect(wallets))
