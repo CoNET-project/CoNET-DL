@@ -239,7 +239,7 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalConnectNode += 1
 
 	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} [${body.wallets.length}:${ body.users.length}]`))
-    logger('transfer',inspect(body?.transfer))
+    logger('transfer', inspect(body?.transfer))
 	addTofaucetPool(body.nodeWallet, body.ipaddress)
 	return res.status(200).end()
 }

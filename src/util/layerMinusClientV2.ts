@@ -278,7 +278,12 @@ const connectToGossipNode = async (nodeIndex: number) => {
 				epoch = data.epoch
 				sendCount = 0
 			}
-            const transfer = data.transfer
+
+            if (node.ip_addr === '66.179.250.183') {
+                logger(inspect(data, false, 3, true))
+            }
+            
+            const transfer = data?.transfer
 
 			sendCount ++
 			let kk = null
