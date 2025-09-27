@@ -26,6 +26,7 @@ import {request as HTTPS_Request, RequestOptions} from 'node:https'
 import GuardianOracle_ABI from './GuardianOracleABI.json'
 import {v4} from 'uuid'
 import { writeFileSync} from 'node:fs'
+import {homedir} from 'node:os'
 import ERC20_ABI from './cCNTPv7.json'
 import SPClubPoint from './SPClub.ABI.json'
 import ReferralsV3ABI from './ReferralsV3.json'
@@ -2599,8 +2600,8 @@ const checkAppleReceipt = async (publicKey: string, Solana: string, transactionI
 }
 
 const appleRoots: Buffer[] = [
-  readFileSync(join('/home/peter', "AppleRootCA-G3.cer")),
-  readFileSync(join('/home/peter', "AppleWWDRCAG5.cer")),
+  readFileSync(join(homedir(), "AppleRootCA-G3.cer")),
+  readFileSync(join(homedir(), "AppleWWDRCAG5.cer")),
 ];
 
 const buildVerifier = (env: Environment) =>
@@ -3078,4 +3079,5 @@ const test4 = async () => {
     checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
 }
 
+createRedeemWithSPProcessAdmin()
 // testApple()

@@ -332,10 +332,10 @@ const getAllNodes = () => new Promise(async resolve=> {
         const domain: string = node[2]
         const ipAddr: string = node[3]
         const region: string = node[4]
-        if (i == 499) {
-            logger(i)
-        }
-        const itemNode: nodeInfo = {
+        
+        logger(i)
+
+            const itemNode: nodeInfo = {
             ip_addr: ipAddr,
             armoredPublicKey: pgpString,
             domain: domain,
@@ -344,6 +344,8 @@ const getAllNodes = () => new Promise(async resolve=> {
         }
     
         Guardian_Nodes.set(id, itemNode)
+        
+       
     }
     logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.size} `))
     resolve(true)
