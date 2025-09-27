@@ -297,6 +297,8 @@ const GB_airdrop = async () => {
 
         GB_airdropPool.delete(key)
     })
+    logger(inspect(wallets))
+    logger(inspect(airdropGBs))
     if (wallets.length > 0) {
         try {
             const ts = await SC.issueGBBatch(wallets, airdropGBs)
