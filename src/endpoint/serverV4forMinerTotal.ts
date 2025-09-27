@@ -188,6 +188,7 @@ let currentEpoch = 0
 interface InodeEpochData {
 	wallets: string[]
 	users: string[]
+    nodeWallet: string
 }
 
 const addTofaucetPool = async (wallet: string, ipAddress: string) => {
@@ -220,7 +221,7 @@ const miningData = (body: any, res: Response) => {
 		epochNodeData.set(ephchKey, eposh)
 	}
 
-	eposh.set (body.ipaddress, {wallets: [...body.wallets, body.nodeWallet], users: body.users})
+	eposh.set (body.ipaddress, {wallets: [...body.wallets, body.nodeWallet], users: body.users, nodeWallet: body.nodeWallet})
 
 	let epochTotal = epochTotalData.get (ephchKey)
 	if (!epochTotal) {
@@ -266,7 +267,9 @@ interface iEPOCH_DATA {
 	minerRate: number
 	totalUsrs: number
 	epoch: number
+    nodeWallets: {ipAddr:string, wallet: string}[]
 }
+
 let EPOCH_DATA: iEPOCH_DATA
 
 
@@ -290,14 +293,13 @@ const moveData = async (epoch: number) => {
 		return logger (Colors.red(`moveData can't get epochAll ${block}`))
 	}
 
-
-
+    const nodeWallets: {ipAddr:string, wallet: string}[] = []
 	epochAll.forEach((v, keys) => {
-        logger(`v.wallets: `,inspect(v.wallets, false, 3, true))
         
 		v.wallets.forEach(n => _wallets_.set(n.toLowerCase(), true))
 
-        logger(`v.users: `,inspect(v.users, false, 3, true))
+        
+        nodeWallets.push({ipAddr: keys, wallet: v.nodeWallet})
         v.users.forEach(n => {
 			const k = n.toLowerCase()
 			_users_.set(k, true)
@@ -309,7 +311,7 @@ const moveData = async (epoch: number) => {
 
 	
 	const totalUsrs = _users_.size
-	const totalMiners = _wallets_.size + totalUsrs
+	const totalMiners = _wallets_.size
 	const minerRate = (rate/totalMiners)/12
 	for (let w in [..._wallets_.keys()]) {
 		// refferInit(w, '')
@@ -328,7 +330,7 @@ const moveData = async (epoch: number) => {
 	const filename4 = `${filePath}current.total`
 	const filename5 = `${filePath}current.users`
 
-	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block}
+	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block, nodeWallets}
 	
 	logger(inspect(EPOCH_DATA, false, 3, true))
 	await Promise.all ([
@@ -340,6 +342,8 @@ const moveData = async (epoch: number) => {
 		writeFile(filename4, JSON.stringify(EPOCH_DATA), 'utf8'),
 		writeFile(filename5, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
+
+
 
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
 	
@@ -425,6 +429,11 @@ class conet_dl_server {
 		router.post ('/epoch',(req: any, res: any) => {
 			res.status(200).json(EPOCH_DATA).end()
 		})
+
+        router.post ('/allNodesWallets',(req: any, res: any) => {
+			res.status(200).json(EPOCH_DATA).end()
+		})
+
 
 		router.post ('/miningData', (req: any, res: any) => {
 			miningData(req.body, res)

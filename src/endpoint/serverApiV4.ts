@@ -72,6 +72,10 @@ const getreferralsCount = async (addr: string, _res: Response) => {
 	}
 }
 
+const getAllNodesWallet = async (_res: Response) => {
+
+}
+
 let eposh_total:epochRate|null = null
 
 const filePath = '/home/peter/.data/v2/'
