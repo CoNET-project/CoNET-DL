@@ -407,6 +407,7 @@ interface listenClient {
 	minerResponseHash: any
 	userWallets: string[]
 	isUser: boolean
+    transfer: {wallet: string, bytes: number}[]
 }
 
 interface IGossipStatus {

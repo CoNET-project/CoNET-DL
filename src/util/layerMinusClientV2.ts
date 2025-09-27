@@ -278,11 +278,12 @@ const connectToGossipNode = async (nodeIndex: number) => {
 				epoch = data.epoch
 				sendCount = 0
 			}
+            const transfer = data.transfer
 
 			sendCount ++
 			let kk = null
 			if (postLocal) {
-				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: nodeWallet})
+				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: nodeWallet, transfer})
 			}
 
 
