@@ -296,7 +296,7 @@ const GB_airdrop = async () => {
         try {
             const ts = await SC.issueGBBatch(wallets, airdropGBs)
             await ts.wait()
-            logger(`GB_airdrop *********** wallets length = ${wallets.length} TOTAL GB = ${total}`)
+            logger(`GB_airdrop *********** wallets length = ${wallets.length} TOTAL GB = ${total} ${ts.hash} ***************************`)
         } catch (ex: any) {
             logger(`GB_airdrop ERROR: ${ex.message}`)
         }
