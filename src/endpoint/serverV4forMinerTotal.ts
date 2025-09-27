@@ -241,12 +241,17 @@ const miningData = (body: any, res: Response) => {
     if (!transfer) {
         logger(`${body.ipaddress}. ***** transfer undefine!!!`)
     } else {
+        const nodeWallet = body.nodeWallet.toLowerCase()
+        let nodeTotal = eGB_Pool.get(nodeWallet)||0
         transfer.forEach(n => {
             const wallet = n.wallet.toLowerCase()
             const transferData = eGB_Pool.get(wallet)||0
             const total = transferData + n.bytes
+            nodeTotal += total
             eGB_Pool.set(wallet, total)
         })
+
+        eGB_Pool.set(nodeWallet, nodeTotal)
         
     }
 
