@@ -527,15 +527,6 @@ class conet_dl_server {
 
 		const server = createServer(app)
 
-		this.router (router)
-
-		app.all ('*', (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
-			res.status(404).end ()
-			return res.socket?.end().destroy()
-		})
-
         app.get('/',async (req: any, res: any) => {
             const _node = await getRandomNode()
             const url = new URL(req.url, `https://${req.headers.host}`)
@@ -550,6 +541,17 @@ class conet_dl_server {
 
             res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
         })
+
+		this.router (router)
+
+		app.all ('*', (req: any, res: any) => {
+			const ipaddress = getIpAddressFromForwardHeader(req)
+			logger (Colors.red(`Cluster Master get unknow router from ${ipaddress} => ${ req.method } [http://${ req.headers.host }${ req.url }] STOP connect! ${req.body, false, 3, true}`))
+			res.status(404).end ()
+			return res.socket?.end().destroy()
+		})
+
+
 
 		logger(`start master server!`)
 
