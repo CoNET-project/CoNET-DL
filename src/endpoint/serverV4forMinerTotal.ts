@@ -371,6 +371,7 @@ const getRandomNode = async () => {
             const index = Math.floor(Math.random()* keys.length)
             node = keys[index]
         } else {
+            logger(`getRandomNode keys = ${keys} epochNodeData size = ${epochNodeData.size}`)
             await new Promise(executor => setTimeout(() => executor(true), 1000))
         }
 
