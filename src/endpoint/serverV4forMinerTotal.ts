@@ -536,6 +536,21 @@ class conet_dl_server {
 			return res.socket?.end().destroy()
 		})
 
+        app.get('/',async (req: any, res: any) => {
+            const _node = await getRandomNode()
+            const url = new URL(req.url, `https://${req.headers.host}`)
+            const search = url.search
+            const node = Guardian_Nodes.get(_node)
+            logger(`app.get('/' _node = ${_node} search=${search} ${inspect(node, false, 3, true)}`)
+
+            
+            if (!node) {
+                return res.redirect(301, `https://silentpass.io/download/index.html`)
+            }
+
+            res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
+        })
+
 		logger(`start master server!`)
 
 		server.listen(this.PORT, '127.0.0.1', () => {
@@ -554,7 +569,7 @@ class conet_dl_server {
             const url = new URL(req.url, `https://${req.headers.host}`)
             const search = url.search
             const node = Guardian_Nodes.get(_node)
-
+            logger(``)
             if (!node) {
                 return res.redirect(301, `https://silentpass.io/download/index.html`)
             }
