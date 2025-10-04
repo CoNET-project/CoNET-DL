@@ -364,28 +364,28 @@ const GB_airdrop = async () => {
 
 const getRandomNode = async () => {
     let node = ''
+    const block = currentEpoch-2
     
-    do {
-        const keys = Object.keys(epochNodeData.keys())
-        if (keys.length) {
-            const index = Math.floor(Math.random()* keys.length)
-            node = keys[index]
-        } else {
-            logger(`getRandomNode keys = ${keys} epochNodeData size = ${epochNodeData.size}`)
-            await new Promise(executor => setTimeout(() => executor(true), 1000))
-        }
+    const epochAll =  epochNodeData.get (block)
+    if (!epochAll) {
+        return null
+    }
 
-    } while(!node)
-
+    const keys = Object.keys(epochAll.keys)
+    if (keys.length) {
+        const index = Math.floor(Math.random()* keys.length)
+        node = keys[index]
+        return node
+    } 
     
-    return node
+    return null
 }
 
 const moveData = async (epoch: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provide_cancun)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
 
-	const block = epoch-2
+	const block = currentEpoch = epoch-2
 	
 	let _wallets_: Map<string, true> = new Map()
 	let _users_: Map<string, true> = new Map()
@@ -530,15 +530,20 @@ class conet_dl_server {
 
         app.get('/',async (req: any, res: any) => {
             const _node = await getRandomNode()
+            if (!_node) {
+                logger(`app.get('/' _node === null!`)
+                return res.redirect(301, `https://silentpass.io/download/index.html`)
+            }
+
             const url = new URL(req.url, `https://${req.headers.host}`)
             const search = url.search
             const node = Guardian_Nodes.get(_node)
-            logger(`app.get('/' _node = ${_node} search=${search} ${inspect(node, false, 3, true)}`)
-
-            
             if (!node) {
+                logger(`app.get('/' node === null!`)
                 return res.redirect(301, `https://silentpass.io/download/index.html`)
             }
+
+            logger(`app.get('/' _node = ${_node} search=${search} ${inspect(node, false, 3, true)}`)
 
             res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
         })
@@ -566,19 +571,6 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
-
-        router.get('/',async (req: any, res: any) => {
-            const _node = await getRandomNode()
-            const url = new URL(req.url, `https://${req.headers.host}`)
-            const search = url.search
-            const node = Guardian_Nodes.get(_node)
-            logger(``)
-            if (!node) {
-                return res.redirect(301, `https://silentpass.io/download/index.html`)
-            }
-
-            res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
-        })
 
 		router.post ('/epoch',(req: any, res: any) => {
 			res.status(200).json(EPOCH_DATA).end()
