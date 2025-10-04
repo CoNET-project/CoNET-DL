@@ -377,12 +377,14 @@ const GB_airdrop = async () => {
 }
 
 const getRandomNode = async () => {
-    let node = ''
+    let node
 
     const keys = Array.from(workingNodeIpAddress.keys())
     if (keys.length) {
         const index = Math.floor(Math.random()* keys.length)
-        node = keys[index]
+        
+        node = workingNodeIpAddress.get(keys[index])
+
     } else {
         logger(`############################### workingNodeIpAddress = ${workingNodeIpAddress.size}`)
     }
