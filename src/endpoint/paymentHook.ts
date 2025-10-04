@@ -2941,8 +2941,8 @@ new conet_dl_server ()
 
 
 const createRedeemWithSPProcessAdmin = async (): Promise<void> => {
-    for (let i = 0; i < 1; i ++) {
-        const redeemCode = await createRedeemWithSP ('0')
+    for (let i = 0; i < 10; i ++) {
+        const redeemCode = await createRedeemWithSP ('2400')
         console.log(redeemCode)
     }
     logger(`success!`)
@@ -3079,5 +3079,5 @@ const test4 = async () => {
     checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
 }
 
-createRedeemWithSPProcessAdmin()
+// createRedeemWithSPProcessAdmin()
 // testApple()

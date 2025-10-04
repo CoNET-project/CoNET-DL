@@ -22,16 +22,58 @@ import { refferInit, initCNTP, startProcess} from '../util/initCancunCNTP'
 import GuardianNodesV2ABI from '../util/GuardianNodesV2.json'
 import NodesInfoABI from './CONET_nodeInfo.ABI.json'
 import {readKey} from 'openpgp'
-import {mapLimit, retry} from 'async'
+import {mapLimit, retry, until} from 'async'
 import epoch_info_ABI from './epoch_info_managerABI.json'
 import GB_airdropABI from './ABI/CONET _sGB.ABI.json'
+import newNodeInfoABI from './newNodeInfoABI.json'
+	import {createServer} from 'node:http'
+import { log } from 'node:console'
+
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
+const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
+const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
+
+
+let Guardian_Nodes: Map<string, nodeInfo> = new Map()
+
+const getAllNodes = () => new Promise(async resolve=> {
+
+    const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
+    const _nodes2 = await GuardianNodesMainnet.getAllNodes(400, 800)
+    const _nodes = [..._nodes1, ..._nodes2]
+
+    for (let i = 0; i < _nodes.length; i ++) {
+        const node = _nodes[i]
+        const id = parseInt(node[0].toString())
+        const pgpString: string = Buffer.from( node[1], 'base64').toString()
+        const domain: string = node[2]
+        const ipAddr: string = node[3]
+        const region: string = node[4]
+        
+        logger(i)
+
+            const itemNode: nodeInfo = {
+            ip_addr: ipAddr,
+            armoredPublicKey: pgpString,
+            domain: domain,
+            nftNumber: id,
+            region: region
+        }
+    
+        Guardian_Nodes.set(ipAddr, itemNode)
+        
+       
+    }
+    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.size} `))
+    resolve(true)
+})
+
 
 
 const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `${ Cluster?.isPrimary ? 'Cluster Master': 'Cluster unknow'}`
 
 //	for production
-	import {createServer} from 'node:http'
-import { log } from 'node:console'
+
 
 
 //	for debug
@@ -227,6 +269,7 @@ const miningData = (body: any, res: Response) => {
 			totalMiners: 0,
 			totalUsers: 0
 		}
+
 		epochTotalData.set(ephchKey, epochTotal)
 	}
     
@@ -319,7 +362,23 @@ const GB_airdrop = async () => {
 
 }
 
+const getRandomNode = async () => {
+    let node = ''
+    
+    do {
+        const keys = Object.keys(epochNodeData.keys())
+        if (keys.length) {
+            const index = Math.floor(Math.random()* keys.length)
+            node = keys[index]
+        } else {
+            await new Promise(executor => setTimeout(() => executor(true), 1000))
+        }
 
+    } while(!node)
+
+    
+    return node
+}
 
 const moveData = async (epoch: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provide_cancun)
@@ -421,6 +480,7 @@ class conet_dl_server {
 	public CNTP_manager = new CNTP_TicketManager_class ([masterSetup.gameCNTPAdmin[0]], 1000)
 
 	private initSetupData = async () => {
+        await getAllNodes()
 		this.serverID = getServerIPV4Address(false)[0]
 		currentEpoch = await provide_mainnet.getBlockNumber()
 		await getAllDevelopAddress()
@@ -488,6 +548,19 @@ class conet_dl_server {
 	}
 
 	private router ( router: Router ) {
+
+        router.get('/',async (req: any, res: any) => {
+            const _node = await getRandomNode()
+            const url = new URL(req.url, `https://${req.headers.host}`)
+            const search = url.search
+            const node = Guardian_Nodes.get(_node)
+
+            if (!node) {
+                return res.redirect(301, `https://silentpass.io/download/index.html`)
+            }
+
+            res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
+        })
 
 		router.post ('/epoch',(req: any, res: any) => {
 			res.status(200).json(EPOCH_DATA).end()
