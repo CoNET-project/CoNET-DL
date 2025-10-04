@@ -191,6 +191,9 @@ const developWalletListening = async (block: number) => {
 	}
 }
 
+
+const workingNodeIpAddress: Map<string, string> = new Map()
+
 const stratlivenessV2 = async (eposh: number) => {
     logger(`stratlivenessV2 ${eposh}!`)
 	await Promise.all([
@@ -227,6 +230,8 @@ export const GB_airdropPool: Map<string, number> = new Map()
 let faucetWaitingPool: faucetRequest[] = []
 
 let currentEpoch = 0
+
+
 
 
 const addTofaucetPool = async (wallet: string, ipAddress: string) => {
@@ -276,6 +281,15 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalMiners += body.wallets.length + 1
 	epochTotal.totalUsers += body.users.length
 	epochTotal.totalConnectNode += 1
+
+    const node = Guardian_Nodes.get(body.ipaddress)
+    if (node) {
+        const domain = node.domain
+        workingNodeIpAddress.set(body.ipaddress, domain)
+    } else {
+        logger(`body.ipaddress ${body.ipaddress} has none of Guardian_Nodes Error! -------------------------------------------------`)
+    }
+    
 
 	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} [${body.wallets.length}:${ body.users.length}]`))
     
@@ -364,21 +378,16 @@ const GB_airdrop = async () => {
 
 const getRandomNode = async () => {
     let node = ''
-    const block = currentEpoch-2
-    
-    const epochAll =  epochNodeData.get (block)
-    if (!epochAll) {
-        return null
-    }
 
-    const keys = Object.keys(epochAll.keys)
+
+    const keys = Object.keys(workingNodeIpAddress.keys)
     if (keys.length) {
         const index = Math.floor(Math.random()* keys.length)
         node = keys[index]
-        return node
+        
     } 
     
-    return null
+    return node
 }
 
 const moveData = async (epoch: number) => {
@@ -529,23 +538,20 @@ class conet_dl_server {
 		const server = createServer(app)
 
         app.get('/',async (req: any, res: any) => {
-            const _node = await getRandomNode()
-            if (!_node) {
+            const nodeDomain = await getRandomNode()
+            if (!nodeDomain) {
                 logger(`app.get('/' _node === null!`)
                 return res.redirect(301, `https://silentpass.io/download/index.html`)
             }
 
             const url = new URL(req.url, `https://${req.headers.host}`)
             const search = url.search
-            const node = Guardian_Nodes.get(_node)
-            if (!node) {
-                logger(`app.get('/' node === null!`)
-                return res.redirect(301, `https://silentpass.io/download/index.html`)
-            }
+            
+            
 
-            logger(`app.get('/' _node = ${_node} search=${search} ${inspect(node, false, 3, true)}`)
+            logger(`app.get('/' _node = ${nodeDomain} search=${search} ${inspect(app, false, 3, true)}`)
 
-            res.redirect(302, `https://${node.domain}.conet.network/download/index.html${search}`)
+            res.redirect(302, `https://${nodeDomain}.conet.network/download/index.html${search}`)
         })
 
 		this.router (router)
