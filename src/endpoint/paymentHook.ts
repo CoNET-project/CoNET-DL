@@ -1639,7 +1639,7 @@ const Plan2860 = async (wallet: string, SolanaAddr: string, HDWallet: string) =>
         }
         payment_waiting_status.get(wallet)
         logger(`Plan2860`, inspect(obj, false, 3, true))
-        await storePlan2860(wallet, HDWallet, obj)
+        //await storePlan2860(wallet, HDWallet, obj)
 
 }
 
@@ -3076,8 +3076,12 @@ const test2 = async () => {
 
 const test4 = async () => {
     // await execVesting('3', '0xc74866D94e0E836AD99cEf963cFfB199a81Cb5ef', '', '', v4())
-    checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
+    //checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
+    Plan2860('0xBf2D1C6902B451EE7Cf775df63c097ff4E5Db6Ce','2qybXkEjhJnuZPRvdXjDEagHYPeHKeipTP3QceVDnLP6','')
 }
+
+
 
 // createRedeemWithSPProcessAdmin()
 // testApple()
+test4()

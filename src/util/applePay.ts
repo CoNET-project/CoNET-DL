@@ -18,7 +18,7 @@ const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.netw
 const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 const appleStoreWallet = new ethers.Wallet(masterSetup.appleStore, CONET_MAINNET)
 
-const appleStoreSC = [new ethers.Contract('0x92FF779aF409Fb399Be9C8dDD91C08d50e90F2fA', AppleStoreSubscriptionABI, appleStoreWallet)]
+const appleStoreSC = [new ethers.Contract('0xA00B479efeB9C61715b860A3CCbd4B5C5bAEb971', AppleStoreSubscriptionABI, appleStoreWallet)]
 const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, CONET_MAINNET)
 
 const SPClubPointManagerV2 = '0x0e78F4f06B1F34cf5348361AA35e4Ec6460658bb'
@@ -53,26 +53,27 @@ const aplleStoreObjProcess = async () => {
     const NFT = parseInt((await SP_Passport_SC_readonly.currentID()).toString()) + 1
     const duplicateAccount = await SPDuplicateFactoryContract.duplicateList(obj.to)
     const assetAccount = duplicateAccount === ethers.ZeroAddress ? obj.to : duplicateAccount
+    const uuid = v4()
     try {
         switch(obj.plan) {
             case '299': {
-                tx = obj.restore ? await  SC.restoreSPMember(assetAccount, obj.transactionId, obj.solana, v4()) :  await SC.initSPMember(assetAccount, obj.transactionId, obj.solana, 31, v4())
+                tx = obj.restore ? await  SC.restoreSPMember(assetAccount, obj.transactionId, obj.solana, uuid) :  await SC.initSPMember(assetAccount, obj.transactionId, obj.solana, 31, uuid)
                 break
             }
             case '2400': {
-                tx = obj.restore ? await  SC.restoreSPMember(assetAccount, obj.transactionId, obj.solana, v4()) : await SC.initSPMember(assetAccount, obj.transactionId, obj.solana, 366, v4())
+                tx = obj.restore ? await  SC.restoreSPMember(assetAccount, obj.transactionId, obj.solana, uuid) : await SC.initSPMember(assetAccount, obj.transactionId, obj.solana, 366, uuid)
                 break
             }
             case '3100': {
-                tx = obj.restore ? await  SC.restoreGoldMember(assetAccount, obj.transactionId, obj.solana, v4()) : await SC.initSPGoldMember(assetAccount, obj.transactionId, obj.solana,v4())
+                tx = obj.restore ? await  SC.restoreGoldMember(assetAccount, obj.transactionId, obj.solana, uuid) : await SC.initSPGoldMember(assetAccount, obj.transactionId, obj.solana, uuid)
                 break
             }
             default: {
-                logger(`aplleStoreObjProcess unknow PLAN ${obj.plan} Error `)
+                logger(`aplleStoreObjProcess unknow PLAN ${obj.plan} Error !!!!!!!!! assetAccount = ${assetAccount} _payID:${obj.transactionId} solana:${obj.solana} uuid=${uuid} `)
             }
         }
     } catch (ex: any) {
-        logger(`aplleStoreObjProcess CATCH EX Error ${ex.message} `)
+        logger(`aplleStoreObjProcess CATCH EX Error ${ex.message} assetAccount = ${assetAccount} _payID:${obj.transactionId} solana:${obj.solana} uuid=${uuid}`)
     }
 
     if (tx?.wait) {
