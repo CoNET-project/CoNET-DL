@@ -72,8 +72,9 @@ const aplleStoreObjProcess = async () => {
                 logger(`aplleStoreObjProcess unknow PLAN ${obj.plan} Error !!!!!!!!! assetAccount = ${assetAccount} _payID:${obj.transactionId} solana:${obj.solana} uuid=${uuid} `)
             }
         }
+        
     } catch (ex: any) {
-        logger(`aplleStoreObjProcess CATCH EX Error ${ex.message} assetAccount = ${assetAccount} _payID:${obj.transactionId} solana:${obj.solana} uuid=${uuid}`)
+        logger(`aplleStoreObjProcess CATCH EX Error  ${obj.plan} assetAccount = ${assetAccount} _payID:${obj.transactionId} solana:${obj.solana} uuid=${uuid}, ex: ${ex.message}`)
     }
 
     if (tx?.wait) {
