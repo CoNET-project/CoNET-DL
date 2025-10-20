@@ -374,6 +374,7 @@ const GB_airdrop = async () => {
     GB_airdropPool.forEach(async (val,key) => {
         if (val > 0) {
             const duplicate = await getDuplicateAccount(key)
+            logger(`GB_airdrop airdrop to ${key} duplicate = ${duplicate} GB = ${val}`)
             wallets.push(duplicate)
             airdropGBs.push(val)
             total += val
@@ -390,6 +391,8 @@ const GB_airdrop = async () => {
         } catch (ex: any) {
             logger(`GB_airdrop ERROR: ${ex.message}`)
         }
+    } else {
+        logger(`GB_airdrop no wallets to airdrop! total = ${total}`)
     }
 
     GB_airdropSCPool.unshift(SC)
