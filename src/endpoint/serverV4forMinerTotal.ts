@@ -360,18 +360,12 @@ const getDuplicateAccount = async (walletAddress: string) => {
 }
 
 
-
-
-const GB_airdrop = async () => {
-    const SC = GB_airdropSCPool.shift()
-    if (!SC) {
-        return
-    }
-
+const getData = async () => {
     const wallets: string[] = []
     const airdropGBs: number[] = []
     let total = 0
-    GB_airdropPool.forEach(async (val,key) => {
+
+    const tasks = Array.from(GB_airdropPool.entries()).map(async ([key, val]) => {
         if (val > 0) {
             const duplicate = await getDuplicateAccount(key)
             logger(`GB_airdrop airdrop to ${key} duplicate = ${duplicate} GB = ${val}`)
@@ -379,9 +373,21 @@ const GB_airdrop = async () => {
             airdropGBs.push(val)
             total += val
         }
-        
         GB_airdropPool.delete(key)
     })
+
+    await Promise.all(tasks)
+
+    return { wallets, airdropGBs, total }
+}
+
+const GB_airdrop = async () => {
+    const SC = GB_airdropSCPool.shift()
+    if (!SC) {
+        return
+    }
+
+    const {wallets, airdropGBs, total} = await getData()
 
     if (wallets.length > 0) {
         try {
