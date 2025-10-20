@@ -28,6 +28,7 @@ import GB_airdropABI from './ABI/CONET _sGB.ABI.json'
 import newNodeInfoABI from './newNodeInfoABI.json'
 	import {createServer} from 'node:http'
 import { log } from 'node:console'
+import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
@@ -342,25 +343,45 @@ const initV3Map: Map<string, boolean> = new Map()
 
 let EPOCH_DATA: iEPOCH_DATA
 
+
+const duplicateFactoryAddr = '0x87A70eD480a2b904c607Ee68e6C3f8c54D58FB08'
+const SPDuplicateFactoryContract = new ethers.Contract(duplicateFactoryAddr, duplicateFactory_ABI, provide_mainnet)
+
+const duplicateList: Map<string, string> = new Map()
+
+const getDuplicateAccount = async (walletAddress: string) => {
+    walletAddress = walletAddress.toLowerCase()
+    let duplicate = duplicateList.get(walletAddress) || await SPDuplicateFactoryContract.duplicateList(walletAddress)
+    if (duplicate === ethers.ZeroAddress) {
+        duplicate = walletAddress
+    }
+    duplicateList.set(walletAddress, duplicate)
+    return duplicate
+}
+
+
+
+
 const GB_airdrop = async () => {
     const SC = GB_airdropSCPool.shift()
     if (!SC) {
         return
     }
+
     const wallets: string[] = []
     const airdropGBs: number[] = []
     let total = 0
-    GB_airdropPool.forEach((val,key) => {
+    GB_airdropPool.forEach(async (val,key) => {
         if (val > 0) {
-            wallets.push(key)
+            const duplicate = await getDuplicateAccount(key)
+            wallets.push(duplicate)
             airdropGBs.push(val)
             total += val
         }
         
         GB_airdropPool.delete(key)
     })
-    logger(inspect(wallets))
-    logger(inspect(airdropGBs))
+
     if (wallets.length > 0) {
         try {
             const ts = await SC.issueGBBatch(wallets, airdropGBs)
@@ -372,7 +393,6 @@ const GB_airdrop = async () => {
     }
 
     GB_airdropSCPool.unshift(SC)
-
 
 }
 
@@ -453,18 +473,14 @@ const moveData = async (epoch: number) => {
 	EPOCH_DATA = {totalMiners, minerRate, totalUsrs, epoch: block, nodeWallets}
 	
 
-        const eposhGB_wallet: string[] = []
-        const eposhGB: number[] = []
-        const eposhStore: {wallet: string, GB: number}[] = []
 
         eGB_Pool.forEach((val, key) => {
-            eposhGB_wallet.push(key)
+            
             const GB = Math.floor(val)
-            eposhGB.push(GB)
-            eposhStore.push({wallet: key, GB})
+            
             eGB_Pool.delete(key)
             const GB_airdrop = GB_airdropPool.get(key)||0
-            GB_airdropPool.set(key, GB_airdrop+GB)
+            GB_airdropPool.set(key, GB_airdrop + GB)
         })
 
 	await Promise.all ([

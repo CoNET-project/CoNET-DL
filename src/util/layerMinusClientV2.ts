@@ -265,11 +265,7 @@ const connectToGossipNode = async (nodeIndex: number) => {
 			if (!total) {
 				logger(`******************************************* didResponseNode Total send to local ${sendCount}`, inspect(didResponseNode, false, 3, true), '*******************************************')
 				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
-
-
 			}
-
-
 
 			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
 			didResponseNode.splice(index, 1)
