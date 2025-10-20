@@ -275,7 +275,7 @@ const connectToGossipNode = async (nodeIndex: number) => {
 				sendCount = 0
 			}
 
-            if (node.ip_addr === '66.179.250.183') {
+            if (node.ip_addr === '212.227.240.189') {
                 logger(inspect(data, false, 3, true))
             }
             
