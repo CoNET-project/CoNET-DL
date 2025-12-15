@@ -907,6 +907,7 @@ class conet_dl_server_v4 {
 		})
 	}
 }
+
 const channelPartnersAddr = '0x2E2fd2A910E4b27946A30C00FD7F2A32069e52CC'
 const duplicateFactoryPool = new ethers.Contract(channelPartnersAddr, channelPartnersABI, mainnetEndpoint)
 

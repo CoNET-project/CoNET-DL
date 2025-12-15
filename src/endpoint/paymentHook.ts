@@ -86,7 +86,9 @@ type walletsProcess = {
 }
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
-const web2_wallet = new ethers.Wallet(masterSetup.web2_PaymentPassport, CONET_MAINNET)
+const web2_wallet = new ethers.Wallet(masterSetup.web2_PaymentPassport, CONET_MAINNET)          ///             0x2254ee19Bd6a655D0F28Ccd86a3BF61c21AB8062
+
+
 const PaymentPassport_addr = '0x3F7D3F23D0A00C60f5231De78094bD7409C72AF9'
 const payment_SC = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, web2_wallet)
 const payment_SC_readOnly = new ethers.Contract(PaymentPassport_addr, web2PaymentABI, CONET_MAINNET)
@@ -172,6 +174,10 @@ const daemondStart = async () => {
         
     })
 }
+
+
+
+
 
 const oracolPrice = async () => {
     const assets = ['bnb', 'eth']
@@ -1233,7 +1239,9 @@ class conet_dl_server {
                     error: 'message & signMessage Object walletAddress or solanaWallet Error!'
                 }).end()
             }
+
             logger(`/purchasePassportBySP success!`, inspect(obj, false, 3, true))
+            
             return res.status(200).json({
                 status: true
             }).end()
@@ -1850,7 +1858,7 @@ const createRedeemWithSP = async(plan: planStruct) => {
     const RedeemCode = uuid62.v4()
     const hash = ethers.solidityPackedKeccak256(['string'], [RedeemCode])
     const data = {
-         expiresDayes,
+        expiresDayes,
         redeemCode: hash
     }
 
@@ -1947,6 +1955,7 @@ const sp_reword_contract = new ethers.Contract(SPClubPointManagerV2, SPClubPoint
 const sp_reword_sc_pool: ethers.Contract[] = [sp_reword_contract]
 
 const reword_pool: {wallet: string, solana: string, balance: BigInt}[] = []
+
 
 const sp_reword_process = async () => {
     const obj = reword_pool.shift()
@@ -2104,7 +2113,7 @@ const ExpiresDays = 1000 * 60 * 60 * 24 * 7
 const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 const passport_distributor_addr = '0x40d64D88A86D6efb721042225B812379dc97bc89'
 const SP_Passport_SC_readonly = new ethers.Contract(SP_passport_addr, SP_ABI, CONET_MAINNET)
-const SPManagermentcodeToClient= new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, web2_wallet)
+const SPManagermentcodeToClient= [new ethers.Contract(passport_distributor_addr, passport_distributor_ABI, web2_wallet)]
 const getNextNft = async (wallet: string, userInfo: [nfts:BigInt[], expires: BigInt[], expiresDays: BigInt[], premium:boolean[]]) => {
 
 	for (let i = 0; i < userInfo[0].length; i ++) {
@@ -2611,7 +2620,7 @@ const buildVerifier = (env: Environment) =>
     env,
     bundleId,
     /* appAppleId */ undefined
-  );
+);
 
 
 const solana_account = masterSetup.solana_return_manager                    //              A8Vk2LsNqKktabs4xPY4YUmYxBoDqcTdxY5em4EQm8v1
@@ -3069,15 +3078,13 @@ const test2 = async () => {
     //     // const success = await searchInvoices(metadata, subscription.latest_invoice)
     //     logger(inspect({metadata, price}, false, 3, true))
     // }
-
-
     
 }
 
 const test4 = async () => {
     // await execVesting('3', '0xc74866D94e0E836AD99cEf963cFfB199a81Cb5ef', '', '', v4())
     //checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
-    //Plan2860('','','')
+    // Plan2860('0xbf2d1c6902b451ee7cf775df63c097ff4e5db6ce','2qybXkEjhJnuZPRvdXjDEagHYPeHKeipTP3QceVDnLP6','')
 }
 
 

@@ -67,29 +67,54 @@ const getIDs = () => {
 	})
 }
 
+const getUsdFxFromCoinbase = async () => {
+    const res = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD')
+    if (!res.ok) throw new Error(`coinbase fx failed: ${res.status}`)
+    const json: any = await res.json()
+
+    const rates = json?.data?.rates || {}
+    const cad = Number(rates.CAD)
+    const jpy = Number(rates.JPY)
+    const cny = Number(rates.CNY) // 人民币 ISO= CNY
+
+    if (!cad || !jpy || !cny) throw new Error('missing CAD/JPY/CNY in coinbase rates')
+    return { USDCAD: cad, USDJPY: jpy, USDCNY: cny }
+}
+
 
 const process = async () => {
+    try {
+        const [cmc, fx] = await Promise.all([
+        client.getQuotes({ id: [1839, 4943, 1027, 825, 3408, 1958] }),
+        getUsdFxFromCoinbase()
+        ])
 
-	return client.getQuotes({id: [1839, 4943, 1027, 825, 3408, 883, 1958]}).then(async (data: any) => {
-		const usdt: quote = data.data['825'].quote
-		const eth: quote = data.data['1027'].quote
-		const usdc: quote = data.data['3408'].quote
-		const dai: quote = data.data['4943'].quote
-		const bnb: quote = data.data['1839'].quote
-		const tron: quote = data.data['1958'].quote
+        const usdt = cmc.data['825'].quote
+        const eth = cmc.data['1027'].quote
+        const usdc = cmc.data['3408'].quote
+        const dai = cmc.data['4943'].quote
+        const bnb = cmc.data['1839'].quote
+        const tron = cmc.data['1958'].quote
 
-		// const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'tron']
-        const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'trx']
-		logger(inspect(tron, false, 3, true))
-		const price = [eth.USD.price, usdt.USD.price, usdc.USD.price, dai.USD.price, bnb.USD.price, tron.USD.price]
-		await updateOracle(tokenNames, price)
-		setTimeout (() => {
-			process()
-		}, linten)
-	})
+        const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'trx', 'usd-cad', 'usd-jpy', 'usd-cny']
+        const price = [
+            eth.USD.price,
+            usdt.USD.price,
+            usdc.USD.price,
+            dai.USD.price,
+            bnb.USD.price,
+            tron.USD.price,
+            fx.USDCAD,
+            fx.USDJPY,
+            fx.USDCNY
+        ]
+
+        await updateOracle(tokenNames, price)
+    } finally {
+        setTimeout(() => process(), linten)
+    }
 }
 // getIDs()
 process()
 
 logger(managerWallet.address)
-// getIDs()
