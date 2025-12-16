@@ -68,19 +68,34 @@ const getIDs = () => {
 }
 
 const getUsdFxFromCoinbase = async () => {
-    const res = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD')
-    if (!res.ok) throw new Error(`coinbase fx failed: ${res.status}`)
-    const json: any = await res.json()
+	const res = await fetch('https://api.coinbase.com/v2/exchange-rates?currency=USD')
+	if (!res.ok) throw new Error(`coinbase fx failed: ${res.status}`)
 
-    const rates = json?.data?.rates || {}
-    const cad = Number(rates.CAD)
-    const jpy = Number(rates.JPY)
-    const cny = Number(rates.CNY) // 人民币 ISO= CNY
+	const json: any = await res.json()
+	const rates = json?.data?.rates || {}
 
-    if (!cad || !jpy || !cny) throw new Error('missing CAD/JPY/CNY in coinbase rates')
-    return { USDCAD: cad, USDJPY: jpy, USDCNY: cny }
+	const cad = Number(rates.CAD)
+	const jpy = Number(rates.JPY)
+	const cny = Number(rates.CNY) // 人民币 ISO = CNY
+	const hkd = Number(rates.HKD) // 港元 ISO = HKD
+	const eur = Number(rates.EUR) // 欧元 ISO = EUR
+	const sgd = Number(rates.SGD) // 新加坡元 ISO = SGD
+	const twd = Number(rates.TWD) // 新台币 ISO = TWD
+
+	if (!cad || !jpy || !cny || !hkd || !eur || !sgd || !twd) {
+		throw new Error('missing CAD/JPY/CNY/HKD/EUR/SGD/TWD in coinbase rates')
+	}
+
+	return {
+		USDCAD: cad,
+		USDJPY: jpy,
+		USDCNY: cny,
+		USDHKD: hkd,
+		USDEUR: eur,
+		USDSGD: sgd,
+		USDTWD: twd
+	}
 }
-
 
 const process = async () => {
     try {
@@ -96,7 +111,7 @@ const process = async () => {
         const bnb = cmc.data['1839'].quote
         const tron = cmc.data['1958'].quote
 
-        const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'trx', 'usd-cad', 'usd-jpy', 'usd-cny']
+        const tokenNames = ['eth', 'usdt', 'usdc', 'dai', 'bnb', 'trx', 'usd-cad', 'usd-jpy', 'usd-cny', 'usd-hkd', 'usd-eur', 'usd-sgd', 'usd-twd']
         const price = [
             eth.USD.price,
             usdt.USD.price,
@@ -106,7 +121,11 @@ const process = async () => {
             tron.USD.price,
             fx.USDCAD,
             fx.USDJPY,
-            fx.USDCNY
+            fx.USDCNY,
+            fx.USDHKD,
+            fx.USDEUR,
+            fx.USDSGD,
+            fx.USDTWD
         ]
 
         await updateOracle(tokenNames, price)
@@ -117,4 +136,4 @@ const process = async () => {
 // getIDs()
 process()
 
-logger(managerWallet.address)
+// logger(managerWallet.address)
