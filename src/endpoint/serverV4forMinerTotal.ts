@@ -237,11 +237,13 @@ const managerSC_Pool: ethers.Contract[]= []
 
 const ConetPGP = '0x902A0592C8cB96c49f6818051aAf96C89F4318B3'
 
-
-    const adminWallet = new ethers.Wallet(masterSetup.oracleManager, provide_mainnet)
+masterSetup.initManager.forEach(n => {
+    const adminWallet = new ethers.Wallet(n, provide_mainnet)
     const SC = new ethers.Contract(ConetPGP, CONET_PGPABI, adminWallet)
     managerSC_Pool.push(SC)
     console.log (`=====================>`,adminWallet.address)
+})
+    
 
 
 
@@ -435,15 +437,51 @@ const getRandomNode = async () => {
     return node
 }
 
+type pgpData = {
+    pgpKeyID: string
+    pgpPublicKeyArmored: string
+    nodeWallet: string
+}
+
+
+const datas: {pgpData: pgpDataToSC}[] = []
+
+
+const writeNodeInfoPGPProcess = async () => {
+    const obj = datas.shift()
+    if (!obj) return 
+
+    const SC =  managerSC_Pool.shift ()
+    if (!SC) {
+        datas.unshift(obj)
+        return setTimeout(() => writeNodeInfoPGPProcess(), 4000)
+    }
+
+    try {
+        const tx = await SC.addRoutes(obj.pgpData.pgpKeyID, obj.pgpData.pgpPublicKeyArmored, obj.pgpData.nodeWallet )
+        await tx.await()
+        logger(`writeNodeInfoPGPProcess success ${tx.hash}`)
+
+    } catch (ex: any) {
+        logger(`writeNodeInfoPGP process error! ${ex.message}`)
+        datas.unshift(obj)
+
+    }
+    managerSC_Pool.push(SC)
+    setTimeout(() => writeNodeInfoPGPProcess(), 6000)
+
+}
+
+type pgpDataToSC = {
+    pgpKeyID: string[]
+    pgpPublicKeyArmored: string[]
+    nodeWallet: string[]
+}
 
 const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     logger(`writeNodeInfoPGP nodeWallets = ${nodeWallets.length}`)
 
-    const data: {
-        pgpKeyID: string
-        pgpPublicKeyArmored: string
-        nodeWallet: string
-    }[] = []
+    const data: pgpData[] = []
 
     nodeWallets.forEach(n => {
         const ipaddress = n.ipAddr
@@ -456,13 +494,34 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
         const pgpPublicKeyArmored = nodeInfo.armoredPublicKey
         const pgpKeyID = nodeInfo.domain
         data.push({
-            pgpKeyID,
             pgpPublicKeyArmored,
+            pgpKeyID,
             nodeWallet
         })
+
     })
 
-    logger(`writeNodeInfoPGP DATA TOTAL = ${data.length }`)
+    let pgpKeyID: string[] = []
+    let pgpPublicKeyArmored: string[] = []
+    let nodeWallet: string[] = []
+
+    for (let k of data) {
+        pgpKeyID.push(k.pgpKeyID)
+        pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
+        nodeWallet.push(k.nodeWallet)
+
+        if (pgpKeyID.length > 49) {
+            datas.push({
+                pgpData: {
+                    pgpKeyID: [...pgpKeyID],
+                    pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+                    nodeWallet: [...nodeWallet]
+                }
+            })
+        }
+        pgpKeyID = pgpPublicKeyArmored = nodeWallet = []
+        
+    }
 
 }
 
