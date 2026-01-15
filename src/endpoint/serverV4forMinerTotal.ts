@@ -505,6 +505,8 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     let pgpPublicKeyArmored: string[] = []
     let nodeWallet: string[] = []
 
+    logger(`writeNodeInfoPGP finished nodes = ${nodeWallets.length} == data ${data.length}`)
+
     for (let k of data) {
         pgpKeyID.push(k.pgpKeyID)
         pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
@@ -522,6 +524,10 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
         pgpKeyID = pgpPublicKeyArmored = nodeWallet = []
         
     }
+
+
+
+    logger(`writeNodeInfoPGP make datas ${datas.length}`)
 
 }
 
