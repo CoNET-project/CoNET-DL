@@ -460,7 +460,7 @@ const writeNodeInfoPGPProcess = async () => {
     try {
         const tx = await SC.addRoutes(obj.pgpData.pgpKeyID, obj.pgpData.pgpPublicKeyArmored, obj.pgpData.nodeWallet )
         await tx.await()
-        logger(`writeNodeInfoPGPProcess success ${tx.hash}`)
+        logger(`writeNodeInfoPGP success ${tx.hash}`)
 
     } catch (ex: any) {
         logger(`writeNodeInfoPGP process error! ${ex.message}`)
@@ -506,35 +506,38 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     let nodeWallet: string[] = []
 
     for (const k of data) {
-    pgpKeyID.push(k.pgpKeyID)
-    pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
-    nodeWallet.push(k.nodeWallet)
+        pgpKeyID.push(k.pgpKeyID)
+        pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
+        nodeWallet.push(k.nodeWallet)
 
-    if (pgpKeyID.length >= 50) {
-        datas.push({
-        pgpData: {
-            pgpKeyID: [...pgpKeyID],
-            pgpPublicKeyArmored: [...pgpPublicKeyArmored],
-            nodeWallet: [...nodeWallet]
+        if (pgpKeyID.length >= 50) {
+            datas.push({
+                pgpData: {
+                    pgpKeyID: [...pgpKeyID],
+                    pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+                    nodeWallet: [...nodeWallet]
+                }
+            })
+
+
+
+            // ✅ 只有凑满 50 条后才清空，开始下一组
+            pgpKeyID = []
+            pgpPublicKeyArmored = []
+            nodeWallet = []
+            writeNodeInfoPGPProcess()
         }
-        })
-
-        // ✅ 只有凑满 50 条后才清空，开始下一组
-        pgpKeyID = []
-        pgpPublicKeyArmored = []
-        nodeWallet = []
-    }
     }
 
     // ✅ 把最后不足 50 条的尾巴也塞进去（否则会丢数据）
     if (pgpKeyID.length > 0) {
-    datas.push({
-        pgpData: {
-        pgpKeyID: [...pgpKeyID],
-        pgpPublicKeyArmored: [...pgpPublicKeyArmored],
-        nodeWallet: [...nodeWallet]
-        }
-    })
+        datas.push({
+            pgpData: {
+            pgpKeyID: [...pgpKeyID],
+            pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+            nodeWallet: [...nodeWallet]
+            }
+        })
     }
 
     logger(`writeNodeInfoPGP make datas ${datas.length}`)
