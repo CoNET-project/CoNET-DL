@@ -237,12 +237,12 @@ const managerSC_Pool: ethers.Contract[]= []
 
 const ConetPGP = '0x902A0592C8cB96c49f6818051aAf96C89F4318B3'
 
-masterSetup.ETH_Manager.forEach(n => {
-    const adminWallet = new ethers.Wallet(n, provide_mainnet)
+
+    const adminWallet = new ethers.Wallet(masterSetup.oracleManager, provide_mainnet)
     const SC = new ethers.Contract(ConetPGP, CONET_PGPABI, adminWallet)
     managerSC_Pool.push(SC)
-    console.log (adminWallet.address)
-})
+    console.log (`=====================>`,adminWallet.address)
+
 
 
 
