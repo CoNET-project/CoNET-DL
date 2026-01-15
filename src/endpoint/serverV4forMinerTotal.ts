@@ -459,7 +459,7 @@ const writeNodeInfoPGPProcess = async () => {
 
     try {
         const tx = await SC.addRoutes(obj.pgpData.pgpKeyID, obj.pgpData.pgpPublicKeyArmored, obj.pgpData.nodeWallet )
-        await tx.await()
+        await tx.wait()
         logger(`writeNodeInfoPGP success ${tx.hash}`)
 
     } catch (ex: any) {
