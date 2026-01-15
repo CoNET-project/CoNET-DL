@@ -11,6 +11,7 @@ const startWriteReadboard = async (block:  number) => {
 	await saveFragment('gaem_LeaderBoard', JSON.stringify(list))
 	console.log (`GameLeaderBoard [${block}] = gaem_LeaderBoard success`)
 }
+
 const storagePATH = masterSetup.storagePATH
 
 const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
@@ -28,6 +29,7 @@ const saveFragment = (hashName: string, data: string) => new Promise(resolve=> {
 		return resolve (true)
 	})
 })
+
 export const start = () => {
 	logger(Colors.blue(`Started with PATH ${storagePATH}`))
 	conetRPC.on ('block', async block => {

@@ -29,6 +29,7 @@ import newNodeInfoABI from './newNodeInfoABI.json'
 	import {createServer} from 'node:http'
 import { log } from 'node:console'
 import duplicateFactory_ABI from './duplicateFactory.ABI.json'
+import CONET_PGPABI from './ABI/CoNETPGP.json'
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
@@ -232,6 +233,19 @@ let faucetWaitingPool: faucetRequest[] = []
 
 let currentEpoch = 0
 
+const managerSC_Pool: ethers.Contract[]= []
+
+const ConetPGP = '0x902A0592C8cB96c49f6818051aAf96C89F4318B3'
+
+masterSetup.ETH_Manager.forEach(n => {
+    const adminWallet = new ethers.Wallet(n, provide_mainnet)
+    const SC = new ethers.Contract(ConetPGP, CONET_PGPABI, adminWallet)
+    managerSC_Pool.push(SC)
+    console.log (adminWallet.address)
+})
+
+
+
 
 
 
@@ -421,6 +435,42 @@ const getRandomNode = async () => {
     return node
 }
 
+
+const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
+    logger(`writeNodeInfoPGP nodeWallets = ${nodeWallets.length}`)
+
+    const data: {
+        pgpKeyID: string
+        pgpPublicKeyArmored: string
+        nodeWallet: string
+    }[] = []
+
+    nodeWallets.forEach(n => {
+        const ipaddress = n.ipAddr
+        const nodeWallet = n.wallet
+
+        const nodeInfo = Guardian_Nodes.get(ipaddress)
+        if (!nodeInfo) {
+            return logger(`writeNodeInfoPGP Error node ${ipaddress} haven't INFO!!!!!!!!!!!!!!!!!!`)
+        }
+        const pgpPublicKeyArmored = nodeInfo.armoredPublicKey
+        const pgpKeyID = nodeInfo.domain
+        data.push({
+            pgpKeyID,
+            pgpPublicKeyArmored,
+            nodeWallet
+        })
+    })
+
+    logger(`writeNodeInfoPGP DATA TOTAL = ${data.length }`)
+
+}
+
+
+let skipEppoch = 0
+let writewriteNodeInfoPGP = false
+
+
 const moveData = async (epoch: number) => {
 	const rateSC = new ethers.Contract(rateAddr, rateABI, provide_cancun)
 	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
@@ -503,8 +553,21 @@ const moveData = async (epoch: number) => {
         writeFile(filename6, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
+
+
+
+
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
     GB_airdrop()
+    if (skipEppoch ++ > 10 && !writewriteNodeInfoPGP) {
+        writewriteNodeInfoPGP = true
+        writeNodeInfoPGP (nodeWallets)
+    } else {
+        logger(`writeNodeInfoPGP skip at ${skipEppoch}`)
+    }
+    
+
+
 	
 }
 

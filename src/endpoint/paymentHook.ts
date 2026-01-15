@@ -3084,11 +3084,11 @@ const test2 = async () => {
 const test4 = async () => {
     // await execVesting('3', '0xc74866D94e0E836AD99cEf963cFfB199a81Cb5ef', '', '', v4())
     //checkSolanaPayment1('N5AjwbVXyABoSJJ57uo2qcTeQsCATkBa4hXvbe1xFAduZTVQ34t4DKnuCyFHTEPLDe5X769Z1eP1y77agqeeYQT', '0x70549b2c458a5dc672e065f575d674f739c0f090', '2ziUnLzeApRxTHJZ3mCMocHARjzjM2caQQVCGSTkr1Pr')
-    // Plan2860('0xbf2d1c6902b451ee7cf775df63c097ff4e5db6ce','2qybXkEjhJnuZPRvdXjDEagHYPeHKeipTP3QceVDnLP6','')
+    Plan2860('0xbf2d1c6902b451ee7cf775df63c097ff4e5db6ce','2qybXkEjhJnuZPRvdXjDEagHYPeHKeipTP3QceVDnLP6','')
 }
 
 
 
 // createRedeemWithSPProcessAdmin()
 // testApple()
-// test4()
+test4()
