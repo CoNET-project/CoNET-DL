@@ -510,7 +510,7 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
         pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
         nodeWallet.push(k.nodeWallet)
 
-        if (pgpKeyID.length >= 50) {
+        if (pgpKeyID.length >=20) {
             datas.push({
                 pgpData: {
                     pgpKeyID: [...pgpKeyID],
