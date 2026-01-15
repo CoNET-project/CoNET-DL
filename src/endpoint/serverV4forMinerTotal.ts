@@ -510,7 +510,7 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
         pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
         nodeWallet.push(k.nodeWallet)
 
-        if (pgpKeyID.length >=20) {
+        if (pgpKeyID.length >=10) {
             datas.push({
                 pgpData: {
                     pgpKeyID: [...pgpKeyID],
@@ -521,7 +521,7 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
 
 
 
-            // ✅ 只有凑满 50 条后才清空，开始下一组
+            // ✅ 只有凑满 10 条后才清空，开始下一组
             pgpKeyID = []
             pgpPublicKeyArmored = []
             nodeWallet = []
