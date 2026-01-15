@@ -505,27 +505,37 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     let pgpPublicKeyArmored: string[] = []
     let nodeWallet: string[] = []
 
-    logger(`writeNodeInfoPGP finished nodes = ${nodeWallets.length} == data ${data.length}`)
+    for (const k of data) {
+    pgpKeyID.push(k.pgpKeyID)
+    pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
+    nodeWallet.push(k.nodeWallet)
 
-    for (let k of data) {
-        pgpKeyID.push(k.pgpKeyID)
-        pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
-        nodeWallet.push(k.nodeWallet)
-
-        if (pgpKeyID.length > 49) {
-            datas.push({
-                pgpData: {
-                    pgpKeyID: [...pgpKeyID],
-                    pgpPublicKeyArmored: [...pgpPublicKeyArmored],
-                    nodeWallet: [...nodeWallet]
-                }
-            })
+    if (pgpKeyID.length >= 50) {
+        datas.push({
+        pgpData: {
+            pgpKeyID: [...pgpKeyID],
+            pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+            nodeWallet: [...nodeWallet]
         }
-        pgpKeyID = pgpPublicKeyArmored = nodeWallet = []
-        
+        })
+
+        // ✅ 只有凑满 50 条后才清空，开始下一组
+        pgpKeyID = []
+        pgpPublicKeyArmored = []
+        nodeWallet = []
+    }
     }
 
-
+    // ✅ 把最后不足 50 条的尾巴也塞进去（否则会丢数据）
+    if (pgpKeyID.length > 0) {
+    datas.push({
+        pgpData: {
+        pgpKeyID: [...pgpKeyID],
+        pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+        nodeWallet: [...nodeWallet]
+        }
+    })
+    }
 
     logger(`writeNodeInfoPGP make datas ${datas.length}`)
 
