@@ -634,7 +634,7 @@ const moveData = async (epoch: number) => {
 
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
     GB_airdrop()
-    if (skipEppoch ++ > 10 && !writewriteNodeInfoPGP) {
+    if (skipEppoch ++ > 4 && !writewriteNodeInfoPGP) {
         writewriteNodeInfoPGP = true
         writeNodeInfoPGP (nodeWallets)
     } else {
