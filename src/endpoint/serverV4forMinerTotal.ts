@@ -404,9 +404,10 @@ const miningData = (body: any, res: Response) => {
         if (nodeTotal>0) {
             eGB_Pool.set(nodeWallet, nodeTotal)
         }
+
         if (node) {
             isRegiestedNode(nodeWallet, node.armoredPublicKey, node.domain)
-        }
+        } 
         
         
     }
@@ -741,7 +742,7 @@ const moveData = async (epoch: number) => {
         writeFile(filename6, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
-	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
+	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success! regiestedNodePool length = ${regiestedNodePool.size}`))
     GB_airdrop()
     if (skipEppoch ++ > 4 && !writewriteNodeInfoPGP) {
         writewriteNodeInfoPGP = true
