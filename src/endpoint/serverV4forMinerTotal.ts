@@ -555,8 +555,10 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
         }
         const wallet = new ethers.Wallet(masterSetup.initManager[0], provide_mainnet)
         const SC = new ethers.Contract(ethBatchETHAddress, beatch_abi, wallet)
+        const fixed = 50_000_000_000_000_000n
+        const value = fixed * BigInt(nodeWallet.length)
         try {
-            const tx = await SC.patch(nodeWallet, '50000000000000000')
+            const tx = await SC.patch(nodeWallet, fixed, {value})
             await tx.wait()
             logger(`airdropETH success! ${tx.hash}`)
         } catch (ex: any) {
