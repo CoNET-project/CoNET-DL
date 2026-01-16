@@ -288,6 +288,7 @@ const regiestNode = (wallet: string, publicKeyArmored: string, keyID: string) =>
         keyID
     })
     regiestNodePoolProcess()
+    regiestedNodePool.set(wallet, true)
 
 }
 
@@ -315,8 +316,10 @@ const isRegiestedNode = async (nodeAddress: string, publicKeyArmored: string, ke
         const ok: boolean = await SC.nodeKeyExists(h)
 
         if (!ok) {
-            regiestNode(nodeAddress, publicKeyArmored, keyID)
+            return regiestNode(nodeAddress, publicKeyArmored, keyID)
         }
+        regiestedNodePool.set(nodeAddress, true)
+
     } catch {
         return false
     }
