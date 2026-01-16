@@ -245,7 +245,82 @@ masterSetup.initManager.forEach(n => {
     console.log (`=====================>`,adminWallet.address)
 })
     
+const regiestedNodePool: Map<string, boolean> = new Map()
 
+const regiestNodePool: {
+    publicKeyArmored: string
+    keyID: string
+    wallet: string
+
+}[] = []
+
+const regiestNodePoolProcess = async () => {
+    const obj = regiestNodePool.shift()
+    if (!obj) return
+
+    const SC = managerSC_Pool.shift()
+    if (!SC) {
+        regiestNodePool.unshift(obj)
+        return setTimeout(() => regiestNodePoolProcess(), 1000)
+    }
+    try {
+        const tx = await SC.addRoute(obj.keyID, obj.publicKeyArmored, obj.wallet)
+        tx.wait()
+        logger(`regiestNodePoolProcess node ${obj.wallet} success! ${tx.hash}`)
+
+    }catch (ex: any) {
+        logger(`regiestNodePoolProcess `)
+    }
+
+    managerSC_Pool.push(SC)
+    setTimeout(() => regiestNodePoolProcess(), 1000)
+
+}
+
+
+
+const regiestNode = (wallet: string, publicKeyArmored: string, keyID: string) => {
+
+    logger(`regiestNode ${wallet} keyID =${keyID}`)
+    regiestNodePool.push({
+        wallet,
+        publicKeyArmored,
+        keyID
+    })
+    regiestNodePoolProcess()
+
+}
+
+const pgpReadonly = new ethers.Contract(ConetPGP, CONET_PGPABI, provide_mainnet)
+
+const isRegiestedNode = async (nodeAddress: string, publicKeyArmored: string, keyID: string) => {
+    const nodes = regiestedNodePool.get(nodeAddress)
+    if (nodes) return
+
+
+    let isReg = false
+    const SC = pgpReadonly
+    try {
+
+        
+
+        // nodeWallet2KeyHash(address) => bytes32
+        const h: string = await SC.nodeWallet2KeyHash(nodeAddress)
+
+        if (!h || h === ethers.ZeroHash) {
+            return regiestNode(nodeAddress, publicKeyArmored, keyID)
+        }
+
+        // nodeKeyExists(bytes32) => bool
+        const ok: boolean = await SC.nodeKeyExists(h)
+
+        if (!ok) {
+            regiestNode(nodeAddress, publicKeyArmored, keyID)
+        }
+    } catch {
+        return false
+    }
+}
 
 
 
@@ -329,10 +404,13 @@ const miningData = (body: any, res: Response) => {
         if (nodeTotal>0) {
             eGB_Pool.set(nodeWallet, nodeTotal)
         }
+        if (node) {
+            isRegiestedNode(nodeWallet, node.armoredPublicKey, node.domain)
+        }
         
         
     }
-
+    
 
 	addTofaucetPool(body.nodeWallet, body.ipaddress)
 	return res.status(200).end()
@@ -437,9 +515,6 @@ const getRandomNode = async () => {
     
     return node
 }
-
-
-
 
 type pgpData = {
     pgpKeyID: string
@@ -569,8 +644,11 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     }
 
 
+
+
+
     logger(`writeNodeInfoPGP make datas ${datas.length}`)
-    writeNodeInfoPGPProcess()
+    //writeNodeInfoPGPProcess()
     // airdropETH()
 
 
@@ -676,8 +754,6 @@ const moveData = async (epoch: number) => {
 
     
 }
-
-
 
 
 
