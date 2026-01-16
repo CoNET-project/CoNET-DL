@@ -30,6 +30,7 @@ import newNodeInfoABI from './newNodeInfoABI.json'
 import { log } from 'node:console'
 import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import CONET_PGPABI from './ABI/CoNETPGP.json'
+import beatch_abi from './ABI/BatchETH.json'
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
@@ -437,6 +438,9 @@ const getRandomNode = async () => {
     return node
 }
 
+
+
+
 type pgpData = {
     pgpKeyID: string
     pgpPublicKeyArmored: string
@@ -478,6 +482,9 @@ type pgpDataToSC = {
     nodeWallet: string[]
 }
 
+const ethBatchETHAddress = '0xdfeCA2417a7de672537557b2e6f42098340D2C32'
+
+
 const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     logger(`writeNodeInfoPGP nodeWallets = ${nodeWallets.length}`)
 
@@ -505,42 +512,63 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
     let pgpPublicKeyArmored: string[] = []
     let nodeWallet: string[] = []
 
-    for (const k of data) {
-        pgpKeyID.push(k.pgpKeyID)
-        pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
-        nodeWallet.push(k.nodeWallet)
+    const regiestNodes = () => {
+        for (const k of data) {
+            pgpKeyID.push(k.pgpKeyID)
+            pgpPublicKeyArmored.push(k.pgpPublicKeyArmored)
+            nodeWallet.push(k.nodeWallet)
 
-        if (pgpKeyID.length >=10) {
+            if (pgpKeyID.length >=10) {
+                datas.push({
+                    pgpData: {
+                        pgpKeyID: [...pgpKeyID],
+                        pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+                        nodeWallet: [...nodeWallet]
+                    }
+                })
+
+
+
+                // ✅ 只有凑满 10 条后才清空，开始下一组
+                pgpKeyID = []
+                pgpPublicKeyArmored = []
+                nodeWallet = []
+                writeNodeInfoPGPProcess()
+            }
+        }
+
+        // ✅ 把最后不足 50 条的尾巴也塞进去（否则会丢数据）
+        if (pgpKeyID.length > 0) {
             datas.push({
                 pgpData: {
-                    pgpKeyID: [...pgpKeyID],
-                    pgpPublicKeyArmored: [...pgpPublicKeyArmored],
-                    nodeWallet: [...nodeWallet]
+                pgpKeyID: [...pgpKeyID],
+                pgpPublicKeyArmored: [...pgpPublicKeyArmored],
+                nodeWallet: [...nodeWallet]
                 }
             })
-
-
-
-            // ✅ 只有凑满 10 条后才清空，开始下一组
-            pgpKeyID = []
-            pgpPublicKeyArmored = []
-            nodeWallet = []
-            writeNodeInfoPGPProcess()
         }
     }
 
-    // ✅ 把最后不足 50 条的尾巴也塞进去（否则会丢数据）
-    if (pgpKeyID.length > 0) {
-        datas.push({
-            pgpData: {
-            pgpKeyID: [...pgpKeyID],
-            pgpPublicKeyArmored: [...pgpPublicKeyArmored],
-            nodeWallet: [...nodeWallet]
-            }
-        })
+    const airdropETH = async () => {
+        for (const k of data) {
+            nodeWallet.push(k.nodeWallet)
+        }
+        const wallet = new ethers.Wallet(masterSetup.initManager[0], provide_mainnet)
+        const SC = new ethers.Contract(ethBatchETHAddress, beatch_abi, wallet)
+        try {
+            const tx = await SC.patch(nodeWallet, '50000000000000000')
+            await tx.wait()
+            logger(`airdropETH success! ${tx.hash}`)
+        } catch (ex: any) {
+            logger(`airdropETH Error!`, ex.message)
+        }
+
     }
 
+
     logger(`writeNodeInfoPGP make datas ${datas.length}`)
+
+    airdropETH()
 
 }
 
@@ -631,18 +659,22 @@ const moveData = async (epoch: number) => {
         writeFile(filename6, JSON.stringify([..._users_.keys()]), 'utf8')
 	])
 
-
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
     GB_airdrop()
-    // if (skipEppoch ++ > 4 && !writewriteNodeInfoPGP) {
-    //     writewriteNodeInfoPGP = true
-    //     writeNodeInfoPGP (nodeWallets)
-    // } else {
-    //     logger(`writeNodeInfoPGP skip at ${skipEppoch}`)
-    // }
+    if (skipEppoch ++ > 4 && !writewriteNodeInfoPGP) {
+        writewriteNodeInfoPGP = true
+        writeNodeInfoPGP (nodeWallets)
+
+    } else {
+        logger(`writeNodeInfoPGP skip at ${skipEppoch}`)
+    }
+
+
     
-	
 }
+
+
+
 
 
 class conet_dl_server {
