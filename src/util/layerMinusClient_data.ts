@@ -19,7 +19,7 @@ const epochTotal: Map<string, number> = new Map()
 const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
 const CoNET_passport_SC: ethers.Contract[] = []
 
-const ConetPGP = '0x902A0592C8cB96c49f6818051aAf96C89F4318B3'
+const ConetPGP = '0x84de3EA6446489E6a267B0AAD2fAe1462564C32E'
 const CoNETProvider = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 const managerSC_Pool: ethers.Contract[]= []
 

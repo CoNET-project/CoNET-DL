@@ -308,7 +308,7 @@ const miningData = (body: any, res: Response) => {
     }
     
 
-	logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} [${body.wallets.length}:${ body.users.length}]`))
+	//logger(Colors.grey(`/miningData eposh ${body.epoch} nodes ${body.ipaddress} nodewallet ${body.nodeWallet} = ${eposh.size} [${body.wallets.length}:${ body.users.length}]`))
     
     const transfer: transferGB[] = body?.transfer
     
@@ -632,20 +632,15 @@ const moveData = async (epoch: number) => {
 	])
 
 
-
-
-
 	logger(Colors.blue(`moveData save files ${filename}, ${filename1}, ${filename2} success!`))
     GB_airdrop()
-    // if (skipEppoch ++ > 4 && !writewriteNodeInfoPGP) {
-    //     writewriteNodeInfoPGP = true
-    //     writeNodeInfoPGP (nodeWallets)
-    // } else {
-    //     logger(`writeNodeInfoPGP skip at ${skipEppoch}`)
-    // }
+    if (skipEppoch ++ > 4 && !writewriteNodeInfoPGP) {
+        writewriteNodeInfoPGP = true
+        writeNodeInfoPGP (nodeWallets)
+    } else {
+        logger(`writeNodeInfoPGP skip at ${skipEppoch}`)
+    }
     
-
-
 	
 }
 
