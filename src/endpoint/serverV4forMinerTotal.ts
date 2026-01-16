@@ -546,6 +546,7 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
                 nodeWallet: [...nodeWallet]
                 }
             })
+            writeNodeInfoPGPProcess()
         }
     }
 
@@ -569,8 +570,9 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
 
 
     logger(`writeNodeInfoPGP make datas ${datas.length}`)
+    writeNodeInfoPGPProcess()
+    // airdropETH()
 
-    airdropETH()
 
 }
 
