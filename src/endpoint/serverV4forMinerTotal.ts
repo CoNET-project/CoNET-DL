@@ -236,7 +236,7 @@ let currentEpoch = 0
 
 const managerSC_Pool: ethers.Contract[]= []
 
-const ConetPGP = '0x902A0592C8cB96c49f6818051aAf96C89F4318B3'
+const ConetPGP = '0x84de3EA6446489E6a267B0AAD2fAe1462564C32E'
 
 masterSetup.initManager.forEach(n => {
     const adminWallet = new ethers.Wallet(n, provide_mainnet)
