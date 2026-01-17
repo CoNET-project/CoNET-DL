@@ -323,6 +323,7 @@ const tryRegiestedNode = async (nodeAddress: string, publicKeyArmored: string, k
             return regiestNode(nodeAddress, publicKeyArmored, keyID)
         }
 
+        logger(`tryRegiestedNode keyID [${keyID}] h = ${h} _wa = ${_wa}  regiestedNodePool.set ${nodeAddress} ===> true   ethers.keccak256(ethers.toUtf8Bytes(keyID)) = ${ha}`)
         regiestedNodePool.set(nodeAddress, true)
 
     } catch {
