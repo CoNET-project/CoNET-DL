@@ -294,34 +294,39 @@ const regiestNode = (wallet: string, publicKeyArmored: string, keyID: string) =>
 
 const pgpReadonly = new ethers.Contract(ConetPGP, CONET_PGPABI, provide_mainnet)
 
-const isRegiestedNode = async (nodeAddress: string, publicKeyArmored: string, keyID: string) => {
+const tryRegiestedNode = async (nodeAddress: string, publicKeyArmored: string, keyID: string) => {
     const nodes = regiestedNodePool.get(nodeAddress)
     if (nodes) return
 
-
-    let isReg = false
     const SC = pgpReadonly
     try {
 
-        
+        const ha = ethers.keccak256(ethers.toUtf8Bytes(keyID))
 
         // nodeWallet2KeyHash(address) => bytes32
-        const h: string = await SC.nodeWallet2KeyHash(nodeAddress)
 
-        if (!h || h === ethers.ZeroHash) {
+        const [h, _wa]: [boolean, string ] = await Promise.all([
+            SC.nodeKeyExists(ha),
+            SC.nodeKeyHash2Wallet(ha)
+        ])
+       
+
+
+        if (!h) {
             return regiestNode(nodeAddress, publicKeyArmored, keyID)
         }
 
         // nodeKeyExists(bytes32) => bool
-        const ok: boolean = await SC.nodeKeyExists(h)
+       
 
-        if (!ok) {
+        if (_wa.toLowerCase() !== nodeAddress.toLowerCase()) {
             return regiestNode(nodeAddress, publicKeyArmored, keyID)
         }
+
         regiestedNodePool.set(nodeAddress, true)
 
     } catch {
-        return false
+        
     }
 }
 
@@ -409,7 +414,7 @@ const miningData = (body: any, res: Response) => {
         }
 
         if (node) {
-            isRegiestedNode(nodeWallet, node.armoredPublicKey, node.domain)
+            tryRegiestedNode(nodeWallet, node.armoredPublicKey, node.domain)
         } 
         
         
