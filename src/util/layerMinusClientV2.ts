@@ -245,7 +245,9 @@ let  PassportPoolProcessCount = 0
 const launchMap: Map<string, boolean> = new Map()
 const activeRequests: Map<string, ReturnType<typeof request>> = new Map()
 
+
 const activeNodeSessions = new Map<number, boolean>()
+
 
 const connectToGossipNode = async (nodeIndex: number) => {
     // 🛡️ 守卫：如果该节点已经在处理中，直接返回
@@ -334,23 +336,53 @@ const connectToGossipNode = async (nodeIndex: number) => {
                 return logger(Colors.magenta(`connectToGossipNode ${node.ip_addr} push ${_data} is null!`))
             }
 
-            try {
-                // ... 原有的数据处理逻辑保持不变 ...
-                const data: listenClient = JSON.parse(_data)
-                
-                // (省略中间业务逻辑，保持原样)
-                const wallets = data.nodeWallets||[]
-                // ...
-                const transfer = data?.transfer
+		try {
+			const data: listenClient = JSON.parse(_data)
+			
+			const wallets = data.nodeWallets||[]
+			const users = data.userWallets||[]
+			node.lastEposh =  data.epoch
 
-                // ...
-                
-            } catch (ex) {
-                logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
-                logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
-            }
-        }
-    )
+			const messageVa = {epoch: data.epoch.toString(), wallet: walletAddress}
+			const nodeWallet = ethers.verifyMessage(JSON.stringify(messageVa), data.hash).toLowerCase()
+
+			if (nodeWallet !== data.nodeWallet.toLowerCase()) {
+				return logger(Colors.red(`${node.ip_addr} validatorMining verifyMessage hash Error! nodeWallet ${nodeWallet} !== validatorData.nodeWallet.toLowerCase() ${data.nodeWallet.toLowerCase()}`))
+			}
+
+			let total = epochTotal.get (data.epoch.toString())||0
+
+			if (!total) {
+				logger(`******************************************* didResponseNode Total send to local ${sendCount}`, inspect(didResponseNode, false, 3, true), '*******************************************')
+				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
+			}
+
+			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
+			didResponseNode.splice(index, 1)
+			epochTotal.set(data.epoch.toString(), total +1 )
+			if (epoch != data.epoch) {
+				epoch = data.epoch
+				sendCount = 0
+			}
+
+        
+            
+            const transfer = data?.transfer
+
+			sendCount ++
+			let kk = null
+			if (postLocal) {
+				kk = await postLocalhost('/api/miningData', {wallets, users, ipaddress: node.ip_addr, epoch: data.epoch, nodeWallet: nodeWallet, transfer})
+			}
+
+
+			logger(Colors.grey(`PassportPoolProcessCount = [${PassportPoolProcessCount}] startGossip got EPOCH ${data.epoch} [${node.ip_addr}:${data.nodeWallet}] Total nodes ${total +1} miners ${data.nodeWallets.length} users ${data.userWallets.length} ${kk ? ' sendLocalhost count ' + sendCount + 'SUCCESS' : ''}`))
+		} catch (ex) {
+			logger(Colors.blue(`${node.ip_addr} => \n${_data}`))
+			logger(Colors.red(`connectToGossipNode ${node.ip_addr} JSON.parse(_data) Error!`))
+		}
+	})
+
 }
 
 let kkk: ReturnType<typeof request> | null = null as any
