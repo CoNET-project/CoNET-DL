@@ -223,7 +223,7 @@ const postLocalhost = (path: string, obj: any)=> new Promise(async resolve =>{
 			return resolve(false)
 		}
 		resolve(true)
-		//return logger(Colors.grey(`postLocalhost http://localhost/${path} Success!!!`),inspect(obj, false, 3, true))
+		return logger(Colors.grey(`postLocalhost http://localhost/${path} Success!!!`),inspect(obj, false, 3, true))
 
 	})
 
