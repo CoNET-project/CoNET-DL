@@ -29,14 +29,14 @@ interface quote {
 /** GuardianOracle 所在 L1：CoNET */
 const providerConet = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 /** BeamioOracle 所在 L1；与 CoNET 不同链，故可并行喂价且无 nonce 冲突 */
-const beamioL1Rpc = masterSetup.beamio_l1_rpc
-if (!beamioL1Rpc) throw new Error('missing beamio L1 RPC: set masterSetup.beamio_l1_rpc or env BEAMIO_L1_RPC')
-const providerBeamio = new ethers.JsonRpcProvider(beamioL1Rpc)
+const providerBaseBackup = new ethers.JsonRpcProvider('https://1rpc.io/base')
+
+
 
 const apiKey = masterSetup.CoinMarketCapAPIKey
 const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
 const managerWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerConet)
-const beamioWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerBeamio)
+const beamioWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerBaseBackup)
 const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerWallet)
 const client = new CoinMarketCap(apiKey)
 ///							1 Credits
@@ -51,7 +51,7 @@ const testData1 = [
   537.1435821764862
 ]
 
-logger(`admin wallet ${managerWallet.address} | GuardianOracle CoNET | BeamioOracle L1 ${beamioL1Rpc}`)
+logger(`admin wallet ${managerWallet.address} | GuardianOracle CoNET | BeamioOracle L1 ${providerBaseBackup}`)
 
 const beamioOracleAddr = '0xDa4AE8301262BdAaf1bb68EC91259E6C512A9A2B'
 const beamioOracle = new ethers.Contract(beamioOracleAddr, SeamioOracle_ABI, beamioWallet)
@@ -101,7 +101,7 @@ const updateBeamioOracle = async (fx: any, cmcQuotes: any) => {
             logger(`  - ${r.symbol}: 1 ${r.symbol} = ${r.rateUsd.toFixed(6)} USD`);
         }
 
-        const feeData = await providerBeamio.getFeeData();
+        const feeData = await providerBaseBackup.getFeeData();
         
         // 显式增加 20% 的 GasPrice，确保覆盖任何挂起的交易
         const gasPrice = feeData.gasPrice ? (feeData.gasPrice * 120n / 100n) : undefined;
