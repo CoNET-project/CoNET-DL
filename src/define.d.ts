@@ -75,6 +75,7 @@ interface iEPOCH_DATA {
 }
 
 interface ICoNET_DL_masterSetup {
+	settle_contractAdmin: string[]
     GB_airdrop: string
     appleStore:string
     GuardianNodesInfoManager: string
@@ -113,6 +114,8 @@ interface ICoNET_DL_masterSetup {
 	solanaManager: string
 	SP_Oracle: string
 	ethEndpoint: string
+	/** BeamioOracle 所在 L1 的 RPC；与 GuardianOracle (CoNET) 为不同链时可并行喂价 */
+	beamio_l1_rpc?: string
 	SilentPassAirdrop: string[]
 	mainnet_passport_airdrop: string
 	conetian_eth_airdrop: string

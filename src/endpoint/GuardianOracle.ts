@@ -4,6 +4,8 @@ import { logger } from '../util/logger'
 import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import GuardianOracle_ABI from './GuardianOracleABI.json'
+import SeamioOracle_ABI from './ABI/SeamioOracleABI.json'
+
 const CoinMarketCap = require('coinmarketcap-api')
 interface quote {
 	USD: {
@@ -24,10 +26,17 @@ interface quote {
 	}
 }
 
-const provide = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+/** GuardianOracle 所在 L1：CoNET */
+const providerConet = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+/** BeamioOracle 所在 L1；与 CoNET 不同链，故可并行喂价且无 nonce 冲突 */
+const beamioL1Rpc = masterSetup.beamio_l1_rpc ?? process.env.BEAMIO_L1_RPC
+if (!beamioL1Rpc) throw new Error('missing beamio L1 RPC: set masterSetup.beamio_l1_rpc or env BEAMIO_L1_RPC')
+const providerBeamio = new ethers.JsonRpcProvider(beamioL1Rpc)
+
 const apiKey = masterSetup.CoinMarketCapAPIKey
 const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
-const managerWallet = new ethers.Wallet(masterSetup.oracleManager, provide)
+const managerWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerConet)
+const beamioWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerBeamio)
 const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerWallet)
 const client = new CoinMarketCap(apiKey)
 ///							1 Credits
@@ -41,6 +50,86 @@ const testData1 = [
   0.9998955107583655,
   537.1435821764862
 ]
+
+logger(`admin wallet ${managerWallet.address} | GuardianOracle CoNET | BeamioOracle L1 ${beamioL1Rpc}`)
+
+const beamioOracleAddr = '0xDa4AE8301262BdAaf1bb68EC91259E6C512A9A2B'
+const beamioOracle = new ethers.Contract(beamioOracleAddr, SeamioOracle_ABI, beamioWallet)
+
+/** BeamioCurrency.CurrencyType 对应索引: CAD=0, USD=1, JPY=2, CNY=3, USDC=4, HKD=5, EUR=6, SGD=7, TWD=8 */
+
+const CURRENCY_IDS = { CAD: 0, USD: 1, JPY: 2, CNY: 3, USDC: 4, HKD: 5, EUR: 6, SGD: 7, TWD: 8 } as const;
+
+/**
+ * 将数据喂给 BeamioOracle，覆盖 CurrencyType 全部 9 种货币。
+ * fx: Coinbase 返回的 1 USD = X 外币；Oracle 存储 1 外币 = ? USD，故法币用 1/rate。
+ * USDC 来自 CMC；USD 恒为 1。
+ */
+const updateBeamioOracle = async (fx: any, cmcQuotes: any) => {
+    try {
+        const usdcPrice = Number(cmcQuotes.data['3408'].quote.USD.price);
+        
+        // 1. USDC 脱锚检测逻辑
+        if (Math.abs(usdcPrice - 1) > 0.05) {
+            logger(Colors.yellow(`⚠️ WARNING: USDC de-peg detected! Current Price: ${usdcPrice}`));
+        }
+
+        const ratesData = [
+            { id: CURRENCY_IDS.CAD, symbol: 'CAD', rateUsd: 1 / fx.USDCAD },
+            { id: CURRENCY_IDS.USD, symbol: 'USD', rateUsd: 1 },
+            { id: CURRENCY_IDS.JPY, symbol: 'JPY', rateUsd: 1 / fx.USDJPY },
+            { id: CURRENCY_IDS.CNY, symbol: 'CNY', rateUsd: 1 / fx.USDCNY },
+            { id: CURRENCY_IDS.USDC, symbol: 'USDC', rateUsd: usdcPrice },
+            { id: CURRENCY_IDS.HKD, symbol: 'HKD', rateUsd: 1 / fx.USDHKD },
+            { id: CURRENCY_IDS.EUR, symbol: 'EUR', rateUsd: 1 / fx.USDEUR },
+            { id: CURRENCY_IDS.SGD, symbol: 'SGD', rateUsd: 1 / fx.USDSGD },
+            { id: CURRENCY_IDS.TWD, symbol: 'TWD', rateUsd: 1 / fx.USDTWD },
+        ];
+
+        // 2. 准备批量更新所需的数组
+        const ids = [];
+        const rates = [];
+
+        logger(Colors.cyan(`Preparing batch update for ${ratesData.length} currencies...`));
+        
+        for (const r of ratesData) {
+            ids.push(r.id);
+            // 转换为 E18 精度
+            const rateE18 = ethers.parseUnits(r.rateUsd.toFixed(18), 18);
+            rates.push(rateE18);
+            
+            logger(`  - ${r.symbol}: 1 ${r.symbol} = ${r.rateUsd.toFixed(6)} USD`);
+        }
+
+        // 获取该链当前的 Gas 价格
+        const feeData = await provide.getFeeData();
+        
+        // 显式增加 20% 的 GasPrice，确保覆盖任何挂起的交易
+        const gasPrice = feeData.gasPrice ? (feeData.gasPrice * 120n / 100n) : undefined;
+
+        logger(Colors.cyan(`Sending Batch TX to Beamio (L1)...`));
+        
+        const tx = await beamioOracle.updateRatesBatch(ids, rates, {
+            gasPrice: gasPrice, // 强制使用 Legacy Gas 模式
+        });
+
+        logger(Colors.yellow(`Batch TX sent: ${tx.hash}`));
+        const receipt = await tx.wait();
+        
+        // 使用批量更新接口
+       
+
+        if (receipt.status === 1) {
+            logger(Colors.green(`✅ BeamioOracle batch update successful in block ${receipt.blockNumber}!`));
+        } else {
+            throw new Error("Transaction reverted by the network.");
+        }
+
+    } catch (ex) {
+        logger(Colors.red(`❌ updateBeamioOracle Error!`), ex);
+        // 如果是特定错误，可以在此增加重试逻辑
+    }
+}
 
 const linten = 1000 * 60 * 10
 const updateOracle = async (tokenNames: string[], price: number[]) => {
@@ -128,7 +217,12 @@ const process = async () => {
             fx.USDTWD
         ]
 
-        await updateOracle(tokenNames, price)
+		await Promise.all([
+			updateOracle(tokenNames, price),
+			updateBeamioOracle(fx, cmc)
+		])
+
+        
     } finally {
         setTimeout(() => process(), linten)
     }
