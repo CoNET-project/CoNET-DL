@@ -29,7 +29,7 @@ interface quote {
 /** GuardianOracle 所在 L1：CoNET */
 const providerConet = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
 /** BeamioOracle 所在 L1；与 CoNET 不同链，故可并行喂价且无 nonce 冲突 */
-const beamioL1Rpc = masterSetup.beamio_l1_rpc ?? process.env.BEAMIO_L1_RPC
+const beamioL1Rpc = masterSetup.beamio_l1_rpc
 if (!beamioL1Rpc) throw new Error('missing beamio L1 RPC: set masterSetup.beamio_l1_rpc or env BEAMIO_L1_RPC')
 const providerBeamio = new ethers.JsonRpcProvider(beamioL1Rpc)
 
@@ -101,8 +101,7 @@ const updateBeamioOracle = async (fx: any, cmcQuotes: any) => {
             logger(`  - ${r.symbol}: 1 ${r.symbol} = ${r.rateUsd.toFixed(6)} USD`);
         }
 
-        // 获取该链当前的 Gas 价格
-        const feeData = await provide.getFeeData();
+        const feeData = await providerBeamio.getFeeData();
         
         // 显式增加 20% 的 GasPrice，确保覆盖任何挂起的交易
         const gasPrice = feeData.gasPrice ? (feeData.gasPrice * 120n / 100n) : undefined;
@@ -186,7 +185,7 @@ const getUsdFxFromCoinbase = async () => {
 	}
 }
 
-const process = async () => {
+const runTick = async () => {
     try {
         const [cmc, fx] = await Promise.all([
         client.getQuotes({ id: [1839, 4943, 1027, 825, 3408, 1958] }),
@@ -224,10 +223,10 @@ const process = async () => {
 
         
     } finally {
-        setTimeout(() => process(), linten)
+        setTimeout(runTick, linten)
     }
 }
 // getIDs()
-process()
+runTick()
 
 // logger(managerWallet.address)
