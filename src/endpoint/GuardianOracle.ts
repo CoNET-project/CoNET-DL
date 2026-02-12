@@ -34,7 +34,7 @@ const providerBaseBackup = new ethers.JsonRpcProvider('https://1rpc.io/base')
 
 
 const apiKey = masterSetup.CoinMarketCapAPIKey
-const oracleSC_addr = '0xE9922F900Eef37635aF06e87708545ffD9C3aa99'
+const oracleSC_addr = '0xe5dA73e4c714afA3D1cCdb3392A4867cBc117629'
 const managerWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerConet)
 const beamioWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerBaseBackup)
 const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerWallet)
