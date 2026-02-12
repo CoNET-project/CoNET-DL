@@ -37,7 +37,7 @@ const apiKey = masterSetup.CoinMarketCapAPIKey
 const oracleSC_addr = '0xe5dA73e4c714afA3D1cCdb3392A4867cBc117629'
 const managerWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerConet)
 const beamioWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerBaseBackup)
-const oracleSC = new ethers.Contract(oracleSC_addr, GuardianOracle_ABI, managerWallet)
+const oracleSC = new ethers.Contract(oracleSC_addr, SeamioOracle_ABI, managerWallet)
 const client = new CoinMarketCap(apiKey)
 ///							1 Credits
 ///		ids BNB: 1839, Dai: 4943, ETH: 1027, USDC: 3408, USDT: 825 TRX:1958
@@ -217,7 +217,7 @@ const runTick = async () => {
         ]
 
 		await Promise.all([
-			updateOracle(tokenNames, price),
+			// updateOracle(tokenNames, price),
 			updateBeamioOracle(fx, cmc)
 		])
 
