@@ -21,31 +21,6 @@ const CoNET_passport_SC: ethers.Contract[] = []
 
 const addNodeToPassportPool: string[] = []
 
-const PassportPoolProcess = async () => {
-	const node = addNodeToPassportPool.shift()
-	if (!node) {
-		return
-	}
-	const sc = CoNET_passport_SC.shift()
-	if (!sc) {
-		addNodeToPassportPool.unshift(node)
-		return
-	}
-	try {
-		const isAd = await sc._guardianList(node)
-		if (!isAd) {
-			const tx = await sc.changeAddressInGuardianList(node, true)
-			await tx.wait()
-			logger(Colors.magenta(`PassportPoolProcess ${node} waiting list = [${addNodeToPassportPool.length}] success! `))
-		}
-		
-		
-	} catch(ex:any) {
-		logger(Colors.red(`PassportPoolProcess Error, $${ex.message}`))
-	}
-	CoNET_passport_SC.unshift(sc)
-	PassportPoolProcess()
-}
 
 
 const startGossip = (
@@ -405,7 +380,7 @@ let currentEpoch = 0
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
 let getAllNodesProcess = false
 let Guardian_Nodes: Map<number, nodeInfo> = new Map()
-const GuardianNodeInfo_mainnet = '0x2DF3302d0c9aC19BE01Ee08ce3DDA841BdcF6F03'
+const GuardianNodeInfo_mainnet = '0xCd68C3FFFE403f9F26081807c77aB29a4DF6940D'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 
