@@ -39,6 +39,13 @@ const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNo
 
 let Guardian_Nodes: Map<string, nodeInfo> = new Map()
 
+/** 与链上 Guardian / CoNET-SI routerInfo IP 对齐（trim、去 IPv4-mapped 前缀、小写） */
+const normalizeMinerIp = (ip: string) =>
+	(ip || '').trim().replace(/^::ffff:/i, '').toLowerCase()
+
+/** miningData 上报过的 ip -> 节点钱包；用于 EPOCH_DATA.nodeWallets 补齐「链上有 Guardian、当轮 epoch 未出现在汇总里」的 IP */
+const lastNodeWalletByIp: Map<string, string> = new Map()
+
 const getAllNodes = () => new Promise(async resolve=> {
 
     const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
@@ -63,7 +70,7 @@ const getAllNodes = () => new Promise(async resolve=> {
             region: region
         }
     
-        Guardian_Nodes.set(ipAddr, itemNode)
+        Guardian_Nodes.set(normalizeMinerIp(ipAddr), itemNode)
         
        
     }
@@ -359,6 +366,7 @@ const epochTotalData:  Map<number, IGossipStatus > = new Map()
 const miningData = (body: any, res: Response) => {
 	
 	const ephchKey = parseInt(body.epoch)
+	const ipKey = normalizeMinerIp(body.ipaddress)
 
 	let eposh = epochNodeData.get(ephchKey)
 	if (!eposh) {
@@ -366,7 +374,8 @@ const miningData = (body: any, res: Response) => {
 		epochNodeData.set(ephchKey, eposh)
 	}
 
-	eposh.set (body.ipaddress, {wallets: [...body.wallets, body.nodeWallet], users: body.users, nodeWallet: body.nodeWallet})
+	eposh.set (ipKey, {wallets: [...body.wallets, body.nodeWallet], users: body.users, nodeWallet: body.nodeWallet})
+	lastNodeWalletByIp.set(ipKey, String(body.nodeWallet).toLowerCase())
 
 	let epochTotal = epochTotalData.get (ephchKey)
 	if (!epochTotal) {
@@ -384,12 +393,12 @@ const miningData = (body: any, res: Response) => {
 	epochTotal.totalUsers += body.users.length
 	epochTotal.totalConnectNode += 1
 
-    const node = Guardian_Nodes.get(body.ipaddress)
+    const node = Guardian_Nodes.get(ipKey)
     if (node) {
         const domain = node.domain
-        workingNodeIpAddress.set(body.ipaddress, domain)
+        workingNodeIpAddress.set(ipKey, domain)
     } else {
-        logger(`body.ipaddress ${body.ipaddress} has none of Guardian_Nodes Error! -------------------------------------------------`)
+        logger(`body.ipaddress ${body.ipaddress} (norm ${ipKey}) has none of Guardian_Nodes Error! -------------------------------------------------`)
     }
     
 
@@ -579,7 +588,7 @@ const writeNodeInfoPGP = (nodeWallets: {ipAddr:string, wallet: string}[]) => {
         const ipaddress = n.ipAddr
         const nodeWallet = n.wallet
 
-        const nodeInfo = Guardian_Nodes.get(ipaddress)
+        const nodeInfo = Guardian_Nodes.get(normalizeMinerIp(ipaddress))
         if (!nodeInfo) {
             return logger(`writeNodeInfoPGP Error node ${ipaddress} haven't INFO!!!!!!!!!!!!!!!!!!`)
         }
@@ -694,8 +703,9 @@ const moveData = async (epoch: number) => {
         
 		v.wallets.forEach(n => _wallets_.set(n.toLowerCase(), true))
 
-        
-        nodeWallets.push({ipAddr: keys, wallet: v.nodeWallet})
+        const gNode = Guardian_Nodes.get(keys)
+        const outIp = gNode?.ip_addr ?? keys
+        nodeWallets.push({ ipAddr: outIp, wallet: v.nodeWallet })
         v.users.forEach(n => {
 			const k = n.toLowerCase()
 			_users_.set(k, true)
@@ -703,9 +713,18 @@ const moveData = async (epoch: number) => {
 		})
 	})
 
-	
+	// 链上 Guardian 存在、但当轮 epoch 汇总里未出现该 IP 时，仍用最近一次 miningData 的钱包补进 nodeWallets（供 apiv4 miningRate / CoNET-SI 转发）
+	Guardian_Nodes.forEach((nodeInfo) => {
+		const ipFromChain = nodeInfo.ip_addr
+		const norm = normalizeMinerIp(ipFromChain)
+		if (nodeWallets.some(n => normalizeMinerIp(n.ipAddr) === norm)) return
+		const w = lastNodeWalletByIp.get(norm)
+		if (w) {
+			nodeWallets.push({ ipAddr: ipFromChain, wallet: w })
+			logger(Colors.cyan(`moveData: supplemented nodeWallets for Guardian ${ipFromChain} from lastNodeWalletByIp`))
+		}
+	})
 
-	
 	const totalUsrs = _users_.size
 	const totalMiners = _wallets_.size
 	const minerRate = (rate/totalMiners)/12

@@ -53,10 +53,14 @@ const getIpAddressFromForwardHeader = (req: Request) => {
 	return ipaddress
 }
 
+/** 与 localhost:8004 /api/epoch 返回的 EPOCH_DATA 对齐；含 nodeWallets 供 CoNET-SI getAllNodeWallets */
 interface epochRate {
 	totalMiners: number
 	minerRate: number
-	totalUsers: number
+	totalUsers?: number
+	totalUsrs?: number
+	epoch?: number
+	nodeWallets?: { ipAddr: string; wallet: string }[]
 }
 
 const referralsV3_addr = '0x1b104BCBa6870D518bC57B5AF97904fBD1030681'
@@ -76,7 +80,15 @@ const getAllNodesWallet = async (_res: Response) => {
 
 }
 
-let eposh_total:epochRate|null = null
+let eposh_total: epochRate | null = null
+
+const emptyMiningRatePayload: epochRate = {
+	totalMiners: 0,
+	minerRate: 0,
+	totalUsrs: 0,
+	epoch: 0,
+	nodeWallets: [],
+}
 
 const filePath = '/home/peter/.data/v2/'
 const epochPath = '/api/epoch'
@@ -480,20 +492,14 @@ class conet_dl_server_v4 {
 			
 		})
 
-		router.get('/miningRate', async (req: any, res: any) => {
-
-			const query = req.query
-			const epoch = currentEpoch
-			
-			return res.status(200).json(eposh_total).end()
+		router.get('/miningRate', async (_req: any, res: any) => {
+			const payload = eposh_total ?? emptyMiningRatePayload
+			return res.status(200).json(payload).end()
 		})
 
-        router.post('/miningRate', async (req: any, res: any) => {
-
-			const query = req.query
-			const epoch = currentEpoch
-			
-			return res.status(200).json(eposh_total).end()
+        router.post('/miningRate', async (_req: any, res: any) => {
+			const payload = eposh_total ?? emptyMiningRatePayload
+			return res.status(200).json(payload).end()
 		})
 
 		router.post ('/PurchaseCONETianPlan', async (req: any, res: any) => {
