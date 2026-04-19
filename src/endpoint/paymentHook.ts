@@ -85,7 +85,7 @@ type walletsProcess = {
     hdWallet?: string
 }
 
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
 const web2_wallet = new ethers.Wallet(masterSetup.web2_PaymentPassport, CONET_MAINNET)          ///             0x2254ee19Bd6a655D0F28Ccd86a3BF61c21AB8062
 
 
@@ -2878,7 +2878,7 @@ const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLow
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 let Guardian_Nodes: nodeInfo[] = []
-const GuardianNodeInfo_mainnet = '0xCd68C3FFFE403f9F26081807c77aB29a4DF6940D'
+const GuardianNodeInfo_mainnet = '0xdE51f1daaCa6eae9BDeEe33E324c3e6e96837e94'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 

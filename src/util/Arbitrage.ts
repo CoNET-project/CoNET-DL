@@ -60,7 +60,7 @@ const swapTokens = async (from: string, to: string, privateKey: string, fromEthA
 }
 
 const jupiterQuoteApi = createJupiterApiClient()
-const mainnetRPC = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+const mainnetRPC = new ethers.JsonRpcProvider('https://rpc1.conet.network')
 
 const usdtAddr = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'
 const solanaAddr = "So11111111111111111111111111111111111111112"

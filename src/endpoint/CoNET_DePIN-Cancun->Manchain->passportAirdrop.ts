@@ -5,7 +5,7 @@ import {inspect} from 'node:util'
 import cancun_passport_airdrop_ABI from './cancun_passport_airdropABI.json'
 import mainnet_passpost_airdropABI from './mainnet_passport_airdropABI.json'
 
-const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
+const CoNETMainChainRPC = 'https://rpc1.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 
 const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)

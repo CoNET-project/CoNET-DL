@@ -7,7 +7,7 @@ import Colors from 'colors/safe'
 import {inspect} from 'node:util'
 import {mapLimit} from 'async'
 
-const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
+const CoNETMainChainRPC = 'https://rpc1.conet.network'
 
 const CoNET_mainnet_ETH_pool_Addr = '0xC9039A1eb88346E67879767908bF1924246430b6'.toLowerCase()
 

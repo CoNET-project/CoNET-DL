@@ -32,8 +32,8 @@ import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import CONET_PGPABI from './ABI/CoNETPGP.json'
 import beatch_abi from './ABI/BatchETH.json'
 
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
-const GuardianNodeInfo_mainnet = '0xCd68C3FFFE403f9F26081807c77aB29a4DF6940D'
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
+const GuardianNodeInfo_mainnet = '0xdE51f1daaCa6eae9BDeEe33E324c3e6e96837e94'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 
@@ -94,7 +94,7 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 
 const provide_cancun = new ethers.JsonRpcProvider(conet_cancun_rpc)
-const provide_mainnet = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+const provide_mainnet = new ethers.JsonRpcProvider('https://rpc1.conet.network')
 
 export const checkGasPrice = 1550000
 const GB_airdropWallet = new ethers.Wallet(masterSetup.GB_airdrop, provide_mainnet)                 //          0x42aD56d9CE0f2c38c3Ba83b8DB51b7E58A656F07

@@ -168,7 +168,7 @@ const startFaucetProcess = () => new Promise(async resolve => {
 })
 
 const spclub_addr = '0xe1949263B338D8c1eD7d4CbDE2026eb82DB78D3a'
-const mainnet_rpc = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+const mainnet_rpc = new ethers.JsonRpcProvider('https://rpc1.conet.network')
 
 const SPClub_admin_SC: ethers.Contract[] = []
 for (let wallet of masterSetup.SPClub_admin_mainnet) {

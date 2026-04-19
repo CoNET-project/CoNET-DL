@@ -1,7 +1,7 @@
 {
   "name": "CONET Mainnet",
   "chain": "CONET Mainnet",
-  "rpc": ["https://mainnet-rpc.conet.network"],
+  "rpc": ["https://rpc1.conet.network"],
   "faucets": [],
   "nativeCurrency": {
     "name": "CONET ETH",
@@ -11,8 +11,8 @@
   "features": [{ "name": "EIP155" }],
   "infoURL": "https://conet.network",
   "shortName": "conet-holesky",
-  "chainId": 224400,
-  "networkId": 224400,
+  "chainId": 224422,
+  "networkId": 224422,
   "slip44": 2147708048,
   "icon": "CONET",
   "explorers": [

@@ -8,7 +8,7 @@ import {inspect} from 'node:util'
 import {mapLimit} from 'async'
 
 const ethEndpoint = masterSetup.ethEndpoint
-const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
+const CoNETMainChainRPC = 'https://rpc1.conet.network'
 
 const CoNET_mainnet_ETH_manager = '0x8E946aaD91155A8A37d24Dc10DE851f4Ef41C2Ef'.toLowerCase()
 

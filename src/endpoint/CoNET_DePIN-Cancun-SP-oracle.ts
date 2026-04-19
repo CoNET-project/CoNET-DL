@@ -7,7 +7,7 @@ import Colors from 'colors/safe'
 import { createJupiterApiClient, QuoteGetRequest } from '@jup-ag/api'
 import SP_Oracle_ABI from './SP_OracleABI.json'
 
-const CoNET_Mainnet_RPC = 'https://mainnet-rpc.conet.network'
+const CoNET_Mainnet_RPC = 'https://rpc1.conet.network'
 const endPoint_Mainnet = new ethers.JsonRpcProvider(CoNET_Mainnet_RPC)
 const SP_Oracle_Addr = '0x96B2d95084C0D4b0dD67461Da06E22451389dE23'
 const SP_Oracle_Wallet = new ethers.Wallet(masterSetup.SP_Oracle, endPoint_Mainnet)

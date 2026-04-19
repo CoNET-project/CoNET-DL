@@ -10,7 +10,7 @@ import CoNET_DePIN_ABI from './CoNET_DePIN.json'
 const CoNET_DePIN_addr = '0xc4D5cc27026F52dc357cccD293549076a6b7757D'
 
 
-const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
+const CoNETMainChainRPC = 'https://rpc1.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 
 const CNTPCancun_addr = '0x6C7C575010F86A311673432319299F3D68e4b522'.toLowerCase()

@@ -14,7 +14,7 @@ import SPClubPointManagerABI from '../endpoint/SPClubPointManagerABI.json'
  * @param solanaWallet    Solana 地址
  */
 
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
 const SP_passport_addr = '0x054498c353452A6F29FcA5E7A0c4D13b2D77fF08'
 const appleStoreWallet = new ethers.Wallet(masterSetup.appleStore, CONET_MAINNET)           //      
 

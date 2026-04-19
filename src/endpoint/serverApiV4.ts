@@ -33,7 +33,7 @@ const workerNumber = Cluster?.worker?.id ? `worker : ${Cluster.worker.id} ` : `$
 
 
 
-const mainnetEndpoint = new ethers.JsonRpcProvider('https://mainnet-rpc.conet.network')
+const mainnetEndpoint = new ethers.JsonRpcProvider('https://rpc1.conet.network')
 const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version

@@ -6,7 +6,7 @@ import {inspect} from 'node:util'
 import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
 
 
-const CoNETMainChainRPC = 'https://mainnet-rpc.conet.network'
+const CoNETMainChainRPC = 'https://rpc1.conet.network'
 const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
 const Cancun_CNTP_airdrop_updated_addr = '0x41B2e6da821066bf99C30058C91ea5b2A80888E7'.toLowerCase()
 const endPointCoNETMainnet = new ethers.JsonRpcProvider(CoNETMainChainRPC)
