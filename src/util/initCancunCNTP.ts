@@ -62,7 +62,7 @@ const Cancun_CNTP_airdrop_updated_addr = '0x41B2e6da821066bf99C30058C91ea5b2A808
 // const Holesky_CNTP_airdrop_SC_readonly = new ethers.Contract(Holesky_CNTP_airdrop_addr, CoNETDePINHoleskyABI, provode_Holesky)
 const Cancun_CNTP_airdrop_SC = new ethers.Contract(Cancun_CNTP_airdrop_updated_addr, Cancun_CNTP_airdorpABI, Cancun_CNTP_AirdropStatus_manager)
 
-const conetDePIN_mainnet_addr = '0xC6edDb4Bc6161259325cf56AEf8b0D4fb289898A'
+const conetDePIN_mainnet_addr = '0x28022d17064367F7246F5800af905DA3E53C01A4'
 const conetDePIN_mainnet_SC_readonly = new ethers.Contract(conetDePIN_mainnet_addr, CoNETDePIN_MainnetABI, mainnet)
 
 const cancunInitSC_Pool: ethers.Contract[] = []
