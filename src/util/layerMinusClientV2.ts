@@ -21,7 +21,54 @@ const CoNET_passport_SC: ethers.Contract[] = []
 
 const addNodeToPassportPool: string[] = []
 
+/**
+ * One logical frame from the node may be raw JSON or SSE (data: ...).
+ * Strip SSE field lines so downstream JSON.parse sees only the payload.
+ */
+const streamFrameToJsonText = (frame: string): string => {
+  const block = frame.trim()
+  if (!block) return block
 
+  const lines = block.split(/\r?\n/)
+  const dataParts: string[] = []
+  let sawDataLine = false
+
+  for (const line of lines) {
+    if (line.startsWith('data:')) {
+      sawDataLine = true
+      dataParts.push(line.slice(5).replace(/^\s/, ''))
+      continue
+    }
+    if (line.startsWith(':')) continue
+    if (/^(event|id|retry)\s*:/i.test(line)) continue
+  }
+
+  if (sawDataLine) return dataParts.join('\n').trim()
+  return block
+}
+
+/**
+ * First SSE frame from SI liveness pool (addIpaddressToLivenessListeningPool):
+ * { ipaddress, epoch, status, nodeWallet, hash } — no nodeWallets.
+ * Mining pushes (stratlivenessV2) always include nodeWallets.
+ */
+const isLivenessHandshake = (o: unknown): boolean => {
+  if (!o || typeof o !== 'object') return false
+  const r = o as Record<string, unknown>
+  return typeof r.ipaddress === 'string' && !('nodeWallets' in r)
+}
+
+/** Split buffer by SSE/HTTP-style blank line; prefer CRLF then LF. */
+const pullNextFrame = (buf: string): { frame: string; rest: string } | null => {
+  let idx = buf.indexOf('\r\n\r\n')
+  let sep = 4
+  if (idx === -1) {
+    idx = buf.indexOf('\n\n')
+    sep = 2
+  }
+  if (idx === -1) return null
+  return { frame: buf.slice(0, idx), rest: buf.slice(idx + sep) }
+}
 
 const startGossip = (
   connectHash: string,
@@ -133,28 +180,31 @@ const startGossip = (
       
       buffer += chunk.toString()
 
-      // 处理粘包 (Split by double CRLF)
-      let idx
-      while ((idx = buffer.indexOf('\r\n\r\n')) !== -1) {
-          const part = buffer.slice(0, idx)
-          buffer = buffer.slice(idx + 4) // 跳过 \r\n\r\n
+      let pulled: { frame: string; rest: string } | null
+      while ((pulled = pullNextFrame(buffer))) {
+        buffer = pulled.rest
+        const part = pulled.frame
 
-          if (!part) continue
+        if (!part.trim()) continue
 
-          if (first) {
-              first = false
-              try {
-                  JSON.parse(part)
-                  // First message is usually handshake/status, ignore or log
-              } catch (ex) {
-                  logger(Colors.red(`JSON Parse Error (First)`), ex)
-              }
-          } else {
-              // 正常数据回调
-              // 注意：原代码里 data.replace(/\r\n/g, '') 可能导致 JSON 损坏，建议确认数据源格式
-              // 如果是标准 JSON 此时应该是干净的
-              callback?.('', part)
+        const jsonText = streamFrameToJsonText(part)
+        if (!jsonText) continue
+
+        if (first) {
+          try {
+            const parsed = JSON.parse(jsonText) as unknown
+            first = false
+            if (isLivenessHandshake(parsed)) {
+              continue
+            }
+            callback?.('', jsonText)
+          } catch (ex) {
+            logger(Colors.red(`JSON Parse Error (First liveness / SSE)`), ex)
           }
+          continue
+        }
+
+        callback?.('', jsonText)
       }
     })
 
@@ -332,8 +382,10 @@ const connectToGossipNode = async (nodeIndex: number) => {
 				didResponseNode = JSON.parse(JSON.stringify(allNodeAddr))
 			}
 
-			const index = didResponseNode.findIndex(n => n ===node.ip_addr)
-			didResponseNode.splice(index, 1)
+			const index = didResponseNode.findIndex(n => n === node.ip_addr)
+			if (index >= 0) {
+				didResponseNode.splice(index, 1)
+			}
 			epochTotal.set(data.epoch.toString(), total +1 )
 			if (epoch != data.epoch) {
 				epoch = data.epoch
