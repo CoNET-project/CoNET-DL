@@ -97,26 +97,17 @@ const get_epoch_total = async () => {
 
 	getLocalhostData(epochPath, {}, data => {
 		if (!data) {
-			return logger(`get_epoch_total Error, data null!`)
+			// 启动顺序竞争：localhost:8004 (serverV4forMinerTotal) 可能晚于本进程
+			// 启动；不能让 eposh_total 永久停在 null，否则对外 /miningRate
+			// 会持续返回 emptyMiningRatePayload，导致 CoNET-SI 的
+			// reScanAllWallets 找不到任何节点钱包。
+			logger(Colors.yellow(`get_epoch_total: localhost:8004${epochPath} returned null, retry in 5s`))
+			setTimeout(() => { get_epoch_total() }, 5_000)
+			return
 		}
-		
+
 		eposh_total = data
 	})
-
-
-	// const block = currentEpoch - 3
-	// const filename1 = `${filePath}current.total`
-	
-	// try {
-	// 	const data = await readFile(filename1, 'utf8')
-		
-	// 	const ratedata: epochRate = JSON.parse(data)
-	// 	eposh_total = ratedata
-		
-	// } catch (ex: any) {
-	// 	eposh_total = {totalMiners: 0, minerRate: 0, totalUsers: 0}
-	// 	logger(Colors.red(`get_epoch_total ${filename1} Error!`), ex.message)
-	// }
 }
 
 const unlockCNTP = async (wallet: string, privateKey: string) => {
@@ -213,27 +204,23 @@ const postLocalhost = async (path: string, obj: any, _res: Response|null = null)
 	req.end()
 }
 
-let currentEpoch = 0
-
 const listenEpoch = async () => {
 
-	watch(filePath, async (eventType, _filename) => {
-		const filename = _filename||''
-		
+	// fs.watch 触发即拉一次。注意：旧实现用 mainnet block (provider.getBlockNumber)
+	// 当作比较基准 (`epoch > currentEpoch`)，但 watch 文件名里的 epoch 是 cancun
+	// 链 epoch（数量级几千），mainnet block 是几千万，比较恒为 false，导致
+	// `eposh_total` 永远不会在启动后被刷新。这里改成无条件触发拉取。
+	watch(filePath, async (_eventType, _filename) => {
+		const filename = _filename || ''
 		if (/\.total$/.test(filename)) {
-			const epoch = parseInt(filename.split('.')[0]) + 1
-			if (epoch > currentEpoch) {
-				currentEpoch = epoch
-				setTimeout(async () => {
-					await get_epoch_total()
-				}, 1000)
-				
-			}
-			
+			setTimeout(() => { get_epoch_total() }, 1_000)
 		}
 	})
-	
-	currentEpoch = await provider.getBlockNumber()
+
+	// 兜底定时器：即便 fs.watch 因为容器/挂载/inotify 限制丢事件，
+	// 仍能每 24s 强制刷新一次（约等于 2 个 cancun epoch 出块节奏）。
+	setInterval(() => { get_epoch_total() }, 24_000)
+
 	await get_epoch_total()
 }
 
