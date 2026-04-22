@@ -23,7 +23,7 @@ const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 let Guardian_Nodes: nodeInfo[] = []
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
-const GuardianNodeInfo_mainnet = '0xdE51f1daaCa6eae9BDeEe33E324c3e6e96837e94'
+const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 const getAllNodes = () => new Promise(async resolve=> {
     
