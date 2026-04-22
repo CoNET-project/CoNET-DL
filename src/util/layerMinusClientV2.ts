@@ -526,17 +526,20 @@ const startEPOCH_EventListeningForMining = async () => {
 }
 
 const start = async () => {
-	logger(Colors.blue(`Layer Minus listenning V2 start from (${_start}) to (${_end})`))
-	wallet = ethers.Wallet.createRandom()
-	await getAllNodes()
-	startGossipListening()
-	managerWallet = Math.round(_start / 100)
+	try {
+		logger(Colors.blue(`Layer Minus listenning V2 start from (${_start}) to (${_end})`))
+		wallet = ethers.Wallet.createRandom()
+		await getAllNodes()
+		startGossipListening()
+		managerWallet = Math.round(_start / 100)
 
-	const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], CONET_MAINNET)
-	const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
-	CoNET_passport_SC.push(sc)
-    startEPOCH_EventListeningForMining()
-
+		const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], CONET_MAINNET)
+		const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
+		CoNET_passport_SC.push(sc)
+		startEPOCH_EventListeningForMining()
+	} catch (e: unknown) {
+		logger(Colors.red(`Layer Minus V2 start failed: ${e instanceof Error ? e.message : String(e)}`))
+	}
 }
 
 
