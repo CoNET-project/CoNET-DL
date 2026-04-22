@@ -432,41 +432,47 @@ let currentEpoch = 0
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
 let getAllNodesProcess = false
 let Guardian_Nodes: Map<number, nodeInfo> = new Map()
-const GuardianNodeInfo_mainnet = '0xdE51f1daaCa6eae9BDeEe33E324c3e6e96837e94'
+/** 与 `deployments/conet-addresses.json` / GuardianNodesInfoV6 主网部署保持一致 */
+const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 
-const getAllNodes = () => new Promise(async resolve=> {
+/** 不向外抛错，避免 systemd 子进程因未处理 rejection 直接退出。 */
+const getAllNodes = async (): Promise<void> => {
+	try {
+		const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
+		const _nodes2 = await GuardianNodesMainnet.getAllNodes(400, 800)
+		const _nodes = [..._nodes1, ..._nodes2]
 
-    const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
-    const _nodes2 = await GuardianNodesMainnet.getAllNodes(400, 800)
-    const _nodes = [..._nodes1, ..._nodes2]
+		for (let i = 0; i < _nodes.length; i ++) {
+			const node = _nodes[i]
+			const id = parseInt(node[0].toString())
+			const pgpString: string = Buffer.from( node[1], 'base64').toString()
+			const domain: string = node[2]
+			const ipAddr: string = node[3]
+			const region: string = node[4]
+			
+			logger(i)
 
-    for (let i = 0; i < _nodes.length; i ++) {
-        const node = _nodes[i]
-        const id = parseInt(node[0].toString())
-        const pgpString: string = Buffer.from( node[1], 'base64').toString()
-        const domain: string = node[2]
-        const ipAddr: string = node[3]
-        const region: string = node[4]
-        
-        logger(i)
-
-            const itemNode: nodeInfo = {
-            ip_addr: ipAddr,
-            armoredPublicKey: pgpString,
-            domain: domain,
-            nftNumber: id,
-            region: region
-        }
-    
-        Guardian_Nodes.set(id, itemNode)
-        
-       
-    }
-    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.size} `))
-    resolve(true)
-})
+			const itemNode: nodeInfo = {
+				ip_addr: ipAddr,
+				armoredPublicKey: pgpString,
+				domain: domain,
+				nftNumber: id,
+				region: region
+			}
+		
+			Guardian_Nodes.set(id, itemNode)
+		}
+		logger(Colors.red(`getAllNodes done Guardian_Nodes = ${Guardian_Nodes.size} `))
+	} catch (e: any) {
+		if (e?.code === 'BAD_DATA' && /value="0x"/.test(e?.message ?? '')) {
+			logger(Colors.yellow(`getAllNodes: contract returned empty (0x), treat as no nodes (check GuardianNodesInfoV6 address / RPC)`))
+		} else {
+			logger(Colors.red(`getAllNodes Error: ${e?.message ?? e}`))
+		}
+	}
+}
 
 let allNodeAddr: string[] = []
 const startGossipListening = () => {
@@ -502,8 +508,10 @@ const checkNodeUpdate = async(block: number) => {
 	for (let tx of blockTs.transactions) {
 
 		const event = await CONET_MAINNET.getTransactionReceipt(tx)
-		if ( event?.to?.toLowerCase() === GuardianNodeInfo_mainnet) {
-			getAllNodes()
+		if ( event?.to?.toLowerCase() === GuardianNodeInfo_mainnet.toLowerCase()) {
+			void getAllNodes().catch((err: unknown) =>
+				logger(Colors.red(`getAllNodes (block ${block}): ${err instanceof Error ? err.message : String(err)}`))
+			)
 		}
 		
 	}
