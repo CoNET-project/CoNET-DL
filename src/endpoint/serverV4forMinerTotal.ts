@@ -168,7 +168,7 @@ const sc = new ethers.Contract(scAddr, devplopABI, provide_cancun)
 
 const developWalletPool: Map<string, boolean> = new Map()
 
-const epoch_mining_info_mainnet_addr = '0xbC713Fef0c7Bb178151cE45eFF1FD17d020a9ecD'
+const epoch_mining_info_mainnet_addr = '0x9163937cBBacf2F12C069eeEbD7c6A8b91b0e9BD'
 
 const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provide_mainnet)
 
