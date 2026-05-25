@@ -33,7 +33,8 @@ import CONET_PGPABI from './ABI/CoNETPGP.json'
 import beatch_abi from './ABI/BatchETH.json'
 
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
-const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
+/** 与 `deployments/conet-addresses.json` GuardianNodesInfoV6 一致（由 updateConetReferences.ts 同步） */
+const GuardianNodeInfo_mainnet = '0x359F781A5eEb17630A44e15Bc2aC57b248b81790'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 
@@ -46,37 +47,49 @@ const normalizeMinerIp = (ip: string) =>
 /** miningData 上报过的 ip -> 节点钱包；用于 EPOCH_DATA.nodeWallets 补齐「链上有 Guardian、当轮 epoch 未出现在汇总里」的 IP */
 const lastNodeWalletByIp: Map<string, string> = new Map()
 
-const getAllNodes = () => new Promise(async resolve=> {
+const getAllNodes = (): Promise<boolean> =>
+  new Promise(async (resolve) => {
+    try {
+      const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
+      const _nodes2 = await GuardianNodesMainnet.getAllNodes(400, 800)
+      const _nodes = [..._nodes1, ..._nodes2]
 
-    const _nodes1 = await GuardianNodesMainnet.getAllNodes(0, 400)
-    const _nodes2 = await GuardianNodesMainnet.getAllNodes(400, 800)
-    const _nodes = [..._nodes1, ..._nodes2]
-
-    for (let i = 0; i < _nodes.length; i ++) {
+      for (let i = 0; i < _nodes.length; i++) {
         const node = _nodes[i]
         const id = parseInt(node[0].toString())
-        const pgpString: string = Buffer.from( node[1], 'base64').toString()
+        const pgpString: string = Buffer.from(node[1], 'base64').toString()
         const domain: string = node[2]
         const ipAddr: string = node[3]
         const region: string = node[4]
-        
+
         logger(i)
 
-            const itemNode: nodeInfo = {
-            ip_addr: ipAddr,
-            armoredPublicKey: pgpString,
-            domain: domain,
-            nftNumber: id,
-            region: region
+        const itemNode: nodeInfo = {
+          ip_addr: ipAddr,
+          armoredPublicKey: pgpString,
+          domain: domain,
+          nftNumber: id,
+          region: region,
         }
-    
+
         Guardian_Nodes.set(normalizeMinerIp(ipAddr), itemNode)
-        
-       
+      }
+      logger(Colors.green(`getAllNodes done Guardian_Nodes = ${Guardian_Nodes.size}`))
+      resolve(true)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('missing revert data') || msg.includes('execution reverted') || msg.includes('BAD_DATA')) {
+        logger(
+          Colors.yellow(
+            `getAllNodes: Guardian call failed (check GuardianNodesInfoV6 / RPC); keeping ${Guardian_Nodes.size} cached nodes`
+          )
+        )
+      } else {
+        logger(Colors.red(`getAllNodes Error: ${msg}`))
+      }
+      resolve(false)
     }
-    logger(Colors.red(`mapLimit catch ex! Guardian_Nodes = ${Guardian_Nodes.size} `))
-    resolve(true)
-})
+  })
 
 
 
