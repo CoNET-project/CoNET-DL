@@ -213,6 +213,30 @@ const developWalletListening = async (block: number) => {
 
 const workingNodeIpAddress: Map<string, string> = new Map()
 
+/** updateInfo 写 epochInfo 新 slot；CoNET estimateGas 常低估，固定上限避免 OOG */
+const EPOCH_MINING_UPDATE_GAS_LIMIT = 200_000n
+
+let stratlivenessV2InFlight = false
+let stratlivenessV2PendingBlock: number | undefined
+
+const runStratlivenessV2Serial = async (eposh: number): Promise<void> => {
+	if (stratlivenessV2InFlight) {
+		stratlivenessV2PendingBlock = eposh
+		return
+	}
+	stratlivenessV2InFlight = true
+	try {
+		await stratlivenessV2(eposh)
+	} finally {
+		stratlivenessV2InFlight = false
+		if (stratlivenessV2PendingBlock !== undefined) {
+			const next = stratlivenessV2PendingBlock
+			stratlivenessV2PendingBlock = undefined
+			await runStratlivenessV2Serial(next)
+		}
+	}
+}
+
 const stratlivenessV2 = async (eposh: number) => {
     logger(`stratlivenessV2 ${eposh}!`)
 	await Promise.all([
@@ -445,16 +469,18 @@ const miningData = (body: any, res: Response) => {
 }
 
 const updateEpochToSC = async (epoch: iEPOCH_DATA) => {
-	//	uint256 totalMiners, uint256 minerRate, uint256 totalUsrs, uint256 epoch
 	try {
-
-		const tx = await epoch_mining_sc.updateInfo(epoch.totalMiners, ethers.parseEther(epoch.minerRate.toFixed(10)), epoch.totalUsrs)
+		const tx = await epoch_mining_sc.updateInfo(
+			epoch.totalMiners,
+			ethers.parseEther(epoch.minerRate.toFixed(10)),
+			epoch.totalUsrs,
+			{ gasLimit: EPOCH_MINING_UPDATE_GAS_LIMIT }
+		)
 		await tx.wait()
 		logger(Colors.blue(`updateEpochToSC current data to epoch info success! ${tx.hash}`))
 	} catch (ex: any) {
 		logger(Colors.red(`updateEpochToSC store Cancun Error! ${ex.message}`))
 	}
-	
 }
 
 const rateAddr = '0xE95b13888042fBeA32BDce7Ae2F402dFce11C1ba'.toLowerCase()
@@ -816,7 +842,7 @@ class conet_dl_server {
 			}
 
 			currentEpoch = _block
-			return stratlivenessV2(_block)
+			void runStratlivenessV2Serial(_block)
 			
 		})
 		
