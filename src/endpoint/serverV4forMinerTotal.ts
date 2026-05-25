@@ -98,7 +98,7 @@ const provide_mainnet = new ethers.JsonRpcProvider('https://rpc1.conet.network')
 
 export const checkGasPrice = 1550000
 const GB_airdropWallet = new ethers.Wallet(masterSetup.GB_airdrop, provide_mainnet)                 //          0x42aD56d9CE0f2c38c3Ba83b8DB51b7E58A656F07
-const eGB_addr = '0x84aAD9aD5BbdDfC0cCcb6A599DFadaEFaF6B497E'
+const eGB_addr = '0x4641Eb3055A891E6D3109e441aA8b931738A48b5'
 const GB_airdropSCPool = [new ethers.Contract(eGB_addr, GB_airdropABI, GB_airdropWallet)]
 
 
@@ -155,16 +155,12 @@ const sc = new ethers.Contract(scAddr, devplopABI, provide_cancun)
 
 const developWalletPool: Map<string, boolean> = new Map()
 
-const epoch_mining_info_cancun_addr = '0x31680dc539cb1835d7C1270527bD5D209DfBC547'
 const epoch_mining_info_mainnet_addr = '0xbC713Fef0c7Bb178151cE45eFF1FD17d020a9ecD'
 
 const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provide_mainnet)
 
 logger(`masterSetup.epochManagre = ${epoch_mining_manager.address}`)
 const epoch_mining_sc = new ethers.Contract(epoch_mining_info_mainnet_addr, epoch_info_ABI, epoch_mining_manager)
-
-const CONET_Guardian_cancun_addr = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
-const GuardianNodesInfoV6_cancun_addr = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 
 
 const getAllDevelopAddress = async () => {

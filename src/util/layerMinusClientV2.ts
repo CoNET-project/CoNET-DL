@@ -8,18 +8,11 @@ import {RequestOptions, request } from 'node:http'
 import {createMessage, encrypt, enums, readKey, Key} from 'openpgp'
 import {getRandomValues} from 'node:crypto'
 import {masterSetup} from './util'
-import CONETPassportABI from './CoNET_Cancun_passportABI.json'
 import newNodeInfoABI from '../endpoint/newNodeInfoABI.json'
 
 
 
 const epochTotal: Map<string, number> = new Map()
-
-const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
-const CoNET_passport_SC: ethers.Contract[] = []
-
-
-const addNodeToPassportPool: string[] = []
 
 /**
  * One logical frame from the node may be raw JSON or SSE (data: ...).
@@ -432,8 +425,8 @@ let currentEpoch = 0
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
 let getAllNodesProcess = false
 let Guardian_Nodes: Map<number, nodeInfo> = new Map()
-/** 与 `deployments/conet-addresses.json` / GuardianNodesInfoV6 主网部署保持一致 */
-const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
+/** 与 `deployments/conet-addresses.json` / GuardianNodesInfoV6 主网部署保持一致（由 updateConetReferences.ts 同步） */
+const GuardianNodeInfo_mainnet = '0x359F781A5eEb17630A44e15Bc2aC57b248b81790'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 
@@ -534,8 +527,7 @@ const start = async () => {
 		managerWallet = Math.round(_start / 100)
 
 		const _wa = new ethers.Wallet(masterSetup.LayerMinus[managerWallet], CONET_MAINNET)
-		const sc = new ethers.Contract(CoNET_passport_addr, CONETPassportABI, _wa)
-		CoNET_passport_SC.push(sc)
+
 		startEPOCH_EventListeningForMining()
 	} catch (e: unknown) {
 		logger(Colors.red(`Layer Minus V2 start failed: ${e instanceof Error ? e.message : String(e)}`))
