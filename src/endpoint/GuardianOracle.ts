@@ -7,20 +7,20 @@ import SeamioOracle_ABI from './ABI/SeamioOracleABI.json'
 
 const CoinMarketCap = require('coinmarketcap-api')
 
-/** CoNET BeamioOracle（224422）；与 deployments/conet-addresses.json `beamioOracle` 一致 */
-const providerConet = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+/** CoNET BeamioOracle（224422）；与 deployments/conet-addresses.json `rpcUrl` / `beamioOracle` 一致 */
+const providerConet = new ethers.JsonRpcProvider('https://publicrpc.conet.network')
 /** Base 主网 BeamioOracle；与 CoNET 不同链，可并行喂价且无 nonce 冲突 */
 const providerBaseBackup = new ethers.JsonRpcProvider('https://base-rpc.conet.network')
 
 const apiKey = masterSetup.CoinMarketCapAPIKey
-const conetBeamioOracleAddr = '0x102E9FBE87a28BaC10ADbc0E67a2b0385C8Bd0E9'
+const conetBeamioOracleAddr = '0x77CB8358c5a37aB7190b0A2C7EaA7fEeDCF11008'
 const managerWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerConet)
 const beamioWallet = new ethers.Wallet(masterSetup.settle_contractAdmin[0], providerBaseBackup)
 const conetBeamioOracle = new ethers.Contract(conetBeamioOracleAddr, SeamioOracle_ABI, managerWallet)
 const client = new CoinMarketCap(apiKey)
 
 /** Base 主网 BeamioOracle（8453） */
-const beamioOracleAddr = '0xDa4AE8301262BdAaf1bb68EC91259E6C512A9A2B'
+const beamioOracleAddr = '0x77CB8358c5a37aB7190b0A2C7EaA7fEeDCF11008'
 const beamioOracle = new ethers.Contract(beamioOracleAddr, SeamioOracle_ABI, beamioWallet)
 
 logger(`admin wallet ${managerWallet.address} | BeamioOracle CoNET ${conetBeamioOracleAddr} | Base ${beamioOracleAddr}`)
