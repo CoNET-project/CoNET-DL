@@ -714,8 +714,18 @@ let writewriteNodeInfoPGP = false
 
 
 const moveData = async (epoch: number) => {
-	const rateSC = new ethers.Contract(rateAddr, rateABI, provide_cancun)
-	const rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
+	let rate = 0
+	try {
+		const rateSC = new ethers.Contract(rateAddr, rateABI, provide_cancun)
+		rate = parseFloat(ethers.formatEther(await rateSC.miningRate()))
+	} catch (ex: unknown) {
+		const msg = ex instanceof Error ? ex.message : String(ex)
+		logger(
+			Colors.yellow(
+				`moveData: miningRate unavailable on ${conet_cancun_rpc} @ ${rateAddr} (${msg}); using rate=0 until Cancun rate SC is deployed`
+			)
+		)
+	}
 
 	const block = currentEpoch = epoch-2
 	
@@ -762,7 +772,7 @@ const moveData = async (epoch: number) => {
 
 	const totalUsrs = _users_.size
 	const totalMiners = _wallets_.size
-	const minerRate = (rate/totalMiners)/12
+	const minerRate = totalMiners > 0 ? (rate / totalMiners) / 12 : 0
 	for (let w in [..._wallets_.keys()]) {
 		// refferInit(w, '')
 		// initCNTP(w)
