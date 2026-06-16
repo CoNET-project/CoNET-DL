@@ -168,7 +168,7 @@ const sc = new ethers.Contract(scAddr, devplopABI, provide_cancun)
 
 const developWalletPool: Map<string, boolean> = new Map()
 
-const epoch_mining_info_mainnet_addr = '0x9163937cBBacf2F12C069eeEbD7c6A8b91b0e9BD'
+const epoch_mining_info_mainnet_addr = '0x648f1a17269627C3d465fEa40b3C229f7CacE5cA'
 
 const epoch_mining_manager = new ethers.Wallet(masterSetup.epochManagre, provide_mainnet)
 
@@ -468,7 +468,29 @@ const miningData = (body: any, res: Response) => {
 	return res.status(200).end()
 }
 
+const ensureEpochMiningContractReady = async (): Promise<boolean> => {
+	try {
+		const code = await provide_mainnet.getCode(epoch_mining_info_mainnet_addr)
+		if (!code || code === '0x') {
+			logger(
+				Colors.red(
+					`EpochMiningInfo ${epoch_mining_info_mainnet_addr} has no bytecode on publicrpc; skip updateInfo until deployed`
+				)
+			)
+			return false
+		}
+		return true
+	} catch (ex: unknown) {
+		const msg = ex instanceof Error ? ex.message : String(ex)
+		logger(Colors.red(`ensureEpochMiningContractReady Error! ${msg}`))
+		return false
+	}
+}
+
 const updateEpochToSC = async (epoch: iEPOCH_DATA) => {
+	if (!(await ensureEpochMiningContractReady())) {
+		return
+	}
 	try {
 		const tx = await epoch_mining_sc.updateInfo(
 			epoch.totalMiners,
@@ -477,9 +499,14 @@ const updateEpochToSC = async (epoch: iEPOCH_DATA) => {
 			{ gasLimit: EPOCH_MINING_UPDATE_GAS_LIMIT }
 		)
 		await tx.wait()
-		logger(Colors.blue(`updateEpochToSC current data to epoch info success! ${tx.hash}`))
-	} catch (ex: any) {
-		logger(Colors.red(`updateEpochToSC store Cancun Error! ${ex.message}`))
+		logger(
+			Colors.blue(
+				`updateEpochToSC EpochMiningInfo ${epoch_mining_info_mainnet_addr} epoch=${epoch.epoch} miners=${epoch.totalMiners} users=${epoch.totalUsrs} rate=${epoch.minerRate} tx=${tx.hash}`
+			)
+		)
+	} catch (ex: unknown) {
+		const msg = ex instanceof Error ? ex.message : String(ex)
+		logger(Colors.red(`updateEpochToSC store publicrpc Error! ${msg}`))
 	}
 }
 
@@ -735,12 +762,15 @@ const moveData = async (epoch: number) => {
 	const epochTotal = epochTotalData.get (block)
 	const epochAll =  epochNodeData.get (block)
 
-	if (!epochTotal) {
-		return logger (Colors.red(`moveData can't get epochTotal ${block}`))
-	}
-
-	if (!epochAll) {
-		return logger (Colors.red(`moveData can't get epochAll ${block}`))
+	if (!epochTotal || !epochAll) {
+		logger(
+			Colors.yellow(
+				`moveData: no SI mining aggregation for epoch ${block}; writing zero snapshot to EpochMiningInfo ${epoch_mining_info_mainnet_addr}`
+			)
+		)
+		EPOCH_DATA = { totalMiners: 0, minerRate: 0, totalUsrs: 0, epoch: block, nodeWallets: [] }
+		await updateEpochToSC(EPOCH_DATA)
+		return
 	}
 
     const nodeWallets: {ipAddr:string, wallet: string}[] = []
@@ -843,6 +873,12 @@ class conet_dl_server {
 		this.serverID = getServerIPV4Address(false)[0]
 		currentEpoch = await provide_mainnet.getBlockNumber()
 		await getAllDevelopAddress()
+		await ensureEpochMiningContractReady()
+		logger(
+			Colors.cyan(
+				`EpochMiningInfo writer: ${epoch_mining_info_mainnet_addr} signer=${epoch_mining_manager.address} rpc=publicrpc.conet.network`
+			)
+		)
 		this.startServer()
 
 		provide_mainnet.on ('block', async _block => {
