@@ -183,15 +183,24 @@ const oracolPrice = async () => {
     const assets = ['bnb', 'eth']
 	const process: any[] = []
 	assets.forEach(n =>{
-		process.push (oracleSC.GuardianPrice(n))
+		if (typeof oracleSC.GuardianPrice === 'function') {
+			process.push(oracleSC.GuardianPrice(n))
+		}
 	})
+	if (process.length === 0) {
+		logger(Colors.yellow('oracolPrice: oracle GuardianPrice unavailable; skipping legacy price poll'))
+		return
+	}
+	try {
+		const price = await Promise.all(process)
+		const bnb = ethers.formatEther(price[0])
+		const eth = ethers.formatEther(price[1])
 
-	const price = await Promise.all(process)
-    const bnb = ethers.formatEther(price[0])
-    const eth = ethers.formatEther(price[1])
-
-    oracle.bnb = parseFloat(bnb)
-    oracle.eth = parseFloat(eth)
+		oracle.bnb = parseFloat(bnb)
+		oracle.eth = parseFloat(eth)
+	} catch (err: any) {
+		logger(Colors.yellow(`oracolPrice failed: ${err?.message ?? err}`))
+	}
 }
 
 const monitorRewardWaitingMins = 15

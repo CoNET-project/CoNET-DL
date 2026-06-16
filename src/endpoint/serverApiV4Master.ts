@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { inspect } from 'node:util'
 import Colors from 'colors/safe'
 import Cluster from 'node:cluster'
-import { masterSetup, getServerIPV4Address} from '../util/util'
+import { masterSetup, getServerIPV4Address, conet_cancun_rpc} from '../util/util'
 import {logger} from '../util/logger'
 import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
@@ -44,7 +44,7 @@ const packageFile = join (__dirname, '..', '..','package.json')
 const packageJson = require ( packageFile )
 const version = packageJson.version
 
-const provideCONET = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
+const provideCONET = new ethers.JsonRpcProvider(conet_cancun_rpc)
 
 export const checkGasPrice = 1550000
 let startDailyPoolTranferProcess = false
@@ -343,9 +343,23 @@ class conet_dl_server {
 
 	private initSetupData = async () => {
 		this.serverID = getServerIPV4Address(false)[0]
-		currentEpoch = await provideCONET.getBlockNumber()
-		await getAllDevelopAddress()
+		let cancunReady = false
+		try {
+			currentEpoch = await provideCONET.getBlockNumber()
+			await getAllDevelopAddress()
+			cancunReady = true
+		} catch (err: any) {
+			logger(
+				Colors.red(
+					`initSetupData: Cancun RPC unavailable (${conet_cancun_rpc}): ${err?.message ?? err}`
+				)
+			)
+			logger(Colors.yellow('initSetupData: master API starting degraded (no Cancun block listener)'))
+		}
 		this.startServer()
+		if (!cancunReady) {
+			return
+		}
 		provideCONET.on ('block', async _block => {
 
 			if (_block % 2) {
