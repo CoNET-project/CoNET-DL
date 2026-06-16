@@ -10,20 +10,20 @@ import { masterSetup, checkSign} from '../util/util'
 import {inspect} from 'node:util'
 
 const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://publicrpc.conet.network') 
 const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
 
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)
 
-const newNodeInfoAddr = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
+const newNodeInfoAddr = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 const GuardianNodesInfoManager = new ethers.Wallet(masterSetup.GuardianNodesInfoManager, CONET_MAINNET)
 const newNodeInfoSC = new ethers.Contract(newNodeInfoAddr, newNodeInfoABI, GuardianNodesInfoManager)
 const GuardianNodes = new ethers.Contract(CONET_Guardian_PlanV7, GuardianNodesV2ABI, provider)
 
 let Guardian_Nodes: nodeInfo[] = []
 
-const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
+const GuardianNodeInfo_mainnet = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 const getAllNodes = () => new Promise(async resolve=> {

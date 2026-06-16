@@ -422,11 +422,11 @@ const listenPool: Map<number, Map<string, string[]>> = new Map()
 const userPool: Map<number, Map<string, string[]>> = new Map()
 
 let currentEpoch = 0
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://publicrpc.conet.network') 
 let getAllNodesProcess = false
 let Guardian_Nodes: Map<number, nodeInfo> = new Map()
 /** 与 `deployments/conet-addresses.json` / GuardianNodesInfoV6 主网部署保持一致（由 updateConetReferences.ts 同步） */
-const GuardianNodeInfo_mainnet = '0x359F781A5eEb17630A44e15Bc2aC57b248b81790'
+const GuardianNodeInfo_mainnet = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 

@@ -19,8 +19,8 @@ const epochTotal: Map<string, number> = new Map()
 const CoNET_passport_addr = '0xEa6356BcE3E1264C03C93CBa668BB486765a46BA'
 const CoNET_passport_SC: ethers.Contract[] = []
 
-const ConetPGP = '0x84de3EA6446489E6a267B0AAD2fAe1462564C32E'
-const CoNETProvider = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+const ConetPGP = '0x684b0ac760cEE9c9b85de36d69746420648Cf9e2'
+const CoNETProvider = new ethers.JsonRpcProvider('https://publicrpc.conet.network')
 const managerSC_Pool: ethers.Contract[]= []
 
 masterSetup.ETH_Manager.forEach(n => {
@@ -330,10 +330,10 @@ const listenPool: Map<number, Map<string, string[]>> = new Map()
 const userPool: Map<number, Map<string, string[]>> = new Map()
 
 let currentEpoch = 0
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://publicrpc.conet.network') 
 let getAllNodesProcess = false
 let Guardian_Nodes: Map<number, nodeInfo> = new Map()
-const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
+const GuardianNodeInfo_mainnet = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 

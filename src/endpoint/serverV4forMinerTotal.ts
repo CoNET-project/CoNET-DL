@@ -32,9 +32,9 @@ import duplicateFactory_ABI from './duplicateFactory.ABI.json'
 import CONET_PGPABI from './ABI/CoNETPGP.json'
 import beatch_abi from './ABI/BatchETH.json'
 
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://publicrpc.conet.network') 
 /** 与 `deployments/conet-addresses.json` GuardianNodesInfoV6 一致（由 updateConetReferences.ts 同步） */
-const GuardianNodeInfo_mainnet = '0x359F781A5eEb17630A44e15Bc2aC57b248b81790'
+const GuardianNodeInfo_mainnet = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 
@@ -107,11 +107,11 @@ const packageJson = require ( packageFile )
 const version = packageJson.version
 
 const provide_cancun = new ethers.JsonRpcProvider(conet_cancun_rpc)
-const provide_mainnet = new ethers.JsonRpcProvider('https://rpc1.conet.network')
+const provide_mainnet = new ethers.JsonRpcProvider('https://publicrpc.conet.network')
 
 export const checkGasPrice = 1550000
 const GB_airdropWallet = new ethers.Wallet(masterSetup.GB_airdrop, provide_mainnet)                 //          0x42aD56d9CE0f2c38c3Ba83b8DB51b7E58A656F07
-const eGB_addr = '0x4641Eb3055A891E6D3109e441aA8b931738A48b5'
+const eGB_addr = '0xcA423EEBC09d09834dC9CA28861798B3321893ab'
 const GB_airdropSCPool = [new ethers.Contract(eGB_addr, GB_airdropABI, GB_airdropWallet)]
 
 
@@ -276,7 +276,7 @@ let currentEpoch = 0
 
 const managerSC_Pool: ethers.Contract[]= []
 
-const ConetPGP = '0x84de3EA6446489E6a267B0AAD2fAe1462564C32E'
+const ConetPGP = '0x684b0ac760cEE9c9b85de36d69746420648Cf9e2'
 
 masterSetup.initManager.forEach(n => {
     const adminWallet = new ethers.Wallet(n, provide_mainnet)

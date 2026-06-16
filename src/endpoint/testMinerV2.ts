@@ -30,9 +30,9 @@ let getAllNodesProcess = false
 let Guardian_Nodes: nodeInfo[] = []
 
 const epochTotal: Map<number, Map<string, boolean>> = new Map()
-const GuardianNodeInfo_mainnet = '0x6d7a526BFD03E90ea8D19eDB986577395a139872'
+const GuardianNodeInfo_mainnet = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 
-const CONET_MAINNET = new ethers.JsonRpcProvider('https://rpc1.conet.network') 
+const CONET_MAINNET = new ethers.JsonRpcProvider('https://publicrpc.conet.network') 
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
 
 const getAllNodes = () => new Promise(async resolve=> {
