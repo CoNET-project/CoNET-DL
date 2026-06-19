@@ -5,7 +5,6 @@ import Color from 'colors/safe'
 import { logger } from './logger'
 import { join } from 'node:path'
 import {readFile} from 'node:fs/promises'
-import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 import {inspect} from 'node:util'
 import CONET_Point_ABI from './cCNTP.json'
 
@@ -74,7 +73,7 @@ const stratFreeMinerTransfer = async (block: number) => {
 	const payArray = walletArray.map (n => parseFloat(minerRate.toFixed(6)))
 	const brunCNTP = total.totalUsrs * minerRate
 	console.error(Color.blue(`daemon EPOCH = [${block}] starting! rate minerRate = [${ minerRate }] MinerWallets length = [${walletArray.length}] users ${total.totalUsrs} brun CNTP = ${brunCNTP}`))
-	CNTP_Transfer_Manager_freemining.addToPool(walletArray, payArray)
+	logger(Color.yellow(`doEpochTransferV2 CNTP airdrop disabled; skip transferCNTP for epoch [${block}] wallets=${walletArray.length} pays=${payArray.length}`))
 	// await burnCNTP(brunCNTP)
 }
 
@@ -94,5 +93,4 @@ const startListeningCONET_Holesky_EPOCH_v2 = async () => {
 	})
 }
 
-const CNTP_Transfer_Manager_freemining = new CNTP_Transfer_Manager(masterSetup.conetCNTPAdmin, 1000)
 startListeningCONET_Holesky_EPOCH_v2()
