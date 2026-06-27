@@ -111,7 +111,7 @@ const provide_mainnet = new ethers.JsonRpcProvider('https://publicrpc.conet.netw
 
 export const checkGasPrice = 1550000
 const GB_airdropWallet = new ethers.Wallet(masterSetup.GB_airdrop, provide_mainnet)                 //          0x42aD56d9CE0f2c38c3Ba83b8DB51b7E58A656F07
-const eGB_addr = '0xcA423EEBC09d09834dC9CA28861798B3321893ab'
+const eGB_addr = '0x3Dc53e528d45225e8F38c391Cc6a72CDec435748'
 const GB_airdropSCPool = [new ethers.Contract(eGB_addr, GB_airdropABI, GB_airdropWallet)]
 
 
