@@ -13,7 +13,6 @@ import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
 import { writeFile} from 'node:fs/promises'
 import {cntpAdminWallet, startEposhTransfer} from './utilNew'
-import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
@@ -110,7 +109,6 @@ const stratlivenessV2 = async (eposh: number) => {
 
 	await Promise.all([
 		startProcess(),
-		startFaucetProcess(),
 		developWalletListening(eposh),
 		processFreePassport()
 	])
@@ -118,54 +116,15 @@ const stratlivenessV2 = async (eposh: number) => {
 
 
 
-const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
-
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[6], provideCONET)
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 const contract_Referral = new ethers.Contract(conet_Referral_cancun, CONET_Referral_ABI, provideCONET)
-const faucet_v3_Contract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
-const FaucetProcessSCPOOL: ethers.Contract[] = [faucet_v3_Contract]
-interface faucetRequest {
-	wallet: string
-	ipAddress: string
-}
 
 export const checkGasPriceFordailyTaskPool = 25000000
-
-const startFaucetProcess = () => new Promise(async resolve => {
-	if (!faucetWaitingPool.length) {
-		return resolve (false)
-	}
-	const SC = FaucetProcessSCPOOL.shift()
-	if (!SC) {
-		return resolve (false)
-	}
-
-
-	const splited = faucetWaitingPool.slice(0, 50)
-	faucetWaitingPool = faucetWaitingPool.slice(50)
-
-	const ipAddress = splited.map(n => n.ipAddress)
-	const wallet = splited.map(n => n.wallet)
-
-	try {
-		
-		const tx = await SC.getFaucet(wallet, ipAddress)
-		logger(`faucetWaitingPool start Faucet Total wallets ${wallet.length} Process tx = ${tx.hash} used manager wallet ${faucetWallet.address} `)
-
-		await tx.wait()
-	} catch (ex: any) {
-		logger(`startFaucetProcess Error!`, ex.message)
-	}
-	FaucetProcessSCPOOL.push(SC)
-
-	return resolve(true)
-})
 
 const spclub_addr = '0xe1949263B338D8c1eD7d4CbDE2026eb82DB78D3a'
 const mainnet_rpc = new ethers.JsonRpcProvider('https://publicrpc.conet.network')
@@ -178,28 +137,7 @@ for (let wallet of masterSetup.SPClub_admin_mainnet) {
 }
 
 
-let faucetWaitingPool: faucetRequest[] = []
-
-export const faucet_call =  (wallet: string, ipAddress: string) => {
-	try {
-		let _wallet = ethers.getAddress(wallet).toLowerCase()
-		const obj = faucet_call_pool.get(_wallet)
-		if (obj) {
-			return false
-		}
-		faucet_call_pool.set(wallet, true)
-		faucetWaitingPool.push({wallet, ipAddress})
-		
-	} catch (ex) {
-		return false
-	}
-
-	return true
-}
-
 let currentEpoch = 0
-
-const faucet_call_pool: Map<string, boolean> = new Map()
 
 
 interface InodeEpochData {
@@ -490,31 +428,6 @@ class conet_dl_server {
 			return res.status(200).json({address}).end()
 		})
 		
-		router.post ('/conet-faucet', async (req: any, res: any) => {
-			const wallet = req.body.walletAddress
-			const ipaddress = req.body.ipaddress
-			if (!wallet) {
-				logger(Colors.red(`master conet-faucet req.walletAddress is none Error! [${wallet}]`))
-				return res.status(403).end()
-			}
-			const initWallet = initV3Map.get (wallet)
-
-			if (!initWallet) {
-
-				initV3Map.set(wallet, true)
-				refferInit(wallet, '')
-				initCNTP(wallet)
-			}
-
-			
-			const tx = await faucet_call(wallet.toLowerCase(), ipaddress)
-			
-			if (tx) {
-				return res.status(200).json(tx).end()
-			}
-			return res.status(403).end()
-		})
-
 		router.post('/spclub', async (req: any, res: any) => {
 			const obj:minerObj = req.body
 			logger(`/spclub`, inspect(obj, false, 3, true))

@@ -133,13 +133,9 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 
 	let ii = 0
 	mapLimit(wallets, 10, async (n, next) => {
-		await Promise.all([
-			getFaucet (n),
-			airdrop(n, ++ii),
-			// addReferrer(n, ii)
-		])
+		await airdrop(n, ++ii)
 	}, err => {
-		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
+		logger(`All wallets [${wallets.length}] airdrop done! err = ${err}`)
 	})
 }
 
@@ -362,16 +358,6 @@ const getRandomNodeV2: (exclude: number) => Promise<null|{node: nodeInfo, index 
 })
 
 const launchMap: Map<string, boolean> = new Map()
-const FaucetURL = `${apiEndpoint}conet-faucet`
-
-const getFaucet = async (privateKeyArmor: string) => {
-	const wallet = new ethers.Wallet(privateKeyArmor)
-	const data = JSON.stringify({ walletAddr: wallet.address})
-
-	logger(Colors.blue(`getFaucet for ${wallet.address}`))
-	await httpsPostToUrl(FaucetURL, data)
-}
-
 
 const [,,...args] = process.argv
 let _SRP = ''

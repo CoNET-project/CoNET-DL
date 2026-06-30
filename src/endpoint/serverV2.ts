@@ -5,7 +5,7 @@ import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
 import { inspect } from 'node:util'
-import {regiestFaucet, getOraclePrice, txManager, conet_lotte_bio} from './help-database'
+import {getOraclePrice, txManager, conet_lotte_bio} from './help-database'
 import Colors from 'colors/safe'
 import { homedir } from 'node:os'
 import {v4} from 'uuid'
@@ -274,34 +274,6 @@ class conet_dl_server {
 		})
 
 		//********************			V2    		****** */				
-		router.post ('/conet-faucet', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
-			let wallet_add = req.body?.walletAddr
-
-			if (! wallet_add ||! ipaddress) {
-				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
-				if (res.writable && !res.writableEnded) {
-					res.status(400).end()
-				}
-				return res.socket?.end().destroy()
-			}
-			
-			try {
-				wallet_add = ethers.getAddress(wallet_add)
-			} catch (ex) {
-				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
-				if (res.writable && !res.writableEnded) {
-					return res.status(400).end()
-				}
-				
-				return res.socket?.end().destroy()
-			}
-			
-			return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
-
-		})
-
 		router.get ('/conet-nodes', async (req: any, res: any) => {
 			res.json({node:this.si_pool, masterBalance: this.masterBalance}).end()
 		})

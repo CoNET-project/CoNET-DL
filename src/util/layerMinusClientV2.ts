@@ -256,7 +256,6 @@ const postLocalhost = (path: string, obj: any)=> new Promise(async resolve =>{
 
 let sendCount = 0
 let epoch = 0
-let faucetProcess = false
 let  PassportPoolProcessCount = 0
 
 

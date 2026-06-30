@@ -13,7 +13,6 @@ import devplopABI from './develop.ABI.json'
 import {ethers} from 'ethers'
 import { writeFile} from 'node:fs/promises'
 import {cntpAdminWallet, startEposhTransfer} from './utilNew'
-import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import {abi as CONET_Referral_ABI} from '../util/conet-referral.json'
@@ -129,39 +128,6 @@ process.on('unhandledRejection', (reason) => { throw reason; })
 
 const MAX_TX_Waiting = 1000 * 60 * 3
 
-const startFaucetProcess = () => new Promise(async resolve => {
-	if (!faucetWaitingPool.length) {
-		return resolve (false)
-	}
-	const sc = faucet_v3_Contract_Pool.shift()
-	if (!sc) {
-		return
-	}
-
-	logger(`faucetWaitingPool Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
-
-	logger(`faucetWaitingPool length = ${faucetWaitingPool.length}`)
-
-	const splited = faucetWaitingPool.slice(0, 150)
-	faucetWaitingPool = faucetWaitingPool.slice(150)
-
-	const ipAddress = splited.map(n => n.ipAddress)
-	const wallet = splited.map(n => n.wallet)
-
-	try {
-		
-		const tx = await sc.getFaucet(wallet, ipAddress)
-		await tx.wait()
-
-		logger(`startFaucetProcess Success ${tx.hash}`)
-
-	} catch (ex: any) {
-		logger(`startFaucetProcess Error!`, ex.message)
-	}
-	faucet_v3_Contract_Pool.unshift(sc)
-	return resolve(true)
-})
-
 const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 
 const sc = new ethers.Contract(scAddr, devplopABI, provide_cancun)
@@ -241,36 +207,22 @@ const stratlivenessV2 = async (eposh: number) => {
     logger(`stratlivenessV2 ${eposh}!`)
 	await Promise.all([
 		startProcess(),
-		startFaucetProcess(),
 		developWalletListening(eposh),
 		moveData(eposh)
 	])
 }
 
-const faucetV3_cancun_Addr = `0x8433Fcab26d4840777c9e23dC13aCC0652eE9F90`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const conet_Referral_cancun = '0xbd67716ab31fc9691482a839117004497761D0b9'
-
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[5], provide_cancun)
-logger(Colors.magenta(`faucetWallet = ${faucetWallet.address}`))
-const faucetContract = new ethers.Contract(faucetV3_cancun_Addr, faucet_v3_ABI, faucetWallet)
-const faucet_v3_Contract_Pool = [faucetContract]
 
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provide_cancun)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provide_cancun)
 export const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
 const contract_Referral = new ethers.Contract(conet_Referral_cancun, CONET_Referral_ABI, provide_cancun)
 
-interface faucetRequest {
-	wallet: string
-	ipAddress: string
-}
-
 export const checkGasPriceFordailyTaskPool = 25000000
 const eGB_Pool: Map<string, number> = new Map()
 export const GB_airdropPool: Map<string, number> = new Map()
-
-let faucetWaitingPool: faucetRequest[] = []
 
 let currentEpoch = 0
 
@@ -376,23 +328,6 @@ const tryRegiestedNode = async (nodeAddress: string, publicKeyArmored: string, k
 
 
 
-const addTofaucetPool = async (wallet: string, ipAddress: string) => {
-	const index = faucetWaitingPool.findIndex(n => n.wallet === wallet)
-	if (index > -1) {
-		return
-	}
-
-	try {
-		const balance: BigInt = await provide_cancun.getBalance(wallet)
-		if (!balance) {
-			faucetWaitingPool.push({wallet, ipAddress})
-			startFaucetProcess()
-		}
-	} catch (ex:any) {
-		logger(Colors.red(`addTofaucetPool catch error, ${ex.message}`))
-	}
-}
-
 const epochNodeData: Map<number, Map<string,InodeEpochData >> = new Map()
 const epochTotalData:  Map<number, IGossipStatus > = new Map()
 
@@ -464,7 +399,6 @@ const miningData = (body: any, res: Response) => {
     }
     
 
-	addTofaucetPool(body.nodeWallet, body.ipaddress)
 	return res.status(200).end()
 }
 

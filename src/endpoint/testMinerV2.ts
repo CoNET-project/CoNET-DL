@@ -109,15 +109,6 @@ const getWallet = async (SRP: string, max: number, __start: number) => {
 		
 		connectToGossipNode(n, i ++)
 	})
-	
-	
-	mapLimit(wallets, 1, async (n, next) => {
-		await getFaucet (n)
-		// await addReferrer(n)
-	}, err => {
-		logger(`All wallets [${wallets.length}] getFaucet success! err = ${err}`)
-		
-	})
 }
 
 const httpsPostToUrl = (url: string, body: string) => new Promise(resolve =>{
@@ -342,19 +333,6 @@ const getRandomNodeV2: (exclude: number) => Promise<null|{node: nodeInfo, index 
 
 const launchMap: Map<string, boolean> = new Map()
 const listenningPool: Map<string, NodeJS.Timeout> = new Map()
-const FaucetURL = `${apiEndpoint}conet-faucet`
-
-const getFaucet = (privateKeyArmor: string) => new Promise (async resolve=>{
-	const wallet = new ethers.Wallet(privateKeyArmor)
-	const data = JSON.stringify({ walletAddr: wallet.address})
-	//logger(Colors.blue(`getFaucet for ${wallet.address}`))
-	const uuu = await httpsPostToUrl(FaucetURL, data)
-	setTimeout(() => {
-		resolve(true)
-	}, 1000)
-
-})
-
 
 const connectToGossipNode = async ( privateKeyArmor: string, connectingNUmber: number ) => {
 	const wallet = new ethers.Wallet(privateKeyArmor)

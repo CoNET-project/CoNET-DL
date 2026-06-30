@@ -17,7 +17,6 @@ import type { RequestOptions } from 'node:http'
 import {request} from 'node:http'
 import {cntpAdminWallet, startEposhTransfer} from './utilNew'
 import {mapLimit} from 'async'
-import faucet_v3_ABI from './faucet_v3.abi.json'
 import Ticket_ABI from './ticket.abi.json'
 import CNTP_TicketManager_class  from '../util/CNTP_Transfer_pool'
 import profileABI from './profile.ABI.json'
@@ -363,40 +362,6 @@ const addToWinnerPool = (winnObj: winnerObj, CNTP_Transfer_manager: CNTP_TicketM
 
 const MAX_TX_Waiting = 1000 * 60 * 3
 
-
-
-const startFaucetProcess = () => new Promise(async resolve => {
-	if (!faucetWaitingPool.length) {
-		return resolve (false)
-	}
-
-	const SC = FaucetProcessSCPOOL.shift()
-	if (!SC) {
-		return resolve (false)
-	}
-
-	logger(`Start Faucet Process Wainging List length = ${faucetWaitingPool.length}`)
-
-	logger(inspect(faucetWaitingPool, false, 3, true))
-	const ipAddress = faucetWaitingPool.map(n => n.ipAddress)
-	const wallet = faucetWaitingPool.map(n => n.wallet)
-	faucetWaitingPool = []
-	logger(inspect(wallet, false, 3, true))
-
-	try {
-		
-		const tx = await SC.getFaucet(wallet, ipAddress)
-		logger(`start Faucet Process tx = ${tx.hash} used manager wallet is ${faucetWallet.address}  Total wallets = ${wallet.length} ${tx.hash}`)
-		await tx.wait()
-
-	} catch (ex) {
-		logger(`startFaucetProcess Error!`, ex)
-
-	}
-	FaucetProcessSCPOOL.push(SC)
-	return resolve(true)
-})
-
 const scAddr = '0x7859028f76f83B2d4d3af739367b5d5EEe4C7e33'.toLowerCase()
 const sc = new ethers.Contract(scAddr, devplopABI, provideCONET)
 const developWalletPool: Map<string, boolean> = new Map()
@@ -439,7 +404,6 @@ const developWalletListening = async (block: number) => {
 const stratlivenessV2 = async (eposh: number, classData: conet_dl_server) => {
 	await Promise.all([
 		ticketPoolProcess(eposh),
-		startFaucetProcess(),
 		developWalletListening(eposh)
 
 	])
@@ -501,24 +465,14 @@ const checkTimeLimited = (wallet: string, ipaddress: string, res: Response, CNYP
 	soLotteryV3 (wallet, ipaddress, res, CNYP_class)
 }
 
-const faucetV3_new_Addr = `0x04CD419cb93FD4f70059cAeEe34f175459Ae1b6a`
 const ticketAddr = '0x92a033A02fA92169046B91232195D0E82b8017AB'
 const profileAddr = '0x9f2d92da19beA5B2aBc51e69841a2dD7077EAD8f'
 const ticketManager_addr = '0x3Da23685785F721B87971ffF5D0b1A892CC1cd71'
 
-const faucetWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[1], provideCONET)
-const faucet_v3_Contract = new ethers.Contract(faucetV3_new_Addr, faucet_v3_ABI, faucetWallet)
-const FaucetProcessSCPOOL: ethers.Contract[] = [faucet_v3_Contract]
 const ticketWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[2], provideCONET)
 const profileWallet = new ethers.Wallet(masterSetup.newFaucetAdmin[3], provideCONET)
 const profileContract = new ethers.Contract(profileAddr, profileABI, profileWallet)
 const ticket_contract = new ethers.Contract(ticketAddr, Ticket_ABI, ticketWallet)
-
-interface faucetRequest {
-	wallet: string
-	ipAddress: string
-}
-
 
 const ticketPool: Map<string, number> = new Map()
 const ticketBrunPool: Map<string, number> = new Map()
@@ -865,28 +819,9 @@ const dailyTaskPoolProcess = async () => {
 
 }
 
-let faucetWaitingPool: faucetRequest[] = []
-const faucet_call =  (wallet: string, ipAddress: string) => {
-	try {
-		let _wallet = ethers.getAddress(wallet).toLowerCase()
-		const obj = faucet_call_pool.get(_wallet)
-		if (obj) {
-			return false
-		}
-		faucet_call_pool.set(wallet, true)
-		faucetWaitingPool.push({wallet, ipAddress})
-		
-	} catch (ex) {
-		return false
-	}
-
-	return true
-}
-
 let block = 0
 let socialTaskNFTNMaximumumber = 0
 
-const faucet_call_pool: Map<string, boolean> = new Map()
 const TwttterServiceListeningPool: Map<string, Response> = new Map()
 
 const TGWaitingCallbackPool: Map<string, (obk: TGResult) => void> = new Map()
