@@ -413,34 +413,6 @@ class conet_dl_server_v4 {
 
 		//********************			V2    		****** */		
 
-		router.post ('/conet-faucet', async (req: any, res: any) => {
-			const ipaddress = getIpAddressFromForwardHeader(req)
-			//logger (Colors.grey(`Router /conet-faucet to [${ ipaddress }]`))
-			let wallet_add = req.body?.walletAddr
-
-			if (! wallet_add ||! ipaddress) {
-				logger (`POST /conet-faucet ERROR! Have no walletAddr [${ipaddress}]`, inspect(req.body, false, 3, true))
-				if (res.writable && !res.writableEnded) {
-					res.status(400).end()
-				}
-				return res.socket?.end().destroy()
-			}
-			
-			try {
-				wallet_add = ethers.getAddress(wallet_add)
-			} catch (ex) {
-				logger(Colors.grey(`ethers.getAddress(${wallet_add}) Error!`))
-				if (res.writable && !res.writableEnded) {
-					return res.status(400).end()
-				}
-				
-				return res.socket?.end().destroy()
-			}
-			return res.status(200).end()
-			// return postLocalhost('/api/conet-faucet', {walletAddress: wallet_add, ipaddress}, res)
-
-		})
-
 		router.post ('/Purchase-Guardian', async (req: any, res: any) => {
 			
 			const ipaddress = getIpAddressFromForwardHeader(req)
@@ -487,6 +459,17 @@ class conet_dl_server_v4 {
         router.post('/miningRate', async (_req: any, res: any) => {
 			const payload = eposh_total ?? emptyMiningRatePayload
 			return res.status(200).json(payload).end()
+		})
+
+		// CoNET-SI startUp() calls getFaucet -> httpsPostToUrl(FaucetURL); the node's
+		// httpsPostToUrl only resolves on HTTP 200, so a 404 here permanently stalls node
+		// mining startup (on('block') never mounts). Keep a 200 stub so nodes never block.
+		router.post('/conet-faucet', async (_req: any, res: any) => {
+			return res.status(200).end()
+		})
+
+		router.get('/conet-faucet', async (_req: any, res: any) => {
+			return res.status(200).end()
 		})
 
 		router.post ('/PurchaseCONETianPlan', async (req: any, res: any) => {
