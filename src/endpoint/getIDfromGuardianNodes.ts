@@ -81,7 +81,7 @@ const getRandomNode = () => {
 
 class conet_dl_server {
 
-	private PORT = 4000
+	private PORT = Number(process.env.SILENTPASS_REDIRECT_PORT || 14000)
 	private initSetupData = async () => {
 		this.startServer()
 	}
