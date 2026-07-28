@@ -461,8 +461,21 @@ const duplicateList: Map<string, string> = new Map()
 
 const getDuplicateAccount = async (walletAddress: string) => {
     walletAddress = walletAddress.toLowerCase()
-    let duplicate = duplicateList.get(walletAddress) || await SPDuplicateFactoryContract.duplicateList(walletAddress)
-    if (duplicate === ethers.ZeroAddress) {
+    const cached = duplicateList.get(walletAddress)
+    if (cached) {
+        return cached
+    }
+    // DuplicateFactory may be absent on current CoNET (eth_getCode=0x) → ethers BAD_DATA.
+    // Must not throw: uncaught rejection in GB_airdrop kills Cluster Master (8004 down → LayerMinus ECONNREFUSED).
+    let duplicate = walletAddress
+    try {
+        const onChain = await SPDuplicateFactoryContract.duplicateList(walletAddress)
+        if (onChain && onChain !== ethers.ZeroAddress) {
+            duplicate = String(onChain).toLowerCase()
+        }
+    } catch (ex: unknown) {
+        const msg = ex instanceof Error ? ex.message : String(ex)
+        logger(Colors.yellow(`getDuplicateAccount skip (factory unavailable): ${walletAddress} ${msg}`))
         duplicate = walletAddress
     }
     duplicateList.set(walletAddress, duplicate)
@@ -497,21 +510,26 @@ const GB_airdrop = async () => {
         return
     }
 
-    const {wallets, airdropGBs, total} = await getData()
+    try {
+        const {wallets, airdropGBs, total} = await getData()
 
-    if (wallets.length > 0) {
-        try {
-            const ts = await SC.issueGBBatch(wallets, airdropGBs)
-            await ts.wait()
-            logger(`GB_airdrop *********** wallets length = ${wallets.length} TOTAL GB = ${total} ${ts.hash} ***************************`)
-        } catch (ex: any) {
-            logger(`GB_airdrop ERROR: ${ex.message}`)
+        if (wallets.length > 0) {
+            try {
+                const ts = await SC.issueGBBatch(wallets, airdropGBs)
+                await ts.wait()
+                logger(`GB_airdrop *********** wallets length = ${wallets.length} TOTAL GB = ${total} ${ts.hash} ***************************`)
+            } catch (ex: any) {
+                logger(`GB_airdrop ERROR: ${ex.message}`)
+            }
+        } else {
+            logger(`GB_airdrop no wallets to airdrop! total = ${total}`)
         }
-    } else {
-        logger(`GB_airdrop no wallets to airdrop! total = ${total}`)
+    } catch (ex: unknown) {
+        const msg = ex instanceof Error ? ex.message : String(ex)
+        logger(Colors.red(`GB_airdrop getData ERROR: ${msg}`))
+    } finally {
+        GB_airdropSCPool.unshift(SC)
     }
-
-    GB_airdropSCPool.unshift(SC)
 
 }
 
