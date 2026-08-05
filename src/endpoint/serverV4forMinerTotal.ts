@@ -1,6 +1,8 @@
 /**
- * 			
- * */
+ * CoNET DePIN miner daemon — includes legacy ConetGB1155 `issueGBBatch` / GB_airdrop paths.
+ * **@deprecated for new GB semantics** — canonical GB = GBToken ERC20 (CONET_GB_ERC20).
+ * See `.cursor/rules/beamio-gb-erc20-canonical.mdc`.
+ */
 import Express, { Router } from 'express'
 import type {Response, Request } from 'express'
 import { join } from 'node:path'
