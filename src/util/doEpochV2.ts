@@ -11,7 +11,7 @@ import {readFile} from 'node:fs/promises'
 import {CNTP_Transfer_Manager} from './CNTP_Transfer_pool_multiTransferToken'
 import {inspect} from 'node:util'
 
-const conet_Holesky_RPC = 'https://cancun-rpc.conet.network'
+const conet_Holesky_RPC = 'http://127.0.0.1:8888'
 const provider = new ethers.JsonRpcProvider(conet_Holesky_RPC)
 
 interface leaderboard {

@@ -6,7 +6,7 @@ import cancun_passport_airdrop_ABI from './cancun_passport_airdropABI.json'
 import mainnet_passpost_airdropABI from './mainnet_passport_airdropABI.json'
 
 const CoNETMainChainRPC = 'https://rpc1.conet.network'
-const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
+const CoNET_CancunRPC = 'http://127.0.0.1:8888'
 
 const endPointCancun = new ethers.JsonRpcProvider(CoNET_CancunRPC)
 const cancun_passport_airdrop_addr = '0xe996e897bc088b840283cadafd75a856bea44730'.toLocaleLowerCase()

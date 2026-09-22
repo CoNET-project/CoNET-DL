@@ -5,7 +5,7 @@ import Colors from 'colors/safe'
 import Cancun_CNTP_airdorpABI from '../util/Cancun_CNTP_airdorpABI.json'
 import {readFile} from 'node:fs'
 
-const CoNETCancunRPC = 'https://cancun-rpc.conet.network'
+const CoNETCancunRPC = 'http://127.0.0.1:8888'
 
 const CoNETDePINCancunSCAddress = '0x8A8898960B45AEa683b36EB214422740cb19fD06'
 

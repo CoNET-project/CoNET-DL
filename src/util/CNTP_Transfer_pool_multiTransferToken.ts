@@ -4,7 +4,7 @@ import Color from 'colors/safe'
 import CNTP_multiTransferTokenABI from './CNTP_multiTransferTokenABI.json'
 import { inspect } from 'node:util'
 import {mapLimit} from 'async'
-const rpcUrl = 'https://cancun-rpc.conet.network'
+const rpcUrl = 'http://127.0.0.1:8888'
 import CoNETDePINMiningABI from './CoNETDePINMiningABI.json'
 
 const CoNETDePINMiningContract = '0x3B91CF65A50FeC75b9BB69Ded04c12b524e70c29'

@@ -13,7 +13,7 @@ import NodesInfoABI_Cancun from './GuardNodeInfoCancunABI.json'
 const conetHoleskyRPC = 'https://rpc.conet.network'
 const GuardianNFT_holesky = '0x35c6f84C5337e110C9190A5efbaC8B850E960384'
 const GuardianNFT_Cancun = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'
-const CONET_cancunRPC = 'https://cancun-rpc.conet.network'
+const CONET_cancunRPC = 'http://127.0.0.1:8888'
 const GuardNodeInfoAddr_Cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 
 
