@@ -1,7 +1,7 @@
 
 import { logger } from './logger'
 import Colors from 'colors/safe'
-import {readFileSync} from 'node:fs'
+import {existsSync, readFileSync} from 'node:fs'
 import {join} from 'node:path'
 import TelegramBot from "node-telegram-bot-api"
 
@@ -77,8 +77,16 @@ export const start = async () => {
 	startProcess = true
 	const filePath = join(__dirname,'.telegram.token')
 	logger(Colors.magenta(`filePath ${filePath}`))
+	if (!existsSync(filePath)) {
+		logger(Colors.yellow(`Telegram bot disabled: token file is missing at ${filePath}`))
+		return
+	}
 	const kk = readFileSync(filePath,'utf-8')
 	const account: account = JSON.parse(kk)
+	if (!account.account?.trim()) {
+		logger(Colors.yellow('Telegram bot disabled: token file has no account token'))
+		return
+	}
 	startTeleBot(account.account)
 }
 
