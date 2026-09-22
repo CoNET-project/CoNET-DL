@@ -11,7 +11,7 @@ import Bs58 from 'bs58'
 import SP_purchase_eventABI from './SP_purchase_eventABI.json'
 import SP_mainnetABI from './CoNET_DEPIN-mainnet_SP-API.json'
 
-const CoNET_CancunRPC = 'https://cancun-rpc.conet.network'
+const CoNET_CancunRPC = 'http://127.0.0.1:8888'
 const CoNETMainnetRPC = 'https://rpc1.conet.network'
 const SOLANA_CONNECTION = new Connection(
 	"https://api.mainnet-beta.solana.com" // We only support mainnet.

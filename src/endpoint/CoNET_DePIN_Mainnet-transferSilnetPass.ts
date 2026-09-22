@@ -47,7 +47,7 @@ const getSoBalance = async (publicKey: string) => {
 
 //	curl -d 'service=vpn.conet.network' -s -X POST -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","id": 1, "method":"getAccountInfo", "jsonrpc":"2.0", "params":["EzozEmk2pcroo7a7FvpPXppP6Q9vX8EgUYegLH3d6ghP",{"encoding":"base64"}],"id":"787975a4-366a-4ffd-b25e-38444b43c38a"}' https://solana-rpc.conet.network  
 
-const conetProvider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
+const conetProvider = new ethers.JsonRpcProvider('http://127.0.0.1:8888')
 const SC = new ethers.Contract('0xE111F88A0204eE1F5DFE2cF5796F9C2179EeBBDd', SP_purchase_eventABI, conetProvider)
 
 const checkCNTPTransfer = (tR: ethers.TransactionReceipt, contract: ethers.Contract, wallet: string) => new Promise(resolve=>{

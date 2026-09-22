@@ -11,7 +11,7 @@ import {inspect} from 'node:util'
 
 const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 const CONET_MAINNET = new ethers.JsonRpcProvider('https://publicrpc.conet.network') 
-const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
+const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8888')
 
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
 const GuardianNodesInfo = new ethers.Contract(GuardianNodesInfoV6_cancun, NodesInfoABI, provider)

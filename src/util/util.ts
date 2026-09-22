@@ -34,7 +34,7 @@ import {Readable} from 'node:stream'
 
 export const conet_Holesky_rpc1 = 'https://rpc.conet.network'
 export const conet_cancun_rpc =
-	process.env.CANCUN_RPC || process.env.CONET_CANCUN_RPC || 'https://cancun-rpc.conet.network'
+	process.env.CANCUN_RPC || process.env.CONET_CANCUN_RPC || 'http://127.0.0.1:8888'
 const bscMainchainRPC = 'https://bsc-dataseed.bnbchain.org/'
 const balstMainchainRPC = 'https://rpc.ankr.com/blast'
 

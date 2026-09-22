@@ -6,7 +6,7 @@ import {mapLimit} from 'async'
 import Colors from 'colors/safe'
 import { inspect } from 'node:util'
 
-const CoNET_cancunRPC = 'https://cancun-rpc.conet.network'
+const CoNET_cancunRPC = 'http://127.0.0.1:8888'
 const conet_Cancun = new ethers.JsonRpcProvider(CoNET_cancunRPC)
 const GuardianMiningAddr = '0xa37A017FcBe39B35806804C0e7b9E90775B60D8F'
 const adminList = [

@@ -2885,7 +2885,7 @@ const returnSP_Pool_process = async () => {
 
 const CONET_Guardian_PlanV7 = '0x312c96DbcCF9aa277999b3a11b7ea6956DdF5c61'.toLowerCase()
 const GuardianNodesInfoV6_cancun = '0x88cBCc093344F2e1A6c2790A537574949D711E9d'
-const provider = new ethers.JsonRpcProvider('https://cancun-rpc.conet.network')
+const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8888')
 let Guardian_Nodes: nodeInfo[] = []
 const GuardianNodeInfo_mainnet = '0xBC6b53065b5647261396d002bDBA0d3396E0722f'
 const GuardianNodesMainnet = new ethers.Contract(GuardianNodeInfo_mainnet, newNodeInfoABI, CONET_MAINNET)
